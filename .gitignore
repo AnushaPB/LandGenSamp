@@ -1,6 +1,6 @@
 #Ignore all vcf and csv files 
-.vcf
-.csv
+*.vcf
+*.csv
 
 # History files
 .Rhistory
