@@ -515,8 +515,8 @@ for K in [5]:
             params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
             params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
             params['comm']['species']['spp_0']['init']['K_factor'] = K
-            params['comm']['species']['spp_0']['movement']['movement_distance_distr_param1'] = m
-            params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param1'] = m
+            params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
+            params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
             params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
             
             #print params to confirm proper params were used (in output)
