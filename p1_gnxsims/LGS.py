@@ -247,18 +247,18 @@ params = {
                     'direction_distr_mu':                   1,
                     #concentration of distr of movement direction
                     'direction_distr_kappa':                0,
-                    #1st param of distr of movement distance  (mean)       
-                    'movement_distance_distr_param1':       m, 
-                    #2nd param of distr of movement distance (variance)
-                    'movement_distance_distr_param2':       5e-8,
-                    #movement distance distr to use ('levy' or 'wald')
-                    'movement_distance_distr':              'levy',
+                    #1st param of distr of movement distance
+                    'movement_distance_distr_param1':       0, 
+                    #2nd param of distr of movement distance 
+                    'movement_distance_distr_param2':       m,
+                    #movement distance distr to use 
+                    'movement_distance_distr':              'lognormal',
                     #1st param of distr of dispersal distance
-                    'dispersal_distance_distr_param1':      m,
+                    'dispersal_distance_distr_param1':      0,
                     #2nd param of distr of dispersal distance
-                    'dispersal_distance_distr_param2':      5e-14,
-                    #dispersal distance distr to use ('levy' or 'wald')
-                    'dispersal_distance_distr':             'levy',
+                    'dispersal_distance_distr_param2':      m,
+                    #dispersal distance distr to use 
+                    'dispersal_distance_distr':             'lognormal',
                     'move_surf'     : {
                         #move-surf Layer name
                         'layer':                'lyr_0',
@@ -283,9 +283,9 @@ params = {
                     #file defining custom genomic arch
                     'gen_arch_file':            None,
                     #num of loci
-                    'L':                        10000,
-                    #num of chromosomes
-                    'l_c':                      [100],
+                    'L':                        100000,
+                    #num of chromosomes (doesn't matter when there is no linkage)
+                    'l_c':                      [1],
                     #starting allele frequency (None to draw freqs randomly)
                     'start_p_fixed':            0.5,
                     #whether to start neutral locus freqs at 0
@@ -298,8 +298,8 @@ params = {
                     'delet_alpha_distr_shape':  0.2,
                     #scale of distr of deleterious effect sizes
                     'delet_alpha_distr_scale':  0.2,
-                    #alpha of distr of recomb rates
-                    'r_distr_alpha':            None,
+                    #alpha of distr of recomb rates (default = 0.5 = unlinked)
+                    'r_distr_alpha':            None, 
                     #beta of distr of recomb rates
                     'r_distr_beta':             None,
                     #whether loci should be dominant (for allele '1')
@@ -331,11 +331,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               4,          
+                            'n_loci':               2,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.25,
+                            'alpha_distr_mu' :      0.5,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -356,11 +356,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               4,          
+                            'n_loci':               2,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.25,
+                            'alpha_distr_mu' :      0.5,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -401,9 +401,9 @@ params = {
 #-------------#
     'model': {
         #total Model runtime (in timesteps)
-        'T':            1001,
+        'T':            1100,
         #min burn-in runtime (in timesteps)
-        'burn_T':       100,
+        'burn_T':       10000,
         #seed number
         'num':          42,
         #time step interval for simplication of tskit tables
@@ -499,7 +499,7 @@ params = {
 #TESTING LOOP WILL PARALLELIZE LATER
 for K in [5]:
   for phi in [0.5]:
-    for m in[1]:
+    for m in[0.25]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
@@ -523,7 +523,7 @@ for K in [5]:
             print(params)
             
             #make our params dict into a proper Geonomics ParamsDict object
-            mod_name = "mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
+            mod_name = "2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
             print(mod_name)
             params = gnx.make_params_dict(params, mod_name)
             #then use it to make a model
@@ -541,5 +541,4 @@ for K in [5]:
             print(mod.comm[0].gen_arch.nonneut_loci)
                                                                                                                            
             #run the model for 1000 steps
-            mod.walk(1000)
-            
+            mod.walk(1001)

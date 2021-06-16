@@ -10,7 +10,7 @@
 #SBATCH --account=fc_landgen
 #
 # Partition:
-#SBATCH --partition=savio
+#SBATCH --partition=savio3_bigmem
 #
 # Wall clock limit:
 #SBATCH --time=3-00:00:00
