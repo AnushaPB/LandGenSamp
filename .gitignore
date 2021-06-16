@@ -2,8 +2,9 @@
 *.vcf
 *.csv
 
-#Ignore data
+#Ignore data and outputs
 /data
+/outputs
 
 #Dstore
 .DS_Store
