@@ -1,6 +1,7 @@
-#Ignore all vcf and csv files 
+#Ignore all vcf, fasta, and csv files 
 *.vcf
 *.csv
+*.fasta
 
 #Ignore data and outputs
 /data
