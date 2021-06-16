@@ -504,12 +504,12 @@ for K in [5]:
         for H in [0.5]:
           for r in [0.6]: 
             #directory where input/output data will be stored (scratch)
-            dir = "/global/scratch/anushabishop/LGS/"
+            dir = "/global/scratch/anushabishop/LandGenSamp/p1_gnxsims/"
             #note: currently gnx dumps output files where the script is run
             
             #get env layers
-            env1 = np.genfromtxt(dir+"MNLM/seed"+str(seed)+"_env1_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
-            env2 = np.genfromtxt(dir+"MNLM/seed"+str(seed)+"_env2_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
+            env1 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env1_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
+            env2 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env2_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
             
             #redefine params
             params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
