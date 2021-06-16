@@ -1,0 +1,14 @@
+]0;IPython: LGS/p1_gnxsims
+
+NOTE: No display found. Using non-interactive Agg backend
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mTypeError[0m                                 Traceback (most recent call last)
+[0;32m~/GeonomicsAB/LGS/p1_gnxsims/LGS.py[0m in [0;36m<module>[0;34m[0m
+[1;32m    509[0m [0;34m[0m[0m
+[1;32m    510[0m             [0;31m#get env layers[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 511[0;31m             [0menv1[0m [0;34m=[0m [0mnp[0m[0;34m.[0m[0mgenfromtxt[0m[0;34m([0m[0mdir[0m[0;34m+[0m[0;34m"MNLM/seed"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mseed[0m[0;34m)[0m[0;34m+[0m[0;34m"_env1_H"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mint[0m[0;34m([0m[0mH[0m[0;34m*[0m[0;36m100[0m[0;34m)[0m[0;34m)[0m[0;34m+[0m[0;34m"_r"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mint[0m[0;34m([0m[0mr[0m[0;34m*[0m[0;36m100[0m[0;34m)[0m[0;34m+[0m[0;34m".csv"[0m[0;34m)[0m[0;34m,[0m [0mdelimiter[0m[0;34m=[0m[0;34m','[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    512[0m             [0menv2[0m [0;34m=[0m [0mnp[0m[0;34m.[0m[0mgenfromtxt[0m[0;34m([0m[0mdir[0m[0;34m+[0m[0;34m"MNLM/seed"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mseed[0m[0;34m)[0m[0;34m+[0m[0;34m"_env2_H"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mint[0m[0;34m([0m[0mH[0m[0;34m*[0m[0;36m100[0m[0;34m)[0m[0;34m)[0m[0;34m+[0m[0;34m"_r"[0m[0;34m+[0m[0mstr[0m[0;34m([0m[0mint[0m[0;34m([0m[0mr[0m[0;34m*[0m[0;36m100[0m[0;34m)[0m[0;34m+[0m[0;34m".csv"[0m[0;34m)[0m[0;34m,[0m [0mdelimiter[0m[0;34m=[0m[0;34m','[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    513[0m [0;34m[0m[0m
+
+[0;31mTypeError[0m: unsupported operand type(s) for +: 'int' and 'str'

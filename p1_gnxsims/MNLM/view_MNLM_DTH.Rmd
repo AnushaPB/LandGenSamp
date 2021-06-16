@@ -1,0 +1,60 @@
+---
+title: "MNLM"
+output: html_document
+---
+```{r}
+library(raster)
+library(here)
+
+library(wesanderson)
+library(RColorBrewer)
+library(viridisLite)
+library(spatialEco)
+
+
+pal0 <- rev(brewer.pal(n = 11, name = "BrBG"))
+pal1 <- rev(brewer.pal(n = 11, name = "PRGn"))
+BlueRed <- colorRampPalette(c("blue", "grey90", "red")) 
+
+cols <-  c("#003f5c", "#58508d","#bc5090", "#ff6361", "#ffa600")
+palc <- colorRampPalette(cols, interpolate="linear")
+
+pal <- wes_palette("GrandBudapest2", 4, type = c("discrete"))
+palz <- wes_palette("Zissou1", 100, type = c("continuous"))
+
+BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
+paldiv <- colorRampPalette(BuRd, interpolate="linear")
+```
+
+
+```{r fig.width=8, fig.height=10}
+par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
+for(seed in c(1,2,3)){
+  for(H in c(0.1,0.5)){
+    for(r in c(0.3, 0.6)){
+      
+      file1 <- read.csv(here("data",paste0("seed",seed,"_env1_H0",H*10,"_r0",r*10,"_DTH.csv")))
+      #file1 <- read.csv(here("data",paste0("seed",seed,"_env1_H0",H*10,".csv")))
+      env1 <- raster(as.matrix(file1))
+      extent(env1) <- c(0,40,0,40)
+      
+      file2 <- read.csv(here("data",paste0("seed",seed,"_env2_H0",H*10,"_r0",r*10,"_DTH.csv")))
+      #file2 <- read.csv(here("data",paste0("seed",seed,"_env2_H0",H*10,"_r0",r*10,".csv")))
+      env2 <- raster(as.matrix(file2))
+      extent(env2) <- c(0,40,0,40)
+      
+      pearcor <- round(layerStats(stack(env1,env2),"pearson")$`pearson correlation coefficient`,1)[1,2]
+      
+      plot(env1, box=FALSE, axes=FALSE, col=palz, legend.width=2, 
+           main = paste0("env1 | Moran's I = ",round(Moran(env1),2)))
+      plot(env2, box=FALSE, axes=FALSE, col=palz, legend.width=2,
+           main = paste0("env2 | Moran's I =",round(Moran(env2),2)))
+      
+      rascor <- rasterCorrelation(env1,env2,5)
+      plot(rascor, col=paldiv(100), box=FALSE, axes=FALSE, zlim = c(-1,1),
+           main = paste0("H = ",H," | r = ",pearcor), legend.width=2)
+    }
+  }
+}
+
+```

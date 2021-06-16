@@ -1,0 +1,2697 @@
+title: "PopGen Project"
+author: "Anusha"
+date: "1/3/2021"
+output: html_document
+---
+
+```{r}
+library(lfmm)
+library(here)
+library(wesanderson)
+library(adegenet)
+library(raster)
+library(gdm)
+library(RColorBrewer)
+library(vegan)
+library(RStoolbox)
+library(viridisLite)
+viridis(100, option = "F")
+?viridis
+
+pal0 <- rev(brewer.pal(n = 11, name = "BrBG"))
+pal1 <- rev(brewer.pal(n = 11, name = "PRGn"))
+```
+
+
+#load data
+```{r}
+gea_df <- read.csv(here("data",paste0("gea_MNLM_m1_phi0p05_k5_H05_r06_TEST_df.csv")))
+gea_df <- gea_df[,-1]
+dim(gea_df)
+colnames(gea_df)[10001:10004]
+
+colnames(gea_df) <- c(paste0("X",1:10000), colnames(gea_df)[10001:10004]) # CHANGE FROM BASE 0 TO BASE 1
+
+loci_df <- read.csv(here("data",paste0("loci_MNLM_m1_phi0p05_k5_H05_r06_TEST_df.csv")))
+loci_df <- data.frame(trait2 = loci_df$trait2, trait2 = loci_df$trait2)
+```
+
+```{r fig.width=4, fig.height=4}
+env1 <- raster(as.matrix(read.csv(here("data","seed1_env1_H05.csv"))))
+extent(env1) <- c(0,40,0,40)
+
+env2 <- raster(as.matrix(read.csv(here("data","seed1_env2_H05_r06.csv"))))
+extent(env2) <- c(0,40,0,40)
+
+palz <- wes_palette("Zissou1", 100, type = c("continuous"))
+
+#FLIP TO MATCH GNX ORIENTATION
+env1 <- flip(env1, direction = "y")
+env2 <- flip(env2, direction = "y")
+
+#Check to make sure envs match vals in dfs
+plot(env1, col = palz)
+tmpcol<- palz[as.numeric(cut(gea_df$env1,breaks = 100))]
+plot(env1, col = "white")
+points(gea_df$x, gea_df$y, col = tmpcol, cex = 1)
+
+plot(env2, col = palz)
+tmpcol<- palz[as.numeric(cut(gea_df$env2,breaks = 100))]
+plot(env2, col = "white")
+points(gea_df$x, gea_df$y, col = tmpcol, cex = 1)
+
+plot(env1+env2, axes = FALSE, box = FALSE, col = palz, zlim = c(0,2))
+
+plot(calc(stack(env1,env2),fun=sd), col=palz)
+plot(abs(env2-env1), col=palz)
+```
+
+
+```{r, fig.width=5, fig.height=10}
+par(mfrow = c(2,1), mar = rep(1,4))
+plot(env1, col = pal0, box = FALSE, axes = FALSE, main = "env1", cex.main = 2)
+plot(env2, col = pal1, box = FALSE, axes = FALSE, main = "env2", cex.main = 2)
+```
+
+```{r}
+layerStats(stack(env1=env1, env2), "pearson")
+```
+
+##MMRR
+```{r}
+# MMRR performs Multiple Matrix Regression with Randomization analysis
+# Y is a dependent distance matrix
+# X is a list of independent distance matrices (with optional names)
+
+MMRR<-function(Y,X,nperm=999){
+	#compute regression coefficients and test statistics
+	nrowsY<-nrow(Y)
+	y<-unfold(Y)
+	if(is.null(names(X)))names(X)<-paste("X",1:length(X),sep="")
+        Xmats<-sapply(X,unfold)
+        fit<-lm(y~Xmats)
+	coeffs<-fit$coefficients
+	summ<-summary(fit)
+	r.squared<-summ$r.squared
+	tstat<-summ$coefficients[,"t value"]
+	Fstat<-summ$fstatistic[1]
+	tprob<-rep(1,length(tstat))
+	Fprob<-1
+
+	#perform permutations
+	for(i in 1:nperm){
+		rand<-sample(1:nrowsY)
+		Yperm<-Y[rand,rand]
+		yperm<-unfold(Yperm)
+		fit<-lm(yperm~Xmats)
+		summ<-summary(fit)
+                Fprob<-Fprob+as.numeric(summ$fstatistic[1]>=Fstat)
+                tprob<-tprob+as.numeric(abs(summ$coefficients[,"t value"])>=abs(tstat))
+	}
+
+	#return values
+	tp<-tprob/(nperm+1)
+	Fp<-Fprob/(nperm+1)
+	names(r.squared)<-"r.squared"
+	names(coeffs)<-c("Intercept",names(X))
+	names(tstat)<-paste(c("Intercept",names(X)),"(t)",sep="")
+	names(tp)<-paste(c("Intercept",names(X)),"(p)",sep="")
+	names(Fstat)<-"F-statistic"
+	names(Fp)<-"F p-value"
+	return(list(r.squared=r.squared,
+		coefficients=coeffs,
+		tstatistic=tstat,
+		tpvalue=tp,
+		Fstatistic=Fstat,
+		Fpvalue=Fp))
+}
+
+# unfold converts the lower diagonal elements of a matrix into a vector
+# unfold is called by MMRR
+
+unfold<-function(X){
+	x<-vector()
+	for(i in 2:nrow(X)) x<-c(x,X[i,1:i-1])
+	x<-scale(x, center=TRUE, scale=TRUE)  # Comment this line out if you wish to perform the analysis without standardizing the distance matrices! 
+	return(x)
+}
+
+```
+
+```{r}
+s <- sample(nrow(gea_df), 1000, replace=F)
+Y <- gea_df[s,1:1000]
+Y <- as.matrix(Y)
+pc <- prcomp(Y)
+
+X <- gea_df[s,c("env1","env2","y","x")]
+
+plot(pc$sdev[1:20]^2, xlab = 'PC', ylab = "Variance explained")
+
+
+pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+env1_dist <- as.matrix(dist(X$env1, diag = TRUE, upper = TRUE))
+env2_dist <- as.matrix(dist(X$env2, diag = TRUE, upper = TRUE))
+geo_dist <- as.matrix(dist(X[,c("y", "x")], diag = TRUE, upper = TRUE))
+
+t=100
+mantel(pc_dist[1:t,1:t], env1_dist[1:t,1:t])
+
+```
+
+
+```{r}
+m1 <- pc_dist
+m2 <- env1_dist
+m3 <- env2_dist
+m4 <- geo_dist
+
+Xmats <- list(env1 = m2, env2 = m3, geography = m4)
+
+MMRR(m1, Xmats, nperm = 999)
+```
+
+#GDM
+##GDM (Neutral + Adaptive Loci)
+```{r}
+set.seed(42)
+s <- sample(1:nrow(gea_df), 1000, replace = F)
+Y <- gea_df[s, 1:1000]
+Y <- as.matrix(Y)
+pc <- prcomp(Y)
+pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+
+site <- 1:nrow(pc_dist)
+gdmGen <- cbind(site, pc_dist)
+gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+
+gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+
+#SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1)
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+
+gdm.model <- gdm(gdmData, geo = TRUE)
+
+summary(gdm.model)
+```
+
+
+```{r}
+gdm.model.splineDat <- isplineExtract(gdm.model)
+
+par(mfrow=c(1,3), pty = "s")
+
+plot(gdm.model.splineDat$x[,"env1"], gdm.model.splineDat$y[,"env1"], cex.lab = 1.5, 
+     lwd=2, type="l", col="red", ylim = c(0,1), xlab = "env1", ylab = "Partial Genetic distance")
+
+plot(gdm.model.splineDat$x[,"env2"], gdm.model.splineDat$y[,"env2"], cex.lab = 1.5, 
+     lwd=2, type="l", col="blue", ylim = c(0,1), xlab = "env2", ylab = "Partial Genetic distance")
+
+
+plot(gdm.model.splineDat$x[,"Geographic"], gdm.model.splineDat$y[,"Geographic"], cex.lab = 1.5, 
+     lwd=2, type="l", col="black", ylim = c(0,1), xlab="Geo Dist", ylab = "Partial Genetic distance")
+```
+
+```{r}
+# Sum coefficients for each predictor (each has 3 splines)
+coeffs <- function(gdm.model){
+  coefSums <- c()
+  for (i in 1:length(gdm.model$predictors)){
+    j <- (i * 3) - 2
+    coefSums[i] <- sum(gdm.model$coefficients[j:(j+2)])
+  }
+  
+  # Add those values to a simple data frame
+  coeffs <- data.frame(predictor = gdm.model$predictors, coefficient = coefSums)
+  return(coeffs)
+}
+
+```
+
+```{r}
+predictors <- coeffs(gdm.model)
+predictors
+```
+
+
+```{r, fig.width = 3, fig.height = 3.5}
+# Transform GIS layers
+rastTrans <- gdm.transform(gdm.model, stack(env1,env2))
+rastDat <- na.omit(getValues(rastTrans))
+pcaSamp <- prcomp(rastDat)
+
+# note the use of the 'index' argument
+pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+# scale rasters
+pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+  (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+  (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+  (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+
+par(mfrow=c(3,2), mar = rep(0,4), oma = rep(0,4), pty="s")
+plotRGB(pcaRast, r=1, g=2, b=3)
+plotRGB(pcaRast, r=1, g=3, b=2)
+plotRGB(pcaRast, r=2, g=3, b=1)
+plotRGB(pcaRast, r=2, g=1, b=3)
+plotRGB(pcaRast, r=3, g=2, b=1)
+plotRGB(pcaRast, r=3, g=1, b=2)
+``` 
+
+
+```{r, fig.width=6, fig.height=2, warning = FALSE}
+par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("PC",i))
+}
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+points(gea_df$x[s], gea_df$y[s], cex = 0.05, pch = 3)
+mtext("Neutral + Adaptive Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+```{r fig.width=10, fig.height=5}
+plot(env2 - env1, col = palz)
+plot(calc(stack(env1,env2),fun=sd), col = palz)
+plot(env2 + env1, col = palz, box = FALSE, axes = FALSE, main = "env1 + env2")
+points(gea_df$x[s], gea_df$y[s], pch = 3, cex = 0.2)
+
+par(mfrow=c(1,2))
+plot(env2 + env1, col = palz, box = FALSE, axes = FALSE, main = "env1 + env2")
+points(gea_df$x[s], gea_df$y[s], pch = 3, cex = 0.2)
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+points(gea_df$x[s], gea_df$y[s], cex = 0.2, pch = 3)
+
+```
+
+```{r, fig.width=8, fig.height=4, warning = FALSE}
+pcavals <- values(pcaRast)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(1,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 0.8, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+#Multiple its viz
+```{r warning = FALSE}
+its=100
+gdm_mods <- list()
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  set.seed(i)
+  
+  s <- sample(1:nrow(gea_df), 1000, replace = F)
+  Y <- gea_df[s, 1:1000]
+  Y <- as.matrix(Y)
+  
+  pc <- prcomp(Y)
+  pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+  
+  site <- 1:nrow(pc_dist)
+  gdmGen <- cbind(site, pc_dist)
+  gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+  
+  gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+  
+  #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1)
+  range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+  if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+  
+  gdm.model <- gdm(gdmData, geo = TRUE)
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  predictors <- coeffs(gdm.model)
+  
+  if(0 %in% predictors[,2]){ 
+    print("Coeff = 0")
+    next 
+    }
+  
+  gdm_mods[[i]] <- gdm.model
+  
+  # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+  pcaRast_current <- pcaRast
+  
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+  
+  
+}
+
+gdm_mods_all <- gdm_mods
+
+```
+
+```{r warning = FALSE}
+par(mfrow=c(10,10), mar = rep(0,4))
+for(i in 1:100){
+  gdm.model <- gdm_mods_all[[i]] 
+  
+  skip_to_next <- FALSE
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+ # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  plotRGB(pcaRast, r=3, g=1, b=2)
+}
+```
+
+
+```{r warning = FALSE}
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for(i in 1:100){
+  gdm.model <- gdm_mods_all[[i]] 
+  
+ # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+  pcaRast_current <- pcaRast
+  
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+}
+```
+
+
+```{r}
+par(mfrow = c(1,3), pty="s")
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env1")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(1,0,0,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env2")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(0,0,1,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,60))
+axis(1)
+axis(2)
+title(xlab="Geo Dist")
+title(ylab="Partial Genetic Dist")
+box()
+range(gdm.model.splineDat_preCC$y[,"Geographic"])
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l", col =  rgb(0,0,0,alpha=0.3))
+  
+}
+
+
+```
+
+
+```{r, fig.width=4.5, fig.height=4, warning = FALSE}
+library("colorspace")
+pcaRasts_mean <- stack(mean(pca1_rasts), mean(pca2_rasts), mean(pca3_rasts))
+pcaRasts_sd <- stack(calc(pca1_rasts, fun = sd), calc(pca2_rasts, fun = sd), calc(pca3_rasts, fun = sd))
+
+par(mfrow=c(2,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRasts_mean[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="Mean RGB Plot")
+mtext("Neutral + Adaptive Loci GDM", outer = TRUE, cex = 1, line = 1)
+
+#par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+for(i in 1:3){
+  plot(pcaRasts_sd[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = sequential_hcl(palette = "Grays", n=100, rev=TRUE), main = paste0("SD PC",i), zlim = c(0,150))
+}
+plot(mean(pcaRasts_sd), box=FALSE, axes = FALSE, col=sequential_hcl(palette = "Grays", n=100, rev=TRUE), legend=FALSE, main = "Mean SD", zlim = c(0,150))
+
+```
+
+```{r warning=FALSE}
+pcaRasts_mean <- stack(mean(pca1_rasts), mean(pca2_rasts), mean(pca3_rasts))
+
+pcavals <- values(pcaRasts_mean)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(1,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+```{r, fig.width=5, fig.height=2, warning = FALSE}
+par(mfrow=c(1,3), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+mtext("Neutral + Adaptive Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+
+
+#### PCA of PCs from GDM
+```{r PCA of PCs, warning = FALSE}
+#PCA on PCs from GDM
+pca2_rast1 <- rasterPCA(pca1_rasts)
+pca2_rast2<- rasterPCA(pca2_rasts)
+pca2_rast3 <- rasterPCA(pca3_rasts)
+
+pca2Rast <- stack(pca2_rast1$map[[1]], pca2_rast2$map[[1]], pca2_rast3$map[[1]])
+
+# scale rasters
+pca2Rast[[1]] <- (pca2Rast[[1]]-pca2Rast[[1]]@data@min) /
+  (pca2Rast[[1]]@data@max-pca2Rast[[1]]@data@min)*255
+pca2Rast[[2]] <- (pca2Rast[[2]]-pca2Rast[[2]]@data@min) /
+  (pca2Rast[[2]]@data@max-pca2Rast[[2]]@data@min)*255
+pca2Rast[[3]] <- (pca2Rast[[3]]-pca2Rast[[3]]@data@min) /
+  (pca2Rast[[3]]@data@max-pca2Rast[[3]]@data@min)*255
+
+```
+
+```{r, plot PC RGB plot, warning = FALSE}
+pcavals <- values(pca2Rast)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(2,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pca2Rast, r = 3, g = 1, b = 2)
+```
+
+
+```{r, fig.width = 9, fig.height=3}
+par(mfrow=c(1,3), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g, b, r) #same order as RGB plot
+
+for(i in 1:3){
+  plot(pca2Rast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("PC1 of PC",i))
+}
+mtext("Neutral + Adaptive Loci", outer = TRUE, cex = 1.5, line = 1)
+
+```
+
+##GDM w/ adaptive loci
+
+```{r}
+set.seed(42)
+s <- sample(1:nrow(gea_df), 1000, replace = F)
+Y <- gea_df[s, c(which(loci_df$trait1 == 1), which(loci_df$trait2 == 1))]
+Y <- as.matrix(Y)
+pc <- prcomp(Y)
+pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+
+site <- 1:nrow(pc_dist)
+gdmGen <- cbind(site, pc_dist)
+gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+
+gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+
+gdm.model <- gdm(gdmData, geo = TRUE)
+
+summary(gdm.model)
+```
+
+```{r}
+# Sum coefficients for each predictor (each has 3 splines)
+coeffs <- function(gdm.model){
+  coefSums <- c()
+  for (i in 1:length(gdm.model$predictors)){
+    j <- (i * 3) - 2
+    coefSums[i] <- sum(gdm.model$coefficients[j:(j+2)])
+  }
+  
+  # Add those values to a simple data frame
+  coeffs <- data.frame(predictor = gdm.model$predictors, coefficient = coefSums)
+  return(coeffs)
+}
+
+```
+
+```{r}
+predictors <- coeffs(gdm.model)
+predictors
+```
+
+
+```{r, fig.width = 3, fig.height = 3.5}
+# Transform GIS layers
+rastTrans <- gdm.transform(gdm.model, stack(env1,env2))
+rastDat <- na.omit(getValues(rastTrans))
+pcaSamp <- prcomp(rastDat)
+
+# note the use of the 'index' argument
+pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+# scale rasters
+pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+  (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+  (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+  (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+
+par(mfrow=c(3,2), mar = rep(0,4), pty="s")
+plotRGB(pcaRast, r=1, g=2, b=3)
+plotRGB(pcaRast, r=1, g=3, b=2)
+plotRGB(pcaRast, r=2, g=3, b=1)
+plotRGB(pcaRast, r=2, g=1, b=3)
+plotRGB(pcaRast, r=3, g=2, b=1)
+plotRGB(pcaRast, r=3, g=1, b=2)
+``` 
+```{r, fig.width=6, fig.height=2, warning = FALSE}
+par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("PC",i))
+}
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+mtext("Adaptive Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+```{r fig.width=10, fig.height=5, warning=FALSE}
+par(mfrow=c(1,2))
+plot(env2 + env1, col = palz, box = FALSE, axes = FALSE, main = "env1 + env2")
+points(gea_df$x[s], gea_df$y[s], pch = 3, cex = 0.2)
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+points(gea_df$x[s], gea_df$y[s], cex = 0.2, pch = 3)
+
+```
+```{r, fig.width=8, fig.height=4, warning = FALSE}
+pcavals <- values(pcaRast)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(1,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+```{r, fig.width = 9, fig.height = 3}
+gdm.model.splineDat <- isplineExtract(gdm.model)
+
+par(mfrow=c(1,3), pty = "s")
+plot(gdm.model.splineDat$x[,"Geographic"], gdm.model.splineDat$y[,"Geographic"], cex.lab = 2, 
+     lwd=2, type="l", col="blue", ylim = c(0,1), xlab="Geo Dist", ylab = "Partial Genetic distance")
+
+plot(gdm.model.splineDat$x[,"env1"], gdm.model.splineDat$y[,"env1"], cex.lab = 2, 
+     lwd=2, type="l", col="black", ylim = c(0,1), xlab = "env1", ylab = "Partial Genetic distance")
+
+plot(gdm.model.splineDat$x[,"env2"], gdm.model.splineDat$y[,"env2"], cex.lab = 2, 
+     lwd=2, type="l", col="black", ylim = c(0,1), xlab = "env2", ylab = "Partial Genetic distance")
+```
+
+#Multiple its viz
+```{r warning = FALSE}
+its=100
+gdm_mods <- list()
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  set.seed(i)
+  
+  s <- sample(1:nrow(gea_df), 1000, replace = F)
+  Y <- gea_df[s, c(which(loci_df$trait1 == 1), which(loci_df$trait2 == 1))]
+  Y <- as.matrix(Y)
+  
+  pc <- prcomp(Y)
+  pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+  
+  site <- 1:nrow(pc_dist)
+  gdmGen <- cbind(site, pc_dist)
+  gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+  
+  gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+  
+  #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1)
+  range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+  if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+  
+  gdm.model <- gdm(gdmData, geo = TRUE)
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  predictors <- coeffs(gdm.model)
+  
+  if(0 %in% predictors[,2]){ 
+    print("Coeff = 0")
+    next 
+    }
+  
+  gdm_mods[[i]] <- gdm.model
+  
+  # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+  pcaRast_current <- pcaRast
+  
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+  
+  
+}
+
+gdm_mods_adaptive <- gdm_mods
+gdm_mods <- gdm_mods_adaptive
+```
+
+```{r warning = FALSE}
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for(i in 1:100){
+  gdm.model <- gdm_mods_adaptive[[i]] 
+  
+ # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+}
+```
+
+
+
+
+```{r warning = FALSE}
+par(mfrow=c(10,10), mar = rep(0,4))
+for(i in 1:100){
+  gdm.model <- gdm_mods_adaptive[[i]] 
+  
+ # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  plotRGB(pcaRast, r=3, g=1, b=2)
+}
+```
+
+```{r}
+par(mfrow = c(1,3), pty="s")
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env1")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(1,0,0,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env2")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(0,0,1,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,60))
+axis(1)
+axis(2)
+title(xlab="Geo Dist")
+title(ylab="Partial Genetic Dist")
+box()
+range(gdm.model.splineDat_preCC$y[,"Geographic"])
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l", col =  rgb(0,0,0,alpha=0.3))
+  
+}
+
+
+```
+```{r, fig.width=5, fig.height=2, warning = FALSE}
+par(mfrow=c(1,3), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+mtext("Adaptive Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+
+```{r, fig.width=4.5, fig.height=4, warning = FALSE}
+library("colorspace")
+pcaRasts_mean <- stack(mean(pca1_rasts), mean(pca2_rasts), mean(pca3_rasts))
+pcaRasts_sd <- stack(calc(pca1_rasts, fun = sd), calc(pca2_rasts, fun = sd), calc(pca3_rasts, fun = sd))
+
+par(mfrow=c(2,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRasts_mean[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="Mean RGB Plot")
+mtext("Adaptive Loci GDM", outer = TRUE, cex = 1, line = 1)
+
+#par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+for(i in 1:3){
+  plot(pcaRasts_sd[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = sequential_hcl(palette = "Grays", n=100, rev=TRUE), main = paste0("SD PC",i), zlim = c(0,150))
+}
+plot(mean(pcaRasts_sd), box=FALSE, axes = FALSE, col=sequential_hcl(palette = "Grays", n=100, rev=TRUE), legend=FALSE, main = "Mean SD", zlim = c(0,150))
+
+```
+
+```{r warning=FALSE}
+pcavals <- values(pcaRasts_mean)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(1,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+#### PCA of PCs from GDM
+```{r PCA of PCs, warning = FALSE}
+#PCA on PCs from GDM
+pca2_rast1 <- rasterPCA(pca1_rasts)
+pca2_rast2<- rasterPCA(pca2_rasts)
+pca2_rast3 <- rasterPCA(pca3_rasts)
+
+pca2Rast <- stack(pca2_rast1$map[[1]], pca2_rast2$map[[1]], pca2_rast3$map[[1]])
+
+# scale rasters
+pca2Rast[[1]] <- (pca2Rast[[1]]-pca2Rast[[1]]@data@min) /
+  (pca2Rast[[1]]@data@max-pca2Rast[[1]]@data@min)*255
+pca2Rast[[2]] <- (pca2Rast[[2]]-pca2Rast[[2]]@data@min) /
+  (pca2Rast[[2]]@data@max-pca2Rast[[2]]@data@min)*255
+pca2Rast[[3]] <- (pca2Rast[[3]]-pca2Rast[[3]]@data@min) /
+  (pca2Rast[[3]]@data@max-pca2Rast[[3]]@data@min)*255
+
+```
+
+```{r, plot PC RGB plot, warning = FALSE}
+pcavals <- values(pca2Rast)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(2,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pca2Rast, r = 3, g = 1, b = 2)
+```
+
+
+```{r, fig.width = 9, fig.height=3}
+par(mfrow=c(1,3), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g, b, r) #same order as RGB plot
+
+for(i in 1:3){
+  plot(pca2Rast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("PC1 of PC",i))
+}
+mtext("Adaptive Loci", outer = TRUE, cex = 1.5, line = 1)
+
+```
+
+##GDM w/ neutral loci
+
+```{r}
+set.seed(42)
+
+s <- sample(1:nrow(gea_df), 1000, replace = F)
+Y <- gea_df[s, c(which(loci_df$trait1 == 0),which(loci_df$trait2 == 0))]
+Y <- as.matrix(Y)
+pc <- prcomp(Y)
+pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+
+site <- 1:nrow(pc_dist)
+gdmGen <- cbind(site, pc_dist)
+gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+
+gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+
+
+gdm.model <- gdm(gdmData, geo = TRUE)
+
+summary(gdm.model)
+```
+
+```{r}
+# Sum coefficients for each predictor (each has 3 splines)
+coeffs <- function(gdm.model){
+  coefSums <- c()
+  for (i in 1:length(gdm.model$predictors)){
+    j <- (i * 3) - 2
+    coefSums[i] <- sum(gdm.model$coefficients[j:(j+2)])
+  }
+  
+  # Add those values to a simple data frame
+  coeffs <- data.frame(predictor = gdm.model$predictors, coefficient = coefSums)
+  return(coeffs)
+}
+
+```
+
+```{r}
+predictors <- coeffs(gdm.model)
+predictors
+```
+
+```{r, fig.width = 3, fig.height = 3.5}
+# Transform GIS layers
+rastTrans <- gdm.transform(gdm.model, stack(env1,env2))
+rastDat <- na.omit(getValues(rastTrans))
+pcaSamp <- prcomp(rastDat)
+
+# note the use of the 'index' argument
+pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+
+# scale rasters
+pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+  (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+  (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+  (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+
+par(mfrow=c(3,2), mar = rep(0,4), pty="s")
+plotRGB(pcaRast, r=1, g=2, b=3)
+plotRGB(pcaRast, r=1, g=3, b=2)
+plotRGB(pcaRast, r=2, g=3, b=1)
+plotRGB(pcaRast, r=2, g=1, b=3)
+plotRGB(pcaRast, r=3, g=2, b=1)
+plotRGB(pcaRast, r=3, g=1, b=2)
+``` 
+
+```{r, fig.width=6, fig.height=2, warning = FALSE}
+par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("PC",i))
+}
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+mtext("Neutral Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+```{r, warning = FALSE, fig.width=8, fig.height=4}
+pcavals <- raster::extract(pcaRast, cbind(gea_df$x[s], gea_df$y[s]))
+
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+gen <- gea_df[,1:1000]
+pcgen <- prcomp(gen[s,c(which(loci_df$trait1 == 0), which(loci_df$trait2 == 0))])
+
+par(mfrow=c(1,2), pty = "s", mar = rep(4,4), oma = rep(0,4))
+plot(pcgen$x[,1], pcgen$x[,2], col = pcacols, pch = 19, xlab = "PC1", ylab = "PC2")
+plotRGB(pcaRast, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+#Multiple its viz
+```{r warning = FALSE}
+set.seed(42)
+its=100
+gdm_mods <- list()
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  set.seed(i)
+  
+  s <- sample(1:nrow(gea_df), 1000, replace = F)
+  Y <- gea_df[s, c(which(loci_df$trait1 == 0), which(loci_df$trait2 == 0))]
+  Y <- as.matrix(Y)
+  
+  pc <- prcomp(Y)
+  pc_dist <- as.matrix(dist(pc$x[,1:3], diag = TRUE, upper = TRUE))
+  
+  site <- 1:nrow(pc_dist)
+  gdmGen <- cbind(site, pc_dist)
+  gdmPred <- data.frame(site = site, latitude = gea_df$y[s], longitude = gea_df$x[s], env1 = gea_df$env1[s], env2 = gea_df$env2[s])
+  
+  gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "longitude", YColumn = "latitude", siteCol = "site")
+  
+  #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1)
+  range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+  if(max(gdmData$distance)){gdmData$distance <- range01(gdmData$distance)} 
+  
+  gdm.model <- gdm(gdmData, geo = TRUE)
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  predictors <- coeffs(gdm.model)
+  
+  if(0 %in% predictors[,2]){ 
+    print("Coeff = 0")
+    next 
+    }
+  
+  gdm_mods[[i]] <- gdm.model
+  
+  # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+  pcaRast_current <- pcaRast
+  
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+  
+  
+}
+
+gdm_mods_neutral <- gdm_mods
+gdm_mods <- gdm_mods_neutral
+```
+
+```{r warning = FALSE}
+pca1_rasts <- stack()
+pca2_rasts <- stack()
+pca3_rasts <- stack()
+
+for(i in 1:100){
+  gdm.model <- gdm_mods_adaptive[[i]] 
+  
+ # Transform GIS layers
+  env <- stack(env1,env2)
+  rastTrans <- gdm.transform(gdm.model, env)
+  rastDat <- na.omit(getValues(rastTrans))
+  pcaSamp <- prcomp(rastDat)
+  
+  # note the use of the 'index' argument
+  pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+  pcaRast_current <- pcaRast
+  
+  # scale rasters
+  pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
+    (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
+  pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
+    (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
+  pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
+    (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+  
+  pca1_rasts <- stack(pca1_rasts, pcaRast[[1]])
+  pca2_rasts <- stack(pca2_rasts, pcaRast[[2]])
+  pca3_rasts <- stack(pca3_rasts, pcaRast[[3]])
+}
+```
+
+```{r}
+par(mfrow = c(1,3), pty="s")
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env1")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(1,0,0,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env2")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(0,0,1,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,60))
+axis(1)
+axis(2)
+title(xlab="Geo Dist")
+title(ylab="Partial Genetic Dist")
+box()
+range(gdm.model.splineDat_preCC$y[,"Geographic"])
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l", col =  rgb(0,0,0,alpha=0.3))
+  
+}
+
+
+```
+```{r, fig.width=5, fig.height=2, warning = FALSE}
+par(mfrow=c(1,3), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRast[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+mtext("Neutral Loci", outer = TRUE, cex = 1, line = 1)
+mtext(paste0("GeoCoeff: ", round(predictors$coefficient[1],2),", EnvCoeff: ", round(predictors$coefficient[2],2)), 
+      outer = TRUE, cex = 0.7, line = 0)
+
+```
+
+```{r, fig.width=4.5, fig.height=4, warning = FALSE}
+library("colorspace")
+pcaRasts_mean <- stack(mean(pca1_rasts), mean(pca2_rasts), mean(pca3_rasts))
+pcaRasts_sd <- stack(calc(pca1_rasts, fun = sd), calc(pca2_rasts, fun = sd), calc(pca3_rasts, fun = sd))
+
+par(mfrow=c(2,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+
+b <- colorRampPalette(c("black", "#0000ff"))(100)
+g <- colorRampPalette(c("black", "#00ff00"))(100)
+r <- colorRampPalette(c("black", "#ff0000"))(100)
+pals <- list(g,b,r)
+
+for(i in 1:3){
+  plot(pcaRasts_mean[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = pals[[i]], main = paste0("Mean PC",i))
+}
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="Mean RGB Plot")
+mtext("Neutral Loci GDM", outer = TRUE, cex = 1, line = 1)
+
+#par(mfrow=c(1,4), mar = c(1,1,2,1), oma = c(0,0,3,0))
+for(i in 1:3){
+  plot(pcaRasts_sd[[i]], box = FALSE, axes = FALSE, legend = FALSE, col = sequential_hcl(palette = "Grays", n=100, rev=TRUE), main = paste0("SD PC",i), zlim = c(0,150))
+}
+plot(mean(pcaRasts_sd), box=FALSE, axes = FALSE, col=sequential_hcl(palette = "Grays", n=100, rev=TRUE), legend=FALSE, main = "Mean SD", zlim = c(0,150))
+
+```
+
+```{r warning=FALSE}
+pcavals <- values(pcaRasts_mean)
+pcacols <- c()
+for(i in 1:nrow(pcavals)){
+  pcacols[i] <- rgb(pcavals[,3][i], pcavals[,1][i], pcavals[,2][i], maxColorValue = 255) #r=3, g=1, b=2
+}
+
+par(pty="s", mar=rep(1,4), oma=rep(1,4), mfrow=c(1,2))
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+```{r}
+gen <- gea_df[,1:1000]
+genpc <- prcomp(gen[,c(which(loci_df$trait1==0),which(loci_df$trait2==0))])
+
+par(pty="s")
+plot(genpc$x[,1], genpc$x[,2], col = pcacols, pch = 19, xlab = "PC1", ylab = "PC2")
+```
+```{r, warning = FALSE, fig.width=9, fig.height=3}
+par(pty="s", mar=rep(4,4), oma=rep(0,4), mfrow=c(1,3))
+
+plot(genpc$x[,1], genpc$x[,2], col = pcacols, pch = 19, xlab = "PC1", ylab = "PC2")
+
+plot(values(env1), values(env2), col = pcacols, xlab = "", ylab = "", pch = 19, cex = 1, axes = FALSE)
+arrows(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5, 0.05)
+arrows(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1, 0.05)
+mtext(side = 4, text = "env1", line = 0, cex = 1)
+mtext(side = 3, text = "env2", line = 0, cex = 1)
+
+plotRGB(pcaRasts_mean, r=3, g=1, b=2, margins=TRUE, main="RGB Plot")
+```
+
+#Neutral/Adaptive/All comparison
+```{r}
+par(mfrow = c(1,3), pty="s")
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env1")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(1,0,0,alpha=0.3))
+  
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(0,0,1,alpha=0.3))
+  
+  gdm.model <- gdm_mods_all[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env1"], gdm.model.splineDat_preCC$y[,"env1"], lwd=1,
+  type="l", col = rgb(0,0,0,alpha=0.3))
+  
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env2")
+title(ylab="Partial Genetic Dist")
+box()
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(1,0,0,alpha=0.3))
+  
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(0,0,1,alpha=0.3))
+  
+  gdm.model <- gdm_mods_all[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"env2"], gdm.model.splineDat_preCC$y[,"env2"], lwd=1,
+  type="l", col = rgb(0,0,0,alpha=0.3))
+}
+
+plot.new()
+plot.window(ylim=c(0,0.8), xlim = c(0,60))
+axis(1)
+axis(2)
+title(xlab="Geo Dist")
+title(ylab="Partial Genetic Dist")
+box()
+range(gdm.model.splineDat_preCC$y[,"Geographic"])
+for (i in c(1:its)){
+  skip_to_next <- FALSE
+  
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l", col =  rgb(1,0,0,alpha=0.3))
+  
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l",  col =  rgb(0,0,1,alpha=0.3))
+  
+  gdm.model <- gdm_mods_all[[i]]
+  
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat_preCC <- isplineExtract(gdm.model)
+  
+  points(gdm.model.splineDat_preCC$x[,"Geographic"], gdm.model.splineDat_preCC$y[,"Geographic"], lwd=1,
+  type="l",  col =  rgb(0,0,0,alpha=0.3))
+  
+}
+
+
+```
+```{r fig.width = 9, fig.height=3}
+par(mfrow=c(1,3), pty="s")
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,60))
+axis(1)
+axis(2)
+title(xlab="Geo Dist")
+title(ylab="Partial Genetic Dist")
+box()
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"Geographic"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"Geographic"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(0,1,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(0, 1, 1, alpha=0.2), density = 100, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(0,1,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"Geographic"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"Geographic"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(1,0,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col=rgb(1,0,1,alpha=0.2), density = 100, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,0,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_all[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"Geographic"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"Geographic"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y<-geoymean
+#assume constant standard deviation across the 
+sd<-geoysd
+#determine error band
+psd<-y+2*sd
+nsd<-y-2*sd
+points(x, y, ty="l", col=rgb(1,1,0),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(1, 1, 0, alpha=0.2), density = 100, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,1,0),lwd=3)
+
+legend("topleft", c("all","neutral","adaptive"), col = c("yellow","cyan","magenta"), lwd = 2)
+
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env1")
+title(ylab="Partial Genetic Dist")
+box()
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env1"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env1"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(0,1,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(0, 1, 1, alpha=0.2), density = 200, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(0,1,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env1"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env1"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(1,0,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col=rgb(1,0,1,alpha=0.2), density = 200, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,0,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_all[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env1"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env1"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y<-geoymean
+#assume constant standard deviation across the 
+sd<-geoysd
+#determine error band
+psd<-y+2*sd
+nsd<-y-2*sd
+points(x, y, ty="l", col=rgb(1,1,0),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(1, 1, 0, alpha=0.2), density = 100, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,1,0),lwd=3)
+
+legend("topleft", c("all","neutral","adaptive"), col = c("yellow","cyan","magenta"), lwd = 2)
+
+
+plot.new()
+plot.window(ylim=c(0, 0.8), xlim = c(0,1))
+axis(1)
+axis(2)
+title(xlab="env2")
+title(ylab="Partial Genetic Dist")
+box()
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_neutral[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env2"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env2"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(0,1,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(0, 1, 1, alpha=0.2), density = 200, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(0,1,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_adaptive[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env2"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env2"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y <- geoymean
+#assume constant standard deviation across the 
+sd <- geoysd
+#determine error band
+psd <- y+2*sd
+nsd <- y-2*sd
+points(x, y, ty="l", col=rgb(1,0,1),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col=rgb(1,0,1,alpha=0.2), density = 200, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,0,1),lwd=3)
+
+geodfx <- cbind()
+geodfy <- cbind()
+for (i in c(1:99)){
+  gdm.model <- gdm_mods_all[[i]]
+  
+  skip_to_next <- FALSE
+  tryCatch(isplineExtract(gdm.model), error = function(e) { skip_to_next <<- TRUE})
+  if(skip_to_next) { print(paste0("Could not fit GDM (seed =", i, ")")) } 
+  if(skip_to_next) { next } 
+  
+  
+  gdm.model.splineDat <- isplineExtract(gdm.model)
+  geodfx <- cbind(geodfx, gdm.model.splineDat$x[,"env2"])
+  geodfy <- cbind(geodfy, gdm.model.splineDat$y[,"env2"])
+}
+geoxmean <- apply(geodfx, 1, mean)
+geoymean <- apply(geodfy, 1, mean)
+geoxsd <- apply(geodfx, 1, sd)
+geoysd <- apply(geodfy, 1, sd)
+
+x <- geoxmean
+y<-geoymean
+#assume constant standard deviation across the 
+sd<-geoysd
+#determine error band
+psd<-y+2*sd
+nsd<-y-2*sd
+points(x, y, ty="l", col=rgb(1,1,0),lty=1,lwd=3, ylim = c(0,0.8))
+#draw boundary and fill
+lines(x, psd)
+lines(x, nsd)
+polygon(x=c(x, rev(x)), y=c(psd, rev(nsd)), col= rgb(1, 1, 0, alpha=0.2), density = 100, angle=90)
+#redraw line on top
+lines(x, y, col=rgb(1,1,0),lwd=3)
+
+legend("topleft", c("all","neutral","adaptive"), col = c("yellow","cyan","magenta"), lwd = 2)
+
+
+rm(sd)
+```
+
+##LFMM
+
+```{r}
+Y <- gea_df[,1:1000]
+pc <- prcomp(Y)
+plot(pc$sdev[1:20]^2, xlab = 'PC', ylab = "Variance explained")
+#points(6,pc$sdev[6]^2, type = "h", lwd = 3, col = "blue")
+```
+
+#env1
+```{r}
+Y = as.matrix(gea_df[,1:10000])
+s <- sample(1:nrow(gea_df), 3000, replace = FALSE) 
+Y = Y[s,]
+X = as.matrix(gea_df$env1[s])
+lfmm_mod <- lfmm_ridge(Y, X, K = 10) 
+```
+
+```{r}
+## performs association testing using the fitted model:
+pv <- lfmm_test(Y = Y, 
+                X = X, 
+                lfmm = lfmm_mod, 
+                calibrate = "gif")
+
+sum(pv$pvalue < 0.05)
+sum(pv$calibrated.pvalue < 0.05)
+
+#number of true positives
+sum(which(pv$calibrated.pvalue < 0.05) %in% which(loci_df$trait1 == 1))
+sum(which(pv$pvalue < 0.05) %in% which(loci_df$trait1 == 1))
+
+#number of false positives
+sum(which(pv$calibrated.pvalue < 0.05) %in% which(loci_df$trait1 == 0))
+sum(which(pv$pvalue < 0.05) %in% which(loci_df$trait1 == 0))
+
+#number of false negatives
+sum(which(pv$calibrated.pvalue > 0.05) %in% which(loci_df$trait1 == 1))
+sum(which(pv$pvalue > 0.05) %in%  which(loci_df$trait1 == 1))
+
+#number of true negatives
+sum(which(pv$calibrated.pvalue > 0.05) %in% which(loci_df$trait1 == 0))
+sum(which(pv$pvalue > 0.05) %in% which(loci_df$trait1 == 0))
+```
+
+```{r}
+pvalues <- pv$calibrated.pvalue 
+qqplot(rexp(length(pvalues), rate = log(10)),
+       -log10(pvalues), xlab = "Expected quantile",
+       pch = 19, cex = .4)
+abline(0,1)
+```
+
+
+```{r, fig.width=5, fig.height=5}
+pal <- wes_palette("GrandBudapest2", 4, type = c("discrete"))
+par(pty="s")
+## Manhattan plot
+plot(-log10(pvalues), 
+      pch = 19, 
+      cex = .2, 
+      xlab = "SNP", ylab = "-Log P",
+      col = "grey",
+      main = "env1 LFMM")
+
+points(which(loci_df$trait1 == 1), 
+      -log10(pvalues)[which(loci_df$trait1 == 1)], 
+      col = "red", 
+      cex = 1.5)
+
+points(which(loci_df$trait2 == 1), 
+      -log10(pvalues)[which(loci_df$trait2 == 1)], 
+      col = "blue", 
+      cex = 1.5)
+
+points(which(pvalues < 0.05/1000),
+       -log10(pvalues)[which(pvalues < 0.05/1000)], 
+       type = "h", 
+       col = pal[4],
+       lty = "solid",
+       lwd = 3)
+
+legend("topleft",
+       legend = c("env1 SNP", "env2 SNP", "p < 0.00005"),
+       col = c("red", "blue", pal[4]),
+       lwd = c(NA, NA, 3),
+       pch = c(1, 1, NA),
+       cex = 0.6)
+
+```
+
+#env2
+```{r}
+Y = as.matrix(gea_df[,1:10000])
+s <- sample(1:nrow(gea_df), 3000, replace = FALSE) 
+Y = Y[s,]
+X = as.matrix(gea_df$env2[s])
+lfmm_mod <- lfmm_ridge(Y, X, K = 10) 
+```
+
+```{r}
+## performs association testing using the fitted model:
+pv <- lfmm_test(Y = Y, 
+                X = X, 
+                lfmm = lfmm_mod, 
+                calibrate = "gif")
+
+sum(pv$pvalue < 0.05)
+sum(pv$calibrated.pvalue < 0.05)
+
+#number of true positives
+sum(which(pv$calibrated.pvalue < 0.05) %in% which(loci_df$trait1 == 1))
+sum(which(pv$pvalue < 0.05) %in% which(loci_df$trait1 == 1))
+
+#number of false positives
+sum(which(pv$calibrated.pvalue < 0.05) %in% which(loci_df$trait1 == 0))
+sum(which(pv$pvalue < 0.05) %in% which(loci_df$trait1 == 0))
+
+#number of false negatives
+sum(which(pv$calibrated.pvalue > 0.05) %in% which(loci_df$trait1 == 1))
+sum(which(pv$pvalue > 0.05) %in%  which(loci_df$trait1 == 1))
+
+#number of true negatives
+sum(which(pv$calibrated.pvalue > 0.05) %in% which(loci_df$trait1 == 0))
+sum(which(pv$pvalue > 0.05) %in% which(loci_df$trait1 == 0))
+```
+
+```{r}
+pvalues <- pv$calibrated.pvalue 
+qqplot(rexp(length(pvalues), rate = log(10)),
+       -log10(pvalues), xlab = "Expected quantile",
+       pch = 19, cex = .4)
+abline(0,1)
+```
+
+
+```{r, fig.width=5, fig.height=5}
+pal <- wes_palette("GrandBudapest2", 4, type = c("discrete"))
+par(pty="s")
+## Manhattan plot
+pal <- wes_palette("GrandBudapest2", 4, type = c("discrete"))
+par(pty="s")
+## Manhattan plot
+plot(-log10(pvalues), 
+      pch = 19, 
+      cex = .2, 
+      xlab = "SNP", ylab = "-Log P",
+      col = "grey",
+      main = "env2 LFMM")
+
+points(which(loci_df$trait1 == 1), 
+      -log10(pvalues)[which(loci_df$trait1 == 1)], 
+      col = "red", 
+      cex = 1.5)
+
+points(which(loci_df$trait2 == 1), 
+      -log10(pvalues)[which(loci_df$trait2 == 1)], 
+      col = "blue", 
+      cex = 1.5)
+
+points(which(pvalues < 0.05/1000),
+       -log10(pvalues)[which(pvalues < 0.05/1000)], 
+       type = "h", 
+       col = pal[4],
+       lty = "solid",
+       lwd = 3)
+
+legend("bottomleft",
+       legend = c("env1 SNP", "env2 SNP", "p < 0.00005"),
+       col = c("red", "blue", pal[4]),
+       lwd = c(NA, NA, 3),
+       pch = c(1, 1, NA),
+       cex = 0.6)
+
+
+```
+
+##RDA
+##RDA just env
+```{r RDA mod}
+set.seed(42)
+#Take sample of inds for large pop (>1000 inds)
+if(nrow(gea_df) > 1000){
+  s <- sample(nrow(gea_df), 1000, replace = FALSE)
+  gea_df <- gea_df[s,]
+  } 
+
+mod <- rda(gea_df[, 1:1000] ~ env1 + env2, data=gea_df, scale=T)
+```
+
+```{r RDA plots, fig.width=9, fig.height=5}
+
+col0 <- loci_df$trait1 == 1
+col0[col0 == T] <- "red"
+col0[col0 == F] <- rgb(0,1,0, alpha=0)
+
+col1 <- loci_df$trait2 == 1
+col1[col1== T] <- "blue"
+col1[col1 == F] <- rgb(0,1,0, alpha=0)
+
+
+#This adds a column of color values based on the y values
+colz <- palz[as.numeric(cut(gea_df$env1+gea_df$env2,breaks = 100))]
+
+par(pty="s", mar=rep(1,4), mfrow=c(1,2), oma = rep(1,4))
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+legend("bottomleft", legend = c("Neutral SNPs", "env1 SNPs", "env2 SNPs", "Individuals"), 
+       pch = c(3,3,3,1), col=c("gray", "red", "blue", "black"), cex = 0.8)
+
+
+plot(env1+env2, col = palz, box = FALSE, axes = FALSE, legend.width=2, main = "env1 + env2")
+
+```
+##RDA w/ y x
+
+###env1
+
+```{r RDA mod}
+#Take sample of inds for large pop (>1000 inds)
+if(nrow(gea_df) > 1000){
+  s <- sample(nrow(gea_df), 1000, replace = FALSE)
+  gea_df <- gea_df[s,]
+  } 
+
+mod <- rda(gea_df[, 1:1000] ~ env1 + y + x, data=gea_df, scale=T)
+```
+
+```{r mod summary/RSQ}
+mod
+RsquareAdj(mod)
+```
+
+```{r screeplot}
+screeplot(mod)
+```
+
+```{r signif full model}
+signif.full <- anova.cca(mod, parallel=getOption("mc.cores")) # default is permutation=999
+signif.full
+```
+
+```{r signif vars}
+signif.axis <- anova.cca(mod, by="axis", parallel=getOption("mc.cores"))
+signif.axis
+```
+
+```{r}
+vif.cca(mod)
+```
+
+```{r RDA plots, fig.width=10, fig.height=3}
+
+col0 <- loci_df$trait1 == 1
+col0[col0 == T] <- "blue"
+col0[col0 == F] <- rgb(0,1,0, alpha=0)
+
+#Create a function to generate a continuous color palette
+pal <- wes_palette("Zissou1", 100, type = c("continuous"))
+#This adds a column of color values based on the y values
+colz <- pal[as.numeric(cut(gea_df$env1,breaks = 100))]
+
+par(pty="s", mar=rep(1,4), mfrow=c(1,4))
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(1,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,3))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA3", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(2,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(2,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(2,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(2,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(2,3))
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(1,4))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,4)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,4)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,4))
+legend("topright", legend = c("Neutral SNPs", "Adaptive SNPs", "Individuals"), 
+       pch = c(3,3,1), col=c("gray", "blue", "black"), cex = 0.8)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA4", line = 0, col = "gray", cex = 0.8)
+
+```
+```{r}
+#export mod data
+sm <- summary(mod)
+write.csv(sm$species, here("outputs", "loci_RDA.csv")) #species are loci
+write.csv(sm$sites, here("outputs", "inds_RDA.csv")) #sites are inds
+write.csv(sm$biplot, here("outputs", "vars_RDA.csv")) #biplot are variable loadings
+
+```
+
+###detecting adaptive SNPs
+```{r}
+load.rda <- scores(mod, choices=c(1:4), display="species") 
+```
+
+```{r}
+outliers <- function(x,z){
+  lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
+  x[x < lims[1] | x > lims[2]]               # locus names in these tails
+}
+```
+
+```{r}
+z = 2
+cand1 <- outliers(load.rda[,1], z = z) 
+cand2 <- outliers(load.rda[,2], z = z)
+cand3 <- outliers(load.rda[,3], z = z)
+cand4 <- outliers(load.rda[,4], z = z)
+
+ncand <- length(cand1) + length(cand2) + length(cand3) + length(cand4)
+ncand
+```
+
+```{r}
+cand1 <- cbind.data.frame(rep(1,times=length(cand1)), names(cand1), unname(cand1))
+cand2 <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
+cand3 <- cbind.data.frame(rep(2,times=length(cand3)), names(cand3), unname(cand3))
+cand4 <- cbind.data.frame(rep(2,times=length(cand4)), names(cand4), unname(cand4))
+
+colnames(cand1) <- colnames(cand2) <- colnames(cand3) <- colnames(cand4) <- c("axis","snp","loading")
+
+cand <- rbind(cand1, cand2, cand3, cand4)
+cand$snp <- as.character(cand$snp)
+```
+
+```{r compare to actual adaptive loci}
+rda_loci <- as.numeric(gsub("X", "", cand$snp))
+sum(which(loci_df$trait1 == 1) %in% rda_loci)
+sum(which(loci_df$trait1 == 0) %in% rda_loci)
+
+```
+
+###env2
+
+```{r RDA mod}
+#Take sample of inds for large pop (>1000 inds)
+if(nrow(gea_df) > 1000){
+  s <- sample(nrow(gea_df), 1000, replace = FALSE)
+  gea_df <- gea_df[s,]
+  } 
+
+mod <- rda(gea_df[, 1:1000] ~ env2 + y + x, data=gea_df, scale=T)
+```
+
+```{r mod summary/RSQ}
+mod
+RsquareAdj(mod)
+```
+
+```{r screeplot}
+screeplot(mod)
+```
+
+```{r signif full model}
+signif.full <- anova.cca(mod, parallel=getOption("mc.cores")) # default is permutation=999
+signif.full
+```
+
+```{r signif vars}
+signif.axis <- anova.cca(mod, by="axis", parallel=getOption("mc.cores"))
+signif.axis
+```
+
+```{r}
+vif.cca(mod)
+```
+
+```{r RDA plots, fig.width=10, fig.height=3}
+
+col0 <- loci_df$trait2 == 1
+col0[col0 == T] <- "blue"
+col0[col0 == F] <- rgb(0,1,0, alpha=0)
+
+#Create a function to generate a continuous color palette
+pal <- wes_palette("Zissou1", 100, type = c("continuous"))
+#This adds a column of color values based on the y values
+colz <- pal[as.numeric(cut(gea_df$env2,breaks = 100))]
+
+par(pty="s", mar=rep(1,4), mfrow=c(1,4))
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(1,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,3))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA3", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(2,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(2,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(2,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(2,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(2,3))
+
+plot(mod, type="n", scaling=3, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), axes = F, xlab= "", ylab= "", choices = c(1,4))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,4)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,4)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,4))
+legend("topright", legend = c("Neutral SNPs", "Adaptive SNPs", "Individuals"), 
+       pch = c(3,3,1), col=c("gray", "blue", "black"), cex = 0.8)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA4", line = 0, col = "gray", cex = 0.8)
+
+```
+```{r}
+#export mod data
+sm <- summary(mod)
+write.csv(sm$species, here("outputs", "loci_RDA.csv")) #species are loci
+write.csv(sm$sites, here("outputs", "inds_RDA.csv")) #sites are inds
+write.csv(sm$biplot, here("outputs", "vars_RDA.csv")) #biplot are variable loadings
+
+```
+
+###detecting adaptive SNPs
+```{r}
+load.rda <- scores(mod, choices=c(1:4), display="species") 
+```
+
+```{r}
+outliers <- function(x,z){
+  lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
+  x[x < lims[1] | x > lims[2]]               # locus names in these tails
+}
+```
+
+```{r}
+z = 2
+cand1 <- outliers(load.rda[,1], z = z) 
+cand2 <- outliers(load.rda[,2], z = z)
+cand3 <- outliers(load.rda[,3], z = z)
+cand4 <- outliers(load.rda[,4], z = z)
+
+ncand <- length(cand1) + length(cand2) + length(cand3) + length(cand4)
+ncand
+```
+
+```{r}
+cand1 <- cbind.data.frame(rep(1,times=length(cand1)), names(cand1), unname(cand1))
+cand2 <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
+cand3 <- cbind.data.frame(rep(2,times=length(cand3)), names(cand3), unname(cand3))
+cand4 <- cbind.data.frame(rep(2,times=length(cand4)), names(cand4), unname(cand4))
+
+colnames(cand1) <- colnames(cand2) <- colnames(cand3) <- colnames(cand4) <- c("axis","snp","loading")
+
+cand <- rbind(cand1, cand2, cand3, cand4)
+cand$snp <- as.character(cand$snp)
+```
+
+```{r compare to actual adaptive loci}
+rda_loci <- as.numeric(gsub("X", "", cand$snp))
+sum(which(loci_df$trait1 == 1) %in% rda_loci)
+sum(which(loci_df$trait1 == 0) %in% rda_loci)
+
+```
+
+###env1/1
+
+```{r RDA mod}
+#Take sample of inds for large pop (>1000 inds)
+if(nrow(gea_df) > 1000){
+  s <- sample(nrow(gea_df), 1000, replace = FALSE)
+  gea_df <- gea_df[s,]
+  } 
+
+mod <- rda(gea_df[, 1:1000] ~ env1 + env2 + y + x, data=gea_df, scale=T)
+```
+
+```{r mod summary/RSQ}
+mod
+RsquareAdj(mod)
+```
+
+```{r screeplot}
+screeplot(mod)
+```
+
+```{r signif full model}
+signif.full <- anova.cca(mod, parallel=getOption("mc.cores")) # default is permutation=999
+signif.full
+```
+
+```{r signif vars}
+signif.axis <- anova.cca(mod, by="axis", parallel=getOption("mc.cores"))
+signif.axis
+```
+
+```{r}
+vif.cca(mod)
+```
+
+```{r RDA plots, fig.width=9, fig.height=3}
+
+col0 <- loci_df$trait1 == 1
+col0[col0 == T] <- "red"
+col0[col0 == F] <- rgb(0,1,0, alpha=0)
+
+col1 <- loci_df$trait2 == 1
+col1[col1== T] <- "blue"
+col1[col1 == F] <- rgb(0,1,0, alpha=0)
+
+
+#This adds a column of color values based on the y values
+colz <- palz[as.numeric(cut(gea_df$env1+gea_df$env2,breaks = 100))]
+
+par(pty="s", mar=rep(1,4), mfrow=c(1,4), oma = rep(1,4))
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,3))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA3", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,4))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,4)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,4)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,4))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA4", line = 0, col = "gray", cex = 0.8)
+
+legend("bottomright", legend = c("Neutral SNPs", "env1 SNPs", "env2 SNPs", "Individuals"), 
+       pch = c(3,3,3,1), col=c("gray", "red", "blue", "black"), cex = 0.8)
+
+
+plot(env1+env2, col = palz, box = FALSE, axes = FALSE, legend.width=2, main = "env1 + env2")
+
+```
+
+```{r RDA plots, fig.width=10, fig.height=6}
+
+col0 <- loci_df$trait1 == 1
+col0[col0 == T] <- "red"
+col0[col0 == F] <- rgb(0,1,0, alpha=0)
+
+col1 <- loci_df$trait2 == 1
+col1[col1== T] <- "blue"
+col1[col1 == F] <- rgb(0,1,0, alpha=0)
+
+
+#This adds a column of color values based on the y values
+colz <- pal0[as.numeric(cut(gea_df$env1,breaks = 11))]
+
+par(pty="s", mar=rep(2,4), mfrow=c(2,4), oma = rep(2,4))
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,3))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA3", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,4))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,4)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,4)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,4))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA4", line = 0, col = "gray", cex = 0.8)
+
+legend("bottomright", legend = c("Neutral SNPs", "env1 SNPs", "env2 SNPs", "Individuals"), 
+       pch = c(3,3,3,1), col=c("gray", "red", "blue", "black"), cex = 0.8)
+
+
+plot(env1, col = pal0, box = FALSE, axes = FALSE, legend.width=2, main = "env1")
+
+#Create a function to generate a continuous color palette
+pal <- wes_palette("Zissou1", 100, type = c("continuous"))
+#This adds a column of color values based on the y values
+colz <- pal1[as.numeric(cut(gea_df$env2,breaks = 11))]
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), xlab= "", axes = F, ylab= "")
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2)
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA2", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,3))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,3)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,3)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,3)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,3))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA3", line = 0, col = "gray", cex = 0.8)
+
+plot(mod, type="n", scaling=3, xlim=c(-2,2), ylim=c(-2,2), axes = F, xlab= "", ylab= "", choices = c(1,4))
+points(mod, display="species", cex=0.75, col="gray", scaling=3, pch=3, choices = c(1,4)) #"species" are loci
+points(mod, display="sites", cex=1, col=colz, scaling=3, pch=1, choices = c(1,4)) #"sites" are individuals
+points(mod, display="species", cex=1, col=col0, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+points(mod, display="species", cex=1, col=col1, scaling=3, pch=3, lwd=2, choices = c(1,4)) #"species" are loci
+text(mod, scaling=3, display="bp", col="black", cex=1, lwd=2, choices = c(1,4))
+mtext(side = 1, text = "RDA1", line = 0, col = "gray", cex = 0.8)
+mtext(side = 2, text = "RDA4", line = 0, col = "gray", cex = 0.8)
+
+legend("bottomright", legend = c("Neutral SNPs", "env1 SNPs", "env2 SNPs", "Individuals"), 
+       pch = c(3,3,3,1), col=c("gray", "red", "blue", "black"), cex = 0.8)
+
+plot(env2, col = pal1, box = FALSE, axes = FALSE, legend.width=2, main = "env2")
+
+title("Individuals color coded by env1", line = -1, adj = 0.01, outer = TRUE, col = "dark gray")
+title("Individuals color coded by env2", line = -22, adj = 0.01, outer = TRUE, col = "dark gray")
+```
+```{r}
+#export mod data
+sm <- summary(mod)
+write.csv(sm$species, here("outputs", "loci_RDA.csv")) #species are loci
+write.csv(sm$sites, here("outputs", "inds_RDA.csv")) #sites are inds
+write.csv(sm$biplot, here("outputs", "vars_RDA.csv")) #biplot are variable loadings
+
+```
+
+###detecting adaptive SNPs
+```{r}
+load.rda <- scores(mod, choices=c(1:4), display="species") 
+```
+
+```{r}
+outliers <- function(x,z){
+  lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
+  x[x < lims[1] | x > lims[2]]               # locus names in these tails
+}
+```
+
+```{r}
+z = 2
+cand1 <- outliers(load.rda[,1], z = z) 
+cand2 <- outliers(load.rda[,2], z = z)
+cand3 <- outliers(load.rda[,3], z = z)
+cand4 <- outliers(load.rda[,4], z = z)
+
+ncand <- length(cand1) + length(cand2) + length(cand3) + length(cand4)
+ncand
+```
+
+```{r}
+cand1 <- cbind.data.frame(rep(1,times=length(cand1)), names(cand1), unname(cand1))
+cand2 <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
+cand3 <- cbind.data.frame(rep(2,times=length(cand3)), names(cand3), unname(cand3))
+cand4 <- cbind.data.frame(rep(2,times=length(cand4)), names(cand4), unname(cand4))
+
+colnames(cand1) <- colnames(cand2) <- colnames(cand3) <- colnames(cand4) <- c("axis","snp","loading")
+
+cand <- rbind(cand1, cand2, cand3, cand4)
+cand$snp <- as.character(cand$snp)
+```
+
+```{r compare to actual adaptive loci}
+rda_loci <- as.numeric(gsub("X", "", cand$snp))
+sum(which(loci_df$trait1 == 1) %in% rda_loci)
+sum(which(loci_df$trait1 == 0) %in% rda_loci)
+
+```
