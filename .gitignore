@@ -1,3 +1,7 @@
+#Ignore all vcf and csv files 
+.vcf
+.csv
+
 # History files
 .Rhistory
 .Rapp.history
