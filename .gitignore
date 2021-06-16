@@ -5,6 +5,9 @@
 #Ignore data
 /data
 
+#Dstore
+.DS_Store
+
 # History files
 .Rhistory
 .Rapp.history
