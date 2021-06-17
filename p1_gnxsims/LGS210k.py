@@ -523,7 +523,7 @@ for K in [5]:
             print(params)
             
             #make our params dict into a proper Geonomics ParamsDict object
-            mod_name = "2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
+            mod_name = "10k_2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
             print(mod_name)
             params = gnx.make_params_dict(params, mod_name)
             #then use it to make a model

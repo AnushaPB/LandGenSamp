@@ -283,7 +283,7 @@ params = {
                     #file defining custom genomic arch
                     'gen_arch_file':            None,
                     #num of loci
-                    'L':                        10000,
+                    'L':                        100000,
                     #num of chromosomes (doesn't matter when there is no linkage)
                     'l_c':                      [1],
                     #starting allele frequency (None to draw freqs randomly)
@@ -403,7 +403,7 @@ params = {
         #total Model runtime (in timesteps)
         'T':            1100,
         #min burn-in runtime (in timesteps)
-        'burn_T':       100000,
+        'burn_T':       100,
         #seed number
         'num':          42,
         #time step interval for simplication of tskit tables
@@ -530,7 +530,7 @@ for K in [5]:
             mod = gnx.make_model(parameters=params, verbose=True)
             
             #burn-in model
-            mod.walk(T=100000, mode='burn')
+            mod.walk(T=10000, mode='burn')
                                                                                                                            
             #save and print all of the non-neutral loci
             loci_df = pd.DataFrame()
