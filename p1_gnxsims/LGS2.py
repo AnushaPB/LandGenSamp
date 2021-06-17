@@ -18,7 +18,7 @@ unifenv = make_unif_array(41)
 #Params to define
 ##K_factor = K
 K = 0
-##movement_distance_distr_param2 = md/dispersal_distance_distr_param2 = dd
+##movement_distance_distr_param1 = md/dispersal_distance_distr_param1 = dd
 m = 0
 ##phi = phi
 phi = 0
@@ -331,11 +331,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               4,          
+                            'n_loci':               2,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.25,
+                            'alpha_distr_mu' :      0.5,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -356,11 +356,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               4,          
+                            'n_loci':               2,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.25,
+                            'alpha_distr_mu' :      0.5,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -403,7 +403,7 @@ params = {
         #total Model runtime (in timesteps)
         'T':            1100,
         #min burn-in runtime (in timesteps)
-        'burn_T':       100000,
+        'burn_T':       10000,
         #seed number
         'num':          42,
         #time step interval for simplication of tskit tables
@@ -498,7 +498,7 @@ params = {
 
 #TESTING LOOP WILL PARALLELIZE LATER
 for K in [5]:
-  for phi in [0.05]:
+  for phi in [0.5]:
     for m in[0.25]:
       for seed in [1]:
         for H in [0.5]:
@@ -523,14 +523,14 @@ for K in [5]:
             print(params)
             
             #make our params dict into a proper Geonomics ParamsDict object
-            mod_name = "K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
+            mod_name = "2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
             print(mod_name)
             params = gnx.make_params_dict(params, mod_name)
             #then use it to make a model
             mod = gnx.make_model(parameters=params, verbose=True)
             
             #burn-in model
-            mod.walk(T=100000, mode='burn')
+            mod.walk(T=10000, mode='burn')
                                                                                                                            
             #save and print all of the non-neutral loci
             loci_df = pd.DataFrame()
