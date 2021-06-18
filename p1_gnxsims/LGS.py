@@ -498,7 +498,7 @@ params = {
 
 #TESTING LOOP WILL PARALLELIZE LATER
 for K in [5]:
-  for phi in [0.05]:
+  for phi in [0.1]:
     for m in[0.25]:
       for seed in [1]:
         for H in [0.5]:
@@ -518,6 +518,7 @@ for K in [5]:
             params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
             params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
             params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
+            params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
             
             #print params to confirm proper params were used (in output)
             print(params)
