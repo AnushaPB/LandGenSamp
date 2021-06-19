@@ -18,7 +18,7 @@ unifenv = make_unif_array(41)
 #Params to define
 ##K_factor = K
 K = 0
-##movement_distance_distr_param2 = md/dispersal_distance_distr_param2 = dd
+##movement_distance_distr_param1 = md/dispersal_distance_distr_param1 = dd
 m = 0
 ##phi = phi
 phi = 0
@@ -247,18 +247,18 @@ params = {
                     'direction_distr_mu':                   1,
                     #concentration of distr of movement direction
                     'direction_distr_kappa':                0,
-                    #1st param of distr of movement distance
-                    'movement_distance_distr_param1':       0, 
-                    #2nd param of distr of movement distance 
-                    'movement_distance_distr_param2':       m,
-                    #movement distance distr to use 
-                    'movement_distance_distr':              'lognormal',
+                    #1st param of distr of movement distance  (mean)       
+                    'movement_distance_distr_param1':       m, 
+                    #2nd param of distr of movement distance (variance)
+                    'movement_distance_distr_param2':       5e-8,
+                    #movement distance distr to use ('levy' or 'wald')
+                    'movement_distance_distr':              'levy',
                     #1st param of distr of dispersal distance
-                    'dispersal_distance_distr_param1':      0,
+                    'dispersal_distance_distr_param1':      m,
                     #2nd param of distr of dispersal distance
-                    'dispersal_distance_distr_param2':      m,
-                    #dispersal distance distr to use 
-                    'dispersal_distance_distr':             'lognormal',
+                    'dispersal_distance_distr_param2':      5e-14,
+                    #dispersal distance distr to use ('levy' or 'wald')
+                    'dispersal_distance_distr':             'levy',
                     'move_surf'     : {
                         #move-surf Layer name
                         'layer':                'lyr_0',
@@ -284,8 +284,8 @@ params = {
                     'gen_arch_file':            None,
                     #num of loci
                     'L':                        10000,
-                    #num of chromosomes (doesn't matter when there is no linkage)
-                    'l_c':                      [1],
+                    #num of chromosomes
+                    'l_c':                      [100],
                     #starting allele frequency (None to draw freqs randomly)
                     'start_p_fixed':            0.5,
                     #whether to start neutral locus freqs at 0
@@ -298,8 +298,8 @@ params = {
                     'delet_alpha_distr_shape':  0.2,
                     #scale of distr of deleterious effect sizes
                     'delet_alpha_distr_scale':  0.2,
-                    #alpha of distr of recomb rates (default = 0.5 = unlinked)
-                    'r_distr_alpha':            0.5, 
+                    #alpha of distr of recomb rates
+                    'r_distr_alpha':            None,
                     #beta of distr of recomb rates
                     'r_distr_beta':             None,
                     #whether loci should be dominant (for allele '1')
@@ -331,11 +331,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               2,          
+                            'n_loci':               4,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.5,
+                            'alpha_distr_mu' :      0.25,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -356,11 +356,11 @@ params = {
                             #polygenic selection coefficient    
                             'phi':                  phi,       
                             #number of loci underlying trait    
-                            'n_loci':               2,          
+                            'n_loci':               4,          
                             #mutation rate at loci underlying trait
                             'mu':                   0,
                             #mean of distr of effect sizes
-                            'alpha_distr_mu' :      0.5,
+                            'alpha_distr_mu' :      0.25,
                             #variance of distr of effect size
                             'alpha_distr_sigma':    0,
                             #max allowed magnitude for an alpha value
@@ -401,7 +401,7 @@ params = {
 #-------------#
     'model': {
         #total Model runtime (in timesteps)
-        'T':            1100,
+        'T':            1001,
         #min burn-in runtime (in timesteps)
         'burn_T':       100,
         #seed number
@@ -499,31 +499,31 @@ params = {
 #TESTING LOOP WILL PARALLELIZE LATER
 for K in [5]:
   for phi in [0.5]:
-    for m in[0.25]:
+    for m in[1]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
             #directory where input/output data will be stored (scratch)
-            dir = "/global/scratch/anushabishop/LandGenSamp/p1_gnxsims/"
+            dir = "/global/scratch/anushabishop/LGS/"
             #note: currently gnx dumps output files where the script is run
             
             #get env layers
-            env1 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env1_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
-            env2 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env2_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
+            env1 = np.genfromtxt(dir+"MNLM/seed"+str(seed)+"_env1_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
+            env2 = np.genfromtxt(dir+"MNLM/seed"+str(seed)+"_env2_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
             
             #redefine params
             params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
             params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
             params['comm']['species']['spp_0']['init']['K_factor'] = K
-            params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
-            params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
+            params['comm']['species']['spp_0']['movement']['movement_distance_distr_param1'] = m
+            params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param1'] = m
             params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
             
             #print params to confirm proper params were used (in output)
             print(params)
             
             #make our params dict into a proper Geonomics ParamsDict object
-            mod_name = "10k_2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
+            mod_name = "mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
             print(mod_name)
             params = gnx.make_params_dict(params, mod_name)
             #then use it to make a model
@@ -541,4 +541,5 @@ for K in [5]:
             print(mod.comm[0].gen_arch.nonneut_loci)
                                                                                                                            
             #run the model for 1000 steps
-            mod.walk(1001)
+            mod.walk(1000)
+            

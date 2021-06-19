@@ -1,0 +1,4422 @@
+]0;IPython: anushabishop/yosemite
+
+NOTE: No display found. Using non-interactive Agg backend
+
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES Sceloporus graciosus...
+
+			making genomic architecture...
+
+			making individuals...
+
+			making movement surface...
+				[can take a bit]
+
+			setting up species changes...
+				[can take a while,
+				 if movement or dispersal
+				 surfaces will change]
+
+
+
+No mod.burn_fn_queue was found. Running mod.reset()...
+
+
+Creating the burn-in function queue...
+
+
+Creating the main function queue...
+
+
+burn:	it=-1:	t=0
+	species: Sceloporus graciosus          N=50000	(births=15464	deaths=2)
+
+	........................................................................
+burn:	it=-1:	t=1
+	species: Sceloporus graciosus          N=65462	(births=20472	deaths=76)
+
+	........................................................................
+burn:	it=-1:	t=2
+	species: Sceloporus graciosus          N=85858	(births=26837	deaths=652)
+
+	........................................................................
+burn:	it=-1:	t=3
+	species: Sceloporus graciosus          N=112043	(births=35256	deaths=1529)
+
+	........................................................................
+burn:	it=-1:	t=4
+	species: Sceloporus graciosus          N=145770	(births=45294	deaths=3653)
+
+	........................................................................
+burn:	it=-1:	t=5
+	species: Sceloporus graciosus          N=187411	(births=58994	deaths=9738)
+
+	........................................................................
+burn:	it=-1:	t=6
+	species: Sceloporus graciosus          N=236667	(births=73037	deaths=21932)
+
+	........................................................................
+burn:	it=-1:	t=7
+	species: Sceloporus graciosus          N=287772	(births=89947	deaths=44014)
+
+	........................................................................
+burn:	it=-1:	t=8
+	species: Sceloporus graciosus          N=333705	(births=104949	deaths=104044)
+
+	........................................................................
+burn:	it=-1:	t=9
+	species: Sceloporus graciosus          N=334610	(births=104762	deaths=78057)
+
+	........................................................................
+burn:	it=-1:	t=10
+	species: Sceloporus graciosus          N=361315	(births=113387	deaths=98769)
+
+	........................................................................
+burn:	it=-1:	t=11
+	species: Sceloporus graciosus          N=375933	(births=117170	deaths=110097)
+
+	........................................................................
+burn:	it=-1:	t=12
+	species: Sceloporus graciosus          N=383006	(births=120392	deaths=117913)
+
+	........................................................................
+burn:	it=-1:	t=13
+	species: Sceloporus graciosus          N=385485	(births=121323	deaths=120107)
+
+	........................................................................
+burn:	it=-1:	t=14
+	species: Sceloporus graciosus          N=386701	(births=121315	deaths=120874)
+
+	........................................................................
+burn:	it=-1:	t=15
+	species: Sceloporus graciosus          N=387142	(births=120739	deaths=120154)
+
+	........................................................................
+burn:	it=-1:	t=16
+	species: Sceloporus graciosus          N=387727	(births=120877	deaths=120772)
+
+	........................................................................
+burn:	it=-1:	t=17
+	species: Sceloporus graciosus          N=387832	(births=120374	deaths=120537)
+
+	........................................................................
+burn:	it=-1:	t=18
+	species: Sceloporus graciosus          N=387669	(births=121660	deaths=121053)
+
+	........................................................................
+burn:	it=-1:	t=19
+	species: Sceloporus graciosus          N=388276	(births=121364	deaths=121583)
+
+	........................................................................
+burn:	it=-1:	t=20
+	species: Sceloporus graciosus          N=388057	(births=121334	deaths=121185)
+
+	........................................................................
+burn:	it=-1:	t=21
+	species: Sceloporus graciosus          N=388206	(births=121407	deaths=121260)
+
+	........................................................................
+burn:	it=-1:	t=22
+	species: Sceloporus graciosus          N=388353	(births=121492	deaths=121098)
+
+	........................................................................
+burn:	it=-1:	t=23
+	species: Sceloporus graciosus          N=388747	(births=121655	deaths=121828)
+
+	........................................................................
+burn:	it=-1:	t=24
+	species: Sceloporus graciosus          N=388574	(births=122181	deaths=122905)
+
+	........................................................................
+burn:	it=-1:	t=25
+	species: Sceloporus graciosus          N=387850	(births=121345	deaths=121248)
+
+	........................................................................
+burn:	it=-1:	t=26
+	species: Sceloporus graciosus          N=387947	(births=121328	deaths=121296)
+
+	........................................................................
+burn:	it=-1:	t=27
+	species: Sceloporus graciosus          N=387979	(births=121151	deaths=121372)
+
+	........................................................................
+burn:	it=-1:	t=28
+	species: Sceloporus graciosus          N=387758	(births=121657	deaths=121309)
+
+	........................................................................
+burn:	it=-1:	t=29
+	species: Sceloporus graciosus          N=388106	(births=121584	deaths=121591)
+
+	........................................................................
+burn:	it=-1:	t=30
+	species: Sceloporus graciosus          N=388099	(births=121457	deaths=121798)
+
+	........................................................................
+burn:	it=-1:	t=31
+	species: Sceloporus graciosus          N=387758	(births=121386	deaths=120617)
+
+	........................................................................
+burn:	it=-1:	t=32
+	species: Sceloporus graciosus          N=388527	(births=121585	deaths=121214)
+
+	........................................................................
+burn:	it=-1:	t=33
+	species: Sceloporus graciosus          N=388898	(births=121312	deaths=121579)
+
+	........................................................................
+burn:	it=-1:	t=34
+	species: Sceloporus graciosus          N=388631	(births=121459	deaths=122575)
+
+	........................................................................
+burn:	it=-1:	t=35
+	species: Sceloporus graciosus          N=387515	(births=121180	deaths=120719)
+
+	........................................................................
+burn:	it=-1:	t=36
+	species: Sceloporus graciosus          N=387976	(births=120988	deaths=120504)
+
+	........................................................................
+burn:	it=-1:	t=37
+	species: Sceloporus graciosus          N=388460	(births=121082	deaths=120925)
+
+	........................................................................
+burn:	it=-1:	t=38
+	species: Sceloporus graciosus          N=388617	(births=121080	deaths=121824)
+
+	........................................................................
+burn:	it=-1:	t=39
+	species: Sceloporus graciosus          N=387873	(births=120639	deaths=120789)
+
+	........................................................................
+burn:	it=-1:	t=40
+	species: Sceloporus graciosus          N=387723	(births=120900	deaths=120523)
+
+	........................................................................
+burn:	it=-1:	t=41
+	species: Sceloporus graciosus          N=388100	(births=121137	deaths=121215)
+
+	........................................................................
+burn:	it=-1:	t=42
+	species: Sceloporus graciosus          N=388022	(births=121288	deaths=121007)
+
+	........................................................................
+burn:	it=-1:	t=43
+	species: Sceloporus graciosus          N=388303	(births=121237	deaths=121629)
+
+	........................................................................
+burn:	it=-1:	t=44
+	species: Sceloporus graciosus          N=387911	(births=121310	deaths=121152)
+
+	........................................................................
+burn:	it=-1:	t=45
+	species: Sceloporus graciosus          N=388069	(births=121924	deaths=122245)
+
+	........................................................................
+burn:	it=-1:	t=46
+	species: Sceloporus graciosus          N=387748	(births=121463	deaths=121161)
+
+	........................................................................
+burn:	it=-1:	t=47
+	species: Sceloporus graciosus          N=388050	(births=121586	deaths=121264)
+
+	........................................................................
+burn:	it=-1:	t=48
+	species: Sceloporus graciosus          N=388372	(births=121518	deaths=122120)
+
+	........................................................................
+burn:	it=-1:	t=49
+	species: Sceloporus graciosus          N=387770	(births=121504	deaths=121553)
+
+	........................................................................
+burn:	it=-1:	t=50
+	species: Sceloporus graciosus          N=387721	(births=120870	deaths=121064)
+
+	........................................................................
+burn:	it=-1:	t=51
+	species: Sceloporus graciosus          N=387527	(births=120898	deaths=120794)
+
+	........................................................................
+burn:	it=-1:	t=52
+	species: Sceloporus graciosus          N=387631	(births=121463	deaths=120840)
+
+	........................................................................
+burn:	it=-1:	t=53
+	species: Sceloporus graciosus          N=388254	(births=121165	deaths=121326)
+
+	........................................................................
+burn:	it=-1:	t=54
+	species: Sceloporus graciosus          N=388093	(births=121121	deaths=120514)
+
+	........................................................................
+burn:	it=-1:	t=55
+	species: Sceloporus graciosus          N=388700	(births=121438	deaths=122098)
+
+	........................................................................
+burn:	it=-1:	t=56
+	species: Sceloporus graciosus          N=388040	(births=120961	deaths=120985)
+
+	........................................................................
+burn:	it=-1:	t=57
+	species: Sceloporus graciosus          N=388016	(births=120593	deaths=120795)
+
+	........................................................................
+burn:	it=-1:	t=58
+	species: Sceloporus graciosus          N=387814	(births=120881	deaths=120426)
+
+	........................................................................
+burn:	it=-1:	t=59
+	species: Sceloporus graciosus          N=388269	(births=121367	deaths=120674)
+
+	........................................................................
+burn:	it=-1:	t=60
+	species: Sceloporus graciosus          N=388962	(births=122164	deaths=122320)
+
+	........................................................................
+burn:	it=-1:	t=61
+	species: Sceloporus graciosus          N=388806	(births=122026	deaths=122151)
+
+	........................................................................
+burn:	it=-1:	t=62
+	species: Sceloporus graciosus          N=388681	(births=121650	deaths=122302)
+
+	........................................................................
+burn:	it=-1:	t=63
+	species: Sceloporus graciosus          N=388029	(births=121426	deaths=120874)
+
+	........................................................................
+burn:	it=-1:	t=64
+	species: Sceloporus graciosus          N=388581	(births=121820	deaths=122007)
+
+	........................................................................
+burn:	it=-1:	t=65
+	species: Sceloporus graciosus          N=388394	(births=121770	deaths=122175)
+
+	........................................................................
+burn:	it=-1:	t=66
+	species: Sceloporus graciosus          N=387989	(births=121711	deaths=122075)
+
+	........................................................................
+burn:	it=-1:	t=67
+	species: Sceloporus graciosus          N=387625	(births=121131	deaths=121304)
+
+	........................................................................
+burn:	it=-1:	t=68
+	species: Sceloporus graciosus          N=387452	(births=120877	deaths=120721)
+
+	........................................................................
+burn:	it=-1:	t=69
+	species: Sceloporus graciosus          N=387608	(births=120964	deaths=121035)
+
+	........................................................................
+burn:	it=-1:	t=70
+	species: Sceloporus graciosus          N=387537	(births=120566	deaths=120323)
+
+	........................................................................
+burn:	it=-1:	t=71
+	species: Sceloporus graciosus          N=387780	(births=120904	deaths=120922)
+
+	........................................................................
+burn:	it=-1:	t=72
+	species: Sceloporus graciosus          N=387762	(births=120819	deaths=121170)
+
+	........................................................................
+burn:	it=-1:	t=73
+	species: Sceloporus graciosus          N=387411	(births=121280	deaths=120900)
+
+	........................................................................
+burn:	it=-1:	t=74
+	species: Sceloporus graciosus          N=387791	(births=121273	deaths=121485)
+
+	........................................................................
+burn:	it=-1:	t=75
+	species: Sceloporus graciosus          N=387579	(births=121404	deaths=121016)
+
+	........................................................................
+burn:	it=-1:	t=76
+	species: Sceloporus graciosus          N=387967	(births=121409	deaths=121721)
+
+	........................................................................
+burn:	it=-1:	t=77
+	species: Sceloporus graciosus          N=387655	(births=120633	deaths=121163)
+
+	........................................................................
+burn:	it=-1:	t=78
+	species: Sceloporus graciosus          N=387125	(births=121393	deaths=120803)
+
+	........................................................................
+burn:	it=-1:	t=79
+	species: Sceloporus graciosus          N=387715	(births=121929	deaths=122208)
+
+	........................................................................
+burn:	it=-1:	t=80
+	species: Sceloporus graciosus          N=387436	(births=121591	deaths=121595)
+
+	........................................................................
+burn:	it=-1:	t=81
+	species: Sceloporus graciosus          N=387432	(births=121593	deaths=121137)
+
+	........................................................................
+burn:	it=-1:	t=82
+	species: Sceloporus graciosus          N=387888	(births=121588	deaths=121119)
+
+	........................................................................
+burn:	it=-1:	t=83
+	species: Sceloporus graciosus          N=388357	(births=121789	deaths=121187)
+
+	........................................................................
+burn:	it=-1:	t=84
+	species: Sceloporus graciosus          N=388959	(births=121507	deaths=122496)
+
+	........................................................................
+burn:	it=-1:	t=85
+	species: Sceloporus graciosus          N=387970	(births=121141	deaths=121375)
+
+	........................................................................
+burn:	it=-1:	t=86
+	species: Sceloporus graciosus          N=387736	(births=121195	deaths=121375)
+
+	........................................................................
+burn:	it=-1:	t=87
+	species: Sceloporus graciosus          N=387556	(births=121070	deaths=120874)
+
+	........................................................................
+burn:	it=-1:	t=88
+	species: Sceloporus graciosus          N=387752	(births=121014	deaths=120989)
+
+	........................................................................
+burn:	it=-1:	t=89
+	species: Sceloporus graciosus          N=387777	(births=120663	deaths=120891)
+
+	........................................................................
+burn:	it=-1:	t=90
+	species: Sceloporus graciosus          N=387549	(births=121025	deaths=120522)
+
+	........................................................................
+burn:	it=-1:	t=91
+	species: Sceloporus graciosus          N=388052	(births=121830	deaths=121509)
+
+	........................................................................
+burn:	it=-1:	t=92
+	species: Sceloporus graciosus          N=388373	(births=121430	deaths=122585)
+
+	........................................................................
+burn:	it=-1:	t=93
+	species: Sceloporus graciosus          N=387218	(births=121825	deaths=120767)
+
+	........................................................................
+burn:	it=-1:	t=94
+	species: Sceloporus graciosus          N=388276	(births=122092	deaths=122249)
+
+	........................................................................
+burn:	it=-1:	t=95
+	species: Sceloporus graciosus          N=388119	(births=121266	deaths=121757)
+
+	........................................................................
+burn:	it=-1:	t=96
+	species: Sceloporus graciosus          N=387628	(births=120647	deaths=121018)
+
+	........................................................................
+burn:	it=-1:	t=97
+	species: Sceloporus graciosus          N=387257	(births=120380	deaths=119533)
+
+	........................................................................
+burn:	it=-1:	t=98
+	species: Sceloporus graciosus          N=388104	(births=120964	deaths=121057)
+
+	........................................................................
+burn:	it=-1:	t=99
+	species: Sceloporus graciosus          N=388011	(births=121577	deaths=121253)
+
+	........................................................................
+
+Assigning genomes for species "Sceloporus graciosus"...
+
+
+Burn-in complete.
+
+
+
+NON-NEUTRAL LOCI:
+[306 701]
+
+
+main:	it=-1:	t=0
+	species: Sceloporus graciosus          N=388335	(births=120891	deaths=175166)
+
+	........................................................................
+
+
+main:	it=-1:	t=1
+	species: Sceloporus graciosus          N=334060	(births=104943	deaths=124662)
+
+	........................................................................
+
+
+main:	it=-1:	t=2
+	species: Sceloporus graciosus          N=314341	(births=98339	deaths=106514)
+
+	........................................................................
+
+
+main:	it=-1:	t=3
+	species: Sceloporus graciosus          N=306166	(births=96281	deaths=98386)
+
+	........................................................................
+
+
+main:	it=-1:	t=4
+	species: Sceloporus graciosus          N=304061	(births=95484	deaths=94086)
+
+	........................................................................
+
+
+main:	it=-1:	t=5
+	species: Sceloporus graciosus          N=305459	(births=95846	deaths=94227)
+
+	........................................................................
+
+
+main:	it=-1:	t=6
+	species: Sceloporus graciosus          N=307078	(births=95953	deaths=93495)
+
+	........................................................................
+
+
+main:	it=-1:	t=7
+	species: Sceloporus graciosus          N=309536	(births=97338	deaths=95124)
+
+	........................................................................
+
+
+main:	it=-1:	t=8
+	species: Sceloporus graciosus          N=311750	(births=97204	deaths=94796)
+
+	........................................................................
+
+
+main:	it=-1:	t=9
+	species: Sceloporus graciosus          N=314158	(births=98511	deaths=96403)
+
+	........................................................................
+
+
+main:	it=-1:	t=10
+	species: Sceloporus graciosus          N=316266	(births=98845	deaths=96844)
+
+	........................................................................
+
+
+main:	it=-1:	t=11
+	species: Sceloporus graciosus          N=318267	(births=99157	deaths=97238)
+
+	........................................................................
+
+
+main:	it=-1:	t=12
+	species: Sceloporus graciosus          N=320186	(births=100698	deaths=98481)
+
+	........................................................................
+
+
+main:	it=-1:	t=13
+	species: Sceloporus graciosus          N=322403	(births=101098	deaths=99803)
+
+	........................................................................
+
+
+main:	it=-1:	t=14
+	species: Sceloporus graciosus          N=323698	(births=100812	deaths=99272)
+
+	........................................................................
+
+
+main:	it=-1:	t=15
+	species: Sceloporus graciosus          N=325238	(births=101115	deaths=99714)
+
+	........................................................................
+
+
+main:	it=-1:	t=16
+	species: Sceloporus graciosus          N=326639	(births=101706	deaths=101108)
+
+	........................................................................
+
+
+main:	it=-1:	t=17
+	species: Sceloporus graciosus          N=327237	(births=102428	deaths=101784)
+
+	........................................................................
+
+
+main:	it=-1:	t=18
+	species: Sceloporus graciosus          N=327881	(births=102059	deaths=102031)
+
+	........................................................................
+
+
+main:	it=-1:	t=19
+	species: Sceloporus graciosus          N=327909	(births=102232	deaths=101642)
+
+	........................................................................
+
+
+main:	it=-1:	t=20
+	species: Sceloporus graciosus          N=328499	(births=102039	deaths=101472)
+
+	........................................................................
+
+
+main:	it=-1:	t=21
+	species: Sceloporus graciosus          N=329066	(births=102360	deaths=102056)
+
+	........................................................................
+
+
+main:	it=-1:	t=22
+	species: Sceloporus graciosus          N=329370	(births=102570	deaths=102114)
+
+	........................................................................
+
+
+main:	it=-1:	t=23
+	species: Sceloporus graciosus          N=329826	(births=103084	deaths=102616)
+
+	........................................................................
+
+
+main:	it=-1:	t=24
+	species: Sceloporus graciosus          N=330294	(births=102682	deaths=101797)
+
+	........................................................................
+
+
+main:	it=-1:	t=25
+	species: Sceloporus graciosus          N=331179	(births=103828	deaths=103589)
+
+	........................................................................
+
+
+main:	it=-1:	t=26
+	species: Sceloporus graciosus          N=331418	(births=103531	deaths=103667)
+
+	........................................................................
+
+
+main:	it=-1:	t=27
+	species: Sceloporus graciosus          N=331282	(births=103232	deaths=102846)
+
+	........................................................................
+
+
+main:	it=-1:	t=28
+	species: Sceloporus graciosus          N=331668	(births=103345	deaths=103650)
+
+	........................................................................
+
+
+main:	it=-1:	t=29
+	species: Sceloporus graciosus          N=331363	(births=103835	deaths=103167)
+
+	........................................................................
+
+
+main:	it=-1:	t=30
+	species: Sceloporus graciosus          N=332031	(births=104115	deaths=103752)
+
+	........................................................................
+
+
+main:	it=-1:	t=31
+	species: Sceloporus graciosus          N=332394	(births=104121	deaths=104281)
+
+	........................................................................
+
+
+main:	it=-1:	t=32
+	species: Sceloporus graciosus          N=332234	(births=104611	deaths=104151)
+
+	........................................................................
+
+
+main:	it=-1:	t=33
+	species: Sceloporus graciosus          N=332694	(births=104221	deaths=104153)
+
+	........................................................................
+
+
+main:	it=-1:	t=34
+	species: Sceloporus graciosus          N=332762	(births=103746	deaths=103819)
+
+	........................................................................
+
+
+main:	it=-1:	t=35
+	species: Sceloporus graciosus          N=332689	(births=104046	deaths=104211)
+
+	........................................................................
+
+
+main:	it=-1:	t=36
+	species: Sceloporus graciosus          N=332524	(births=103841	deaths=103764)
+
+	........................................................................
+
+
+main:	it=-1:	t=37
+	species: Sceloporus graciosus          N=332601	(births=104032	deaths=104021)
+
+	........................................................................
+
+
+main:	it=-1:	t=38
+	species: Sceloporus graciosus          N=332612	(births=104641	deaths=103915)
+
+	........................................................................
+
+
+main:	it=-1:	t=39
+	species: Sceloporus graciosus          N=333338	(births=103881	deaths=104056)
+
+	........................................................................
+
+
+main:	it=-1:	t=40
+	species: Sceloporus graciosus          N=333163	(births=103736	deaths=103788)
+
+	........................................................................
+
+
+main:	it=-1:	t=41
+	species: Sceloporus graciosus          N=333111	(births=103613	deaths=103490)
+
+	........................................................................
+
+
+main:	it=-1:	t=42
+	species: Sceloporus graciosus          N=333234	(births=103808	deaths=104238)
+
+	........................................................................
+
+
+main:	it=-1:	t=43
+	species: Sceloporus graciosus          N=332804	(births=103818	deaths=102992)
+
+	........................................................................
+
+
+main:	it=-1:	t=44
+	species: Sceloporus graciosus          N=333630	(births=104730	deaths=105058)
+
+	........................................................................
+
+
+main:	it=-1:	t=45
+	species: Sceloporus graciosus          N=333302	(births=104499	deaths=104599)
+
+	........................................................................
+
+
+main:	it=-1:	t=46
+	species: Sceloporus graciosus          N=333202	(births=104214	deaths=104260)
+
+	........................................................................
+
+
+main:	it=-1:	t=47
+	species: Sceloporus graciosus          N=333156	(births=104323	deaths=104081)
+
+	........................................................................
+
+
+main:	it=-1:	t=48
+	species: Sceloporus graciosus          N=333398	(births=104859	deaths=105199)
+
+	........................................................................
+
+
+main:	it=-1:	t=49
+	species: Sceloporus graciosus          N=333058	(births=103886	deaths=103202)
+
+	........................................................................
+
+
+main:	it=-1:	t=50
+	species: Sceloporus graciosus          N=333742	(births=104229	deaths=104484)
+
+	........................................................................
+
+
+main:	it=-1:	t=51
+	species: Sceloporus graciosus          N=333487	(births=104408	deaths=104652)
+
+	........................................................................
+
+
+main:	it=-1:	t=52
+	species: Sceloporus graciosus          N=333243	(births=103950	deaths=104298)
+
+	........................................................................
+
+
+main:	it=-1:	t=53
+	species: Sceloporus graciosus          N=332895	(births=103251	deaths=103761)
+
+	........................................................................
+
+
+main:	it=-1:	t=54
+	species: Sceloporus graciosus          N=332385	(births=104099	deaths=103442)
+
+	........................................................................
+
+
+main:	it=-1:	t=55
+	species: Sceloporus graciosus          N=333042	(births=103826	deaths=103235)
+
+	........................................................................
+
+
+main:	it=-1:	t=56
+	species: Sceloporus graciosus          N=333633	(births=103972	deaths=104269)
+
+	........................................................................
+
+
+main:	it=-1:	t=57
+	species: Sceloporus graciosus          N=333336	(births=103710	deaths=103951)
+
+	........................................................................
+
+
+main:	it=-1:	t=58
+	species: Sceloporus graciosus          N=333095	(births=103637	deaths=103361)
+
+	........................................................................
+
+
+main:	it=-1:	t=59
+	species: Sceloporus graciosus          N=333371	(births=104609	deaths=104741)
+
+	........................................................................
+
+
+main:	it=-1:	t=60
+	species: Sceloporus graciosus          N=333239	(births=104142	deaths=103895)
+
+	........................................................................
+
+
+main:	it=-1:	t=61
+	species: Sceloporus graciosus          N=333486	(births=103929	deaths=104040)
+
+	........................................................................
+
+
+main:	it=-1:	t=62
+	species: Sceloporus graciosus          N=333375	(births=104186	deaths=103916)
+
+	........................................................................
+
+
+main:	it=-1:	t=63
+	species: Sceloporus graciosus          N=333645	(births=104294	deaths=104969)
+
+	........................................................................
+
+
+main:	it=-1:	t=64
+	species: Sceloporus graciosus          N=332970	(births=103249	deaths=103266)
+
+	........................................................................
+
+
+main:	it=-1:	t=65
+	species: Sceloporus graciosus          N=332953	(births=103652	deaths=104019)
+
+	........................................................................
+
+
+main:	it=-1:	t=66
+	species: Sceloporus graciosus          N=332586	(births=104037	deaths=103771)
+
+	........................................................................
+
+
+main:	it=-1:	t=67
+	species: Sceloporus graciosus          N=332852	(births=104098	deaths=104089)
+
+	........................................................................
+
+
+main:	it=-1:	t=68
+	species: Sceloporus graciosus          N=332861	(births=103123	deaths=103503)
+
+	........................................................................
+
+
+main:	it=-1:	t=69
+	species: Sceloporus graciosus          N=332481	(births=103726	deaths=103053)
+
+	........................................................................
+
+
+main:	it=-1:	t=70
+	species: Sceloporus graciosus          N=333154	(births=104094	deaths=103681)
+
+	........................................................................
+
+
+main:	it=-1:	t=71
+	species: Sceloporus graciosus          N=333567	(births=103867	deaths=103665)
+
+	........................................................................
+
+
+main:	it=-1:	t=72
+	species: Sceloporus graciosus          N=333769	(births=104076	deaths=104364)
+
+	........................................................................
+
+
+main:	it=-1:	t=73
+	species: Sceloporus graciosus          N=333481	(births=103919	deaths=103507)
+
+	........................................................................
+
+
+main:	it=-1:	t=74
+	species: Sceloporus graciosus          N=333893	(births=104070	deaths=104244)
+
+	........................................................................
+
+
+main:	it=-1:	t=75
+	species: Sceloporus graciosus          N=333719	(births=103664	deaths=103741)
+
+	........................................................................
+
+
+main:	it=-1:	t=76
+	species: Sceloporus graciosus          N=333642	(births=103884	deaths=104164)
+
+	........................................................................
+
+
+main:	it=-1:	t=77
+	species: Sceloporus graciosus          N=333362	(births=104146	deaths=104546)
+
+	........................................................................
+
+
+main:	it=-1:	t=78
+	species: Sceloporus graciosus          N=332962	(births=104151	deaths=103564)
+
+	........................................................................
+
+
+main:	it=-1:	t=79
+	species: Sceloporus graciosus          N=333549	(births=103682	deaths=103548)
+
+	........................................................................
+
+
+main:	it=-1:	t=80
+	species: Sceloporus graciosus          N=333683	(births=104003	deaths=103948)
+
+	........................................................................
+
+
+main:	it=-1:	t=81
+	species: Sceloporus graciosus          N=333738	(births=103824	deaths=104553)
+
+	........................................................................
+
+
+main:	it=-1:	t=82
+	species: Sceloporus graciosus          N=333009	(births=103393	deaths=103541)
+
+	........................................................................
+
+
+main:	it=-1:	t=83
+	species: Sceloporus graciosus          N=332861	(births=104238	deaths=104283)
+
+	........................................................................
+
+
+main:	it=-1:	t=84
+	species: Sceloporus graciosus          N=332816	(births=105338	deaths=104903)
+
+	........................................................................
+
+
+main:	it=-1:	t=85
+	species: Sceloporus graciosus          N=333251	(births=104613	deaths=104610)
+
+	........................................................................
+
+
+main:	it=-1:	t=86
+	species: Sceloporus graciosus          N=333254	(births=104300	deaths=104480)
+
+	........................................................................
+
+
+main:	it=-1:	t=87
+	species: Sceloporus graciosus          N=333074	(births=105141	deaths=104838)
+
+	........................................................................
+
+
+main:	it=-1:	t=88
+	species: Sceloporus graciosus          N=333377	(births=105033	deaths=104853)
+
+	........................................................................
+
+
+main:	it=-1:	t=89
+	species: Sceloporus graciosus          N=333557	(births=104128	deaths=104452)
+
+	........................................................................
+
+
+main:	it=-1:	t=90
+	species: Sceloporus graciosus          N=333233	(births=105136	deaths=104628)
+
+	........................................................................
+
+
+main:	it=-1:	t=91
+	species: Sceloporus graciosus          N=333741	(births=104781	deaths=104256)
+
+	........................................................................
+
+
+main:	it=-1:	t=92
+	species: Sceloporus graciosus          N=334266	(births=104269	deaths=104612)
+
+	........................................................................
+
+
+main:	it=-1:	t=93
+	species: Sceloporus graciosus          N=333923	(births=104224	deaths=104195)
+
+	........................................................................
+
+
+main:	it=-1:	t=94
+	species: Sceloporus graciosus          N=333952	(births=104045	deaths=103960)
+
+	........................................................................
+
+
+main:	it=-1:	t=95
+	species: Sceloporus graciosus          N=334037	(births=104226	deaths=103887)
+
+	........................................................................
+
+
+main:	it=-1:	t=96
+	species: Sceloporus graciosus          N=334376	(births=104859	deaths=105347)
+
+	........................................................................
+
+
+main:	it=-1:	t=97
+	species: Sceloporus graciosus          N=333888	(births=104199	deaths=104458)
+
+	........................................................................
+
+
+main:	it=-1:	t=98
+	species: Sceloporus graciosus          N=333629	(births=104228	deaths=104219)
+
+	........................................................................
+
+
+main:	it=-1:	t=99
+	species: Sceloporus graciosus          N=333638	(births=104273	deaths=104102)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 42355536
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 11126577
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  6924110
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1025869
+
+
+main:	it=-1:	t=100
+	species: Sceloporus graciosus          N=333809	(births=104666	deaths=104491)
+
+	........................................................................
+
+
+main:	it=-1:	t=101
+	species: Sceloporus graciosus          N=333984	(births=103951	deaths=104074)
+
+	........................................................................
+
+
+main:	it=-1:	t=102
+	species: Sceloporus graciosus          N=333861	(births=104649	deaths=104296)
+
+	........................................................................
+
+
+main:	it=-1:	t=103
+	species: Sceloporus graciosus          N=334214	(births=104695	deaths=104587)
+
+	........................................................................
+
+
+main:	it=-1:	t=104
+	species: Sceloporus graciosus          N=334322	(births=104544	deaths=104929)
+
+	........................................................................
+
+
+main:	it=-1:	t=105
+	species: Sceloporus graciosus          N=333937	(births=104357	deaths=104813)
+
+	........................................................................
+
+
+main:	it=-1:	t=106
+	species: Sceloporus graciosus          N=333481	(births=104413	deaths=104379)
+
+	........................................................................
+
+
+main:	it=-1:	t=107
+	species: Sceloporus graciosus          N=333515	(births=104215	deaths=104074)
+
+	........................................................................
+
+
+main:	it=-1:	t=108
+	species: Sceloporus graciosus          N=333656	(births=103921	deaths=104415)
+
+	........................................................................
+
+
+main:	it=-1:	t=109
+	species: Sceloporus graciosus          N=333162	(births=103851	deaths=104170)
+
+	........................................................................
+
+
+main:	it=-1:	t=110
+	species: Sceloporus graciosus          N=332843	(births=103790	deaths=103325)
+
+	........................................................................
+
+
+main:	it=-1:	t=111
+	species: Sceloporus graciosus          N=333308	(births=104336	deaths=103786)
+
+	........................................................................
+
+
+main:	it=-1:	t=112
+	species: Sceloporus graciosus          N=333858	(births=104537	deaths=104713)
+
+	........................................................................
+
+
+main:	it=-1:	t=113
+	species: Sceloporus graciosus          N=333682	(births=104361	deaths=104614)
+
+	........................................................................
+
+
+main:	it=-1:	t=114
+	species: Sceloporus graciosus          N=333429	(births=104148	deaths=104412)
+
+	........................................................................
+
+
+main:	it=-1:	t=115
+	species: Sceloporus graciosus          N=333165	(births=103977	deaths=104156)
+
+	........................................................................
+
+
+main:	it=-1:	t=116
+	species: Sceloporus graciosus          N=332986	(births=104349	deaths=103717)
+
+	........................................................................
+
+
+main:	it=-1:	t=117
+	species: Sceloporus graciosus          N=333618	(births=104331	deaths=104383)
+
+	........................................................................
+
+
+main:	it=-1:	t=118
+	species: Sceloporus graciosus          N=333566	(births=104803	deaths=105124)
+
+	........................................................................
+
+
+main:	it=-1:	t=119
+	species: Sceloporus graciosus          N=333245	(births=104705	deaths=104651)
+
+	........................................................................
+
+
+main:	it=-1:	t=120
+	species: Sceloporus graciosus          N=333299	(births=105097	deaths=104862)
+
+	........................................................................
+
+
+main:	it=-1:	t=121
+	species: Sceloporus graciosus          N=333534	(births=105259	deaths=104817)
+
+	........................................................................
+
+
+main:	it=-1:	t=122
+	species: Sceloporus graciosus          N=333976	(births=104675	deaths=104536)
+
+	........................................................................
+
+
+main:	it=-1:	t=123
+	species: Sceloporus graciosus          N=334115	(births=105109	deaths=106213)
+
+	........................................................................
+
+
+main:	it=-1:	t=124
+	species: Sceloporus graciosus          N=333011	(births=104125	deaths=104149)
+
+	........................................................................
+
+
+main:	it=-1:	t=125
+	species: Sceloporus graciosus          N=332987	(births=104166	deaths=103740)
+
+	........................................................................
+
+
+main:	it=-1:	t=126
+	species: Sceloporus graciosus          N=333413	(births=104041	deaths=104018)
+
+	........................................................................
+
+
+main:	it=-1:	t=127
+	species: Sceloporus graciosus          N=333436	(births=103740	deaths=103796)
+
+	........................................................................
+
+
+main:	it=-1:	t=128
+	species: Sceloporus graciosus          N=333380	(births=103817	deaths=104090)
+
+	........................................................................
+
+
+main:	it=-1:	t=129
+	species: Sceloporus graciosus          N=333107	(births=104058	deaths=104562)
+
+	........................................................................
+
+
+main:	it=-1:	t=130
+	species: Sceloporus graciosus          N=332603	(births=103635	deaths=102747)
+
+	........................................................................
+
+
+main:	it=-1:	t=131
+	species: Sceloporus graciosus          N=333491	(births=103735	deaths=103386)
+
+	........................................................................
+
+
+main:	it=-1:	t=132
+	species: Sceloporus graciosus          N=333840	(births=103690	deaths=104516)
+
+	........................................................................
+
+
+main:	it=-1:	t=133
+	species: Sceloporus graciosus          N=333014	(births=103970	deaths=103432)
+
+	........................................................................
+
+
+main:	it=-1:	t=134
+	species: Sceloporus graciosus          N=333552	(births=104228	deaths=104509)
+
+	........................................................................
+
+
+main:	it=-1:	t=135
+	species: Sceloporus graciosus          N=333271	(births=103955	deaths=103443)
+
+	........................................................................
+
+
+main:	it=-1:	t=136
+	species: Sceloporus graciosus          N=333783	(births=104028	deaths=104396)
+
+	........................................................................
+
+
+main:	it=-1:	t=137
+	species: Sceloporus graciosus          N=333415	(births=104669	deaths=104231)
+
+	........................................................................
+
+
+main:	it=-1:	t=138
+	species: Sceloporus graciosus          N=333853	(births=104190	deaths=104676)
+
+	........................................................................
+
+
+main:	it=-1:	t=139
+	species: Sceloporus graciosus          N=333367	(births=104639	deaths=104581)
+
+	........................................................................
+
+
+main:	it=-1:	t=140
+	species: Sceloporus graciosus          N=333425	(births=104487	deaths=104539)
+
+	........................................................................
+
+
+main:	it=-1:	t=141
+	species: Sceloporus graciosus          N=333373	(births=104534	deaths=104681)
+
+	........................................................................
+
+
+main:	it=-1:	t=142
+	species: Sceloporus graciosus          N=333226	(births=104487	deaths=103882)
+
+	........................................................................
+
+
+main:	it=-1:	t=143
+	species: Sceloporus graciosus          N=333831	(births=104499	deaths=104586)
+
+	........................................................................
+
+
+main:	it=-1:	t=144
+	species: Sceloporus graciosus          N=333744	(births=104381	deaths=104171)
+
+	........................................................................
+
+
+main:	it=-1:	t=145
+	species: Sceloporus graciosus          N=333954	(births=104586	deaths=104434)
+
+	........................................................................
+
+
+main:	it=-1:	t=146
+	species: Sceloporus graciosus          N=334106	(births=104659	deaths=104619)
+
+	........................................................................
+
+
+main:	it=-1:	t=147
+	species: Sceloporus graciosus          N=334146	(births=104307	deaths=104514)
+
+	........................................................................
+
+
+main:	it=-1:	t=148
+	species: Sceloporus graciosus          N=333939	(births=105260	deaths=104864)
+
+	........................................................................
+
+
+main:	it=-1:	t=149
+	species: Sceloporus graciosus          N=334335	(births=104221	deaths=103929)
+
+	........................................................................
+
+
+main:	it=-1:	t=150
+	species: Sceloporus graciosus          N=334627	(births=104617	deaths=104618)
+
+	........................................................................
+
+
+main:	it=-1:	t=151
+	species: Sceloporus graciosus          N=334626	(births=104529	deaths=104605)
+
+	........................................................................
+
+
+main:	it=-1:	t=152
+	species: Sceloporus graciosus          N=334550	(births=104978	deaths=105038)
+
+	........................................................................
+
+
+main:	it=-1:	t=153
+	species: Sceloporus graciosus          N=334490	(births=105108	deaths=105145)
+
+	........................................................................
+
+
+main:	it=-1:	t=154
+	species: Sceloporus graciosus          N=334453	(births=105138	deaths=105694)
+
+	........................................................................
+
+
+main:	it=-1:	t=155
+	species: Sceloporus graciosus          N=333897	(births=104062	deaths=104300)
+
+	........................................................................
+
+
+main:	it=-1:	t=156
+	species: Sceloporus graciosus          N=333659	(births=103744	deaths=103551)
+
+	........................................................................
+
+
+main:	it=-1:	t=157
+	species: Sceloporus graciosus          N=333852	(births=104852	deaths=104912)
+
+	........................................................................
+
+
+main:	it=-1:	t=158
+	species: Sceloporus graciosus          N=333792	(births=103782	deaths=103975)
+
+	........................................................................
+
+
+main:	it=-1:	t=159
+	species: Sceloporus graciosus          N=333599	(births=104732	deaths=104367)
+
+	........................................................................
+
+
+main:	it=-1:	t=160
+	species: Sceloporus graciosus          N=333964	(births=104228	deaths=103924)
+
+	........................................................................
+
+
+main:	it=-1:	t=161
+	species: Sceloporus graciosus          N=334268	(births=104435	deaths=105141)
+
+	........................................................................
+
+
+main:	it=-1:	t=162
+	species: Sceloporus graciosus          N=333562	(births=104703	deaths=104512)
+
+	........................................................................
+
+
+main:	it=-1:	t=163
+	species: Sceloporus graciosus          N=333753	(births=104793	deaths=104566)
+
+	........................................................................
+
+
+main:	it=-1:	t=164
+	species: Sceloporus graciosus          N=333980	(births=104949	deaths=105286)
+
+	........................................................................
+
+
+main:	it=-1:	t=165
+	species: Sceloporus graciosus          N=333643	(births=104552	deaths=104480)
+
+	........................................................................
+
+
+main:	it=-1:	t=166
+	species: Sceloporus graciosus          N=333715	(births=104251	deaths=103917)
+
+	........................................................................
+
+
+main:	it=-1:	t=167
+	species: Sceloporus graciosus          N=334049	(births=104394	deaths=104750)
+
+	........................................................................
+
+
+main:	it=-1:	t=168
+	species: Sceloporus graciosus          N=333693	(births=104708	deaths=105125)
+
+	........................................................................
+
+
+main:	it=-1:	t=169
+	species: Sceloporus graciosus          N=333276	(births=103741	deaths=102838)
+
+	........................................................................
+
+
+main:	it=-1:	t=170
+	species: Sceloporus graciosus          N=334179	(births=103890	deaths=103740)
+
+	........................................................................
+
+
+main:	it=-1:	t=171
+	species: Sceloporus graciosus          N=334329	(births=104394	deaths=104141)
+
+	........................................................................
+
+
+main:	it=-1:	t=172
+	species: Sceloporus graciosus          N=334582	(births=104749	deaths=104861)
+
+	........................................................................
+
+
+main:	it=-1:	t=173
+	species: Sceloporus graciosus          N=334470	(births=104033	deaths=104456)
+
+	........................................................................
+
+
+main:	it=-1:	t=174
+	species: Sceloporus graciosus          N=334047	(births=104320	deaths=104200)
+
+	........................................................................
+
+
+main:	it=-1:	t=175
+	species: Sceloporus graciosus          N=334167	(births=104204	deaths=103836)
+
+	........................................................................
+
+
+main:	it=-1:	t=176
+	species: Sceloporus graciosus          N=334535	(births=104235	deaths=104507)
+
+	........................................................................
+
+
+main:	it=-1:	t=177
+	species: Sceloporus graciosus          N=334263	(births=104214	deaths=103880)
+
+	........................................................................
+
+
+main:	it=-1:	t=178
+	species: Sceloporus graciosus          N=334597	(births=104300	deaths=104657)
+
+	........................................................................
+
+
+main:	it=-1:	t=179
+	species: Sceloporus graciosus          N=334240	(births=103785	deaths=103709)
+
+	........................................................................
+
+
+main:	it=-1:	t=180
+	species: Sceloporus graciosus          N=334316	(births=104235	deaths=104428)
+
+	........................................................................
+
+
+main:	it=-1:	t=181
+	species: Sceloporus graciosus          N=334123	(births=104269	deaths=104020)
+
+	........................................................................
+
+
+main:	it=-1:	t=182
+	species: Sceloporus graciosus          N=334372	(births=104484	deaths=104229)
+
+	........................................................................
+
+
+main:	it=-1:	t=183
+	species: Sceloporus graciosus          N=334627	(births=104402	deaths=104553)
+
+	........................................................................
+
+
+main:	it=-1:	t=184
+	species: Sceloporus graciosus          N=334476	(births=104696	deaths=104393)
+
+	........................................................................
+
+
+main:	it=-1:	t=185
+	species: Sceloporus graciosus          N=334779	(births=104002	deaths=104652)
+
+	........................................................................
+
+
+main:	it=-1:	t=186
+	species: Sceloporus graciosus          N=334129	(births=105041	deaths=104359)
+
+	........................................................................
+
+
+main:	it=-1:	t=187
+	species: Sceloporus graciosus          N=334811	(births=104610	deaths=104530)
+
+	........................................................................
+
+
+main:	it=-1:	t=188
+	species: Sceloporus graciosus          N=334891	(births=104481	deaths=104232)
+
+	........................................................................
+
+
+main:	it=-1:	t=189
+	species: Sceloporus graciosus          N=335140	(births=104524	deaths=104995)
+
+	........................................................................
+
+
+main:	it=-1:	t=190
+	species: Sceloporus graciosus          N=334669	(births=104554	deaths=104394)
+
+	........................................................................
+
+
+main:	it=-1:	t=191
+	species: Sceloporus graciosus          N=334829	(births=104624	deaths=104210)
+
+	........................................................................
+
+
+main:	it=-1:	t=192
+	species: Sceloporus graciosus          N=335243	(births=104591	deaths=104859)
+
+	........................................................................
+
+
+main:	it=-1:	t=193
+	species: Sceloporus graciosus          N=334975	(births=104858	deaths=104502)
+
+	........................................................................
+
+
+main:	it=-1:	t=194
+	species: Sceloporus graciosus          N=335331	(births=104695	deaths=104448)
+
+	........................................................................
+
+
+main:	it=-1:	t=195
+	species: Sceloporus graciosus          N=335578	(births=105017	deaths=105131)
+
+	........................................................................
+
+
+main:	it=-1:	t=196
+	species: Sceloporus graciosus          N=335464	(births=103904	deaths=104290)
+
+	........................................................................
+
+
+main:	it=-1:	t=197
+	species: Sceloporus graciosus          N=335078	(births=104552	deaths=104700)
+
+	........................................................................
+
+
+main:	it=-1:	t=198
+	species: Sceloporus graciosus          N=334930	(births=104811	deaths=105112)
+
+	........................................................................
+
+
+main:	it=-1:	t=199
+	species: Sceloporus graciosus          N=334629	(births=105100	deaths=104133)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 48248208
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 11364205
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  8155634
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1175153
+
+
+main:	it=-1:	t=200
+	species: Sceloporus graciosus          N=335596	(births=105617	deaths=105621)
+
+	........................................................................
+
+
+main:	it=-1:	t=201
+	species: Sceloporus graciosus          N=335592	(births=105174	deaths=105670)
+
+	........................................................................
+
+
+main:	it=-1:	t=202
+	species: Sceloporus graciosus          N=335096	(births=104452	deaths=104266)
+
+	........................................................................
+
+
+main:	it=-1:	t=203
+	species: Sceloporus graciosus          N=335282	(births=104280	deaths=104292)
+
+	........................................................................
+
+
+main:	it=-1:	t=204
+	species: Sceloporus graciosus          N=335270	(births=104876	deaths=104523)
+
+	........................................................................
+
+
+main:	it=-1:	t=205
+	species: Sceloporus graciosus          N=335623	(births=104749	deaths=104426)
+
+	........................................................................
+
+
+main:	it=-1:	t=206
+	species: Sceloporus graciosus          N=335946	(births=104530	deaths=104880)
+
+	........................................................................
+
+
+main:	it=-1:	t=207
+	species: Sceloporus graciosus          N=335596	(births=104158	deaths=104816)
+
+	........................................................................
+
+
+main:	it=-1:	t=208
+	species: Sceloporus graciosus          N=334938	(births=104177	deaths=103739)
+
+	........................................................................
+
+
+main:	it=-1:	t=209
+	species: Sceloporus graciosus          N=335376	(births=104980	deaths=105212)
+
+	........................................................................
+
+
+main:	it=-1:	t=210
+	species: Sceloporus graciosus          N=335144	(births=104750	deaths=104084)
+
+	........................................................................
+
+
+main:	it=-1:	t=211
+	species: Sceloporus graciosus          N=335810	(births=104663	deaths=104235)
+
+	........................................................................
+
+
+main:	it=-1:	t=212
+	species: Sceloporus graciosus          N=336238	(births=105074	deaths=105186)
+
+	........................................................................
+
+
+main:	it=-1:	t=213
+	species: Sceloporus graciosus          N=336126	(births=104442	deaths=105140)
+
+	........................................................................
+
+
+main:	it=-1:	t=214
+	species: Sceloporus graciosus          N=335428	(births=104454	deaths=103930)
+
+	........................................................................
+
+
+main:	it=-1:	t=215
+	species: Sceloporus graciosus          N=335952	(births=104537	deaths=104668)
+
+	........................................................................
+
+
+main:	it=-1:	t=216
+	species: Sceloporus graciosus          N=335821	(births=104963	deaths=104705)
+
+	........................................................................
+
+
+main:	it=-1:	t=217
+	species: Sceloporus graciosus          N=336079	(births=105185	deaths=104678)
+
+	........................................................................
+
+
+main:	it=-1:	t=218
+	species: Sceloporus graciosus          N=336586	(births=105087	deaths=105487)
+
+	........................................................................
+
+
+main:	it=-1:	t=219
+	species: Sceloporus graciosus          N=336186	(births=105546	deaths=104922)
+
+	........................................................................
+
+
+main:	it=-1:	t=220
+	species: Sceloporus graciosus          N=336810	(births=105261	deaths=105510)
+
+	........................................................................
+
+
+main:	it=-1:	t=221
+	species: Sceloporus graciosus          N=336561	(births=105318	deaths=105025)
+
+	........................................................................
+
+
+main:	it=-1:	t=222
+	species: Sceloporus graciosus          N=336854	(births=104996	deaths=105029)
+
+	........................................................................
+
+
+main:	it=-1:	t=223
+	species: Sceloporus graciosus          N=336821	(births=104870	deaths=104896)
+
+	........................................................................
+
+
+main:	it=-1:	t=224
+	species: Sceloporus graciosus          N=336795	(births=105748	deaths=105726)
+
+	........................................................................
+
+
+main:	it=-1:	t=225
+	species: Sceloporus graciosus          N=336817	(births=105721	deaths=105627)
+
+	........................................................................
+
+
+main:	it=-1:	t=226
+	species: Sceloporus graciosus          N=336911	(births=105784	deaths=106104)
+
+	........................................................................
+
+
+main:	it=-1:	t=227
+	species: Sceloporus graciosus          N=336591	(births=105245	deaths=105388)
+
+	........................................................................
+
+
+main:	it=-1:	t=228
+	species: Sceloporus graciosus          N=336448	(births=105303	deaths=105760)
+
+	........................................................................
+
+
+main:	it=-1:	t=229
+	species: Sceloporus graciosus          N=335991	(births=105958	deaths=105315)
+
+	........................................................................
+
+
+main:	it=-1:	t=230
+	species: Sceloporus graciosus          N=336634	(births=104844	deaths=105067)
+
+	........................................................................
+
+
+main:	it=-1:	t=231
+	species: Sceloporus graciosus          N=336411	(births=105356	deaths=105131)
+
+	........................................................................
+
+
+main:	it=-1:	t=232
+	species: Sceloporus graciosus          N=336636	(births=105134	deaths=104790)
+
+	........................................................................
+
+
+main:	it=-1:	t=233
+	species: Sceloporus graciosus          N=336980	(births=105458	deaths=105429)
+
+	........................................................................
+
+
+main:	it=-1:	t=234
+	species: Sceloporus graciosus          N=337009	(births=105300	deaths=104889)
+
+	........................................................................
+
+
+main:	it=-1:	t=235
+	species: Sceloporus graciosus          N=337420	(births=104936	deaths=104751)
+
+	........................................................................
+
+
+main:	it=-1:	t=236
+	species: Sceloporus graciosus          N=337605	(births=104647	deaths=105364)
+
+	........................................................................
+
+
+main:	it=-1:	t=237
+	species: Sceloporus graciosus          N=336888	(births=105650	deaths=105763)
+
+	........................................................................
+
+
+main:	it=-1:	t=238
+	species: Sceloporus graciosus          N=336775	(births=105501	deaths=105350)
+
+	........................................................................
+
+
+main:	it=-1:	t=239
+	species: Sceloporus graciosus          N=336926	(births=105679	deaths=105238)
+
+	........................................................................
+
+
+main:	it=-1:	t=240
+	species: Sceloporus graciosus          N=337367	(births=105316	deaths=105508)
+
+	........................................................................
+
+
+main:	it=-1:	t=241
+	species: Sceloporus graciosus          N=337175	(births=105251	deaths=105204)
+
+	........................................................................
+
+
+main:	it=-1:	t=242
+	species: Sceloporus graciosus          N=337222	(births=104596	deaths=104503)
+
+	........................................................................
+
+
+main:	it=-1:	t=243
+	species: Sceloporus graciosus          N=337315	(births=105134	deaths=105003)
+
+	........................................................................
+
+
+main:	it=-1:	t=244
+	species: Sceloporus graciosus          N=337446	(births=105614	deaths=105571)
+
+	........................................................................
+
+
+main:	it=-1:	t=245
+	species: Sceloporus graciosus          N=337489	(births=105302	deaths=105031)
+
+	........................................................................
+
+
+main:	it=-1:	t=246
+	species: Sceloporus graciosus          N=337760	(births=105522	deaths=105411)
+
+	........................................................................
+
+
+main:	it=-1:	t=247
+	species: Sceloporus graciosus          N=337871	(births=105426	deaths=105957)
+
+	........................................................................
+
+
+main:	it=-1:	t=248
+	species: Sceloporus graciosus          N=337340	(births=105410	deaths=105526)
+
+	........................................................................
+
+
+main:	it=-1:	t=249
+	species: Sceloporus graciosus          N=337224	(births=106190	deaths=105485)
+
+	........................................................................
+
+
+main:	it=-1:	t=250
+	species: Sceloporus graciosus          N=337929	(births=105832	deaths=105512)
+
+	........................................................................
+
+
+main:	it=-1:	t=251
+	species: Sceloporus graciosus          N=338249	(births=105996	deaths=105769)
+
+	........................................................................
+
+
+main:	it=-1:	t=252
+	species: Sceloporus graciosus          N=338476	(births=105627	deaths=105622)
+
+	........................................................................
+
+
+main:	it=-1:	t=253
+	species: Sceloporus graciosus          N=338481	(births=105295	deaths=105831)
+
+	........................................................................
+
+
+main:	it=-1:	t=254
+	species: Sceloporus graciosus          N=337945	(births=105833	deaths=105308)
+
+	........................................................................
+
+
+main:	it=-1:	t=255
+	species: Sceloporus graciosus          N=338470	(births=105798	deaths=105603)
+
+	........................................................................
+
+
+main:	it=-1:	t=256
+	species: Sceloporus graciosus          N=338665	(births=105895	deaths=105993)
+
+	........................................................................
+
+
+main:	it=-1:	t=257
+	species: Sceloporus graciosus          N=338567	(births=105968	deaths=105711)
+
+	........................................................................
+
+
+main:	it=-1:	t=258
+	species: Sceloporus graciosus          N=338824	(births=105944	deaths=106215)
+
+	........................................................................
+
+
+main:	it=-1:	t=259
+	species: Sceloporus graciosus          N=338553	(births=105642	deaths=106041)
+
+	........................................................................
+
+
+main:	it=-1:	t=260
+	species: Sceloporus graciosus          N=338154	(births=105403	deaths=105678)
+
+	........................................................................
+
+
+main:	it=-1:	t=261
+	species: Sceloporus graciosus          N=337879	(births=105770	deaths=105513)
+
+	........................................................................
+
+
+main:	it=-1:	t=262
+	species: Sceloporus graciosus          N=338136	(births=105956	deaths=106271)
+
+	........................................................................
+
+
+main:	it=-1:	t=263
+	species: Sceloporus graciosus          N=337821	(births=105834	deaths=105119)
+
+	........................................................................
+
+
+main:	it=-1:	t=264
+	species: Sceloporus graciosus          N=338536	(births=105944	deaths=105852)
+
+	........................................................................
+
+
+main:	it=-1:	t=265
+	species: Sceloporus graciosus          N=338628	(births=105635	deaths=105961)
+
+	........................................................................
+
+
+main:	it=-1:	t=266
+	species: Sceloporus graciosus          N=338302	(births=105964	deaths=105687)
+
+	........................................................................
+
+
+main:	it=-1:	t=267
+	species: Sceloporus graciosus          N=338579	(births=106209	deaths=105888)
+
+	........................................................................
+
+
+main:	it=-1:	t=268
+	species: Sceloporus graciosus          N=338900	(births=105732	deaths=106134)
+
+	........................................................................
+
+
+main:	it=-1:	t=269
+	species: Sceloporus graciosus          N=338498	(births=105106	deaths=105111)
+
+	........................................................................
+
+
+main:	it=-1:	t=270
+	species: Sceloporus graciosus          N=338493	(births=105996	deaths=105267)
+
+	........................................................................
+
+
+main:	it=-1:	t=271
+	species: Sceloporus graciosus          N=339222	(births=105466	deaths=106187)
+
+	........................................................................
+
+
+main:	it=-1:	t=272
+	species: Sceloporus graciosus          N=338501	(births=105348	deaths=105052)
+
+	........................................................................
+
+
+main:	it=-1:	t=273
+	species: Sceloporus graciosus          N=338797	(births=105724	deaths=105722)
+
+	........................................................................
+
+
+main:	it=-1:	t=274
+	species: Sceloporus graciosus          N=338799	(births=106359	deaths=106238)
+
+	........................................................................
+
+
+main:	it=-1:	t=275
+	species: Sceloporus graciosus          N=338920	(births=105703	deaths=105418)
+
+	........................................................................
+
+
+main:	it=-1:	t=276
+	species: Sceloporus graciosus          N=339205	(births=105841	deaths=105642)
+
+	........................................................................
+
+
+main:	it=-1:	t=277
+	species: Sceloporus graciosus          N=339404	(births=106549	deaths=106666)
+
+	........................................................................
+
+
+main:	it=-1:	t=278
+	species: Sceloporus graciosus          N=339287	(births=107243	deaths=106934)
+
+	........................................................................
+
+
+main:	it=-1:	t=279
+	species: Sceloporus graciosus          N=339596	(births=106909	deaths=107527)
+
+	........................................................................
+
+
+main:	it=-1:	t=280
+	species: Sceloporus graciosus          N=338978	(births=106173	deaths=105721)
+
+	........................................................................
+
+
+main:	it=-1:	t=281
+	species: Sceloporus graciosus          N=339430	(births=106194	deaths=105870)
+
+	........................................................................
+
+
+main:	it=-1:	t=282
+	species: Sceloporus graciosus          N=339754	(births=106396	deaths=106659)
+
+	........................................................................
+
+
+main:	it=-1:	t=283
+	species: Sceloporus graciosus          N=339491	(births=106282	deaths=106359)
+
+	........................................................................
+
+
+main:	it=-1:	t=284
+	species: Sceloporus graciosus          N=339414	(births=106634	deaths=105725)
+
+	........................................................................
+
+
+main:	it=-1:	t=285
+	species: Sceloporus graciosus          N=340323	(births=107466	deaths=107480)
+
+	........................................................................
+
+
+main:	it=-1:	t=286
+	species: Sceloporus graciosus          N=340309	(births=106618	deaths=106773)
+
+	........................................................................
+
+
+main:	it=-1:	t=287
+	species: Sceloporus graciosus          N=340154	(births=106360	deaths=106699)
+
+	........................................................................
+
+
+main:	it=-1:	t=288
+	species: Sceloporus graciosus          N=339815	(births=106429	deaths=106241)
+
+	........................................................................
+
+
+main:	it=-1:	t=289
+	species: Sceloporus graciosus          N=340003	(births=106279	deaths=106405)
+
+	........................................................................
+
+
+main:	it=-1:	t=290
+	species: Sceloporus graciosus          N=339877	(births=106499	deaths=107037)
+
+	........................................................................
+
+
+main:	it=-1:	t=291
+	species: Sceloporus graciosus          N=339339	(births=105981	deaths=105702)
+
+	........................................................................
+
+
+main:	it=-1:	t=292
+	species: Sceloporus graciosus          N=339618	(births=106000	deaths=105396)
+
+	........................................................................
+
+
+main:	it=-1:	t=293
+	species: Sceloporus graciosus          N=340222	(births=106239	deaths=106157)
+
+	........................................................................
+
+
+main:	it=-1:	t=294
+	species: Sceloporus graciosus          N=340304	(births=106584	deaths=106164)
+
+	........................................................................
+
+
+main:	it=-1:	t=295
+	species: Sceloporus graciosus          N=340724	(births=106032	deaths=106146)
+
+	........................................................................
+
+
+main:	it=-1:	t=296
+	species: Sceloporus graciosus          N=340610	(births=106567	deaths=106567)
+
+	........................................................................
+
+
+main:	it=-1:	t=297
+	species: Sceloporus graciosus          N=340610	(births=105982	deaths=106007)
+
+	........................................................................
+
+
+main:	it=-1:	t=298
+	species: Sceloporus graciosus          N=340585	(births=106119	deaths=105818)
+
+	........................................................................
+
+
+main:	it=-1:	t=299
+	species: Sceloporus graciosus          N=340886	(births=105847	deaths=106016)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 49947873
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 11629906
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  8973686
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1284062
+
+
+main:	it=-1:	t=300
+	species: Sceloporus graciosus          N=340717	(births=106444	deaths=107026)
+
+	........................................................................
+
+
+main:	it=-1:	t=301
+	species: Sceloporus graciosus          N=340135	(births=105855	deaths=106244)
+
+	........................................................................
+
+
+main:	it=-1:	t=302
+	species: Sceloporus graciosus          N=339746	(births=106453	deaths=105224)
+
+	........................................................................
+
+
+main:	it=-1:	t=303
+	species: Sceloporus graciosus          N=340975	(births=106997	deaths=107190)
+
+	........................................................................
+
+
+main:	it=-1:	t=304
+	species: Sceloporus graciosus          N=340782	(births=106189	deaths=106212)
+
+	........................................................................
+
+
+main:	it=-1:	t=305
+	species: Sceloporus graciosus          N=340759	(births=106631	deaths=106691)
+
+	........................................................................
+
+
+main:	it=-1:	t=306
+	species: Sceloporus graciosus          N=340699	(births=106268	deaths=106368)
+
+	........................................................................
+
+
+main:	it=-1:	t=307
+	species: Sceloporus graciosus          N=340599	(births=106035	deaths=105601)
+
+	........................................................................
+
+
+main:	it=-1:	t=308
+	species: Sceloporus graciosus          N=341033	(births=105849	deaths=105185)
+
+	........................................................................
+
+
+main:	it=-1:	t=309
+	species: Sceloporus graciosus          N=341697	(births=106419	deaths=106472)
+
+	........................................................................
+
+
+main:	it=-1:	t=310
+	species: Sceloporus graciosus          N=341644	(births=106289	deaths=106244)
+
+	........................................................................
+
+
+main:	it=-1:	t=311
+	species: Sceloporus graciosus          N=341689	(births=106343	deaths=106329)
+
+	........................................................................
+
+
+main:	it=-1:	t=312
+	species: Sceloporus graciosus          N=341703	(births=106701	deaths=107443)
+
+	........................................................................
+
+
+main:	it=-1:	t=313
+	species: Sceloporus graciosus          N=340961	(births=106347	deaths=106238)
+
+	........................................................................
+
+
+main:	it=-1:	t=314
+	species: Sceloporus graciosus          N=341070	(births=106501	deaths=106365)
+
+	........................................................................
+
+
+main:	it=-1:	t=315
+	species: Sceloporus graciosus          N=341206	(births=105914	deaths=105763)
+
+	........................................................................
+
+
+main:	it=-1:	t=316
+	species: Sceloporus graciosus          N=341357	(births=106283	deaths=106278)
+
+	........................................................................
+
+
+main:	it=-1:	t=317
+	species: Sceloporus graciosus          N=341362	(births=106343	deaths=106278)
+
+	........................................................................
+
+
+main:	it=-1:	t=318
+	species: Sceloporus graciosus          N=341427	(births=107347	deaths=107163)
+
+	........................................................................
+
+
+main:	it=-1:	t=319
+	species: Sceloporus graciosus          N=341611	(births=106976	deaths=107503)
+
+	........................................................................
+
+
+main:	it=-1:	t=320
+	species: Sceloporus graciosus          N=341084	(births=106561	deaths=106413)
+
+	........................................................................
+
+
+main:	it=-1:	t=321
+	species: Sceloporus graciosus          N=341232	(births=107346	deaths=106998)
+
+	........................................................................
+
+
+main:	it=-1:	t=322
+	species: Sceloporus graciosus          N=341580	(births=106922	deaths=107446)
+
+	........................................................................
+
+
+main:	it=-1:	t=323
+	species: Sceloporus graciosus          N=341056	(births=106384	deaths=105913)
+
+	........................................................................
+
+
+main:	it=-1:	t=324
+	species: Sceloporus graciosus          N=341527	(births=107205	deaths=106692)
+
+	........................................................................
+
+
+main:	it=-1:	t=325
+	species: Sceloporus graciosus          N=342040	(births=106726	deaths=107239)
+
+	........................................................................
+
+
+main:	it=-1:	t=326
+	species: Sceloporus graciosus          N=341527	(births=106595	deaths=106195)
+
+	........................................................................
+
+
+main:	it=-1:	t=327
+	species: Sceloporus graciosus          N=341927	(births=107028	deaths=107218)
+
+	........................................................................
+
+
+main:	it=-1:	t=328
+	species: Sceloporus graciosus          N=341737	(births=106885	deaths=107106)
+
+	........................................................................
+
+
+main:	it=-1:	t=329
+	species: Sceloporus graciosus          N=341516	(births=106848	deaths=106676)
+
+	........................................................................
+
+
+main:	it=-1:	t=330
+	species: Sceloporus graciosus          N=341688	(births=106747	deaths=106956)
+
+	........................................................................
+
+
+main:	it=-1:	t=331
+	species: Sceloporus graciosus          N=341479	(births=106594	deaths=106897)
+
+	........................................................................
+
+
+main:	it=-1:	t=332
+	species: Sceloporus graciosus          N=341176	(births=106438	deaths=106379)
+
+	........................................................................
+
+
+main:	it=-1:	t=333
+	species: Sceloporus graciosus          N=341235	(births=107031	deaths=106820)
+
+	........................................................................
+
+
+main:	it=-1:	t=334
+	species: Sceloporus graciosus          N=341446	(births=107356	deaths=107018)
+
+	........................................................................
+
+
+main:	it=-1:	t=335
+	species: Sceloporus graciosus          N=341784	(births=106586	deaths=106281)
+
+	........................................................................
+
+
+main:	it=-1:	t=336
+	species: Sceloporus graciosus          N=342089	(births=107163	deaths=107419)
+
+	........................................................................
+
+
+main:	it=-1:	t=337
+	species: Sceloporus graciosus          N=341833	(births=106447	deaths=106217)
+
+	........................................................................
+
+
+main:	it=-1:	t=338
+	species: Sceloporus graciosus          N=342063	(births=106730	deaths=107044)
+
+	........................................................................
+
+
+main:	it=-1:	t=339
+	species: Sceloporus graciosus          N=341749	(births=106552	deaths=106014)
+
+	........................................................................
+
+
+main:	it=-1:	t=340
+	species: Sceloporus graciosus          N=342287	(births=106823	deaths=107308)
+
+	........................................................................
+
+
+main:	it=-1:	t=341
+	species: Sceloporus graciosus          N=341802	(births=107244	deaths=106233)
+
+	........................................................................
+
+
+main:	it=-1:	t=342
+	species: Sceloporus graciosus          N=342813	(births=107138	deaths=107352)
+
+	........................................................................
+
+
+main:	it=-1:	t=343
+	species: Sceloporus graciosus          N=342599	(births=107448	deaths=108191)
+
+	........................................................................
+
+
+main:	it=-1:	t=344
+	species: Sceloporus graciosus          N=341856	(births=107565	deaths=107138)
+
+	........................................................................
+
+
+main:	it=-1:	t=345
+	species: Sceloporus graciosus          N=342283	(births=107332	deaths=107469)
+
+	........................................................................
+
+
+main:	it=-1:	t=346
+	species: Sceloporus graciosus          N=342146	(births=107192	deaths=107461)
+
+	........................................................................
+
+
+main:	it=-1:	t=347
+	species: Sceloporus graciosus          N=341877	(births=107296	deaths=106313)
+
+	........................................................................
+
+
+main:	it=-1:	t=348
+	species: Sceloporus graciosus          N=342860	(births=106852	deaths=107240)
+
+	........................................................................
+
+
+main:	it=-1:	t=349
+	species: Sceloporus graciosus          N=342472	(births=106795	deaths=107317)
+
+	........................................................................
+
+
+main:	it=-1:	t=350
+	species: Sceloporus graciosus          N=341950	(births=106807	deaths=107439)
+
+	........................................................................
+
+
+main:	it=-1:	t=351
+	species: Sceloporus graciosus          N=341318	(births=106474	deaths=105696)
+
+	........................................................................
+
+
+main:	it=-1:	t=352
+	species: Sceloporus graciosus          N=342096	(births=106412	deaths=106862)
+
+	........................................................................
+
+
+main:	it=-1:	t=353
+	species: Sceloporus graciosus          N=341646	(births=106142	deaths=106229)
+
+	........................................................................
+
+
+main:	it=-1:	t=354
+	species: Sceloporus graciosus          N=341559	(births=106219	deaths=105567)
+
+	........................................................................
+
+
+main:	it=-1:	t=355
+	species: Sceloporus graciosus          N=342211	(births=106757	deaths=106910)
+
+	........................................................................
+
+
+main:	it=-1:	t=356
+	species: Sceloporus graciosus          N=342058	(births=106915	deaths=106593)
+
+	........................................................................
+
+
+main:	it=-1:	t=357
+	species: Sceloporus graciosus          N=342380	(births=107029	deaths=106939)
+
+	........................................................................
+
+
+main:	it=-1:	t=358
+	species: Sceloporus graciosus          N=342470	(births=106913	deaths=106349)
+
+	........................................................................
+
+
+main:	it=-1:	t=359
+	species: Sceloporus graciosus          N=343034	(births=108141	deaths=108168)
+
+	........................................................................
+
+
+main:	it=-1:	t=360
+	species: Sceloporus graciosus          N=343007	(births=107393	deaths=108021)
+
+	........................................................................
+
+
+main:	it=-1:	t=361
+	species: Sceloporus graciosus          N=342379	(births=107213	deaths=107385)
+
+	........................................................................
+
+
+main:	it=-1:	t=362
+	species: Sceloporus graciosus          N=342207	(births=107055	deaths=106457)
+
+	........................................................................
+
+
+main:	it=-1:	t=363
+	species: Sceloporus graciosus          N=342805	(births=107605	deaths=107632)
+
+	........................................................................
+
+
+main:	it=-1:	t=364
+	species: Sceloporus graciosus          N=342778	(births=106508	deaths=106773)
+
+	........................................................................
+
+
+main:	it=-1:	t=365
+	species: Sceloporus graciosus          N=342513	(births=107091	deaths=106501)
+
+	........................................................................
+
+
+main:	it=-1:	t=366
+	species: Sceloporus graciosus          N=343103	(births=107346	deaths=107554)
+
+	........................................................................
+
+
+main:	it=-1:	t=367
+	species: Sceloporus graciosus          N=342895	(births=107511	deaths=107576)
+
+	........................................................................
+
+
+main:	it=-1:	t=368
+	species: Sceloporus graciosus          N=342830	(births=107026	deaths=107635)
+
+	........................................................................
+
+
+main:	it=-1:	t=369
+	species: Sceloporus graciosus          N=342221	(births=107259	deaths=106334)
+
+	........................................................................
+
+
+main:	it=-1:	t=370
+	species: Sceloporus graciosus          N=343146	(births=107443	deaths=108120)
+
+	........................................................................
+
+
+main:	it=-1:	t=371
+	species: Sceloporus graciosus          N=342469	(births=106657	deaths=106909)
+
+	........................................................................
+
+
+main:	it=-1:	t=372
+	species: Sceloporus graciosus          N=342217	(births=106931	deaths=106813)
+
+	........................................................................
+
+
+main:	it=-1:	t=373
+	species: Sceloporus graciosus          N=342335	(births=107141	deaths=107067)
+
+	........................................................................
+
+
+main:	it=-1:	t=374
+	species: Sceloporus graciosus          N=342409	(births=106886	deaths=107604)
+
+	........................................................................
+
+
+main:	it=-1:	t=375
+	species: Sceloporus graciosus          N=341691	(births=106739	deaths=106486)
+
+	........................................................................
+
+
+main:	it=-1:	t=376
+	species: Sceloporus graciosus          N=341944	(births=107117	deaths=106478)
+
+	........................................................................
+
+
+main:	it=-1:	t=377
+	species: Sceloporus graciosus          N=342583	(births=107091	deaths=107010)
+
+	........................................................................
+
+
+main:	it=-1:	t=378
+	species: Sceloporus graciosus          N=342664	(births=107337	deaths=107205)
+
+	........................................................................
+
+
+main:	it=-1:	t=379
+	species: Sceloporus graciosus          N=342796	(births=107519	deaths=107684)
+
+	........................................................................
+
+
+main:	it=-1:	t=380
+	species: Sceloporus graciosus          N=342631	(births=107299	deaths=107180)
+
+	........................................................................
+
+
+main:	it=-1:	t=381
+	species: Sceloporus graciosus          N=342750	(births=107527	deaths=107819)
+
+	........................................................................
+
+
+main:	it=-1:	t=382
+	species: Sceloporus graciosus          N=342458	(births=107114	deaths=107376)
+
+	........................................................................
+
+
+main:	it=-1:	t=383
+	species: Sceloporus graciosus          N=342196	(births=106993	deaths=106944)
+
+	........................................................................
+
+
+main:	it=-1:	t=384
+	species: Sceloporus graciosus          N=342245	(births=107097	deaths=106993)
+
+	........................................................................
+
+
+main:	it=-1:	t=385
+	species: Sceloporus graciosus          N=342349	(births=107345	deaths=107315)
+
+	........................................................................
+
+
+main:	it=-1:	t=386
+	species: Sceloporus graciosus          N=342379	(births=107062	deaths=107368)
+
+	........................................................................
+
+
+main:	it=-1:	t=387
+	species: Sceloporus graciosus          N=342073	(births=107215	deaths=106722)
+
+	........................................................................
+
+
+main:	it=-1:	t=388
+	species: Sceloporus graciosus          N=342566	(births=106812	deaths=106145)
+
+	........................................................................
+
+
+main:	it=-1:	t=389
+	species: Sceloporus graciosus          N=343233	(births=107630	deaths=107271)
+
+	........................................................................
+
+
+main:	it=-1:	t=390
+	species: Sceloporus graciosus          N=343592	(births=107337	deaths=107404)
+
+	........................................................................
+
+
+main:	it=-1:	t=391
+	species: Sceloporus graciosus          N=343525	(births=106874	deaths=107160)
+
+	........................................................................
+
+
+main:	it=-1:	t=392
+	species: Sceloporus graciosus          N=343239	(births=106929	deaths=107271)
+
+	........................................................................
+
+
+main:	it=-1:	t=393
+	species: Sceloporus graciosus          N=342897	(births=107162	deaths=107619)
+
+	........................................................................
+
+
+main:	it=-1:	t=394
+	species: Sceloporus graciosus          N=342440	(births=107199	deaths=106435)
+
+	........................................................................
+
+
+main:	it=-1:	t=395
+	species: Sceloporus graciosus          N=343204	(births=107213	deaths=107370)
+
+	........................................................................
+
+
+main:	it=-1:	t=396
+	species: Sceloporus graciosus          N=343047	(births=107034	deaths=107376)
+
+	........................................................................
+
+
+main:	it=-1:	t=397
+	species: Sceloporus graciosus          N=342705	(births=106951	deaths=107331)
+
+	........................................................................
+
+
+main:	it=-1:	t=398
+	species: Sceloporus graciosus          N=342325	(births=107673	deaths=107913)
+
+	........................................................................
+
+
+main:	it=-1:	t=399
+	species: Sceloporus graciosus          N=342085	(births=107254	deaths=106758)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 51283259
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 11868261
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  9534643
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1364675
+
+
+main:	it=-1:	t=400
+	species: Sceloporus graciosus          N=342581	(births=107367	deaths=107615)
+
+	........................................................................
+
+
+main:	it=-1:	t=401
+	species: Sceloporus graciosus          N=342333	(births=107283	deaths=106744)
+
+	........................................................................
+
+
+main:	it=-1:	t=402
+	species: Sceloporus graciosus          N=342872	(births=106954	deaths=107854)
+
+	........................................................................
+
+
+main:	it=-1:	t=403
+	species: Sceloporus graciosus          N=341972	(births=106884	deaths=106931)
+
+	........................................................................
+
+
+main:	it=-1:	t=404
+	species: Sceloporus graciosus          N=341925	(births=106866	deaths=106255)
+
+	........................................................................
+
+
+main:	it=-1:	t=405
+	species: Sceloporus graciosus          N=342536	(births=107058	deaths=107326)
+
+	........................................................................
+
+
+main:	it=-1:	t=406
+	species: Sceloporus graciosus          N=342268	(births=107074	deaths=106826)
+
+	........................................................................
+
+
+main:	it=-1:	t=407
+	species: Sceloporus graciosus          N=342516	(births=107218	deaths=107082)
+
+	........................................................................
+
+
+main:	it=-1:	t=408
+	species: Sceloporus graciosus          N=342652	(births=106867	deaths=107277)
+
+	........................................................................
+
+
+main:	it=-1:	t=409
+	species: Sceloporus graciosus          N=342242	(births=106825	deaths=106387)
+
+	........................................................................
+
+
+main:	it=-1:	t=410
+	species: Sceloporus graciosus          N=342680	(births=107184	deaths=107021)
+
+	........................................................................
+
+
+main:	it=-1:	t=411
+	species: Sceloporus graciosus          N=342843	(births=107353	deaths=107632)
+
+	........................................................................
+
+
+main:	it=-1:	t=412
+	species: Sceloporus graciosus          N=342564	(births=107717	deaths=107252)
+
+	........................................................................
+
+
+main:	it=-1:	t=413
+	species: Sceloporus graciosus          N=343029	(births=107276	deaths=106958)
+
+	........................................................................
+
+
+main:	it=-1:	t=414
+	species: Sceloporus graciosus          N=343347	(births=107810	deaths=108238)
+
+	........................................................................
+
+
+main:	it=-1:	t=415
+	species: Sceloporus graciosus          N=342919	(births=107421	deaths=107856)
+
+	........................................................................
+
+
+main:	it=-1:	t=416
+	species: Sceloporus graciosus          N=342484	(births=107342	deaths=107149)
+
+	........................................................................
+
+
+main:	it=-1:	t=417
+	species: Sceloporus graciosus          N=342677	(births=107024	deaths=106642)
+
+	........................................................................
+
+
+main:	it=-1:	t=418
+	species: Sceloporus graciosus          N=343059	(births=107289	deaths=107583)
+
+	........................................................................
+
+
+main:	it=-1:	t=419
+	species: Sceloporus graciosus          N=342765	(births=107757	deaths=107981)
+
+	........................................................................
+
+
+main:	it=-1:	t=420
+	species: Sceloporus graciosus          N=342541	(births=107205	deaths=107324)
+
+	........................................................................
+
+
+main:	it=-1:	t=421
+	species: Sceloporus graciosus          N=342422	(births=106453	deaths=106903)
+
+	........................................................................
+
+
+main:	it=-1:	t=422
+	species: Sceloporus graciosus          N=341972	(births=107235	deaths=106860)
+
+	........................................................................
+
+
+main:	it=-1:	t=423
+	species: Sceloporus graciosus          N=342347	(births=107173	deaths=107048)
+
+	........................................................................
+
+
+main:	it=-1:	t=424
+	species: Sceloporus graciosus          N=342472	(births=107307	deaths=107393)
+
+	........................................................................
+
+
+main:	it=-1:	t=425
+	species: Sceloporus graciosus          N=342386	(births=106657	deaths=106482)
+
+	........................................................................
+
+
+main:	it=-1:	t=426
+	species: Sceloporus graciosus          N=342561	(births=107144	deaths=107073)
+
+	........................................................................
+
+
+main:	it=-1:	t=427
+	species: Sceloporus graciosus          N=342632	(births=107884	deaths=107676)
+
+	........................................................................
+
+
+main:	it=-1:	t=428
+	species: Sceloporus graciosus          N=342840	(births=107266	deaths=107483)
+
+	........................................................................
+
+
+main:	it=-1:	t=429
+	species: Sceloporus graciosus          N=342623	(births=106901	deaths=107189)
+
+	........................................................................
+
+
+main:	it=-1:	t=430
+	species: Sceloporus graciosus          N=342335	(births=106883	deaths=106370)
+
+	........................................................................
+
+
+main:	it=-1:	t=431
+	species: Sceloporus graciosus          N=342848	(births=107491	deaths=107744)
+
+	........................................................................
+
+
+main:	it=-1:	t=432
+	species: Sceloporus graciosus          N=342595	(births=107256	deaths=107076)
+
+	........................................................................
+
+
+main:	it=-1:	t=433
+	species: Sceloporus graciosus          N=342775	(births=107182	deaths=106214)
+
+	........................................................................
+
+
+main:	it=-1:	t=434
+	species: Sceloporus graciosus          N=343743	(births=107373	deaths=108029)
+
+	........................................................................
+
+
+main:	it=-1:	t=435
+	species: Sceloporus graciosus          N=343087	(births=107183	deaths=107263)
+
+	........................................................................
+
+
+main:	it=-1:	t=436
+	species: Sceloporus graciosus          N=343007	(births=107269	deaths=107616)
+
+	........................................................................
+
+
+main:	it=-1:	t=437
+	species: Sceloporus graciosus          N=342660	(births=106977	deaths=106814)
+
+	........................................................................
+
+
+main:	it=-1:	t=438
+	species: Sceloporus graciosus          N=342823	(births=107438	deaths=107499)
+
+	........................................................................
+
+
+main:	it=-1:	t=439
+	species: Sceloporus graciosus          N=342762	(births=107492	deaths=107515)
+
+	........................................................................
+
+
+main:	it=-1:	t=440
+	species: Sceloporus graciosus          N=342739	(births=107457	deaths=106659)
+
+	........................................................................
+
+
+main:	it=-1:	t=441
+	species: Sceloporus graciosus          N=343537	(births=107978	deaths=108043)
+
+	........................................................................
+
+
+main:	it=-1:	t=442
+	species: Sceloporus graciosus          N=343472	(births=106967	deaths=107869)
+
+	........................................................................
+
+
+main:	it=-1:	t=443
+	species: Sceloporus graciosus          N=342570	(births=106685	deaths=106848)
+
+	........................................................................
+
+
+main:	it=-1:	t=444
+	species: Sceloporus graciosus          N=342407	(births=106624	deaths=106621)
+
+	........................................................................
+
+
+main:	it=-1:	t=445
+	species: Sceloporus graciosus          N=342410	(births=106517	deaths=105849)
+
+	........................................................................
+
+
+main:	it=-1:	t=446
+	species: Sceloporus graciosus          N=343078	(births=106747	deaths=106143)
+
+	........................................................................
+
+
+main:	it=-1:	t=447
+	species: Sceloporus graciosus          N=343682	(births=106608	deaths=106813)
+
+	........................................................................
+
+
+main:	it=-1:	t=448
+	species: Sceloporus graciosus          N=343477	(births=106877	deaths=107230)
+
+	........................................................................
+
+
+main:	it=-1:	t=449
+	species: Sceloporus graciosus          N=343124	(births=106612	deaths=106437)
+
+	........................................................................
+
+
+main:	it=-1:	t=450
+	species: Sceloporus graciosus          N=343299	(births=107245	deaths=107131)
+
+	........................................................................
+
+
+main:	it=-1:	t=451
+	species: Sceloporus graciosus          N=343413	(births=106807	deaths=107351)
+
+	........................................................................
+
+
+main:	it=-1:	t=452
+	species: Sceloporus graciosus          N=342869	(births=107466	deaths=107642)
+
+	........................................................................
+
+
+main:	it=-1:	t=453
+	species: Sceloporus graciosus          N=342693	(births=108024	deaths=107825)
+
+	........................................................................
+
+
+main:	it=-1:	t=454
+	species: Sceloporus graciosus          N=342892	(births=107475	deaths=107334)
+
+	........................................................................
+
+
+main:	it=-1:	t=455
+	species: Sceloporus graciosus          N=343033	(births=106589	deaths=106599)
+
+	........................................................................
+
+
+main:	it=-1:	t=456
+	species: Sceloporus graciosus          N=343023	(births=106821	deaths=106991)
+
+	........................................................................
+
+
+main:	it=-1:	t=457
+	species: Sceloporus graciosus          N=342853	(births=107340	deaths=106707)
+
+	........................................................................
+
+
+main:	it=-1:	t=458
+	species: Sceloporus graciosus          N=343486	(births=106826	deaths=107120)
+
+	........................................................................
+
+
+main:	it=-1:	t=459
+	species: Sceloporus graciosus          N=343192	(births=107286	deaths=107831)
+
+	........................................................................
+
+
+main:	it=-1:	t=460
+	species: Sceloporus graciosus          N=342647	(births=106935	deaths=106198)
+
+	........................................................................
+
+
+main:	it=-1:	t=461
+	species: Sceloporus graciosus          N=343384	(births=107535	deaths=107314)
+
+	........................................................................
+
+
+main:	it=-1:	t=462
+	species: Sceloporus graciosus          N=343605	(births=106990	deaths=107640)
+
+	........................................................................
+
+
+main:	it=-1:	t=463
+	species: Sceloporus graciosus          N=342955	(births=107597	deaths=107924)
+
+	........................................................................
+
+
+main:	it=-1:	t=464
+	species: Sceloporus graciosus          N=342628	(births=106511	deaths=107311)
+
+	........................................................................
+
+
+main:	it=-1:	t=465
+	species: Sceloporus graciosus          N=341828	(births=107013	deaths=106461)
+
+	........................................................................
+
+
+main:	it=-1:	t=466
+	species: Sceloporus graciosus          N=342380	(births=107838	deaths=107432)
+
+	........................................................................
+
+
+main:	it=-1:	t=467
+	species: Sceloporus graciosus          N=342786	(births=107114	deaths=106668)
+
+	........................................................................
+
+
+main:	it=-1:	t=468
+	species: Sceloporus graciosus          N=343232	(births=107439	deaths=107420)
+
+	........................................................................
+
+
+main:	it=-1:	t=469
+	species: Sceloporus graciosus          N=343251	(births=106947	deaths=107469)
+
+	........................................................................
+
+
+main:	it=-1:	t=470
+	species: Sceloporus graciosus          N=342729	(births=106733	deaths=106797)
+
+	........................................................................
+
+
+main:	it=-1:	t=471
+	species: Sceloporus graciosus          N=342665	(births=107155	deaths=107049)
+
+	........................................................................
+
+
+main:	it=-1:	t=472
+	species: Sceloporus graciosus          N=342771	(births=106874	deaths=106920)
+
+	........................................................................
+
+
+main:	it=-1:	t=473
+	species: Sceloporus graciosus          N=342725	(births=106755	deaths=106341)
+
+	........................................................................
+
+
+main:	it=-1:	t=474
+	species: Sceloporus graciosus          N=343139	(births=107225	deaths=107500)
+
+	........................................................................
+
+
+main:	it=-1:	t=475
+	species: Sceloporus graciosus          N=342864	(births=106940	deaths=106425)
+
+	........................................................................
+
+
+main:	it=-1:	t=476
+	species: Sceloporus graciosus          N=343379	(births=107351	deaths=107776)
+
+	........................................................................
+
+
+main:	it=-1:	t=477
+	species: Sceloporus graciosus          N=342954	(births=107399	deaths=107601)
+
+	........................................................................
+
+
+main:	it=-1:	t=478
+	species: Sceloporus graciosus          N=342752	(births=106931	deaths=106610)
+
+	........................................................................
+
+
+main:	it=-1:	t=479
+	species: Sceloporus graciosus          N=343073	(births=107348	deaths=107340)
+
+	........................................................................
+
+
+main:	it=-1:	t=480
+	species: Sceloporus graciosus          N=343081	(births=107405	deaths=107547)
+
+	........................................................................
+
+
+main:	it=-1:	t=481
+	species: Sceloporus graciosus          N=342939	(births=107322	deaths=107327)
+
+	........................................................................
+
+
+main:	it=-1:	t=482
+	species: Sceloporus graciosus          N=342934	(births=107802	deaths=107848)
+
+	........................................................................
+
+
+main:	it=-1:	t=483
+	species: Sceloporus graciosus          N=342888	(births=107312	deaths=107390)
+
+	........................................................................
+
+
+main:	it=-1:	t=484
+	species: Sceloporus graciosus          N=342810	(births=107569	deaths=106766)
+
+	........................................................................
+
+
+main:	it=-1:	t=485
+	species: Sceloporus graciosus          N=343613	(births=107289	deaths=106961)
+
+	........................................................................
+
+
+main:	it=-1:	t=486
+	species: Sceloporus graciosus          N=343941	(births=107401	deaths=107842)
+
+	........................................................................
+
+
+main:	it=-1:	t=487
+	species: Sceloporus graciosus          N=343500	(births=107632	deaths=107770)
+
+	........................................................................
+
+
+main:	it=-1:	t=488
+	species: Sceloporus graciosus          N=343362	(births=107504	deaths=106912)
+
+	........................................................................
+
+
+main:	it=-1:	t=489
+	species: Sceloporus graciosus          N=343954	(births=107877	deaths=108144)
+
+	........................................................................
+
+
+main:	it=-1:	t=490
+	species: Sceloporus graciosus          N=343687	(births=107566	deaths=108204)
+
+	........................................................................
+
+
+main:	it=-1:	t=491
+	species: Sceloporus graciosus          N=343049	(births=108174	deaths=108997)
+
+	........................................................................
+
+
+main:	it=-1:	t=492
+	species: Sceloporus graciosus          N=342226	(births=106764	deaths=105891)
+
+	........................................................................
+
+
+main:	it=-1:	t=493
+	species: Sceloporus graciosus          N=343099	(births=107364	deaths=107833)
+
+	........................................................................
+
+
+main:	it=-1:	t=494
+	species: Sceloporus graciosus          N=342630	(births=107423	deaths=107125)
+
+	........................................................................
+
+
+main:	it=-1:	t=495
+	species: Sceloporus graciosus          N=342928	(births=107894	deaths=107588)
+
+	........................................................................
+
+
+main:	it=-1:	t=496
+	species: Sceloporus graciosus          N=343234	(births=106939	deaths=106599)
+
+	........................................................................
+
+
+main:	it=-1:	t=497
+	species: Sceloporus graciosus          N=343574	(births=107720	deaths=107289)
+
+	........................................................................
+
+
+main:	it=-1:	t=498
+	species: Sceloporus graciosus          N=344005	(births=107769	deaths=108444)
+
+	........................................................................
+
+
+main:	it=-1:	t=499
+	species: Sceloporus graciosus          N=343330	(births=107250	deaths=107112)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 51951563
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 11979598
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  9909899
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1422525
+Kriging phenotype. Please wait...
+
+
+
+
+main:	it=-1:	t=500
+	species: Sceloporus graciosus          N=343468	(births=106879	deaths=106999)
+
+	........................................................................
+
+
+main:	it=-1:	t=501
+	species: Sceloporus graciosus          N=343348	(births=106926	deaths=107031)
+
+	........................................................................
+
+
+main:	it=-1:	t=502
+	species: Sceloporus graciosus          N=343243	(births=107102	deaths=107547)
+
+	........................................................................
+
+
+main:	it=-1:	t=503
+	species: Sceloporus graciosus          N=342798	(births=106888	deaths=106765)
+
+	........................................................................
+
+
+main:	it=-1:	t=504
+	species: Sceloporus graciosus          N=342921	(births=107127	deaths=106817)
+
+	........................................................................
+
+
+main:	it=-1:	t=505
+	species: Sceloporus graciosus          N=343231	(births=106907	deaths=106571)
+
+	........................................................................
+
+
+main:	it=-1:	t=506
+	species: Sceloporus graciosus          N=343567	(births=106837	deaths=107175)
+
+	........................................................................
+
+
+main:	it=-1:	t=507
+	species: Sceloporus graciosus          N=343229	(births=107320	deaths=107199)
+
+	........................................................................
+
+
+main:	it=-1:	t=508
+	species: Sceloporus graciosus          N=343350	(births=107369	deaths=107511)
+
+	........................................................................
+
+
+	**** Running the next change	(509, <function _get_lyr_change_fn.<locals>.fn at 0x2b03432d1710>)
+
+
+	**** Running the next change	(509, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1710>)
+
+
+main:	it=-1:	t=509
+	species: Sceloporus graciosus          N=343208	(births=107079	deaths=107028)
+
+	........................................................................
+
+
+main:	it=-1:	t=510
+	species: Sceloporus graciosus          N=343259	(births=107339	deaths=98958)
+
+	........................................................................
+
+
+main:	it=-1:	t=511
+	species: Sceloporus graciosus          N=351640	(births=109835	deaths=104658)
+
+	........................................................................
+
+
+main:	it=-1:	t=512
+	species: Sceloporus graciosus          N=356817	(births=111316	deaths=107672)
+
+	........................................................................
+
+
+main:	it=-1:	t=513
+	species: Sceloporus graciosus          N=360461	(births=112153	deaths=109639)
+
+	........................................................................
+
+
+	**** Running the next change	(514, <function _get_lyr_change_fn.<locals>.fn at 0x2b03709f84d0>)
+
+
+	**** Running the next change	(514, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1830>)
+
+
+main:	it=-1:	t=514
+	species: Sceloporus graciosus          N=362975	(births=114018	deaths=112131)
+
+	........................................................................
+
+
+main:	it=-1:	t=515
+	species: Sceloporus graciosus          N=364862	(births=113964	deaths=125891)
+
+	........................................................................
+
+
+main:	it=-1:	t=516
+	species: Sceloporus graciosus          N=352935	(births=110424	deaths=115308)
+
+	........................................................................
+
+
+main:	it=-1:	t=517
+	species: Sceloporus graciosus          N=348051	(births=108513	deaths=110599)
+
+	........................................................................
+
+
+main:	it=-1:	t=518
+	species: Sceloporus graciosus          N=345965	(births=107915	deaths=109172)
+
+	........................................................................
+
+
+	**** Running the next change	(519, <function _get_lyr_change_fn.<locals>.fn at 0x2b037168f9e0>)
+
+
+	**** Running the next change	(519, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1680>)
+
+
+main:	it=-1:	t=519
+	species: Sceloporus graciosus          N=344708	(births=106900	deaths=107445)
+
+	........................................................................
+
+
+main:	it=-1:	t=520
+	species: Sceloporus graciosus          N=344163	(births=107444	deaths=90376)
+
+	........................................................................
+
+
+main:	it=-1:	t=521
+	species: Sceloporus graciosus          N=361231	(births=113200	deaths=102176)
+
+	........................................................................
+
+
+main:	it=-1:	t=522
+	species: Sceloporus graciosus          N=372255	(births=116390	deaths=110215)
+
+	........................................................................
+
+
+main:	it=-1:	t=523
+	species: Sceloporus graciosus          N=378430	(births=118353	deaths=114847)
+
+	........................................................................
+
+
+	**** Running the next change	(524, <function _get_lyr_change_fn.<locals>.fn at 0x2b037168fb90>)
+
+
+	**** Running the next change	(524, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b15f0>)
+
+
+main:	it=-1:	t=524
+	species: Sceloporus graciosus          N=381936	(births=119467	deaths=118354)
+
+	........................................................................
+
+
+main:	it=-1:	t=525
+	species: Sceloporus graciosus          N=383049	(births=119441	deaths=135320)
+
+	........................................................................
+
+
+main:	it=-1:	t=526
+	species: Sceloporus graciosus          N=367170	(births=114491	deaths=120869)
+
+	........................................................................
+
+
+main:	it=-1:	t=527
+	species: Sceloporus graciosus          N=360792	(births=112946	deaths=116914)
+
+	........................................................................
+
+
+main:	it=-1:	t=528
+	species: Sceloporus graciosus          N=356824	(births=111980	deaths=112531)
+
+	........................................................................
+
+
+	**** Running the next change	(529, <function _get_lyr_change_fn.<locals>.fn at 0x2b037168fd40>)
+
+
+	**** Running the next change	(529, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1560>)
+
+
+main:	it=-1:	t=529
+	species: Sceloporus graciosus          N=356273	(births=110658	deaths=111888)
+
+	........................................................................
+
+
+main:	it=-1:	t=530
+	species: Sceloporus graciosus          N=355043	(births=111426	deaths=110002)
+
+	........................................................................
+
+
+main:	it=-1:	t=531
+	species: Sceloporus graciosus          N=356467	(births=111909	deaths=111291)
+
+	........................................................................
+
+
+main:	it=-1:	t=532
+	species: Sceloporus graciosus          N=357085	(births=111918	deaths=111380)
+
+	........................................................................
+
+
+main:	it=-1:	t=533
+	species: Sceloporus graciosus          N=357623	(births=111772	deaths=111384)
+
+	........................................................................
+
+
+	**** Running the next change	(534, <function _get_lyr_change_fn.<locals>.fn at 0x2b037168fef0>)
+
+
+	**** Running the next change	(534, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1950>)
+
+
+main:	it=-1:	t=534
+	species: Sceloporus graciosus          N=358011	(births=111390	deaths=111327)
+
+	........................................................................
+
+
+main:	it=-1:	t=535
+	species: Sceloporus graciosus          N=358074	(births=111691	deaths=102780)
+
+	........................................................................
+
+
+main:	it=-1:	t=536
+	species: Sceloporus graciosus          N=366985	(births=114478	deaths=109170)
+
+	........................................................................
+
+
+main:	it=-1:	t=537
+	species: Sceloporus graciosus          N=372293	(births=116025	deaths=113214)
+
+	........................................................................
+
+
+main:	it=-1:	t=538
+	species: Sceloporus graciosus          N=375104	(births=117052	deaths=115042)
+
+	........................................................................
+
+
+	**** Running the next change	(539, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af0e0>)
+
+
+	**** Running the next change	(539, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b19e0>)
+
+
+main:	it=-1:	t=539
+	species: Sceloporus graciosus          N=377114	(births=118495	deaths=116961)
+
+	........................................................................
+
+
+main:	it=-1:	t=540
+	species: Sceloporus graciosus          N=378648	(births=118141	deaths=170822)
+
+	........................................................................
+
+
+main:	it=-1:	t=541
+	species: Sceloporus graciosus          N=325967	(births=101570	deaths=117796)
+
+	........................................................................
+
+
+main:	it=-1:	t=542
+	species: Sceloporus graciosus          N=309741	(births=96657	deaths=103624)
+
+	........................................................................
+
+
+main:	it=-1:	t=543
+	species: Sceloporus graciosus          N=302774	(births=94598	deaths=97787)
+
+	........................................................................
+
+
+	**** Running the next change	(544, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af290>)
+
+
+	**** Running the next change	(544, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1a70>)
+
+
+main:	it=-1:	t=544
+	species: Sceloporus graciosus          N=299585	(births=93488	deaths=95271)
+
+	........................................................................
+
+
+main:	it=-1:	t=545
+	species: Sceloporus graciosus          N=297802	(births=92840	deaths=59633)
+
+	........................................................................
+
+
+main:	it=-1:	t=546
+	species: Sceloporus graciosus          N=331009	(births=103682	deaths=78740)
+
+	........................................................................
+
+
+main:	it=-1:	t=547
+	species: Sceloporus graciosus          N=355951	(births=110863	deaths=94248)
+
+	........................................................................
+
+
+main:	it=-1:	t=548
+	species: Sceloporus graciosus          N=372566	(births=116976	deaths=105856)
+
+	........................................................................
+
+
+	**** Running the next change	(549, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af440>)
+
+
+	**** Running the next change	(549, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1b00>)
+
+
+main:	it=-1:	t=549
+	species: Sceloporus graciosus          N=383686	(births=120466	deaths=115202)
+
+	........................................................................
+
+
+main:	it=-1:	t=550
+	species: Sceloporus graciosus          N=388950	(births=121806	deaths=134411)
+
+	........................................................................
+
+
+main:	it=-1:	t=551
+	species: Sceloporus graciosus          N=376345	(births=117286	deaths=121178)
+
+	........................................................................
+
+
+main:	it=-1:	t=552
+	species: Sceloporus graciosus          N=372453	(births=116378	deaths=117967)
+
+	........................................................................
+
+
+main:	it=-1:	t=553
+	species: Sceloporus graciosus          N=370864	(births=115853	deaths=116857)
+
+	........................................................................
+
+
+	**** Running the next change	(554, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af5f0>)
+
+
+	**** Running the next change	(554, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1b90>)
+
+
+main:	it=-1:	t=554
+	species: Sceloporus graciosus          N=369860	(births=115826	deaths=116165)
+
+	........................................................................
+
+
+main:	it=-1:	t=555
+	species: Sceloporus graciosus          N=369521	(births=115847	deaths=122891)
+
+	........................................................................
+
+
+main:	it=-1:	t=556
+	species: Sceloporus graciosus          N=362477	(births=112890	deaths=116161)
+
+	........................................................................
+
+
+main:	it=-1:	t=557
+	species: Sceloporus graciosus          N=359206	(births=111931	deaths=113498)
+
+	........................................................................
+
+
+main:	it=-1:	t=558
+	species: Sceloporus graciosus          N=357639	(births=110713	deaths=111881)
+
+	........................................................................
+
+
+	**** Running the next change	(559, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af7a0>)
+
+
+	**** Running the next change	(559, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1c20>)
+
+
+main:	it=-1:	t=559
+	species: Sceloporus graciosus          N=356471	(births=111680	deaths=111364)
+
+	........................................................................
+
+
+main:	it=-1:	t=560
+	species: Sceloporus graciosus          N=356787	(births=112054	deaths=106232)
+
+	........................................................................
+
+
+main:	it=-1:	t=561
+	species: Sceloporus graciosus          N=362609	(births=113563	deaths=110040)
+
+	........................................................................
+
+
+main:	it=-1:	t=562
+	species: Sceloporus graciosus          N=366132	(births=114779	deaths=112907)
+
+	........................................................................
+
+
+main:	it=-1:	t=563
+	species: Sceloporus graciosus          N=368004	(births=113782	deaths=112593)
+
+	........................................................................
+
+
+	**** Running the next change	(564, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716af950>)
+
+
+	**** Running the next change	(564, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1cb0>)
+
+
+main:	it=-1:	t=564
+	species: Sceloporus graciosus          N=369193	(births=115595	deaths=115185)
+
+	........................................................................
+
+
+main:	it=-1:	t=565
+	species: Sceloporus graciosus          N=369603	(births=115327	deaths=106414)
+
+	........................................................................
+
+
+main:	it=-1:	t=566
+	species: Sceloporus graciosus          N=378516	(births=117860	deaths=112894)
+
+	........................................................................
+
+
+main:	it=-1:	t=567
+	species: Sceloporus graciosus          N=383482	(births=118685	deaths=116767)
+
+	........................................................................
+
+
+main:	it=-1:	t=568
+	species: Sceloporus graciosus          N=385400	(births=120259	deaths=118714)
+
+	........................................................................
+
+
+	**** Running the next change	(569, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716afb00>)
+
+
+	**** Running the next change	(569, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1d40>)
+
+
+main:	it=-1:	t=569
+	species: Sceloporus graciosus          N=386945	(births=120503	deaths=120524)
+
+	........................................................................
+
+
+main:	it=-1:	t=570
+	species: Sceloporus graciosus          N=386924	(births=120287	deaths=182501)
+
+	........................................................................
+
+
+main:	it=-1:	t=571
+	species: Sceloporus graciosus          N=324710	(births=101282	deaths=116598)
+
+	........................................................................
+
+
+main:	it=-1:	t=572
+	species: Sceloporus graciosus          N=309394	(births=97250	deaths=104586)
+
+	........................................................................
+
+
+main:	it=-1:	t=573
+	species: Sceloporus graciosus          N=302058	(births=93884	deaths=97343)
+
+	........................................................................
+
+
+	**** Running the next change	(574, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716afcb0>)
+
+
+	**** Running the next change	(574, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1dd0>)
+
+
+main:	it=-1:	t=574
+	species: Sceloporus graciosus          N=298599	(births=93113	deaths=94514)
+
+	........................................................................
+
+
+main:	it=-1:	t=575
+	species: Sceloporus graciosus          N=297198	(births=93133	deaths=87299)
+
+	........................................................................
+
+
+main:	it=-1:	t=576
+	species: Sceloporus graciosus          N=303032	(births=94292	deaths=91043)
+
+	........................................................................
+
+
+main:	it=-1:	t=577
+	species: Sceloporus graciosus          N=306281	(births=95283	deaths=94225)
+
+	........................................................................
+
+
+main:	it=-1:	t=578
+	species: Sceloporus graciosus          N=307339	(births=96329	deaths=95010)
+
+	........................................................................
+
+
+	**** Running the next change	(579, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716afe60>)
+
+
+	**** Running the next change	(579, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1e60>)
+
+
+main:	it=-1:	t=579
+	species: Sceloporus graciosus          N=308658	(births=96161	deaths=95436)
+
+	........................................................................
+
+
+main:	it=-1:	t=580
+	species: Sceloporus graciosus          N=309383	(births=96100	deaths=93389)
+
+	........................................................................
+
+
+main:	it=-1:	t=581
+	species: Sceloporus graciosus          N=312094	(births=98009	deaths=95535)
+
+	........................................................................
+
+
+main:	it=-1:	t=582
+	species: Sceloporus graciosus          N=314568	(births=97978	deaths=96639)
+
+	........................................................................
+
+
+main:	it=-1:	t=583
+	species: Sceloporus graciosus          N=315907	(births=98971	deaths=98987)
+
+	........................................................................
+
+
+	**** Running the next change	(584, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716b1050>)
+
+
+	**** Running the next change	(584, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1ef0>)
+
+
+main:	it=-1:	t=584
+	species: Sceloporus graciosus          N=315891	(births=98994	deaths=98185)
+
+	........................................................................
+
+
+main:	it=-1:	t=585
+	species: Sceloporus graciosus          N=316700	(births=98665	deaths=106900)
+
+	........................................................................
+
+
+main:	it=-1:	t=586
+	species: Sceloporus graciosus          N=308465	(births=96047	deaths=99835)
+
+	........................................................................
+
+
+main:	it=-1:	t=587
+	species: Sceloporus graciosus          N=304677	(births=94782	deaths=96928)
+
+	........................................................................
+
+
+main:	it=-1:	t=588
+	species: Sceloporus graciosus          N=302531	(births=94618	deaths=95790)
+
+	........................................................................
+
+
+	**** Running the next change	(589, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716b1200>)
+
+
+	**** Running the next change	(589, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b03716b1f80>)
+
+
+main:	it=-1:	t=589
+	species: Sceloporus graciosus          N=301359	(births=94312	deaths=94010)
+
+	........................................................................
+
+
+main:	it=-1:	t=590
+	species: Sceloporus graciosus          N=301661	(births=94832	deaths=66789)
+
+	........................................................................
+
+
+main:	it=-1:	t=591
+	species: Sceloporus graciosus          N=329704	(births=102822	deaths=83652)
+
+	........................................................................
+
+
+main:	it=-1:	t=592
+	species: Sceloporus graciosus          N=348874	(births=108644	deaths=96288)
+
+	........................................................................
+
+
+main:	it=-1:	t=593
+	species: Sceloporus graciosus          N=361230	(births=111755	deaths=104819)
+
+	........................................................................
+
+
+	**** Running the next change	(594, <function _get_lyr_change_fn.<locals>.fn at 0x2b03716b13b0>)
+
+
+	**** Running the next change	(594, <function _get_conductance_surface_change_fns.<locals>.fn at 0x2b037517e050>)
+
+
+main:	it=-1:	t=594
+	species: Sceloporus graciosus          N=368166	(births=114485	deaths=110506)
+
+	........................................................................
+
+
+main:	it=-1:	t=595
+	species: Sceloporus graciosus          N=372145	(births=115554	deaths=173390)
+
+	........................................................................
+
+
+main:	it=-1:	t=596
+	species: Sceloporus graciosus          N=314309	(births=98059	deaths=114592)
+
+	........................................................................
+
+
+main:	it=-1:	t=597
+	species: Sceloporus graciosus          N=297776	(births=92560	deaths=99629)
+
+	........................................................................
+
+
+main:	it=-1:	t=598
+	species: Sceloporus graciosus          N=290707	(births=90643	deaths=94322)
+
+	........................................................................
+
+
+main:	it=-1:	t=599
+	species: Sceloporus graciosus          N=287028	(births=89576	deaths=92071)
+
+	........................................................................
+
+
+now sorting and simplifying tskit tables
+	NUMBER EDGES BEFORE SIMPLIFICATION: 9545033
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 1359471
+
+	NUMBER EDGES AFTER SIMPLIFICATION:  9545033
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  1359471
+Kriging phenotype. Please wait...
+
+
+
+
+main:	it=-1:	t=600
+	species: Sceloporus graciosus          N=284533	(births=88868	deaths=89237)
+
+	........................................................................
+main:	it=-1:	t=601
+	species: Sceloporus graciosus          N=284164	(births=89286	deaths=89233)
+
+	........................................................................
+main:	it=-1:	t=602
+	species: Sceloporus graciosus          N=284217	(births=88997	deaths=89311)
+
+	........................................................................
+main:	it=-1:	t=603
+	species: Sceloporus graciosus          N=283903	(births=88510	deaths=89046)
+
+	........................................................................
+main:	it=-1:	t=604
+	species: Sceloporus graciosus          N=283367	(births=88556	deaths=87965)
+
+	........................................................................
+main:	it=-1:	t=605
+	species: Sceloporus graciosus          N=283958	(births=88684	deaths=89048)
+
+	........................................................................
+main:	it=-1:	t=606
+	species: Sceloporus graciosus          N=283594	(births=89238	deaths=88925)
+
+	........................................................................
+main:	it=-1:	t=607
+	species: Sceloporus graciosus          N=283907	(births=88886	deaths=89292)
+
+	........................................................................
+main:	it=-1:	t=608
+	species: Sceloporus graciosus          N=283501	(births=88398	deaths=88308)
+
+	........................................................................
+main:	it=-1:	t=609
+	species: Sceloporus graciosus          N=283591	(births=88239	deaths=87820)
+
+	........................................................................
+main:	it=-1:	t=610
+	species: Sceloporus graciosus          N=284010	(births=88415	deaths=88854)
+
+	........................................................................
+main:	it=-1:	t=611
+	species: Sceloporus graciosus          N=283571	(births=88527	deaths=88781)
+
+	........................................................................
+main:	it=-1:	t=612
+	species: Sceloporus graciosus          N=283317	(births=88351	deaths=88512)
+
+	........................................................................
+main:	it=-1:	t=613
+	species: Sceloporus graciosus          N=283156	(births=88553	deaths=88594)
+
+	........................................................................
+main:	it=-1:	t=614
+	species: Sceloporus graciosus          N=283115	(births=88500	deaths=88218)
+
+	........................................................................
+main:	it=-1:	t=615
+	species: Sceloporus graciosus          N=283397	(births=88495	deaths=88327)
+
+	........................................................................
+main:	it=-1:	t=616
+	species: Sceloporus graciosus          N=283565	(births=88978	deaths=89060)
+
+	........................................................................
+main:	it=-1:	t=617
+	species: Sceloporus graciosus          N=283483	(births=88715	deaths=88535)
+
+	........................................................................
+main:	it=-1:	t=618
+	species: Sceloporus graciosus          N=283663	(births=88240	deaths=88590)
+
+	........................................................................
+main:	it=-1:	t=619
+	species: Sceloporus graciosus          N=283313	(births=88258	deaths=87393)
+
+	........................................................................
+main:	it=-1:	t=620
+	species: Sceloporus graciosus          N=284178	(births=88442	deaths=89502)
+
+	........................................................................
+main:	it=-1:	t=621
+	species: Sceloporus graciosus          N=283118	(births=88627	deaths=88040)
+
+	........................................................................
+main:	it=-1:	t=622
+	species: Sceloporus graciosus          N=283705	(births=88245	deaths=88271)
+
+	........................................................................
+main:	it=-1:	t=623
+	species: Sceloporus graciosus          N=283679	(births=88518	deaths=88741)
+
+	........................................................................
+main:	it=-1:	t=624
+	species: Sceloporus graciosus          N=283456	(births=89060	deaths=88723)
+
+	........................................................................
+main:	it=-1:	t=625
+	species: Sceloporus graciosus          N=283793	(births=88525	deaths=88587)
+
+	........................................................................
+main:	it=-1:	t=626
+	species: Sceloporus graciosus          N=283731	(births=88524	deaths=88413)
+
+	........................................................................
+main:	it=-1:	t=627
+	species: Sceloporus graciosus          N=283842	(births=88690	deaths=88479)
+
+	........................................................................
+main:	it=-1:	t=628
+	species: Sceloporus graciosus          N=284053	(births=88633	deaths=88942)
+
+	........................................................................
+main:	it=-1:	t=629
+	species: Sceloporus graciosus          N=283744	(births=88259	deaths=88642)
+
+	........................................................................
+main:	it=-1:	t=630
+	species: Sceloporus graciosus          N=283361	(births=88523	deaths=88392)
+
+	........................................................................
+main:	it=-1:	t=631
+	species: Sceloporus graciosus          N=283492	(births=88336	deaths=88178)
+
+	........................................................................
+main:	it=-1:	t=632
+	species: Sceloporus graciosus          N=283650	(births=88484	deaths=88496)
+
+	........................................................................
+main:	it=-1:	t=633
+	species: Sceloporus graciosus          N=283638	(births=88812	deaths=88369)
+
+	........................................................................
+main:	it=-1:	t=634
+	species: Sceloporus graciosus          N=284081	(births=88454	deaths=88753)
+
+	........................................................................
+main:	it=-1:	t=635
+	species: Sceloporus graciosus          N=283782	(births=88890	deaths=88852)
+
+	........................................................................
+main:	it=-1:	t=636
+	species: Sceloporus graciosus          N=283820	(births=88291	deaths=89078)
+
+	........................................................................
+main:	it=-1:	t=637
+	species: Sceloporus graciosus          N=283033	(births=88847	deaths=88209)
+
+	........................................................................
+main:	it=-1:	t=638
+	species: Sceloporus graciosus          N=283671	(births=88837	deaths=88746)
+
+	........................................................................
+main:	it=-1:	t=639
+	species: Sceloporus graciosus          N=283762	(births=88448	deaths=88019)
+
+	........................................................................
+main:	it=-1:	t=640
+	species: Sceloporus graciosus          N=284191	(births=89051	deaths=88490)
+
+	........................................................................
+main:	it=-1:	t=641
+	species: Sceloporus graciosus          N=284752	(births=88898	deaths=89528)
+
+	........................................................................
+main:	it=-1:	t=642
+	species: Sceloporus graciosus          N=284122	(births=88849	deaths=89333)
+
+	........................................................................
+main:	it=-1:	t=643
+	species: Sceloporus graciosus          N=283638	(births=88778	deaths=89121)
+
+	........................................................................
+main:	it=-1:	t=644
+	species: Sceloporus graciosus          N=283295	(births=88859	deaths=88317)
+
+	........................................................................
+main:	it=-1:	t=645
+	species: Sceloporus graciosus          N=283837	(births=89281	deaths=89385)
+
+	........................................................................
+main:	it=-1:	t=646
+	species: Sceloporus graciosus          N=283733	(births=88723	deaths=88985)
+
+	........................................................................
+main:	it=-1:	t=647
+	species: Sceloporus graciosus          N=283471	(births=88619	deaths=88896)
+
+	........................................................................
+main:	it=-1:	t=648
+	species: Sceloporus graciosus          N=283194	(births=89068	deaths=88988)
+
+	........................................................................
+main:	it=-1:	t=649
+	species: Sceloporus graciosus          N=283274	(births=88752	deaths=89251)
+
+	........................................................................
+
+Could not use Imagemagick to create the GIF. The following error was thrown:
+	name 'gif_dir' is not defined
+
+Could not use Imagemagick to save the 3D plot's GIF.  The following error was thrown:
+	Command '['convert', '-size', '640x480', '-depth', '8', '-delay', '1.6666666666666667', '-loop', '0', 'rgba:-', 'yosemite_pheno_drape_fig.gif']' returned non-zero exit status 1.
+
+Could not use Imagemagick to save the 3D plot's GIF.  The following error was thrown:
+	Command '['convert', '-size', '640x480', '-depth', '8', '-delay', '1.6666666666666667', '-loop', '0', 'rgba:-', 'yosemite_pheno_change_drape_fig.gif']' returned non-zero exit status 1.
+
+
+Model ran in 42286.79 seconds.
