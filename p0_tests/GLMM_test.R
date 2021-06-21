@@ -8,6 +8,10 @@ library("LEA") #LEA
 source("http://membres-timc.imag.fr/Olivier.Francois/Conversion.R")
 source("http://membres-timc.imag.fr/Olivier.Francois/POPSutilities.R")
 
+#parallel
+library(foreach)
+library(doParallel)
+
 
 #define nloci 
 nloci = 10000
@@ -64,16 +68,21 @@ Qmat <- Q(obj.snmf, K = K)
 pops <- colnames(Qmat)[apply(Qmat,1,which.max)]
 
 #make kinship matrix (method = c("astle", "IBS", "vanRaden"))
-Kmatrix <- kinship(gen, method = "astle")
+Kmatrix <- kinship(gen, method = "IBS")
 
 #genotypes
-AF.pca <- gen[,adaptive_loci]
+AF.pca <- gen[,c(1,2,3,adaptive_loci)]
 
+  
 pVal <- c()
 coeffs <- list()
 logLikes <- list()
 AICs <- list()
-for(i in 1:ncol(AF.pca)){
+
+
+foreach(i=1:ncol(AF.pca), .combine=cbind) %dopar% {
+  library(spaMM)
+  
   # Data frame for GLMM analysis of each SMV
   df <- data.frame(pop=1:nrow(gea_df), env1 = gea_df$env1, env2 = gea_df$env2, SNP=AF.pca[,i])
   
@@ -111,3 +120,77 @@ for(z in 1:ncol(AF.pca)){
 results.tab <- cbind(results.tab, p.adjust(pVal, method="fdr"))
 colnames(results.tab) = c("p", "env1", "env2", "p.adj")
 results.tab
+
+
+
+# create class which holds multiple results for each loop iteration.
+# Each loop iteration populates three properties: $result1 and $result2 and $result3
+# For a great tutorial on S3 classes, see: 
+# http://www.cyclismo.org/tutorial/R/s3Classes.html#creating-an-s3-class
+multiResultClass <- function(pVal=NULL,coeffs=NULL)
+{
+  me <- list(
+    pVal = pVal,
+    coeffs = coeffs
+  )
+  
+  ## Set the name for the class
+  class(me) <- append(class(me),"multiResultClass")
+  return(me)
+}
+
+
+#register cores
+cores=detectCores()
+cl <- makeCluster(cores[1]-2) #not to overload your computer
+registerDoParallel(cl)
+
+
+modres <- foreach(i=1:ncol(AF.pca)) %dopar% {
+  library(spaMM)
+  result <- multiResultClass()
+  
+  # Data frame for GLMM analysis of each SMV
+  df <- data.frame(pop=1:nrow(AF.pca), env1 = gea_df$env1, env2 = gea_df$env2, SNP=AF.pca[,i])
+  
+  # Fit GLMM using spaMM
+  models <- list()
+  models[[1]] <- corrHLfit(SNP ~ env1 + corrMatrix(1|pop), data = df,
+                           corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
+  
+  models[[2]] <- corrHLfit(SNP ~ env2 + corrMatrix(1|pop), data = df,
+                           corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
+  
+  models[[3]] <- corrHLfit(SNP ~ env1 + env2 + corrMatrix(1|pop), data = df,
+                           corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
+  
+  null.fit <- corrHLfit(SNP ~ 1 + corrMatrix(1|pop), data = df,
+                        corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
+  
+  LLs <- sapply(models, logLik)
+  crit.scores <- sapply(models, AIC)
+  cond.AICs <- crit.scores[2,]
+  best <- which(cond.AICs == min(cond.AICs))
+  result$pVal <- 1-pchisq(2*(LLs[best]-logLik(null.fit)), df=1)
+  result$coeffs <- models[[best]]$fixef
+  return(result)
+}
+
+
+#stop cluster
+stopCluster(cl)
+
+results.tab <- matrix(nrow=ncol(AF.pca), ncol=3)
+for(z in 1:ncol(AF.pca)){
+  results.tab[z, 1] <- modres[[z]]$pVal
+  results.tab[z, 2] <- modres[[z]]$coeffs["env1"]
+  results.tab[z, 3] <- modres[[z]]$coeffs["env2"]
+}
+
+pVal <- c()
+for(i in 1:length(modres)){pVal[i] <- modres[[i]]$pVal}
+
+results.tab <- cbind(results.tab, p.adjust(pVal, method="fdr"))
+colnames(results.tab) = c("p", "env1", "env2", "p.adj")
+results.tab
+
