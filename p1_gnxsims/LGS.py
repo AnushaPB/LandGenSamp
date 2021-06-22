@@ -313,7 +313,7 @@ params = {
                     #total number of recomb paths to simulate
                     'n_recomb_paths_tot':       int(1e5),
                     #num of crossing-over events (i.e. recombs) to simulate
-                    'n_recomb_sims':            10000,
+                    'n_recomb_sims':            10_000,
                     #whether to generate recombination paths at each timestep
                     'allow_ad_hoc_recomb':      False,
                     #whether to save mutation logs

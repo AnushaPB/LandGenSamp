@@ -32,8 +32,8 @@ NOTE: No display found. Using non-interactive Agg backend
        [0.99849879, 0.93970468, 0.94526286, ..., 0.50807053, 0.46171749,
         0.64298715],
        [0.99617223, 0.95555543, 0.94177083, ..., 0.57851222, 0.6002501 ,
-        0.704995  ]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 250, 'K_layer': 'lyr_0', 'K_factor': 5}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.2, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': None, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 1, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 1, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.1, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.1, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 42, 'tskit_simp_interval': 100, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
-10k_K5_phi10_m1_seed1_H50_r60
+        0.704995  ]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 250, 'K_layer': 'lyr_0', 'K_factor': 2}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.2, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': None, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 1, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 1, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 42, 'tskit_simp_interval': 100, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+10k_K2_phi50_m100_seed1_H50_r60
 
 MAKING MODEL...
 
@@ -122,735 +122,735 @@ burn:	it=-1:	t=14
 
 	........................................................................
 burn:	it=-1:	t=15
-	species: spp_0                         N=1175	(births=216	deaths=0)
+	species: spp_0                         N=1175	(births=221	deaths=1)
 
 	........................................................................
 burn:	it=-1:	t=16
-	species: spp_0                         N=1391	(births=259	deaths=0)
+	species: spp_0                         N=1395	(births=251	deaths=4)
 
 	........................................................................
 burn:	it=-1:	t=17
-	species: spp_0                         N=1650	(births=292	deaths=0)
+	species: spp_0                         N=1642	(births=299	deaths=9)
 
 	........................................................................
 burn:	it=-1:	t=18
-	species: spp_0                         N=1942	(births=338	deaths=0)
+	species: spp_0                         N=1932	(births=348	deaths=34)
 
 	........................................................................
 burn:	it=-1:	t=19
-	species: spp_0                         N=2280	(births=436	deaths=0)
+	species: spp_0                         N=2246	(births=414	deaths=51)
 
 	........................................................................
 burn:	it=-1:	t=20
-	species: spp_0                         N=2716	(births=522	deaths=0)
+	species: spp_0                         N=2609	(births=494	deaths=160)
 
 	........................................................................
 burn:	it=-1:	t=21
-	species: spp_0                         N=3238	(births=606	deaths=0)
+	species: spp_0                         N=2943	(births=565	deaths=260)
 
 	........................................................................
 burn:	it=-1:	t=22
-	species: spp_0                         N=3844	(births=737	deaths=3)
+	species: spp_0                         N=3248	(births=647	deaths=288)
 
 	........................................................................
 burn:	it=-1:	t=23
-	species: spp_0                         N=4578	(births=919	deaths=18)
+	species: spp_0                         N=3607	(births=702	deaths=528)
 
 	........................................................................
 burn:	it=-1:	t=24
-	species: spp_0                         N=5479	(births=1093	deaths=57)
+	species: spp_0                         N=3781	(births=776	deaths=612)
 
 	........................................................................
 burn:	it=-1:	t=25
-	species: spp_0                         N=6515	(births=1286	deaths=236)
+	species: spp_0                         N=3945	(births=764	deaths=654)
 
 	........................................................................
 burn:	it=-1:	t=26
-	species: spp_0                         N=7565	(births=1469	deaths=498)
+	species: spp_0                         N=4055	(births=840	deaths=815)
 
 	........................................................................
 burn:	it=-1:	t=27
-	species: spp_0                         N=8536	(births=1641	deaths=882)
+	species: spp_0                         N=4080	(births=762	deaths=777)
 
 	........................................................................
 burn:	it=-1:	t=28
-	species: spp_0                         N=9295	(births=1892	deaths=1257)
+	species: spp_0                         N=4065	(births=852	deaths=791)
 
 	........................................................................
 burn:	it=-1:	t=29
-	species: spp_0                         N=9930	(births=1945	deaths=1674)
+	species: spp_0                         N=4126	(births=759	deaths=831)
 
 	........................................................................
 burn:	it=-1:	t=30
-	species: spp_0                         N=10201	(births=2011	deaths=1889)
+	species: spp_0                         N=4054	(births=849	deaths=782)
 
 	........................................................................
 burn:	it=-1:	t=31
-	species: spp_0                         N=10323	(births=2004	deaths=1972)
+	species: spp_0                         N=4121	(births=797	deaths=794)
 
 	........................................................................
 burn:	it=-1:	t=32
-	species: spp_0                         N=10355	(births=2065	deaths=2031)
+	species: spp_0                         N=4124	(births=816	deaths=824)
 
 	........................................................................
 burn:	it=-1:	t=33
-	species: spp_0                         N=10389	(births=2168	deaths=2135)
+	species: spp_0                         N=4116	(births=811	deaths=824)
 
 	........................................................................
 burn:	it=-1:	t=34
-	species: spp_0                         N=10422	(births=2114	deaths=2123)
+	species: spp_0                         N=4103	(births=820	deaths=843)
 
 	........................................................................
 burn:	it=-1:	t=35
-	species: spp_0                         N=10413	(births=2047	deaths=2036)
+	species: spp_0                         N=4080	(births=833	deaths=834)
 
 	........................................................................
 burn:	it=-1:	t=36
-	species: spp_0                         N=10424	(births=2018	deaths=2009)
+	species: spp_0                         N=4079	(births=824	deaths=794)
 
 	........................................................................
 burn:	it=-1:	t=37
-	species: spp_0                         N=10433	(births=2110	deaths=2173)
+	species: spp_0                         N=4109	(births=843	deaths=817)
 
 	........................................................................
 burn:	it=-1:	t=38
-	species: spp_0                         N=10370	(births=2115	deaths=2051)
+	species: spp_0                         N=4135	(births=843	deaths=830)
 
 	........................................................................
 burn:	it=-1:	t=39
-	species: spp_0                         N=10434	(births=2004	deaths=1967)
+	species: spp_0                         N=4148	(births=801	deaths=876)
 
 	........................................................................
 burn:	it=-1:	t=40
-	species: spp_0                         N=10471	(births=2119	deaths=2143)
+	species: spp_0                         N=4073	(births=818	deaths=813)
 
 	........................................................................
 burn:	it=-1:	t=41
-	species: spp_0                         N=10447	(births=2108	deaths=2183)
+	species: spp_0                         N=4078	(births=795	deaths=811)
 
 	........................................................................
 burn:	it=-1:	t=42
-	species: spp_0                         N=10372	(births=2015	deaths=1942)
+	species: spp_0                         N=4062	(births=806	deaths=781)
 
 	........................................................................
 burn:	it=-1:	t=43
-	species: spp_0                         N=10445	(births=2061	deaths=2059)
+	species: spp_0                         N=4087	(births=788	deaths=749)
 
 	........................................................................
 burn:	it=-1:	t=44
-	species: spp_0                         N=10447	(births=2102	deaths=2113)
+	species: spp_0                         N=4126	(births=787	deaths=877)
 
 	........................................................................
 burn:	it=-1:	t=45
-	species: spp_0                         N=10436	(births=2090	deaths=2075)
+	species: spp_0                         N=4036	(births=792	deaths=710)
 
 	........................................................................
 burn:	it=-1:	t=46
-	species: spp_0                         N=10451	(births=2107	deaths=2138)
+	species: spp_0                         N=4118	(births=832	deaths=806)
 
 	........................................................................
 burn:	it=-1:	t=47
-	species: spp_0                         N=10420	(births=2109	deaths=2078)
+	species: spp_0                         N=4144	(births=821	deaths=887)
 
 	........................................................................
 burn:	it=-1:	t=48
-	species: spp_0                         N=10451	(births=2101	deaths=2145)
+	species: spp_0                         N=4078	(births=785	deaths=798)
 
 	........................................................................
 burn:	it=-1:	t=49
-	species: spp_0                         N=10407	(births=1950	deaths=1951)
+	species: spp_0                         N=4065	(births=815	deaths=792)
 
 	........................................................................
 burn:	it=-1:	t=50
-	species: spp_0                         N=10406	(births=1993	deaths=2100)
+	species: spp_0                         N=4088	(births=797	deaths=805)
 
 	........................................................................
 burn:	it=-1:	t=51
-	species: spp_0                         N=10299	(births=2079	deaths=1967)
+	species: spp_0                         N=4080	(births=837	deaths=778)
 
 	........................................................................
 burn:	it=-1:	t=52
-	species: spp_0                         N=10411	(births=2150	deaths=2087)
+	species: spp_0                         N=4139	(births=823	deaths=829)
 
 	........................................................................
 burn:	it=-1:	t=53
-	species: spp_0                         N=10474	(births=2076	deaths=2116)
+	species: spp_0                         N=4133	(births=787	deaths=826)
 
 	........................................................................
 burn:	it=-1:	t=54
-	species: spp_0                         N=10434	(births=2050	deaths=2102)
+	species: spp_0                         N=4094	(births=816	deaths=871)
 
 	........................................................................
 burn:	it=-1:	t=55
-	species: spp_0                         N=10382	(births=2118	deaths=2005)
+	species: spp_0                         N=4039	(births=797	deaths=749)
 
 	........................................................................
 burn:	it=-1:	t=56
-	species: spp_0                         N=10495	(births=2067	deaths=2053)
+	species: spp_0                         N=4087	(births=851	deaths=815)
 
 	........................................................................
 burn:	it=-1:	t=57
-	species: spp_0                         N=10509	(births=2019	deaths=2047)
+	species: spp_0                         N=4123	(births=801	deaths=844)
 
 	........................................................................
 burn:	it=-1:	t=58
-	species: spp_0                         N=10481	(births=2091	deaths=2124)
+	species: spp_0                         N=4080	(births=794	deaths=768)
 
 	........................................................................
 burn:	it=-1:	t=59
-	species: spp_0                         N=10448	(births=2103	deaths=1960)
+	species: spp_0                         N=4106	(births=835	deaths=826)
 
 	........................................................................
 burn:	it=-1:	t=60
-	species: spp_0                         N=10591	(births=2065	deaths=2217)
+	species: spp_0                         N=4115	(births=807	deaths=845)
 
 	........................................................................
 burn:	it=-1:	t=61
-	species: spp_0                         N=10439	(births=2075	deaths=2052)
+	species: spp_0                         N=4077	(births=808	deaths=785)
 
 	........................................................................
 burn:	it=-1:	t=62
-	species: spp_0                         N=10462	(births=2100	deaths=2141)
+	species: spp_0                         N=4100	(births=802	deaths=795)
 
 	........................................................................
 burn:	it=-1:	t=63
-	species: spp_0                         N=10421	(births=2094	deaths=2100)
+	species: spp_0                         N=4107	(births=759	deaths=849)
 
 	........................................................................
 burn:	it=-1:	t=64
-	species: spp_0                         N=10415	(births=2036	deaths=2063)
+	species: spp_0                         N=4017	(births=799	deaths=738)
 
 	........................................................................
 burn:	it=-1:	t=65
-	species: spp_0                         N=10388	(births=1949	deaths=1970)
+	species: spp_0                         N=4078	(births=823	deaths=780)
 
 	........................................................................
 burn:	it=-1:	t=66
-	species: spp_0                         N=10367	(births=2129	deaths=2067)
+	species: spp_0                         N=4121	(births=819	deaths=808)
 
 	........................................................................
 burn:	it=-1:	t=67
-	species: spp_0                         N=10429	(births=2061	deaths=2041)
+	species: spp_0                         N=4132	(births=749	deaths=801)
 
 	........................................................................
 burn:	it=-1:	t=68
-	species: spp_0                         N=10449	(births=2053	deaths=2028)
+	species: spp_0                         N=4080	(births=787	deaths=841)
 
 	........................................................................
 burn:	it=-1:	t=69
-	species: spp_0                         N=10474	(births=2077	deaths=2038)
+	species: spp_0                         N=4026	(births=771	deaths=752)
 
 	........................................................................
 burn:	it=-1:	t=70
-	species: spp_0                         N=10513	(births=2090	deaths=2160)
+	species: spp_0                         N=4045	(births=790	deaths=730)
 
 	........................................................................
 burn:	it=-1:	t=71
-	species: spp_0                         N=10443	(births=2094	deaths=2039)
+	species: spp_0                         N=4105	(births=798	deaths=781)
 
 	........................................................................
 burn:	it=-1:	t=72
-	species: spp_0                         N=10498	(births=2117	deaths=2196)
+	species: spp_0                         N=4122	(births=791	deaths=831)
 
 	........................................................................
 burn:	it=-1:	t=73
-	species: spp_0                         N=10419	(births=2096	deaths=1997)
+	species: spp_0                         N=4082	(births=832	deaths=799)
 
 	........................................................................
 burn:	it=-1:	t=74
-	species: spp_0                         N=10518	(births=2029	deaths=2146)
+	species: spp_0                         N=4115	(births=819	deaths=792)
 
 	........................................................................
 burn:	it=-1:	t=75
-	species: spp_0                         N=10401	(births=2062	deaths=2060)
+	species: spp_0                         N=4142	(births=810	deaths=858)
 
 	........................................................................
 burn:	it=-1:	t=76
-	species: spp_0                         N=10403	(births=2120	deaths=2073)
+	species: spp_0                         N=4094	(births=832	deaths=791)
 
 	........................................................................
 burn:	it=-1:	t=77
-	species: spp_0                         N=10450	(births=2055	deaths=2077)
+	species: spp_0                         N=4135	(births=847	deaths=849)
 
 	........................................................................
 burn:	it=-1:	t=78
-	species: spp_0                         N=10428	(births=2059	deaths=2077)
+	species: spp_0                         N=4133	(births=827	deaths=858)
 
 	........................................................................
 burn:	it=-1:	t=79
-	species: spp_0                         N=10410	(births=2059	deaths=2085)
+	species: spp_0                         N=4102	(births=810	deaths=816)
 
 	........................................................................
 burn:	it=-1:	t=80
-	species: spp_0                         N=10384	(births=2078	deaths=1992)
+	species: spp_0                         N=4096	(births=812	deaths=817)
 
 	........................................................................
 burn:	it=-1:	t=81
-	species: spp_0                         N=10470	(births=2090	deaths=2035)
+	species: spp_0                         N=4091	(births=817	deaths=775)
 
 	........................................................................
 burn:	it=-1:	t=82
-	species: spp_0                         N=10525	(births=2110	deaths=2182)
+	species: spp_0                         N=4133	(births=829	deaths=853)
 
 	........................................................................
 burn:	it=-1:	t=83
-	species: spp_0                         N=10453	(births=2056	deaths=2068)
+	species: spp_0                         N=4109	(births=814	deaths=823)
 
 	........................................................................
 burn:	it=-1:	t=84
-	species: spp_0                         N=10441	(births=2063	deaths=2111)
+	species: spp_0                         N=4100	(births=812	deaths=823)
 
 	........................................................................
 burn:	it=-1:	t=85
-	species: spp_0                         N=10393	(births=2099	deaths=2038)
+	species: spp_0                         N=4089	(births=776	deaths=825)
 
 	........................................................................
 burn:	it=-1:	t=86
-	species: spp_0                         N=10454	(births=2125	deaths=2116)
+	species: spp_0                         N=4040	(births=786	deaths=733)
 
 	........................................................................
 burn:	it=-1:	t=87
-	species: spp_0                         N=10463	(births=2087	deaths=2081)
+	species: spp_0                         N=4093	(births=789	deaths=810)
 
 	........................................................................
 burn:	it=-1:	t=88
-	species: spp_0                         N=10469	(births=2048	deaths=2051)
+	species: spp_0                         N=4072	(births=823	deaths=816)
 
 	........................................................................
 burn:	it=-1:	t=89
-	species: spp_0                         N=10466	(births=2114	deaths=2169)
+	species: spp_0                         N=4079	(births=800	deaths=771)
 
 	........................................................................
 burn:	it=-1:	t=90
-	species: spp_0                         N=10411	(births=2085	deaths=2090)
+	species: spp_0                         N=4108	(births=804	deaths=776)
 
 	........................................................................
 burn:	it=-1:	t=91
-	species: spp_0                         N=10406	(births=2052	deaths=2096)
+	species: spp_0                         N=4136	(births=768	deaths=822)
 
 	........................................................................
 burn:	it=-1:	t=92
-	species: spp_0                         N=10362	(births=2037	deaths=1980)
+	species: spp_0                         N=4082	(births=810	deaths=833)
 
 	........................................................................
 burn:	it=-1:	t=93
-	species: spp_0                         N=10419	(births=2039	deaths=2060)
+	species: spp_0                         N=4059	(births=785	deaths=791)
 
 	........................................................................
 burn:	it=-1:	t=94
-	species: spp_0                         N=10398	(births=2020	deaths=2004)
+	species: spp_0                         N=4053	(births=787	deaths=803)
 
 	........................................................................
 burn:	it=-1:	t=95
-	species: spp_0                         N=10414	(births=2066	deaths=2068)
+	species: spp_0                         N=4037	(births=804	deaths=771)
 
 	........................................................................
 burn:	it=-1:	t=96
-	species: spp_0                         N=10412	(births=2097	deaths=2122)
+	species: spp_0                         N=4070	(births=824	deaths=815)
 
 	........................................................................
 burn:	it=-1:	t=97
-	species: spp_0                         N=10387	(births=2125	deaths=2094)
+	species: spp_0                         N=4079	(births=788	deaths=784)
 
 	........................................................................
 burn:	it=-1:	t=98
-	species: spp_0                         N=10418	(births=1999	deaths=2006)
+	species: spp_0                         N=4083	(births=850	deaths=795)
 
 	........................................................................
 burn:	it=-1:	t=99
-	species: spp_0                         N=10411	(births=2022	deaths=2039)
+	species: spp_0                         N=4138	(births=832	deaths=852)
 
 	........................................................................
 burn:	it=-1:	t=100
-	species: spp_0                         N=10394	(births=2106	deaths=2033)
+	species: spp_0                         N=4118	(births=793	deaths=833)
 
 	........................................................................
 burn:	it=-1:	t=101
-	species: spp_0                         N=10467	(births=2089	deaths=2141)
+	species: spp_0                         N=4078	(births=751	deaths=748)
 
 	........................................................................
 burn:	it=-1:	t=102
-	species: spp_0                         N=10415	(births=2100	deaths=2033)
+	species: spp_0                         N=4081	(births=746	deaths=781)
 
 	........................................................................
 burn:	it=-1:	t=103
-	species: spp_0                         N=10482	(births=2098	deaths=2100)
+	species: spp_0                         N=4046	(births=750	deaths=752)
 
 	........................................................................
 burn:	it=-1:	t=104
-	species: spp_0                         N=10480	(births=1989	deaths=2076)
+	species: spp_0                         N=4044	(births=848	deaths=781)
 
 	........................................................................
 burn:	it=-1:	t=105
-	species: spp_0                         N=10393	(births=2061	deaths=2020)
+	species: spp_0                         N=4111	(births=827	deaths=829)
 
 	........................................................................
 burn:	it=-1:	t=106
-	species: spp_0                         N=10434	(births=2076	deaths=2080)
+	species: spp_0                         N=4109	(births=786	deaths=792)
 
 	........................................................................
 burn:	it=-1:	t=107
-	species: spp_0                         N=10430	(births=2108	deaths=2014)
+	species: spp_0                         N=4103	(births=870	deaths=878)
 
 	........................................................................
 burn:	it=-1:	t=108
-	species: spp_0                         N=10524	(births=2143	deaths=2243)
+	species: spp_0                         N=4095	(births=794	deaths=801)
 
 	........................................................................
 burn:	it=-1:	t=109
-	species: spp_0                         N=10424	(births=2045	deaths=2128)
+	species: spp_0                         N=4088	(births=767	deaths=755)
 
 	........................................................................
 burn:	it=-1:	t=110
-	species: spp_0                         N=10341	(births=2126	deaths=2003)
+	species: spp_0                         N=4100	(births=819	deaths=798)
 
 	........................................................................
 burn:	it=-1:	t=111
-	species: spp_0                         N=10464	(births=2064	deaths=2144)
+	species: spp_0                         N=4121	(births=810	deaths=836)
 
 	........................................................................
 burn:	it=-1:	t=112
-	species: spp_0                         N=10384	(births=2046	deaths=2012)
+	species: spp_0                         N=4095	(births=781	deaths=834)
 
 	........................................................................
 burn:	it=-1:	t=113
-	species: spp_0                         N=10418	(births=2083	deaths=2091)
+	species: spp_0                         N=4042	(births=807	deaths=799)
 
 	........................................................................
 burn:	it=-1:	t=114
-	species: spp_0                         N=10410	(births=2100	deaths=2065)
+	species: spp_0                         N=4050	(births=799	deaths=771)
 
 	........................................................................
 burn:	it=-1:	t=115
-	species: spp_0                         N=10445	(births=2054	deaths=2067)
+	species: spp_0                         N=4078	(births=794	deaths=773)
 
 	........................................................................
 burn:	it=-1:	t=116
-	species: spp_0                         N=10432	(births=2092	deaths=2071)
+	species: spp_0                         N=4099	(births=813	deaths=828)
 
 	........................................................................
 burn:	it=-1:	t=117
-	species: spp_0                         N=10453	(births=2109	deaths=2061)
+	species: spp_0                         N=4084	(births=825	deaths=770)
 
 	........................................................................
 burn:	it=-1:	t=118
-	species: spp_0                         N=10501	(births=2085	deaths=2110)
+	species: spp_0                         N=4139	(births=772	deaths=792)
 
 	........................................................................
 burn:	it=-1:	t=119
-	species: spp_0                         N=10476	(births=2100	deaths=2061)
+	species: spp_0                         N=4119	(births=791	deaths=834)
 
 	........................................................................
 burn:	it=-1:	t=120
-	species: spp_0                         N=10515	(births=2081	deaths=2179)
+	species: spp_0                         N=4076	(births=797	deaths=828)
 
 	........................................................................
 burn:	it=-1:	t=121
-	species: spp_0                         N=10417	(births=2057	deaths=2065)
+	species: spp_0                         N=4045	(births=814	deaths=769)
 
 	........................................................................
 burn:	it=-1:	t=122
-	species: spp_0                         N=10409	(births=2043	deaths=2033)
+	species: spp_0                         N=4090	(births=807	deaths=813)
 
 	........................................................................
 burn:	it=-1:	t=123
-	species: spp_0                         N=10419	(births=2088	deaths=2089)
+	species: spp_0                         N=4084	(births=809	deaths=773)
 
 	........................................................................
 burn:	it=-1:	t=124
-	species: spp_0                         N=10418	(births=2176	deaths=2127)
+	species: spp_0                         N=4120	(births=830	deaths=883)
 
 	........................................................................
 burn:	it=-1:	t=125
-	species: spp_0                         N=10467	(births=2128	deaths=2112)
+	species: spp_0                         N=4067	(births=855	deaths=817)
 
 	........................................................................
 burn:	it=-1:	t=126
-	species: spp_0                         N=10483	(births=2078	deaths=2165)
+	species: spp_0                         N=4105	(births=801	deaths=799)
 
 	........................................................................
 burn:	it=-1:	t=127
-	species: spp_0                         N=10396	(births=2044	deaths=2073)
+	species: spp_0                         N=4107	(births=811	deaths=832)
 
 	........................................................................
 burn:	it=-1:	t=128
-	species: spp_0                         N=10367	(births=2024	deaths=1978)
+	species: spp_0                         N=4086	(births=760	deaths=808)
 
 	........................................................................
 burn:	it=-1:	t=129
-	species: spp_0                         N=10413	(births=2045	deaths=1984)
+	species: spp_0                         N=4038	(births=763	deaths=728)
 
 	........................................................................
 burn:	it=-1:	t=130
-	species: spp_0                         N=10474	(births=2082	deaths=2107)
+	species: spp_0                         N=4073	(births=806	deaths=826)
 
 	........................................................................
 burn:	it=-1:	t=131
-	species: spp_0                         N=10449	(births=2087	deaths=2107)
+	species: spp_0                         N=4053	(births=771	deaths=748)
 
 	........................................................................
 burn:	it=-1:	t=132
-	species: spp_0                         N=10429	(births=2101	deaths=2135)
+	species: spp_0                         N=4076	(births=854	deaths=809)
 
 	........................................................................
 burn:	it=-1:	t=133
-	species: spp_0                         N=10395	(births=2031	deaths=2024)
+	species: spp_0                         N=4121	(births=787	deaths=794)
 
 	........................................................................
 burn:	it=-1:	t=134
-	species: spp_0                         N=10402	(births=2042	deaths=2037)
+	species: spp_0                         N=4114	(births=795	deaths=808)
 
 	........................................................................
 burn:	it=-1:	t=135
-	species: spp_0                         N=10407	(births=2019	deaths=2034)
+	species: spp_0                         N=4101	(births=803	deaths=780)
 
 	........................................................................
 burn:	it=-1:	t=136
-	species: spp_0                         N=10392	(births=2057	deaths=2100)
+	species: spp_0                         N=4124	(births=826	deaths=830)
 
 	........................................................................
 burn:	it=-1:	t=137
-	species: spp_0                         N=10349	(births=2065	deaths=2008)
+	species: spp_0                         N=4120	(births=830	deaths=872)
 
 	........................................................................
 burn:	it=-1:	t=138
-	species: spp_0                         N=10406	(births=2005	deaths=2053)
+	species: spp_0                         N=4078	(births=829	deaths=841)
 
 	........................................................................
 burn:	it=-1:	t=139
-	species: spp_0                         N=10358	(births=2098	deaths=2009)
+	species: spp_0                         N=4066	(births=836	deaths=821)
 
 	........................................................................
 burn:	it=-1:	t=140
-	species: spp_0                         N=10447	(births=2119	deaths=2005)
+	species: spp_0                         N=4081	(births=844	deaths=810)
 
 	........................................................................
 burn:	it=-1:	t=141
-	species: spp_0                         N=10561	(births=2173	deaths=2200)
+	species: spp_0                         N=4115	(births=780	deaths=828)
 
 	........................................................................
 burn:	it=-1:	t=142
-	species: spp_0                         N=10534	(births=2076	deaths=2120)
+	species: spp_0                         N=4067	(births=769	deaths=782)
 
 	........................................................................
 burn:	it=-1:	t=143
-	species: spp_0                         N=10490	(births=2125	deaths=2066)
+	species: spp_0                         N=4054	(births=766	deaths=773)
 
 	........................................................................
 burn:	it=-1:	t=144
-	species: spp_0                         N=10549	(births=2130	deaths=2217)
+	species: spp_0                         N=4047	(births=764	deaths=780)
 
 	........................................................................
 burn:	it=-1:	t=145
-	species: spp_0                         N=10462	(births=2058	deaths=2069)
+	species: spp_0                         N=4031	(births=773	deaths=805)
 
 	........................................................................
 burn:	it=-1:	t=146
-	species: spp_0                         N=10451	(births=2164	deaths=2096)
+	species: spp_0                         N=3999	(births=805	deaths=738)
 
 	........................................................................
 burn:	it=-1:	t=147
-	species: spp_0                         N=10519	(births=2145	deaths=2229)
+	species: spp_0                         N=4066	(births=807	deaths=760)
 
 	........................................................................
 burn:	it=-1:	t=148
-	species: spp_0                         N=10435	(births=2086	deaths=2098)
+	species: spp_0                         N=4113	(births=836	deaths=841)
 
 	........................................................................
 burn:	it=-1:	t=149
-	species: spp_0                         N=10423	(births=2088	deaths=2062)
+	species: spp_0                         N=4108	(births=809	deaths=816)
 
 	........................................................................
 burn:	it=-1:	t=150
-	species: spp_0                         N=10449	(births=2074	deaths=2158)
+	species: spp_0                         N=4101	(births=819	deaths=836)
 
 	........................................................................
 burn:	it=-1:	t=151
-	species: spp_0                         N=10365	(births=2129	deaths=2032)
+	species: spp_0                         N=4084	(births=800	deaths=812)
 
 	........................................................................
 burn:	it=-1:	t=152
-	species: spp_0                         N=10462	(births=2139	deaths=2102)
+	species: spp_0                         N=4072	(births=804	deaths=850)
 
 	........................................................................
 burn:	it=-1:	t=153
-	species: spp_0                         N=10499	(births=2173	deaths=2211)
+	species: spp_0                         N=4026	(births=812	deaths=752)
 
 	........................................................................
 burn:	it=-1:	t=154
-	species: spp_0                         N=10461	(births=2083	deaths=2116)
+	species: spp_0                         N=4086	(births=816	deaths=839)
 
 	........................................................................
 burn:	it=-1:	t=155
-	species: spp_0                         N=10428	(births=2119	deaths=1982)
+	species: spp_0                         N=4063	(births=816	deaths=796)
 
 	........................................................................
 burn:	it=-1:	t=156
-	species: spp_0                         N=10565	(births=2102	deaths=2180)
+	species: spp_0                         N=4083	(births=783	deaths=756)
 
 	........................................................................
 burn:	it=-1:	t=157
-	species: spp_0                         N=10487	(births=2061	deaths=2135)
+	species: spp_0                         N=4110	(births=846	deaths=857)
 
 	........................................................................
 burn:	it=-1:	t=158
-	species: spp_0                         N=10413	(births=2066	deaths=2021)
+	species: spp_0                         N=4099	(births=834	deaths=774)
 
 	........................................................................
 burn:	it=-1:	t=159
-	species: spp_0                         N=10458	(births=2062	deaths=2137)
+	species: spp_0                         N=4159	(births=804	deaths=895)
 
 	........................................................................
 burn:	it=-1:	t=160
-	species: spp_0                         N=10383	(births=2128	deaths=1997)
+	species: spp_0                         N=4068	(births=801	deaths=775)
 
 	........................................................................
 burn:	it=-1:	t=161
-	species: spp_0                         N=10514	(births=2137	deaths=2217)
+	species: spp_0                         N=4094	(births=787	deaths=797)
 
 	........................................................................
 burn:	it=-1:	t=162
-	species: spp_0                         N=10434	(births=2090	deaths=2123)
+	species: spp_0                         N=4084	(births=786	deaths=794)
 
 	........................................................................
 burn:	it=-1:	t=163
-	species: spp_0                         N=10401	(births=2055	deaths=2040)
+	species: spp_0                         N=4076	(births=765	deaths=825)
 
 	........................................................................
 burn:	it=-1:	t=164
-	species: spp_0                         N=10416	(births=2138	deaths=2081)
+	species: spp_0                         N=4016	(births=801	deaths=723)
 
 	........................................................................
 burn:	it=-1:	t=165
-	species: spp_0                         N=10473	(births=2110	deaths=2151)
+	species: spp_0                         N=4094	(births=831	deaths=827)
 
 	........................................................................
 burn:	it=-1:	t=166
-	species: spp_0                         N=10432	(births=2051	deaths=2097)
+	species: spp_0                         N=4098	(births=787	deaths=817)
 
 	........................................................................
 burn:	it=-1:	t=167
-	species: spp_0                         N=10386	(births=2074	deaths=2103)
+	species: spp_0                         N=4068	(births=789	deaths=824)
 
 	........................................................................
 burn:	it=-1:	t=168
-	species: spp_0                         N=10357	(births=2024	deaths=2095)
+	species: spp_0                         N=4033	(births=784	deaths=772)
 
 	........................................................................
 burn:	it=-1:	t=169
-	species: spp_0                         N=10286	(births=2049	deaths=2003)
+	species: spp_0                         N=4045	(births=737	deaths=747)
 
 	........................................................................
 burn:	it=-1:	t=170
-	species: spp_0                         N=10332	(births=2094	deaths=2015)
+	species: spp_0                         N=4035	(births=812	deaths=743)
 
 	........................................................................
 burn:	it=-1:	t=171
-	species: spp_0                         N=10411	(births=2039	deaths=2113)
+	species: spp_0                         N=4104	(births=825	deaths=805)
 
 	........................................................................
 burn:	it=-1:	t=172
-	species: spp_0                         N=10337	(births=2018	deaths=1948)
+	species: spp_0                         N=4124	(births=819	deaths=856)
 
 	........................................................................
 burn:	it=-1:	t=173
-	species: spp_0                         N=10407	(births=2051	deaths=1980)
+	species: spp_0                         N=4087	(births=881	deaths=825)
 
 	........................................................................
 burn:	it=-1:	t=174
-	species: spp_0                         N=10478	(births=2067	deaths=2109)
+	species: spp_0                         N=4143	(births=823	deaths=846)
 
 	........................................................................
 burn:	it=-1:	t=175
-	species: spp_0                         N=10436	(births=2101	deaths=2111)
+	species: spp_0                         N=4120	(births=835	deaths=828)
 
 	........................................................................
 burn:	it=-1:	t=176
-	species: spp_0                         N=10426	(births=2084	deaths=2042)
+	species: spp_0                         N=4127	(births=795	deaths=827)
 
 	........................................................................
 burn:	it=-1:	t=177
-	species: spp_0                         N=10468	(births=2113	deaths=2113)
+	species: spp_0                         N=4095	(births=801	deaths=868)
 
 	........................................................................
 burn:	it=-1:	t=178
-	species: spp_0                         N=10468	(births=2062	deaths=2108)
+	species: spp_0                         N=4028	(births=770	deaths=748)
 
 	........................................................................
 burn:	it=-1:	t=179
-	species: spp_0                         N=10422	(births=2070	deaths=2111)
+	species: spp_0                         N=4050	(births=832	deaths=772)
 
 	........................................................................
 burn:	it=-1:	t=180
-	species: spp_0                         N=10381	(births=2009	deaths=1987)
+	species: spp_0                         N=4110	(births=800	deaths=858)
 
 	........................................................................
 burn:	it=-1:	t=181
-	species: spp_0                         N=10403	(births=2042	deaths=2071)
+	species: spp_0                         N=4052	(births=792	deaths=762)
 
 	........................................................................
 burn:	it=-1:	t=182
-	species: spp_0                         N=10374	(births=2133	deaths=2098)
+	species: spp_0                         N=4082	(births=770	deaths=801)
 
 	........................................................................
 burn:	it=-1:	t=183
-	species: spp_0                         N=10409	(births=2091	deaths=2010)
+	species: spp_0                         N=4051	(births=794	deaths=739)
 
 	........................................................................
 burn:	it=-1:	t=184
-	species: spp_0                         N=10490	(births=2126	deaths=2154)
+	species: spp_0                         N=4106	(births=806	deaths=819)
 
 	........................................................................
 burn:	it=-1:	t=185
-	species: spp_0                         N=10462	(births=2052	deaths=2058)
+	species: spp_0                         N=4093	(births=778	deaths=794)
 
 	........................................................................
 burn:	it=-1:	t=186
-	species: spp_0                         N=10456	(births=2145	deaths=2090)
+	species: spp_0                         N=4077	(births=761	deaths=761)
 
 	........................................................................
 burn:	it=-1:	t=187
-	species: spp_0                         N=10511	(births=2128	deaths=2201)
+	species: spp_0                         N=4077	(births=791	deaths=761)
 
 	........................................................................
 burn:	it=-1:	t=188
-	species: spp_0                         N=10438	(births=2096	deaths=2050)
+	species: spp_0                         N=4107	(births=785	deaths=809)
 
 	........................................................................
 burn:	it=-1:	t=189
-	species: spp_0                         N=10484	(births=2115	deaths=2117)
+	species: spp_0                         N=4083	(births=817	deaths=827)
 
 	........................................................................
 burn:	it=-1:	t=190
-	species: spp_0                         N=10482	(births=2083	deaths=2096)
+	species: spp_0                         N=4073	(births=807	deaths=801)
 
 	........................................................................
 burn:	it=-1:	t=191
-	species: spp_0                         N=10469	(births=2092	deaths=2103)
+	species: spp_0                         N=4079	(births=773	deaths=811)
 
 	........................................................................
 burn:	it=-1:	t=192
-	species: spp_0                         N=10458	(births=2052	deaths=2087)
+	species: spp_0                         N=4041	(births=827	deaths=783)
 
 	........................................................................
 burn:	it=-1:	t=193
-	species: spp_0                         N=10423	(births=2016	deaths=2027)
+	species: spp_0                         N=4085	(births=802	deaths=810)
 
 	........................................................................
 burn:	it=-1:	t=194
-	species: spp_0                         N=10412	(births=2079	deaths=2080)
+	species: spp_0                         N=4077	(births=817	deaths=809)
 
 	........................................................................
 burn:	it=-1:	t=195
-	species: spp_0                         N=10411	(births=2107	deaths=2068)
+	species: spp_0                         N=4085	(births=830	deaths=851)
 
 	........................................................................
 burn:	it=-1:	t=196
-	species: spp_0                         N=10450	(births=2066	deaths=2138)
+	species: spp_0                         N=4064	(births=791	deaths=856)
 
 	........................................................................
 burn:	it=-1:	t=197
-	species: spp_0                         N=10378	(births=2044	deaths=2063)
+	species: spp_0                         N=3999	(births=816	deaths=722)
 
 	........................................................................
 
@@ -866,1266 +866,1058 @@ NON-NEUTRAL LOCI:
 
 
 main:	it=-1:	t=0
-	species: spp_0                         N=10359	(births=2108	deaths=2404)
+	species: spp_0                         N=4093	(births=778	deaths=1623)
 
 	........................................................................
 main:	it=-1:	t=1
-	species: spp_0                         N=10063	(births=2002	deaths=2212)
+	species: spp_0                         N=3248	(births=609	deaths=869)
 
 	........................................................................
 main:	it=-1:	t=2
-	species: spp_0                         N=9853	(births=1933	deaths=1915)
+	species: spp_0                         N=2988	(births=592	deaths=774)
 
 	........................................................................
 main:	it=-1:	t=3
-	species: spp_0                         N=9871	(births=1969	deaths=2028)
+	species: spp_0                         N=2806	(births=572	deaths=720)
 
 	........................................................................
 main:	it=-1:	t=4
-	species: spp_0                         N=9812	(births=1888	deaths=1919)
+	species: spp_0                         N=2658	(births=519	deaths=624)
 
 	........................................................................
 main:	it=-1:	t=5
-	species: spp_0                         N=9781	(births=1996	deaths=1960)
+	species: spp_0                         N=2553	(births=482	deaths=540)
 
 	........................................................................
 main:	it=-1:	t=6
-	species: spp_0                         N=9817	(births=1904	deaths=1960)
+	species: spp_0                         N=2495	(births=511	deaths=552)
 
 	........................................................................
 main:	it=-1:	t=7
-	species: spp_0                         N=9761	(births=1912	deaths=1861)
+	species: spp_0                         N=2454	(births=455	deaths=486)
 
 	........................................................................
 main:	it=-1:	t=8
-	species: spp_0                         N=9812	(births=1915	deaths=1945)
+	species: spp_0                         N=2423	(births=460	deaths=492)
 
 	........................................................................
 main:	it=-1:	t=9
-	species: spp_0                         N=9782	(births=1968	deaths=1924)
+	species: spp_0                         N=2391	(births=406	deaths=480)
 
 	........................................................................
 main:	it=-1:	t=10
-	species: spp_0                         N=9826	(births=1943	deaths=1962)
+	species: spp_0                         N=2317	(births=427	deaths=442)
 
 	........................................................................
 main:	it=-1:	t=11
-	species: spp_0                         N=9807	(births=1921	deaths=1928)
+	species: spp_0                         N=2302	(births=464	deaths=433)
 
 	........................................................................
 main:	it=-1:	t=12
-	species: spp_0                         N=9800	(births=1958	deaths=2004)
+	species: spp_0                         N=2333	(births=439	deaths=462)
 
 	........................................................................
 main:	it=-1:	t=13
-	species: spp_0                         N=9754	(births=1963	deaths=1892)
+	species: spp_0                         N=2310	(births=443	deaths=401)
 
 	........................................................................
 main:	it=-1:	t=14
-	species: spp_0                         N=9825	(births=1887	deaths=1964)
+	species: spp_0                         N=2352	(births=450	deaths=454)
 
 	........................................................................
 main:	it=-1:	t=15
-	species: spp_0                         N=9748	(births=1981	deaths=1919)
+	species: spp_0                         N=2348	(births=430	deaths=417)
 
 	........................................................................
 main:	it=-1:	t=16
-	species: spp_0                         N=9810	(births=1919	deaths=1928)
+	species: spp_0                         N=2361	(births=429	deaths=443)
 
 	........................................................................
 main:	it=-1:	t=17
-	species: spp_0                         N=9801	(births=1943	deaths=1905)
+	species: spp_0                         N=2347	(births=450	deaths=439)
 
 	........................................................................
 main:	it=-1:	t=18
-	species: spp_0                         N=9839	(births=1936	deaths=1962)
+	species: spp_0                         N=2358	(births=438	deaths=417)
 
 	........................................................................
 main:	it=-1:	t=19
-	species: spp_0                         N=9813	(births=1963	deaths=1950)
+	species: spp_0                         N=2379	(births=459	deaths=417)
 
 	........................................................................
 main:	it=-1:	t=20
-	species: spp_0                         N=9826	(births=1979	deaths=1893)
+	species: spp_0                         N=2421	(births=447	deaths=444)
 
 	........................................................................
 main:	it=-1:	t=21
-	species: spp_0                         N=9912	(births=1956	deaths=2062)
+	species: spp_0                         N=2424	(births=434	deaths=411)
 
 	........................................................................
 main:	it=-1:	t=22
-	species: spp_0                         N=9806	(births=1900	deaths=1861)
+	species: spp_0                         N=2447	(births=503	deaths=427)
 
 	........................................................................
 main:	it=-1:	t=23
-	species: spp_0                         N=9845	(births=1960	deaths=2006)
+	species: spp_0                         N=2523	(births=511	deaths=419)
 
 	........................................................................
 main:	it=-1:	t=24
-	species: spp_0                         N=9799	(births=1968	deaths=1890)
+	species: spp_0                         N=2615	(births=504	deaths=451)
 
 	........................................................................
 main:	it=-1:	t=25
-	species: spp_0                         N=9877	(births=1995	deaths=2007)
+	species: spp_0                         N=2668	(births=524	deaths=464)
 
 	........................................................................
 main:	it=-1:	t=26
-	species: spp_0                         N=9865	(births=1935	deaths=1967)
+	species: spp_0                         N=2728	(births=539	deaths=495)
 
 	........................................................................
 main:	it=-1:	t=27
-	species: spp_0                         N=9833	(births=1963	deaths=1966)
+	species: spp_0                         N=2772	(births=500	deaths=522)
 
 	........................................................................
 main:	it=-1:	t=28
-	species: spp_0                         N=9830	(births=1964	deaths=1997)
+	species: spp_0                         N=2750	(births=529	deaths=519)
 
 	........................................................................
 main:	it=-1:	t=29
-	species: spp_0                         N=9797	(births=1921	deaths=1903)
+	species: spp_0                         N=2760	(births=523	deaths=531)
 
 	........................................................................
 main:	it=-1:	t=30
-	species: spp_0                         N=9815	(births=2016	deaths=1963)
+	species: spp_0                         N=2752	(births=513	deaths=523)
 
 	........................................................................
 main:	it=-1:	t=31
-	species: spp_0                         N=9868	(births=1947	deaths=1989)
+	species: spp_0                         N=2742	(births=534	deaths=497)
 
 	........................................................................
 main:	it=-1:	t=32
-	species: spp_0                         N=9826	(births=1885	deaths=1877)
+	species: spp_0                         N=2779	(births=520	deaths=559)
 
 	........................................................................
 main:	it=-1:	t=33
-	species: spp_0                         N=9834	(births=2021	deaths=1944)
+	species: spp_0                         N=2740	(births=532	deaths=504)
 
 	........................................................................
 main:	it=-1:	t=34
-	species: spp_0                         N=9911	(births=1976	deaths=1970)
+	species: spp_0                         N=2768	(births=532	deaths=509)
 
 	........................................................................
 main:	it=-1:	t=35
-	species: spp_0                         N=9917	(births=1997	deaths=2063)
+	species: spp_0                         N=2791	(births=545	deaths=512)
 
 	........................................................................
 main:	it=-1:	t=36
-	species: spp_0                         N=9851	(births=1950	deaths=1945)
+	species: spp_0                         N=2824	(births=549	deaths=548)
 
 	........................................................................
 main:	it=-1:	t=37
-	species: spp_0                         N=9856	(births=2052	deaths=1971)
+	species: spp_0                         N=2825	(births=560	deaths=553)
 
 	........................................................................
 main:	it=-1:	t=38
-	species: spp_0                         N=9937	(births=1937	deaths=2079)
+	species: spp_0                         N=2832	(births=560	deaths=591)
 
 	........................................................................
 main:	it=-1:	t=39
-	species: spp_0                         N=9795	(births=1996	deaths=1940)
+	species: spp_0                         N=2801	(births=551	deaths=479)
 
 	........................................................................
 main:	it=-1:	t=40
-	species: spp_0                         N=9851	(births=1898	deaths=1970)
+	species: spp_0                         N=2873	(births=572	deaths=584)
 
 	........................................................................
 main:	it=-1:	t=41
-	species: spp_0                         N=9779	(births=2013	deaths=1851)
+	species: spp_0                         N=2861	(births=525	deaths=559)
 
 	........................................................................
 main:	it=-1:	t=42
-	species: spp_0                         N=9941	(births=2006	deaths=2080)
+	species: spp_0                         N=2827	(births=576	deaths=567)
 
 	........................................................................
 main:	it=-1:	t=43
-	species: spp_0                         N=9867	(births=1972	deaths=2063)
+	species: spp_0                         N=2836	(births=536	deaths=538)
 
 	........................................................................
 main:	it=-1:	t=44
-	species: spp_0                         N=9776	(births=1949	deaths=1872)
+	species: spp_0                         N=2834	(births=534	deaths=529)
 
 	........................................................................
 main:	it=-1:	t=45
-	species: spp_0                         N=9853	(births=1933	deaths=1886)
+	species: spp_0                         N=2839	(births=538	deaths=528)
 
 	........................................................................
 main:	it=-1:	t=46
-	species: spp_0                         N=9900	(births=1945	deaths=1984)
+	species: spp_0                         N=2849	(births=556	deaths=521)
 
 	........................................................................
 main:	it=-1:	t=47
-	species: spp_0                         N=9861	(births=1926	deaths=1962)
+	species: spp_0                         N=2884	(births=565	deaths=530)
 
 	........................................................................
 main:	it=-1:	t=48
-	species: spp_0                         N=9825	(births=1943	deaths=1946)
+	species: spp_0                         N=2919	(births=602	deaths=597)
 
 	........................................................................
 main:	it=-1:	t=49
-	species: spp_0                         N=9822	(births=1979	deaths=1885)
+	species: spp_0                         N=2924	(births=571	deaths=536)
 
 	........................................................................
 main:	it=-1:	t=50
-	species: spp_0                         N=9916	(births=1922	deaths=1959)
+	species: spp_0                         N=2959	(births=575	deaths=578)
 
 	........................................................................
 main:	it=-1:	t=51
-	species: spp_0                         N=9879	(births=1899	deaths=1917)
+	species: spp_0                         N=2956	(births=560	deaths=588)
 
 	........................................................................
 main:	it=-1:	t=52
-	species: spp_0                         N=9861	(births=1916	deaths=1957)
+	species: spp_0                         N=2928	(births=575	deaths=578)
 
 	........................................................................
 main:	it=-1:	t=53
-	species: spp_0                         N=9820	(births=1912	deaths=1953)
+	species: spp_0                         N=2925	(births=552	deaths=521)
 
 	........................................................................
 main:	it=-1:	t=54
-	species: spp_0                         N=9779	(births=1972	deaths=1894)
+	species: spp_0                         N=2956	(births=588	deaths=583)
 
 	........................................................................
 main:	it=-1:	t=55
-	species: spp_0                         N=9857	(births=2023	deaths=1962)
+	species: spp_0                         N=2961	(births=564	deaths=564)
 
 	........................................................................
 main:	it=-1:	t=56
-	species: spp_0                         N=9918	(births=1954	deaths=2057)
+	species: spp_0                         N=2961	(births=649	deaths=620)
 
 	........................................................................
 main:	it=-1:	t=57
-	species: spp_0                         N=9815	(births=1945	deaths=1918)
+	species: spp_0                         N=2990	(births=551	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=58
-	species: spp_0                         N=9842	(births=1896	deaths=1897)
+	species: spp_0                         N=2966	(births=568	deaths=573)
 
 	........................................................................
 main:	it=-1:	t=59
-	species: spp_0                         N=9841	(births=1952	deaths=1915)
+	species: spp_0                         N=2961	(births=580	deaths=564)
 
 	........................................................................
 main:	it=-1:	t=60
-	species: spp_0                         N=9878	(births=1920	deaths=1918)
+	species: spp_0                         N=2977	(births=557	deaths=533)
 
 	........................................................................
 main:	it=-1:	t=61
-	species: spp_0                         N=9880	(births=1877	deaths=1919)
+	species: spp_0                         N=3001	(births=593	deaths=609)
 
 	........................................................................
 main:	it=-1:	t=62
-	species: spp_0                         N=9838	(births=1972	deaths=1861)
+	species: spp_0                         N=2985	(births=581	deaths=571)
 
 	........................................................................
 main:	it=-1:	t=63
-	species: spp_0                         N=9949	(births=1882	deaths=2013)
+	species: spp_0                         N=2995	(births=553	deaths=597)
 
 	........................................................................
 main:	it=-1:	t=64
-	species: spp_0                         N=9818	(births=1991	deaths=1915)
+	species: spp_0                         N=2951	(births=570	deaths=530)
 
 	........................................................................
 main:	it=-1:	t=65
-	species: spp_0                         N=9894	(births=1978	deaths=2012)
+	species: spp_0                         N=2991	(births=591	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=66
-	species: spp_0                         N=9860	(births=1950	deaths=1931)
+	species: spp_0                         N=3016	(births=572	deaths=573)
 
 	........................................................................
 main:	it=-1:	t=67
-	species: spp_0                         N=9879	(births=1892	deaths=2001)
+	species: spp_0                         N=3015	(births=553	deaths=545)
 
 	........................................................................
 main:	it=-1:	t=68
-	species: spp_0                         N=9770	(births=1940	deaths=1795)
+	species: spp_0                         N=3023	(births=587	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=69
-	species: spp_0                         N=9915	(births=1888	deaths=1981)
+	species: spp_0                         N=3035	(births=624	deaths=578)
 
 	........................................................................
 main:	it=-1:	t=70
-	species: spp_0                         N=9822	(births=1855	deaths=1828)
+	species: spp_0                         N=3081	(births=583	deaths=626)
 
 	........................................................................
 main:	it=-1:	t=71
-	species: spp_0                         N=9849	(births=1936	deaths=1867)
+	species: spp_0                         N=3038	(births=565	deaths=563)
 
 	........................................................................
 main:	it=-1:	t=72
-	species: spp_0                         N=9918	(births=1945	deaths=1960)
+	species: spp_0                         N=3040	(births=587	deaths=637)
 
 	........................................................................
 main:	it=-1:	t=73
-	species: spp_0                         N=9903	(births=1997	deaths=2032)
+	species: spp_0                         N=2990	(births=582	deaths=579)
 
 	........................................................................
 main:	it=-1:	t=74
-	species: spp_0                         N=9868	(births=1999	deaths=1901)
+	species: spp_0                         N=2993	(births=566	deaths=550)
 
 	........................................................................
 main:	it=-1:	t=75
-	species: spp_0                         N=9966	(births=1933	deaths=1986)
+	species: spp_0                         N=3009	(births=568	deaths=571)
 
 	........................................................................
 main:	it=-1:	t=76
-	species: spp_0                         N=9913	(births=1915	deaths=1974)
+	species: spp_0                         N=3006	(births=596	deaths=613)
 
 	........................................................................
 main:	it=-1:	t=77
-	species: spp_0                         N=9854	(births=1996	deaths=1934)
+	species: spp_0                         N=2989	(births=556	deaths=535)
 
 	........................................................................
 main:	it=-1:	t=78
-	species: spp_0                         N=9916	(births=1955	deaths=1988)
+	species: spp_0                         N=3010	(births=610	deaths=602)
 
 	........................................................................
 main:	it=-1:	t=79
-	species: spp_0                         N=9883	(births=1942	deaths=1888)
+	species: spp_0                         N=3018	(births=579	deaths=581)
 
 	........................................................................
 main:	it=-1:	t=80
-	species: spp_0                         N=9937	(births=1987	deaths=1984)
+	species: spp_0                         N=3016	(births=557	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=81
-	species: spp_0                         N=9940	(births=2053	deaths=2053)
+	species: spp_0                         N=2963	(births=564	deaths=557)
 
 	........................................................................
 main:	it=-1:	t=82
-	species: spp_0                         N=9940	(births=2005	deaths=2037)
+	species: spp_0                         N=2970	(births=564	deaths=550)
 
 	........................................................................
 main:	it=-1:	t=83
-	species: spp_0                         N=9908	(births=1929	deaths=2005)
+	species: spp_0                         N=2984	(births=574	deaths=548)
 
 	........................................................................
 main:	it=-1:	t=84
-	species: spp_0                         N=9832	(births=1946	deaths=1895)
+	species: spp_0                         N=3010	(births=606	deaths=572)
 
 	........................................................................
 main:	it=-1:	t=85
-	species: spp_0                         N=9883	(births=1924	deaths=1980)
+	species: spp_0                         N=3044	(births=606	deaths=605)
 
 	........................................................................
 main:	it=-1:	t=86
-	species: spp_0                         N=9827	(births=1938	deaths=1917)
+	species: spp_0                         N=3045	(births=633	deaths=627)
 
 	........................................................................
 main:	it=-1:	t=87
-	species: spp_0                         N=9848	(births=1969	deaths=1881)
+	species: spp_0                         N=3051	(births=606	deaths=606)
 
 	........................................................................
 main:	it=-1:	t=88
-	species: spp_0                         N=9936	(births=1945	deaths=2026)
+	species: spp_0                         N=3051	(births=613	deaths=579)
 
 	........................................................................
 main:	it=-1:	t=89
-	species: spp_0                         N=9855	(births=2014	deaths=1952)
+	species: spp_0                         N=3085	(births=602	deaths=661)
 
 	........................................................................
 main:	it=-1:	t=90
-	species: spp_0                         N=9917	(births=1974	deaths=2042)
+	species: spp_0                         N=3026	(births=603	deaths=596)
 
 	........................................................................
 main:	it=-1:	t=91
-	species: spp_0                         N=9849	(births=1953	deaths=1918)
+	species: spp_0                         N=3033	(births=582	deaths=580)
 
 	........................................................................
 main:	it=-1:	t=92
-	species: spp_0                         N=9884	(births=1909	deaths=1891)
+	species: spp_0                         N=3035	(births=608	deaths=628)
 
 	........................................................................
 main:	it=-1:	t=93
-	species: spp_0                         N=9902	(births=2004	deaths=2013)
+	species: spp_0                         N=3015	(births=581	deaths=561)
 
 	........................................................................
 main:	it=-1:	t=94
-	species: spp_0                         N=9893	(births=1942	deaths=1977)
+	species: spp_0                         N=3035	(births=595	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=95
-	species: spp_0                         N=9858	(births=2011	deaths=2010)
+	species: spp_0                         N=3020	(births=573	deaths=571)
 
 	........................................................................
 main:	it=-1:	t=96
-	species: spp_0                         N=9859	(births=1904	deaths=1905)
+	species: spp_0                         N=3022	(births=595	deaths=614)
 
 	........................................................................
 main:	it=-1:	t=97
-	species: spp_0                         N=9858	(births=1950	deaths=1970)
+	species: spp_0                         N=3003	(births=563	deaths=559)
 
 	........................................................................
 main:	it=-1:	t=98
-	species: spp_0                         N=9838	(births=1901	deaths=1853)
+	species: spp_0                         N=3007	(births=596	deaths=569)
 
 	........................................................................
 main:	it=-1:	t=99
-	species: spp_0                         N=9886	(births=1975	deaths=1953)
+	species: spp_0                         N=3034	(births=565	deaths=565)
 
 	........................................................................
 
 
 now sorting and simplifying tskit tables
-	NUMBER EDGES BEFORE SIMPLIFICATION: 277116215
-	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 70312
+	NUMBER EDGES BEFORE SIMPLIFICATION: 83526436
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 19165
 
-	NUMBER EDGES AFTER SIMPLIFICATION:  200343737
-	NUMBER INDIVIDS AFTER SIMPLIFICATION:  64323
+	NUMBER EDGES AFTER SIMPLIFICATION:  59917404
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  17279
 main:	it=-1:	t=100
-	species: spp_0                         N=9908	(births=1945	deaths=1978)
+	species: spp_0                         N=3034	(births=587	deaths=592)
 
 	........................................................................
 main:	it=-1:	t=101
-	species: spp_0                         N=9875	(births=2007	deaths=1972)
+	species: spp_0                         N=3029	(births=628	deaths=626)
 
 	........................................................................
 main:	it=-1:	t=102
-	species: spp_0                         N=9910	(births=1885	deaths=1968)
+	species: spp_0                         N=3031	(births=621	deaths=606)
 
 	........................................................................
 main:	it=-1:	t=103
-	species: spp_0                         N=9827	(births=1932	deaths=1894)
+	species: spp_0                         N=3046	(births=627	deaths=590)
 
 	........................................................................
 main:	it=-1:	t=104
-	species: spp_0                         N=9865	(births=1931	deaths=1943)
+	species: spp_0                         N=3083	(births=622	deaths=626)
 
 	........................................................................
 main:	it=-1:	t=105
-	species: spp_0                         N=9853	(births=1916	deaths=1860)
+	species: spp_0                         N=3079	(births=615	deaths=606)
 
 	........................................................................
 main:	it=-1:	t=106
-	species: spp_0                         N=9909	(births=1936	deaths=1931)
+	species: spp_0                         N=3088	(births=544	deaths=565)
 
 	........................................................................
 main:	it=-1:	t=107
-	species: spp_0                         N=9914	(births=2062	deaths=1998)
+	species: spp_0                         N=3067	(births=628	deaths=633)
 
 	........................................................................
 main:	it=-1:	t=108
-	species: spp_0                         N=9978	(births=1951	deaths=1997)
+	species: spp_0                         N=3062	(births=601	deaths=587)
 
 	........................................................................
 main:	it=-1:	t=109
-	species: spp_0                         N=9932	(births=1984	deaths=1971)
+	species: spp_0                         N=3076	(births=576	deaths=604)
 
 	........................................................................
 main:	it=-1:	t=110
-	species: spp_0                         N=9945	(births=1971	deaths=2035)
+	species: spp_0                         N=3048	(births=588	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=111
-	species: spp_0                         N=9881	(births=1964	deaths=1937)
+	species: spp_0                         N=3026	(births=606	deaths=611)
 
 	........................................................................
 main:	it=-1:	t=112
-	species: spp_0                         N=9908	(births=1963	deaths=1989)
+	species: spp_0                         N=3021	(births=590	deaths=556)
 
 	........................................................................
 main:	it=-1:	t=113
-	species: spp_0                         N=9882	(births=1943	deaths=1922)
+	species: spp_0                         N=3055	(births=596	deaths=597)
 
 	........................................................................
 main:	it=-1:	t=114
-	species: spp_0                         N=9903	(births=2038	deaths=2033)
+	species: spp_0                         N=3054	(births=607	deaths=593)
 
 	........................................................................
 main:	it=-1:	t=115
-	species: spp_0                         N=9908	(births=1949	deaths=1991)
+	species: spp_0                         N=3068	(births=595	deaths=606)
 
 	........................................................................
 main:	it=-1:	t=116
-	species: spp_0                         N=9866	(births=1956	deaths=1959)
+	species: spp_0                         N=3057	(births=569	deaths=592)
 
 	........................................................................
 main:	it=-1:	t=117
-	species: spp_0                         N=9863	(births=2045	deaths=1945)
+	species: spp_0                         N=3034	(births=555	deaths=593)
 
 	........................................................................
 main:	it=-1:	t=118
-	species: spp_0                         N=9963	(births=1976	deaths=2012)
+	species: spp_0                         N=2996	(births=617	deaths=639)
 
 	........................................................................
 main:	it=-1:	t=119
-	species: spp_0                         N=9927	(births=1984	deaths=2064)
+	species: spp_0                         N=2974	(births=635	deaths=581)
 
 	........................................................................
 main:	it=-1:	t=120
-	species: spp_0                         N=9847	(births=1919	deaths=1908)
+	species: spp_0                         N=3028	(births=578	deaths=584)
 
 	........................................................................
 main:	it=-1:	t=121
-	species: spp_0                         N=9858	(births=2020	deaths=2012)
+	species: spp_0                         N=3022	(births=605	deaths=576)
 
 	........................................................................
 main:	it=-1:	t=122
-	species: spp_0                         N=9866	(births=1937	deaths=1896)
+	species: spp_0                         N=3051	(births=602	deaths=640)
 
 	........................................................................
 main:	it=-1:	t=123
-	species: spp_0                         N=9907	(births=1969	deaths=1969)
+	species: spp_0                         N=3013	(births=568	deaths=522)
 
 	........................................................................
 main:	it=-1:	t=124
-	species: spp_0                         N=9907	(births=1987	deaths=1943)
+	species: spp_0                         N=3059	(births=588	deaths=624)
 
 	........................................................................
 main:	it=-1:	t=125
-	species: spp_0                         N=9951	(births=1931	deaths=1987)
+	species: spp_0                         N=3023	(births=594	deaths=617)
 
 	........................................................................
 main:	it=-1:	t=126
-	species: spp_0                         N=9895	(births=1901	deaths=1916)
+	species: spp_0                         N=3000	(births=575	deaths=586)
 
 	........................................................................
 main:	it=-1:	t=127
-	species: spp_0                         N=9880	(births=2016	deaths=1892)
+	species: spp_0                         N=2989	(births=599	deaths=524)
 
 	........................................................................
 main:	it=-1:	t=128
-	species: spp_0                         N=10004	(births=1972	deaths=2084)
+	species: spp_0                         N=3064	(births=626	deaths=620)
 
 	........................................................................
 main:	it=-1:	t=129
-	species: spp_0                         N=9892	(births=1977	deaths=1926)
+	species: spp_0                         N=3070	(births=611	deaths=638)
 
 	........................................................................
 main:	it=-1:	t=130
-	species: spp_0                         N=9943	(births=2030	deaths=2040)
+	species: spp_0                         N=3043	(births=578	deaths=616)
 
 	........................................................................
 main:	it=-1:	t=131
-	species: spp_0                         N=9933	(births=1957	deaths=1981)
+	species: spp_0                         N=3005	(births=574	deaths=551)
 
 	........................................................................
 main:	it=-1:	t=132
-	species: spp_0                         N=9909	(births=1965	deaths=1966)
+	species: spp_0                         N=3028	(births=566	deaths=599)
 
 	........................................................................
 main:	it=-1:	t=133
-	species: spp_0                         N=9908	(births=2010	deaths=2000)
+	species: spp_0                         N=2995	(births=590	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=134
-	species: spp_0                         N=9918	(births=2023	deaths=2046)
+	species: spp_0                         N=3019	(births=578	deaths=570)
 
 	........................................................................
 main:	it=-1:	t=135
-	species: spp_0                         N=9895	(births=1957	deaths=1933)
+	species: spp_0                         N=3027	(births=630	deaths=607)
 
 	........................................................................
 main:	it=-1:	t=136
-	species: spp_0                         N=9919	(births=1996	deaths=2022)
+	species: spp_0                         N=3050	(births=589	deaths=603)
 
 	........................................................................
 main:	it=-1:	t=137
-	species: spp_0                         N=9893	(births=1964	deaths=1960)
+	species: spp_0                         N=3036	(births=591	deaths=615)
 
 	........................................................................
 main:	it=-1:	t=138
-	species: spp_0                         N=9897	(births=1964	deaths=2025)
+	species: spp_0                         N=3012	(births=588	deaths=601)
 
 	........................................................................
 main:	it=-1:	t=139
-	species: spp_0                         N=9836	(births=1990	deaths=1893)
+	species: spp_0                         N=2999	(births=603	deaths=542)
 
 	........................................................................
 main:	it=-1:	t=140
-	species: spp_0                         N=9933	(births=2083	deaths=2074)
+	species: spp_0                         N=3060	(births=594	deaths=624)
 
 	........................................................................
 main:	it=-1:	t=141
-	species: spp_0                         N=9942	(births=1998	deaths=2067)
+	species: spp_0                         N=3030	(births=600	deaths=614)
 
 	........................................................................
 main:	it=-1:	t=142
-	species: spp_0                         N=9873	(births=1987	deaths=1960)
+	species: spp_0                         N=3016	(births=598	deaths=583)
 
 	........................................................................
 main:	it=-1:	t=143
-	species: spp_0                         N=9900	(births=2023	deaths=1993)
+	species: spp_0                         N=3031	(births=575	deaths=538)
 
 	........................................................................
 main:	it=-1:	t=144
-	species: spp_0                         N=9930	(births=2004	deaths=1999)
+	species: spp_0                         N=3068	(births=576	deaths=611)
 
 	........................................................................
 main:	it=-1:	t=145
-	species: spp_0                         N=9935	(births=1937	deaths=1945)
+	species: spp_0                         N=3033	(births=562	deaths=564)
 
 	........................................................................
 main:	it=-1:	t=146
-	species: spp_0                         N=9927	(births=1937	deaths=1954)
+	species: spp_0                         N=3031	(births=584	deaths=596)
 
 	........................................................................
 main:	it=-1:	t=147
-	species: spp_0                         N=9910	(births=1928	deaths=1904)
+	species: spp_0                         N=3019	(births=638	deaths=629)
 
 	........................................................................
 main:	it=-1:	t=148
-	species: spp_0                         N=9934	(births=1939	deaths=2031)
+	species: spp_0                         N=3028	(births=588	deaths=620)
 
 	........................................................................
 main:	it=-1:	t=149
-	species: spp_0                         N=9842	(births=1991	deaths=1973)
+	species: spp_0                         N=2996	(births=621	deaths=593)
 
 	........................................................................
 main:	it=-1:	t=150
-	species: spp_0                         N=9860	(births=2000	deaths=1888)
+	species: spp_0                         N=3024	(births=609	deaths=596)
 
 	........................................................................
 main:	it=-1:	t=151
-	species: spp_0                         N=9972	(births=1977	deaths=2025)
+	species: spp_0                         N=3037	(births=562	deaths=602)
 
 	........................................................................
 main:	it=-1:	t=152
-	species: spp_0                         N=9924	(births=1986	deaths=1950)
+	species: spp_0                         N=2997	(births=540	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=153
-	species: spp_0                         N=9960	(births=2000	deaths=1937)
+	species: spp_0                         N=2962	(births=589	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=154
-	species: spp_0                         N=10023	(births=2071	deaths=2135)
+	species: spp_0                         N=2985	(births=553	deaths=594)
 
 	........................................................................
 main:	it=-1:	t=155
-	species: spp_0                         N=9959	(births=1989	deaths=2016)
+	species: spp_0                         N=2944	(births=591	deaths=576)
 
 	........................................................................
 main:	it=-1:	t=156
-	species: spp_0                         N=9932	(births=1936	deaths=2007)
+	species: spp_0                         N=2959	(births=592	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=157
-	species: spp_0                         N=9861	(births=1982	deaths=1918)
+	species: spp_0                         N=2976	(births=585	deaths=564)
 
 	........................................................................
 main:	it=-1:	t=158
-	species: spp_0                         N=9925	(births=1999	deaths=1922)
+	species: spp_0                         N=2997	(births=583	deaths=578)
 
 	........................................................................
 main:	it=-1:	t=159
-	species: spp_0                         N=10002	(births=2027	deaths=2074)
+	species: spp_0                         N=3002	(births=608	deaths=576)
 
 	........................................................................
 main:	it=-1:	t=160
-	species: spp_0                         N=9955	(births=1952	deaths=2024)
+	species: spp_0                         N=3034	(births=596	deaths=605)
 
 	........................................................................
 main:	it=-1:	t=161
-	species: spp_0                         N=9883	(births=1979	deaths=2005)
+	species: spp_0                         N=3025	(births=587	deaths=579)
 
 	........................................................................
 main:	it=-1:	t=162
-	species: spp_0                         N=9857	(births=1966	deaths=1980)
+	species: spp_0                         N=3033	(births=632	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=163
-	species: spp_0                         N=9843	(births=1974	deaths=1927)
+	species: spp_0                         N=3090	(births=564	deaths=605)
 
 	........................................................................
 main:	it=-1:	t=164
-	species: spp_0                         N=9890	(births=1968	deaths=1935)
+	species: spp_0                         N=3049	(births=557	deaths=621)
 
 	........................................................................
 main:	it=-1:	t=165
-	species: spp_0                         N=9923	(births=1950	deaths=1980)
+	species: spp_0                         N=2985	(births=611	deaths=561)
 
 	........................................................................
 main:	it=-1:	t=166
-	species: spp_0                         N=9893	(births=1949	deaths=2014)
+	species: spp_0                         N=3035	(births=581	deaths=616)
 
 	........................................................................
 main:	it=-1:	t=167
-	species: spp_0                         N=9828	(births=1935	deaths=1851)
+	species: spp_0                         N=3000	(births=626	deaths=601)
 
 	........................................................................
 main:	it=-1:	t=168
-	species: spp_0                         N=9912	(births=1946	deaths=2028)
+	species: spp_0                         N=3025	(births=586	deaths=604)
 
 	........................................................................
 main:	it=-1:	t=169
-	species: spp_0                         N=9830	(births=1979	deaths=1956)
+	species: spp_0                         N=3007	(births=567	deaths=623)
 
 	........................................................................
 main:	it=-1:	t=170
-	species: spp_0                         N=9853	(births=1942	deaths=1876)
+	species: spp_0                         N=2951	(births=619	deaths=612)
 
 	........................................................................
 main:	it=-1:	t=171
-	species: spp_0                         N=9919	(births=1962	deaths=1995)
+	species: spp_0                         N=2958	(births=581	deaths=558)
 
 	........................................................................
 main:	it=-1:	t=172
-	species: spp_0                         N=9886	(births=1971	deaths=1949)
+	species: spp_0                         N=2981	(births=570	deaths=589)
 
 	........................................................................
 main:	it=-1:	t=173
-	species: spp_0                         N=9908	(births=1982	deaths=1950)
+	species: spp_0                         N=2962	(births=576	deaths=565)
 
 	........................................................................
 main:	it=-1:	t=174
-	species: spp_0                         N=9940	(births=1967	deaths=1934)
+	species: spp_0                         N=2973	(births=586	deaths=555)
 
 	........................................................................
 main:	it=-1:	t=175
-	species: spp_0                         N=9973	(births=1978	deaths=1983)
+	species: spp_0                         N=3004	(births=586	deaths=597)
 
 	........................................................................
 main:	it=-1:	t=176
-	species: spp_0                         N=9968	(births=1948	deaths=2003)
+	species: spp_0                         N=2993	(births=595	deaths=555)
 
 	........................................................................
 main:	it=-1:	t=177
-	species: spp_0                         N=9913	(births=1916	deaths=2031)
+	species: spp_0                         N=3033	(births=586	deaths=599)
 
 	........................................................................
 main:	it=-1:	t=178
-	species: spp_0                         N=9798	(births=1904	deaths=1939)
+	species: spp_0                         N=3020	(births=563	deaths=589)
 
 	........................................................................
 main:	it=-1:	t=179
-	species: spp_0                         N=9763	(births=1945	deaths=1866)
+	species: spp_0                         N=2994	(births=622	deaths=569)
 
 	........................................................................
 main:	it=-1:	t=180
-	species: spp_0                         N=9842	(births=1917	deaths=1879)
+	species: spp_0                         N=3047	(births=594	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=181
-	species: spp_0                         N=9880	(births=1923	deaths=1932)
+	species: spp_0                         N=3031	(births=547	deaths=594)
 
 	........................................................................
 main:	it=-1:	t=182
-	species: spp_0                         N=9871	(births=1965	deaths=1960)
+	species: spp_0                         N=2984	(births=618	deaths=540)
 
 	........................................................................
 main:	it=-1:	t=183
-	species: spp_0                         N=9876	(births=1988	deaths=1955)
+	species: spp_0                         N=3062	(births=585	deaths=606)
 
 	........................................................................
 main:	it=-1:	t=184
-	species: spp_0                         N=9909	(births=1970	deaths=1937)
+	species: spp_0                         N=3041	(births=565	deaths=624)
 
 	........................................................................
 main:	it=-1:	t=185
-	species: spp_0                         N=9942	(births=1943	deaths=1989)
+	species: spp_0                         N=2982	(births=594	deaths=609)
 
 	........................................................................
 main:	it=-1:	t=186
-	species: spp_0                         N=9896	(births=1982	deaths=1968)
+	species: spp_0                         N=2967	(births=567	deaths=523)
 
 	........................................................................
 main:	it=-1:	t=187
-	species: spp_0                         N=9910	(births=1949	deaths=1894)
+	species: spp_0                         N=3011	(births=596	deaths=586)
 
 	........................................................................
 main:	it=-1:	t=188
-	species: spp_0                         N=9965	(births=1943	deaths=2046)
+	species: spp_0                         N=3021	(births=583	deaths=569)
 
 	........................................................................
 main:	it=-1:	t=189
-	species: spp_0                         N=9862	(births=1938	deaths=1959)
+	species: spp_0                         N=3035	(births=594	deaths=609)
 
 	........................................................................
 main:	it=-1:	t=190
-	species: spp_0                         N=9841	(births=1907	deaths=1901)
+	species: spp_0                         N=3020	(births=569	deaths=553)
 
 	........................................................................
 main:	it=-1:	t=191
-	species: spp_0                         N=9847	(births=1941	deaths=1886)
+	species: spp_0                         N=3036	(births=615	deaths=630)
 
 	........................................................................
 main:	it=-1:	t=192
-	species: spp_0                         N=9902	(births=2005	deaths=2068)
+	species: spp_0                         N=3021	(births=604	deaths=587)
 
 	........................................................................
 main:	it=-1:	t=193
-	species: spp_0                         N=9839	(births=1942	deaths=1868)
+	species: spp_0                         N=3038	(births=590	deaths=545)
 
 	........................................................................
 main:	it=-1:	t=194
-	species: spp_0                         N=9913	(births=1916	deaths=2021)
+	species: spp_0                         N=3083	(births=585	deaths=629)
 
 	........................................................................
 main:	it=-1:	t=195
-	species: spp_0                         N=9808	(births=1985	deaths=1901)
+	species: spp_0                         N=3039	(births=570	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=196
-	species: spp_0                         N=9892	(births=1931	deaths=1875)
+	species: spp_0                         N=2999	(births=606	deaths=592)
 
 	........................................................................
 main:	it=-1:	t=197
-	species: spp_0                         N=9948	(births=1984	deaths=2065)
+	species: spp_0                         N=3013	(births=604	deaths=558)
 
 	........................................................................
 main:	it=-1:	t=198
-	species: spp_0                         N=9867	(births=1962	deaths=1984)
+	species: spp_0                         N=3059	(births=585	deaths=634)
 
 	........................................................................
 main:	it=-1:	t=199
-	species: spp_0                         N=9845	(births=1935	deaths=1868)
+	species: spp_0                         N=3010	(births=576	deaths=563)
 
 	........................................................................
 
 
 now sorting and simplifying tskit tables
-	NUMBER EDGES BEFORE SIMPLIFICATION: 280528408
-	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 113539
+	NUMBER EDGES BEFORE SIMPLIFICATION: 85462678
+	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 31477
 
-	NUMBER EDGES AFTER SIMPLIFICATION:  202813609
-	NUMBER INDIVIDS AFTER SIMPLIFICATION:  107431
+	NUMBER EDGES AFTER SIMPLIFICATION:  61769366
+	NUMBER INDIVIDS AFTER SIMPLIFICATION:  29611
 main:	it=-1:	t=200
-	species: spp_0                         N=9912	(births=1994	deaths=2056)
+	species: spp_0                         N=3023	(births=602	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=201
-	species: spp_0                         N=9850	(births=1978	deaths=1905)
+	species: spp_0                         N=3059	(births=562	deaths=585)
 
 	........................................................................
 main:	it=-1:	t=202
-	species: spp_0                         N=9923	(births=2021	deaths=2005)
+	species: spp_0                         N=3036	(births=555	deaths=573)
 
 	........................................................................
 main:	it=-1:	t=203
-	species: spp_0                         N=9939	(births=1930	deaths=1947)
+	species: spp_0                         N=3018	(births=579	deaths=584)
 
 	........................................................................
 main:	it=-1:	t=204
-	species: spp_0                         N=9922	(births=1962	deaths=1941)
+	species: spp_0                         N=3013	(births=577	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=205
-	species: spp_0                         N=9943	(births=2034	deaths=1980)
+	species: spp_0                         N=3024	(births=562	deaths=546)
 
 	........................................................................
 main:	it=-1:	t=206
-	species: spp_0                         N=9997	(births=1918	deaths=2034)
+	species: spp_0                         N=3040	(births=648	deaths=638)
 
 	........................................................................
 main:	it=-1:	t=207
-	species: spp_0                         N=9881	(births=2016	deaths=1972)
+	species: spp_0                         N=3050	(births=595	deaths=604)
 
 	........................................................................
 main:	it=-1:	t=208
-	species: spp_0                         N=9925	(births=1975	deaths=2021)
+	species: spp_0                         N=3041	(births=580	deaths=585)
 
 	........................................................................
 main:	it=-1:	t=209
-	species: spp_0                         N=9879	(births=1937	deaths=1973)
+	species: spp_0                         N=3036	(births=623	deaths=617)
 
 	........................................................................
 main:	it=-1:	t=210
-	species: spp_0                         N=9843	(births=1989	deaths=1858)
+	species: spp_0                         N=3042	(births=583	deaths=579)
 
 	........................................................................
 main:	it=-1:	t=211
-	species: spp_0                         N=9974	(births=1973	deaths=1972)
+	species: spp_0                         N=3046	(births=600	deaths=605)
 
 	........................................................................
 main:	it=-1:	t=212
-	species: spp_0                         N=9975	(births=1973	deaths=2090)
+	species: spp_0                         N=3041	(births=587	deaths=609)
 
 	........................................................................
 main:	it=-1:	t=213
-	species: spp_0                         N=9858	(births=1924	deaths=1935)
+	species: spp_0                         N=3019	(births=582	deaths=569)
 
 	........................................................................
 main:	it=-1:	t=214
-	species: spp_0                         N=9847	(births=1922	deaths=1928)
+	species: spp_0                         N=3032	(births=591	deaths=612)
 
 	........................................................................
 main:	it=-1:	t=215
-	species: spp_0                         N=9841	(births=1969	deaths=1946)
+	species: spp_0                         N=3011	(births=552	deaths=554)
 
 	........................................................................
 main:	it=-1:	t=216
-	species: spp_0                         N=9864	(births=2000	deaths=1968)
+	species: spp_0                         N=3009	(births=633	deaths=593)
 
 	........................................................................
 main:	it=-1:	t=217
-	species: spp_0                         N=9896	(births=1952	deaths=1915)
+	species: spp_0                         N=3049	(births=617	deaths=588)
 
 	........................................................................
 main:	it=-1:	t=218
-	species: spp_0                         N=9933	(births=1988	deaths=1990)
+	species: spp_0                         N=3078	(births=576	deaths=571)
 
 	........................................................................
 main:	it=-1:	t=219
-	species: spp_0                         N=9931	(births=1913	deaths=1943)
+	species: spp_0                         N=3083	(births=605	deaths=619)
 
 	........................................................................
 main:	it=-1:	t=220
-	species: spp_0                         N=9901	(births=1891	deaths=1990)
+	species: spp_0                         N=3069	(births=571	deaths=570)
 
 	........................................................................
 main:	it=-1:	t=221
-	species: spp_0                         N=9802	(births=1938	deaths=1941)
+	species: spp_0                         N=3070	(births=594	deaths=554)
 
 	........................................................................
 main:	it=-1:	t=222
-	species: spp_0                         N=9799	(births=1916	deaths=1886)
+	species: spp_0                         N=3110	(births=598	deaths=625)
 
 	........................................................................
 main:	it=-1:	t=223
-	species: spp_0                         N=9829	(births=1957	deaths=1914)
+	species: spp_0                         N=3083	(births=590	deaths=615)
 
 	........................................................................
 main:	it=-1:	t=224
-	species: spp_0                         N=9872	(births=1932	deaths=1929)
+	species: spp_0                         N=3058	(births=596	deaths=557)
 
 	........................................................................
 main:	it=-1:	t=225
-	species: spp_0                         N=9875	(births=1906	deaths=1905)
+	species: spp_0                         N=3097	(births=625	deaths=591)
 
 	........................................................................
 main:	it=-1:	t=226
-	species: spp_0                         N=9876	(births=1961	deaths=1949)
+	species: spp_0                         N=3131	(births=586	deaths=592)
 
 	........................................................................
 main:	it=-1:	t=227
-	species: spp_0                         N=9888	(births=1971	deaths=1878)
+	species: spp_0                         N=3125	(births=615	deaths=627)
 
 	........................................................................
 main:	it=-1:	t=228
-	species: spp_0                         N=9981	(births=1971	deaths=1947)
+	species: spp_0                         N=3113	(births=658	deaths=659)
 
 	........................................................................
 main:	it=-1:	t=229
-	species: spp_0                         N=10005	(births=1978	deaths=1993)
+	species: spp_0                         N=3112	(births=629	deaths=651)
 
 	........................................................................
 main:	it=-1:	t=230
-	species: spp_0                         N=9990	(births=2021	deaths=2064)
+	species: spp_0                         N=3090	(births=589	deaths=604)
 
 	........................................................................
 main:	it=-1:	t=231
-	species: spp_0                         N=9947	(births=2005	deaths=2004)
+	species: spp_0                         N=3075	(births=593	deaths=616)
 
 	........................................................................
 main:	it=-1:	t=232
-	species: spp_0                         N=9948	(births=2041	deaths=2030)
+	species: spp_0                         N=3052	(births=589	deaths=602)
 
 	........................................................................
 main:	it=-1:	t=233
-	species: spp_0                         N=9959	(births=2054	deaths=2070)
+	species: spp_0                         N=3039	(births=594	deaths=618)
 
 	........................................................................
 main:	it=-1:	t=234
-	species: spp_0                         N=9943	(births=1971	deaths=1992)
+	species: spp_0                         N=3015	(births=596	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=235
-	species: spp_0                         N=9922	(births=2006	deaths=2056)
+	species: spp_0                         N=3036	(births=562	deaths=575)
 
 	........................................................................
 main:	it=-1:	t=236
-	species: spp_0                         N=9872	(births=1973	deaths=1931)
+	species: spp_0                         N=3023	(births=563	deaths=567)
 
 	........................................................................
 main:	it=-1:	t=237
-	species: spp_0                         N=9914	(births=1974	deaths=1924)
+	species: spp_0                         N=3019	(births=559	deaths=560)
 
 	........................................................................
 main:	it=-1:	t=238
-	species: spp_0                         N=9964	(births=1984	deaths=2038)
+	species: spp_0                         N=3018	(births=578	deaths=554)
 
 	........................................................................
 main:	it=-1:	t=239
-	species: spp_0                         N=9910	(births=1966	deaths=1995)
+	species: spp_0                         N=3042	(births=553	deaths=563)
 
 	........................................................................
 main:	it=-1:	t=240
-	species: spp_0                         N=9881	(births=1951	deaths=1925)
+	species: spp_0                         N=3032	(births=598	deaths=552)
 
 	........................................................................
 main:	it=-1:	t=241
-	species: spp_0                         N=9907	(births=1899	deaths=1973)
+	species: spp_0                         N=3078	(births=633	deaths=622)
 
 	........................................................................
 main:	it=-1:	t=242
-	species: spp_0                         N=9833	(births=1919	deaths=1824)
+	species: spp_0                         N=3089	(births=576	deaths=565)
 
 	........................................................................
 main:	it=-1:	t=243
-	species: spp_0                         N=9928	(births=2011	deaths=1931)
+	species: spp_0                         N=3100	(births=593	deaths=613)
 
 	........................................................................
 main:	it=-1:	t=244
-	species: spp_0                         N=10008	(births=2021	deaths=2054)
+	species: spp_0                         N=3080	(births=606	deaths=577)
 
 	........................................................................
 main:	it=-1:	t=245
-	species: spp_0                         N=9975	(births=2030	deaths=2037)
+	species: spp_0                         N=3109	(births=600	deaths=556)
 
 	........................................................................
 main:	it=-1:	t=246
-	species: spp_0                         N=9968	(births=2008	deaths=1967)
+	species: spp_0                         N=3153	(births=633	deaths=704)
 
 	........................................................................
 main:	it=-1:	t=247
-	species: spp_0                         N=10009	(births=1991	deaths=2035)
+	species: spp_0                         N=3082	(births=635	deaths=610)
 
 	........................................................................
 main:	it=-1:	t=248
-	species: spp_0                         N=9965	(births=1999	deaths=1990)
+	species: spp_0                         N=3107	(births=594	deaths=649)
 
 	........................................................................
 main:	it=-1:	t=249
-	species: spp_0                         N=9974	(births=1929	deaths=1894)
+	species: spp_0                         N=3052	(births=625	deaths=619)
 
 	........................................................................
 main:	it=-1:	t=250
-	species: spp_0                         N=10009	(births=1999	deaths=2084)
+	species: spp_0                         N=3058	(births=585	deaths=594)
 
 	........................................................................
 main:	it=-1:	t=251
-	species: spp_0                         N=9924	(births=1940	deaths=1981)
+	species: spp_0                         N=3049	(births=601	deaths=600)
 
 	........................................................................
 main:	it=-1:	t=252
-	species: spp_0                         N=9883	(births=1907	deaths=1906)
+	species: spp_0                         N=3050	(births=594	deaths=589)
 
 	........................................................................
 main:	it=-1:	t=253
-	species: spp_0                         N=9884	(births=2019	deaths=1998)
+	species: spp_0                         N=3055	(births=620	deaths=631)
 
 	........................................................................
 main:	it=-1:	t=254
-	species: spp_0                         N=9905	(births=1951	deaths=1932)
+	species: spp_0                         N=3044	(births=569	deaths=577)
 
 	........................................................................
 main:	it=-1:	t=255
-	species: spp_0                         N=9924	(births=2062	deaths=1982)
+	species: spp_0                         N=3036	(births=596	deaths=552)
 
 	........................................................................
 main:	it=-1:	t=256
-	species: spp_0                         N=10004	(births=1973	deaths=2055)
+	species: spp_0                         N=3080	(births=576	deaths=584)
 
 	........................................................................
 main:	it=-1:	t=257
-	species: spp_0                         N=9922	(births=2020	deaths=2041)
+	species: spp_0                         N=3072	(births=609	deaths=566)
 
 	........................................................................
 main:	it=-1:	t=258
-	species: spp_0                         N=9901	(births=1927	deaths=1938)
+	species: spp_0                         N=3115	(births=626	deaths=660)
 
 	........................................................................
 main:	it=-1:	t=259
-	species: spp_0                         N=9890	(births=1918	deaths=1962)
-
-	........................................................................
-main:	it=-1:	t=260
-	species: spp_0                         N=9846	(births=1936	deaths=1943)
-
-	........................................................................
-main:	it=-1:	t=261
-	species: spp_0                         N=9839	(births=1884	deaths=1874)
-
-	........................................................................
-main:	it=-1:	t=262
-	species: spp_0                         N=9849	(births=1976	deaths=1986)
-
-	........................................................................
-main:	it=-1:	t=263
-	species: spp_0                         N=9839	(births=2021	deaths=1909)
-
-	........................................................................
-main:	it=-1:	t=264
-	species: spp_0                         N=9951	(births=1914	deaths=2035)
-
-	........................................................................
-main:	it=-1:	t=265
-	species: spp_0                         N=9830	(births=2016	deaths=1914)
-
-	........................................................................
-main:	it=-1:	t=266
-	species: spp_0                         N=9932	(births=1915	deaths=2037)
-
-	........................................................................
-main:	it=-1:	t=267
-	species: spp_0                         N=9810	(births=1987	deaths=1917)
-
-	........................................................................
-main:	it=-1:	t=268
-	species: spp_0                         N=9880	(births=1905	deaths=1862)
-
-	........................................................................
-main:	it=-1:	t=269
-	species: spp_0                         N=9923	(births=1924	deaths=1996)
-
-	........................................................................
-main:	it=-1:	t=270
-	species: spp_0                         N=9851	(births=1975	deaths=1825)
-
-	........................................................................
-main:	it=-1:	t=271
-	species: spp_0                         N=10001	(births=2069	deaths=2092)
-
-	........................................................................
-main:	it=-1:	t=272
-	species: spp_0                         N=9978	(births=1968	deaths=1992)
-
-	........................................................................
-main:	it=-1:	t=273
-	species: spp_0                         N=9954	(births=1907	deaths=1982)
-
-	........................................................................
-main:	it=-1:	t=274
-	species: spp_0                         N=9879	(births=1947	deaths=1897)
-
-	........................................................................
-main:	it=-1:	t=275
-	species: spp_0                         N=9929	(births=1969	deaths=1990)
-
-	........................................................................
-main:	it=-1:	t=276
-	species: spp_0                         N=9908	(births=1961	deaths=2031)
-
-	........................................................................
-main:	it=-1:	t=277
-	species: spp_0                         N=9838	(births=1958	deaths=1917)
-
-	........................................................................
-main:	it=-1:	t=278
-	species: spp_0                         N=9879	(births=1976	deaths=1958)
-
-	........................................................................
-main:	it=-1:	t=279
-	species: spp_0                         N=9897	(births=1952	deaths=2005)
-
-	........................................................................
-main:	it=-1:	t=280
-	species: spp_0                         N=9844	(births=2021	deaths=1905)
-
-	........................................................................
-main:	it=-1:	t=281
-	species: spp_0                         N=9960	(births=1919	deaths=1962)
-
-	........................................................................
-main:	it=-1:	t=282
-	species: spp_0                         N=9917	(births=1910	deaths=1976)
-
-	........................................................................
-main:	it=-1:	t=283
-	species: spp_0                         N=9851	(births=2011	deaths=1867)
-
-	........................................................................
-main:	it=-1:	t=284
-	species: spp_0                         N=9995	(births=1982	deaths=1999)
-
-	........................................................................
-main:	it=-1:	t=285
-	species: spp_0                         N=9978	(births=1972	deaths=2101)
-
-	........................................................................
-main:	it=-1:	t=286
-	species: spp_0                         N=9849	(births=1950	deaths=1935)
-
-	........................................................................
-main:	it=-1:	t=287
-	species: spp_0                         N=9864	(births=2051	deaths=1961)
-
-	........................................................................
-main:	it=-1:	t=288
-	species: spp_0                         N=9954	(births=1985	deaths=2043)
-
-	........................................................................
-main:	it=-1:	t=289
-	species: spp_0                         N=9896	(births=1925	deaths=1916)
-
-	........................................................................
-main:	it=-1:	t=290
-	species: spp_0                         N=9905	(births=1909	deaths=1927)
-
-	........................................................................
-main:	it=-1:	t=291
-	species: spp_0                         N=9887	(births=1978	deaths=1951)
-
-	........................................................................
-main:	it=-1:	t=292
-	species: spp_0                         N=9914	(births=1988	deaths=2026)
-
-	........................................................................
-main:	it=-1:	t=293
-	species: spp_0                         N=9876	(births=1938	deaths=1839)
-
-	........................................................................
-main:	it=-1:	t=294
-	species: spp_0                         N=9975	(births=1956	deaths=2046)
-
-	........................................................................
-main:	it=-1:	t=295
-	species: spp_0                         N=9885	(births=1937	deaths=1832)
-
-	........................................................................
-main:	it=-1:	t=296
-	species: spp_0                         N=9990	(births=2010	deaths=2046)
-
-	........................................................................
-main:	it=-1:	t=297
-	species: spp_0                         N=9954	(births=2007	deaths=1935)
-
-	........................................................................
-main:	it=-1:	t=298
-	species: spp_0                         N=10026	(births=2006	deaths=2047)
-
-	........................................................................
-main:	it=-1:	t=299
-	species: spp_0                         N=9985	(births=2036	deaths=2091)
-
-	........................................................................
-
-
-now sorting and simplifying tskit tables
-	NUMBER EDGES BEFORE SIMPLIFICATION: 285252816
-	NUMBER INDIVIDS BEFORE SIMPLIFICATION: 154454
-
-	NUMBER EDGES AFTER SIMPLIFICATION:  204816280
-	NUMBER INDIVIDS AFTER SIMPLIFICATION:  148071
-main:	it=-1:	t=300
-	species: spp_0                         N=9930	(births=1960	deaths=1981)
-
-	........................................................................
-main:	it=-1:	t=301
-	species: spp_0                         N=9909	(births=1907	deaths=1845)
-
-	........................................................................
-main:	it=-1:	t=302
-	species: spp_0                         N=9971	(births=1989	deaths=1995)
-
-	........................................................................
-main:	it=-1:	t=303
-	species: spp_0                         N=9965	(births=2001	deaths=2081)
-
-	........................................................................
-main:	it=-1:	t=304
-	species: spp_0                         N=9885	(births=1974	deaths=1938)
-
-	........................................................................
-main:	it=-1:	t=305
-	species: spp_0                         N=9921	(births=2048	deaths=1994)
-
-	........................................................................
-main:	it=-1:	t=306
-	species: spp_0                         N=9975	(births=2001	deaths=2065)
-
-	........................................................................
-main:	it=-1:	t=307
-	species: spp_0                         N=9911	(births=1995	deaths=1957)
-
-	........................................................................
-main:	it=-1:	t=308
-	species: spp_0                         N=9949	(births=1988	deaths=1952)
-
-	........................................................................
-main:	it=-1:	t=309
-	species: spp_0                         N=9985	(births=2023	deaths=2113)
+	species: spp_0                         N=3081	(births=583	deaths=567)
 
 	........................................................................

@@ -313,7 +313,7 @@ params = {
                     #total number of recomb paths to simulate
                     'n_recomb_paths_tot':       int(1e5),
                     #num of crossing-over events (i.e. recombs) to simulate
-                    'n_recomb_sims':            10000,
+                    'n_recomb_sims':            10_000,
                     #whether to generate recombination paths at each timestep
                     'allow_ad_hoc_recomb':      False,
                     #whether to save mutation logs
@@ -497,9 +497,9 @@ params = {
 
 
 #TESTING LOOP WILL PARALLELIZE LATER
-for K in [1]:
+for K in [5]:
   for phi in [0.1]:
-    for m in[1]:
+    for m in[0.25]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
