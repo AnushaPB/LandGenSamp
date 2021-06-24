@@ -2,6 +2,8 @@
 *.vcf
 *.csv
 *.fasta
+*.png
+*.gif
 
 #Ignore data and outputs
 /data
