@@ -227,7 +227,7 @@ params = {
 
                 'mortality'     : {
                     #maximum age
-                    'max_age':                      None,
+                    'max_age':                      3,
                     #min P(death) (MUST BE 0<=d_min<=1)
                     'd_min':                        0,
                     #max P(death) (MUST BE 0<=d_max<=1)

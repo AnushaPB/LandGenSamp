@@ -227,7 +227,7 @@ params = {
 
                 'mortality'     : {
                     #maximum age
-                    'max_age':                      None,
+                    'max_age':                      3,
                     #min P(death) (MUST BE 0<=d_min<=1)
                     'd_min':                        0,
                     #max P(death) (MUST BE 0<=d_max<=1)
@@ -407,8 +407,7 @@ params = {
         #seed number
         'num':          42,
         #time step interval for simplication of tskit tables
-        'tskit_simp_interval':      100,
-
+        'tskit_simp_interval':      50, #changed from 100
 
         #-----------------------------#
         #--- iterations parameters ---#
@@ -499,7 +498,7 @@ params = {
 #TESTING LOOP WILL ADD VALUES/PARALLELIZE LATER
 for K in [1]: 
   for phi in [0.5]:
-    for m in[1]:
+    for m in [0.25]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
