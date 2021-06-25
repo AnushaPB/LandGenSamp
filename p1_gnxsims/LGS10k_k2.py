@@ -185,7 +185,7 @@ params = {
 
                 'init': {
                     #starting number of individs
-                    'N':                250,
+                    'N':                3000,
                     #carrying-capacity Layer name
                     'K_layer':          'lyr_0',
                     #multiplicative factor for carrying-capacity layer    
@@ -208,7 +208,7 @@ params = {
                     #intrinsic growth rate
                     'R':                        0.5,
                     #intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b':                        0.2,
+                    'b':                        0.5,
                     #expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda':    1,
                     #whether n births should be fixed at n_births_dist_lambda
