@@ -13,14 +13,24 @@ library("vcfR")
 nloci = 10000
 
 #read in geospatial data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
+#file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-1000_spp-spp_0.csv")
+#file_path = here("data","mod-10k_K1_phi10_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
+#file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
+#file_path = here("data","mod-10k_K5_phi50_m1_seed1_H50_r60_it--1_t-300_spp-spp_0.csv")
+file_path = here("data","mod-10k_K5_phi10_m1_seed1_H50_r60_it--1_t-300_spp-spp_0.csv")
+#file_path = here("data","mod-10k_K5_phi10_m0.25_seed1_H50_r60_it--1_t-300_spp-spp_0.csv")
 gsd_df <- read.csv(file_path)
 gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
 gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
 head(gsd_df)
 
 #read in genetic data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
+#file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-1000_spp-spp_0.vcf")
+#file_path = here("data","mod-10k_K1_phi10_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
+#file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
+#file_path = here("data","mod-10k_K5_phi50_m1_seed1_H50_r60_it--1_t-300_spp-spp_0.vcf")
+file_path = here("data","mod-10k_K5_phi10_m1_seed1_H50_r60_it--1_t-300_spp-spp_0.vcf")
+#file_path = here("data","mod-10k_K5_phi10_m0.25_seed1_H50_r60_it--1_t-300_spp-spp_0.vcf")
 vcf <- read.vcfR(file_path)
 x <- vcfR2genlight(vcf) #CHECK THIS
 gen <- as.matrix(x)
@@ -32,14 +42,6 @@ gea_df <- data.frame(gen,
                      env1 = gsd_df$env1,
                      env2 = gsd_df$env2)
 
-#read in adaptive loci
-file_path = here("data","nnloci_10k_K1_phi10_m1_seed1_H50_r60.csv")
-loci_df <- read.csv(file_path)
-loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
-loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
-adaptive_loci <- c(loci_trait1, loci_trait2)
-neutral_loci <- c(1:nloci)[-adaptive_loci]
-
 loci_trait1 <- c(1731,4684,4742,6252) + 1 #add one to convert from python to R indexing
 loci_trait2 <- c(141,1512,8481,9511) + 1 #add one to convert from python to R indexing
 adaptive_loci <- c(loci_trait1, loci_trait2)
@@ -49,6 +51,8 @@ neutral_loci <- c(1:nloci)[-adaptive_loci]
 set.seed(42)
 s <- sample(1:nrow(gea_df),1000)
 gea_df <- gea_df[s,]
+gen <- gen[s,]
+
 
 palz <- magma(100)
 par(pty="s",mfrow=c(1,2))
@@ -57,141 +61,24 @@ plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env1", xlab="", 
 tmpcol<- palz[as.numeric(cut(gea_df$env2,breaks = 100))]
 plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env2", xlab="", ylab="", box=TRUE)
 
-############
-#   RDA    #
-############
-
-#Run RDA
-mod <- rda(gea_df[, 1:nloci] ~ env1 + env2, data=gea_df, scale=T)
-
-#Get RSQ
-RsquareAdj(mod)
-
-#Plot screeplot
-screeplot(mod)
-
-#Determine significance of full model
-signif.full <- anova.cca(mod, parallel = getOption("mc.cores")) # default is permutation=999
-signif.full
-
-#Determine significance of axes (variables)
-signif.axis <- anova.cca(mod, by="axis", parallel = getOption("mc.cores"))
-signif.axis
-
-#Look at VIF
-#vif.cca(mod)
-
-#load scores
-load.rda <- scores(mod, choices=c(1:2), display="species")  #Choices are RDAs (2 vars = 2 RDAs max)
-
-#OUTLIER FUNCTION
-outliers <- function(x,z){
-  lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
-  x[x < lims[1] | x > lims[2]]               # locus names in these tails
-}
-
-#Define z (default to 3)
-z = 3
-cand1 <- outliers(load.rda[,1], z = z) 
-cand2 <- outliers(load.rda[,2], z = z)
-
-#Determine number of candidate loci
-ncand <- length(cand1) + length(cand2)
-ncand
-
-#Create dataframes for each 
-cand1 <- cbind.data.frame(rep(1,times=length(cand1)), names(cand1), unname(cand1))
-cand2 <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
-
-colnames(cand1) <- colnames(cand2) <- c("axis","snp","loading")
-
-#combine into one DF
-cand <- rbind(cand1, cand2)
-cand$snp <- as.character(cand$snp)
-
-#Remove X and change to numeric for comparison
-rda_loci <- as.numeric(gsub("X0_", "", cand$snp))
-
-#Calc True Positive Rate
-TP <- sum(adaptive_loci %in% rda_loci)
-TPR <- TP/length(adaptive_loci)
-
-#Calc False Discovery Rate
-FD <- sum(neutral_loci %in% rda_loci)
-FDR <- FD/length(rda_loci)
-
-#OUTPUT RESULTS
-#TBD - need to decide on file structure
 
 
-##############
-#LASSO METHOD#
-##############
+########
+# LFMM #
+########
 
-#BOTH ENV
-#run model
-lfmm_mod <- lfmm_lasso(genmat, envmat, K = K)
+#PCA to determine number of latent factors
+#pc <- prcomp(gea_df[,1:nloci])
+#par(pty="s",mfrow=c(1,1))
+#plot(pc$sdev[1:20]^2, xlab = 'PC', ylab = "Variance explained")
+K <- 10 #NUMBER OF LATENT FACTORS (NEED TO MODIFY TO MAKE AUTO)
 
-
-#performs association testing using the fitted model:
-pv <- lfmm_test(Y = genmat, 
-                X = envmat, 
-                lfmm = lfmm_mod, 
-                calibrate = "gif")
-
-#adjust pvalues
-pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
-                      env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
-
-#env1 candidate loci
-#Identify LFMM cand loci
-lfmm_loci <- which(pvalues[,1] < 0.05) 
-#calc True Positive Rate
-TP <- sum(lfmm_loci %in% loci_trait1)
-TPR1 <- TP/length(loci_trait1)
-#calc False Discovery Rate 
-FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% loci_trait2)
-FDR1 <- FD/length(lfmm_loci)
-
-#env2 candidate loci
-#Identify LFMM cand loci
-lfmm_loci <- which(pvalues[,2] < 0.05) 
-#calc True Positive Rate
-TP <- sum(lfmm_loci %in% loci_trait2)
-TPR2 <- TP/length(loci_trait2)
-#calc False Discovery Rate 
-FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% loci_trait1)
-FDR2 <- FD/length(lfmm_loci)
-
-#OUTPUT RESULTS
-#TBD - need to decide on file structure
-
-#PLOT TO CHECK RESULTS
-
-par(mfrow=c(1,2))
-plot(-log10(pvalues[,1]), 
-     pch = 19, 
-     cex = .2, 
-     xlab = "SNP", ylab = "-Log P",
-     col = "grey",
-     main = "env1")
-points(loci_trait1, 
-       -log10(pvalues[,1])[loci_trait1], 
-       col = "red", 
-       cex = 1.5)
-abline(h = -log10(0.05), col="red", lty=2)
-
-plot(-log10(pvalues[,2]), 
-     pch = 19, 
-     cex = .2, 
-     xlab = "SNP", ylab = "-Log P",
-     col = "grey",
-     main = "env2")
-points(loci_trait2, 
-       -log10(pvalues[,2])[loci_trait2], 
-       col = "red", 
-       cex = 1.5)
-abline(h = -log10(0.05), col="red", lty=2)
+#gen matrix
+genmat = as.matrix(gen)
+#env matrix
+env1mat = as.matrix(gea_df[,"env1"])
+env2mat = as.matrix(gea_df[,"env2"])
+envmat = cbind(env1mat, env2mat)
 
 
 ##############
@@ -241,7 +128,7 @@ FDR2 <- FD/length(lfmm_loci)
 par(mfrow=c(1,2))
 plot(-log10(pvalues[,1]), 
      pch = 19, 
-     cex = .2, 
+     cex = .5, 
      xlab = "SNP", ylab = "-Log P",
      col = "grey",
      main = "env1")
@@ -253,7 +140,7 @@ abline(h = -log10(0.05), col="red", lty=2)
 
 plot(-log10(pvalues[,2]), 
      pch = 19, 
-     cex = .2, 
+     cex = .5, 
      xlab = "SNP", ylab = "-Log P",
      col = "grey",
      main = "env2")
@@ -262,4 +149,78 @@ points(loci_trait2,
        col = "red", 
        cex = 1.5)
 abline(h = -log10(0.05), col="red", lty=2)
+
+
+
+#ENV1
+#run model
+lfmm_mod <- lfmm_ridge(genmat, env1mat, K = K)
+
+
+#performs association testing using the fitted model:
+pv <- lfmm_test(Y = genmat, 
+                X = env1mat, 
+                lfmm = lfmm_mod, 
+                calibrate = "gif")
+
+#adjust pvalues
+pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
+
+
+#PLOT TO CHECK RESULTS
+
+plot(-log10(pvalues[,1]), 
+     pch = 19, 
+     cex = .5, 
+     xlab = "SNP", ylab = "-Log P",
+     col = "grey",
+     main = "env1")
+points(loci_trait1, 
+       -log10(pvalues[,1])[loci_trait1], 
+       col = "red", 
+       cex = 1.5)
+abline(h = -log10(0.05), col="red", lty=2)
+
+
+
+
+#ENV2
+#run model
+lfmm_mod <- lfmm_ridge(genmat, env2mat, K = K)
+
+
+#performs association testing using the fitted model:
+pv <- lfmm_test(Y = genmat, 
+                X = env2mat, 
+                lfmm = lfmm_mod, 
+                calibrate = "gif")
+
+#adjust pvalues
+pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
+
+
+#PLOT TO CHECK RESULTS
+
+plot(-log10(pvalues[,1]), 
+     pch = 19, 
+     cex = .5, 
+     xlab = "SNP", ylab = "-Log P",
+     col = "grey",
+     main = "env2")
+points(loci_trait2, 
+       -log10(pvalues[,1])[loci_trait2], 
+       col = "red", 
+       cex = 1.5)
+abline(h = -log10(0.05), col="red", lty=2)
+
+
+
+
+
+
+
+
+
+
+
 
