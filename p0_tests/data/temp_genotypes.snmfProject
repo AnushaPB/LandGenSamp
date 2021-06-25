@@ -1,6 +1,0 @@
-new("snmfProject", snmfProject.file = "temp_genotypes.snmfProject", 
-    projDir = "C:/Users/Anusha/Documents/GitHub/LandGenSamp/p0_tests/data/", 
-    snmfDir = "temp_genotypes.snmf/", input.file = "temp_genotypes.geno", 
-    runs = list(), K = 20L, snmfClass.files = "K20/run1/temp_genotypes_r1.20.snmfClass", 
-    n = 1000L, L = 10000L, creationTime = structure(1624230910.17827, class = c("POSIXct", 
-    "POSIXt")))

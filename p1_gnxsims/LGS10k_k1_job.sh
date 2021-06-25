@@ -13,7 +13,7 @@
 #SBATCH --partition=savio3_bigmem
 #
 # Wall clock limit:
-#SBATCH --time=7-00:00:00
+#SBATCH --time=3-00:00:00
 #
 #SBATCH --mail-type=ALL                                                                             #                                  
 #SBATCH --mail-user=anusha.bishop@berkeley.edu  
@@ -23,6 +23,6 @@ module load gsl
 module load gcc 
 module load imagemagick
 
-ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k.py > LGS10km25.pyout
+ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k_k1.py > LGS10k_phi05TT.pyout
 
-
+ 

@@ -1,0 +1,176 @@
+]0;IPython: LandGenSamp/p1_gnxsims
+
+NOTE: No display found. Using non-interactive Agg backend
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.6787765 , 0.75409927, 0.73748294, ..., 0.68347283, 0.68279365,
+        0.6424832 ],
+       [0.66721202, 0.65996207, 0.71505125, ..., 0.70729313, 0.66340613,
+        0.66417029],
+       [0.64470461, 0.63165287, 0.69530594, ..., 0.65283542, 0.61789216,
+        0.58677299],
+       ...,
+       [0.67471381, 0.65757881, 0.63187525, ..., 0.55019651, 0.55789742,
+        0.58133285],
+       [0.67098662, 0.67320205, 0.6742615 , ..., 0.52634401, 0.54066363,
+        0.64238545],
+       [0.62609913, 0.65736815, 0.68451366, ..., 0.5331824 , 0.59299013,
+        0.69103397]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.80644426, 0.86005862, 0.77910791, ..., 0.58096255, 0.65673385,
+        0.69028361],
+       [0.76991922, 0.75398859, 0.76420925, ..., 0.60088258, 0.60024071,
+        0.6647068 ],
+       [0.71752034, 0.68557814, 0.70931023, ..., 0.54808277, 0.532144  ,
+        0.56248676],
+       ...,
+       [1.        , 0.94939671, 0.92022806, ..., 0.51018368, 0.52571216,
+        0.55370157],
+       [0.99849879, 0.93970468, 0.94526286, ..., 0.50807053, 0.46171749,
+        0.64298715],
+       [0.99617223, 0.95555543, 0.94177083, ..., 0.57851222, 0.6002501 ,
+        0.704995  ]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 250, 'K_layer': 'lyr_0', 'K_factor': 1}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.2, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 0.25, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 0.25, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 42, 'tskit_simp_interval': 50, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+10k_K1_phi50_m25_seed1_H50_r60
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+			making individuals...
+
+			making movement surface...
+				[can take a bit]
+
+
+
+No mod.burn_fn_queue was found. Running mod.reset()...
+
+
+Creating the burn-in function queue...
+
+
+Creating the main function queue...
+
+
+burn:	it=-1:	t=0
+	species: spp_0                         N=250	(births=16	deaths=0)
+
+	........................................................................
+burn:	it=-1:	t=1
+	species: spp_0                         N=266	(births=15	deaths=0)
+
+	........................................................................
+burn:	it=-1:	t=2
+	species: spp_0                         N=281	(births=19	deaths=0)
+
+	........................................................................
+burn:	it=-1:	t=3
+	species: spp_0                         N=300	(births=26	deaths=250)
+
+	........................................................................
+burn:	it=-1:	t=4
+	species: spp_0                         N=76	(births=7	deaths=16)
+
+	........................................................................
+burn:	it=-1:	t=5
+	species: spp_0                         N=67	(births=3	deaths=15)
+
+	........................................................................
+burn:	it=-1:	t=6
+	species: spp_0                         N=55	(births=3	deaths=19)
+
+	........................................................................
+burn:	it=-1:	t=7
+	species: spp_0                         N=39	(births=2	deaths=26)
+
+	........................................................................
+burn:	it=-1:	t=8
+	species: spp_0                         N=15	(births=1	deaths=7)
+
+	........................................................................
+burn:	it=-1:	t=9
+	species: spp_0                         N=9	(births=1	deaths=3)
+
+	........................................................................
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mIndexError[0m                                Traceback (most recent call last)
+[0;32m/global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k_k1.py[0m in [0;36m<module>[0;34m[0m
+[1;32m    532[0m [0;34m[0m[0m
+[1;32m    533[0m             [0;31m#burn-in model[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 534[0;31m             [0mmod[0m[0;34m.[0m[0mwalk[0m[0;34m([0m[0mT[0m[0;34m=[0m[0;36m10000[0m[0;34m,[0m [0mmode[0m[0;34m=[0m[0;34m'burn'[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    535[0m [0;34m[0m[0m
+[1;32m    536[0m             [0;31m#save and print all of the non-neutral loci[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/sim/model.py[0m in [0;36mwalk[0;34m(self, T, mode, verbose, animate)[0m
+[1;32m   1038[0m                           'Running mod.reset()...\n\n'), flush=True)
+[1;32m   1039[0m                 [0mself[0m[0;34m.[0m[0m_reset[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0;32m-> 1040[0;31m             [0mextinct[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0m_do_timestep[0m[0;34m([0m[0mmode[0m[0;34m=[0m[0mmode[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m   1041[0m             [0;31m# continue the animated plot, if animate == True[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m   1042[0m             [0;32mif[0m [0manimate[0m [0;32mnot[0m [0;32min[0m [0;34m([0m[0;32mFalse[0m[0;34m,[0m [0;32mNone[0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/sim/model.py[0m in [0;36m_do_timestep[0;34m(self, mode)[0m
+[1;32m    625[0m             [0;32mfor[0m [0mfn[0m [0;32min[0m [0mself[0m[0;34m.[0m[0mburn_fn_queue[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    626[0m                 [0;32mif[0m [0;32mTrue[0m [0;32mnot[0m [0;32min[0m [0;34m[[0m[0mspp[0m[0;34m.[0m[0mextinct[0m [0;32mfor[0m [0mspp[0m [0;32min[0m [0mself[0m[0;34m.[0m[0mcomm[0m[0;34m.[0m[0mvalues[0m[0;34m([0m[0;34m)[0m[0;34m][0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 627[0;31m                     [0mfn[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    628[0m                 [0;32melse[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    629[0m                     [0;32mbreak[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/sim/model.py[0m in [0;36m<lambda>[0;34m()[0m
+[1;32m    570[0m         [0;31m#multiple, interacting species[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    571[0m         [0;32mfor[0m [0mspp[0m [0;32min[0m [0mself[0m[0;34m.[0m[0mcomm[0m[0;34m.[0m[0mvalues[0m[0;34m([0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 572[0;31m             [0mqueue[0m[0;34m.[0m[0mappend[0m[0;34m([0m[0;32mlambda[0m[0;34m:[0m [0mself[0m[0;34m.[0m[0m_do_pop_dynamics[0m[0;34m([0m[0mspp[0m[0;34m.[0m[0midx[0m[0;34m)[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    573[0m [0;34m[0m[0m
+[1;32m    574[0m         [0;31m#add the Changer.make_change, data._DataCollector._write_data, and[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/sim/model.py[0m in [0;36m_do_pop_dynamics[0;34m(self, spp_idx)[0m
+[1;32m    369[0m     [0;31m#wrapper around Species._do_pop_dynamics[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    370[0m     [0;32mdef[0m [0m_do_pop_dynamics[0m[0;34m([0m[0mself[0m[0;34m,[0m [0mspp_idx[0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 371[0;31m         [0mself[0m[0;34m.[0m[0mcomm[0m[0;34m[[0m[0mspp_idx[0m[0;34m][0m[0;34m.[0m[0m_do_pop_dynamics[0m[0;34m([0m[0mself[0m[0;34m.[0m[0mland[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    372[0m [0;34m[0m[0m
+[1;32m    373[0m     [0;31m#wrapper around Land._make_change[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/structs/species.py[0m in [0;36m_do_pop_dynamics[0;34m(self, land)[0m
+[1;32m    802[0m         [0;31m#result, which will be True iff spp has gone extinct[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    803[0m         extinct = _do_pop_dynamics(self, land,
+[0;32m--> 804[0;31m             with_selection = with_selection, burn = burn)
+[0m[1;32m    805[0m         [0;32mif[0m [0mextinct[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    806[0m             [0;31m#set self.extinct equal to True, so that the iteration will end[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/ops/demography.py[0m in [0;36m_do_pop_dynamics[0;34m(spp, land, with_selection, burn, births_before_deaths, asserts, debug)[0m
+[1;32m    206[0m [0;34m[0m[0m
+[1;32m    207[0m     [0;31m#find mating pairs[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 208[0;31m     [0mpairs[0m [0;34m=[0m [0mspp[0m[0;34m.[0m[0m_find_mating_pairs[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    209[0m [0;34m[0m[0m
+[1;32m    210[0m     [0;31m#calc num_pairs raster (use the calc_pop_density function on the[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/structs/species.py[0m in [0;36m_find_mating_pairs[0;34m(self)[0m
+[1;32m    586[0m         mating_pairs = _find_mates(self, sex=self.sex,
+[1;32m    587[0m                                    [0mchoose_nearest[0m[0;34m=[0m[0mself[0m[0;34m.[0m[0mchoose_nearest_mate[0m[0;34m,[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 588[0;31m                                    inverse_dist_mating=self.inverse_dist_mating)
+[0m[1;32m    589[0m         [0;32mreturn[0m [0mmating_pairs[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    590[0m [0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/ops/mating.py[0m in [0;36m_find_mates[0;34m(spp, sex, repro_age, choose_nearest, inverse_dist_mating)[0m
+[1;32m     35[0m     [0;31m#nearest-neigh pairs[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     36[0m     pairs = spp._get_mating_pairs(choose_nearest=choose_nearest,
+[0;32m---> 37[0;31m                                   inverse_dist_mating=inverse_dist_mating)
+[0m[1;32m     38[0m     [0;31m####################################################[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     39[0m     [0;31m# Then, operationalize sexes, if being used, and find all[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.local/lib/python3.7/site-packages/geonomics/structs/species.py[0m in [0;36m_get_mating_pairs[0;34m(self, within, coords, choose_nearest, inverse_dist_mating)[0m
+[1;32m   1533[0m             can_mate = np.bool8(np.random.binomial(n=1, p=self.b,
+[1;32m   1534[0m                                                    size=pairs.shape[0]))
+[0;32m-> 1535[0;31m             [0mpairs[0m [0;34m=[0m [0mpairs[0m[0;34m[[0m[0mcan_mate[0m[0;34m,[0m [0;34m:[0m[0;34m][0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m   1536[0m         [0;32mreturn[0m [0mpairs[0m[0;34m[0m[0;34m[0m[0m
+[1;32m   1537[0m [0;34m[0m[0m
+
+[0;31mIndexError[0m: too many indices for array

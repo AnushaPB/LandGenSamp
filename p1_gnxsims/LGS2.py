@@ -18,7 +18,7 @@ unifenv = make_unif_array(41)
 #Params to define
 ##K_factor = K
 K = 0
-##movement_distance_distr_param1 = md/dispersal_distance_distr_param1 = dd
+##movement_distance_distr_param2 = md/dispersal_distance_distr_param2 = dd
 m = 0
 ##phi = phi
 phi = 0
@@ -283,7 +283,7 @@ params = {
                     #file defining custom genomic arch
                     'gen_arch_file':            None,
                     #num of loci
-                    'L':                        10000,
+                    'L':                        100000,
                     #num of chromosomes (doesn't matter when there is no linkage)
                     'l_c':                      [1],
                     #starting allele frequency (None to draw freqs randomly)
@@ -299,7 +299,7 @@ params = {
                     #scale of distr of deleterious effect sizes
                     'delet_alpha_distr_scale':  0.2,
                     #alpha of distr of recomb rates (default = 0.5 = unlinked)
-                    'r_distr_alpha':            None, 
+                    'r_distr_alpha':            0.5, 
                     #beta of distr of recomb rates
                     'r_distr_beta':             None,
                     #whether loci should be dominant (for allele '1')

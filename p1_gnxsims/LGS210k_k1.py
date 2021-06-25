@@ -496,10 +496,10 @@ params = {
     } # <END> params
 
 
-#TESTING LOOP WILL PARALLELIZE LATER
-for K in [5]:
-  for phi in [0.5]:
-    for m in[0.25]:
+#TESTING LOOP WILL ADD VALUES/PARALLELIZE LATER
+for K in [1]: 
+  for phi in [0.1]:
+    for m in[1]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
@@ -507,6 +507,7 @@ for K in [5]:
             dir = "/global/scratch/anushabishop/LandGenSamp/p1_gnxsims/"
             #note: currently gnx dumps output files where the script is run
             
+
             #get env layers
             env1 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env1_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
             env2 = np.genfromtxt(dir+"MNLM/layers/seed"+str(seed)+"_env2_H"+str(int(H*100))+"_r"+str(int(r*100))+".csv", delimiter=',')
@@ -518,12 +519,13 @@ for K in [5]:
             params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
             params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
             params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
+            params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
             
             #print params to confirm proper params were used (in output)
             print(params)
             
             #make our params dict into a proper Geonomics ParamsDict object
-            mod_name = "10k_2l_mod_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(m)+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
+            mod_name = "2l_10k_K"+str(K)+"_phi"+str(int(phi*100))+"_m"+str(int(m*100))+"_seed"+str(seed)+"_H"+str(int(H*100))+"_r"+str(int(r*100))
             print(mod_name)
             params = gnx.make_params_dict(params, mod_name)
             #then use it to make a model

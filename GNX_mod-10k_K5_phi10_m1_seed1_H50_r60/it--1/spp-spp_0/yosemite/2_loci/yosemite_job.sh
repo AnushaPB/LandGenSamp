@@ -1,10 +1,10 @@
 #!/bin/bash
 # Job name:
-#SBATCH --job-name=LGS
+#SBATCH --job-name=yosemite
 #
 # Set out/err directories
-#SBATCH -o /global/home/users/anushabishop/scratch/stdout/LGS.sh.%J.out
-#SBATCH -e /global/home/users/anushabishop/scratch/stderr/LGS.sh.%J.err
+#SBATCH -o /global/home/users/anushabishop/scratch/stdout/yos.sh.%J.out
+#SBATCH -e /global/home/users/anushabishop/scratch/stderr/yos.sh.%J.err
 #
 # Account:
 #SBATCH --account=fc_landgen
@@ -13,16 +13,17 @@
 #SBATCH --partition=savio3_bigmem
 #
 # Wall clock limit:
-#SBATCH --time=7-00:00:00
+#SBATCH --time=3-00:00:00
 #
 #SBATCH --mail-type=ALL                                                                             #                                  
 #SBATCH --mail-user=anusha.bishop@berkeley.edu  
+## Command(s) to run (example):
+
+stdbuf -i0 -o0 -e0 command
 
 module load python 
 module load gsl 
 module load gcc 
 module load imagemagick
 
-ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k.py > LGS10km25.pyout
-
-
+ipython /global/home/users/anushabishop/yosemite/run_yosemite_demo.py > yosemite_job.pyout
