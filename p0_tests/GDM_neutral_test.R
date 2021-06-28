@@ -9,7 +9,7 @@ library("vcfR")
 nloci = 10000
 
 #read in geospatial data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
+file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
 gsd_df <- read.csv(file_path)
 #Extract env values from lists
 gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
@@ -20,7 +20,7 @@ gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])'))
 head(gsd_df)
 
 #read in genetic data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
+file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
 vcf <- read.vcfR(file_path)
 #convert to matrix
 x <- vcfR2genlight(vcf) 

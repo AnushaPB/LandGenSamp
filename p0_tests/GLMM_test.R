@@ -17,14 +17,14 @@ library(doParallel)
 nloci = 10000
 
 #read in geospatial data
-file_path = here("data","mod-10k_K5_phi10_m0.25_seed1_H50_r60_it--1_t-300_spp-spp_0.csv")
+file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
 gsd_df <- read.csv(file_path)
 gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
 gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
 head(gsd_df)
 
 #read in genetic data
-file_path = here("data","mod-10k_K5_phi10_m0.25_seed1_H50_r60_it--1_t-300_spp-spp_0.vcf")
+file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
 vcf <- read.vcfR(file_path)
 x <- vcfR2genlight(vcf) #CHECK THIS
 gen <- as.matrix(x)
@@ -57,7 +57,7 @@ diag(ks) <- NA
 heatmap(ks, keep.dendro=FALSE)
 
 #genotypes
-AF.pca <- gen[,c(1,2,3,4,5,adaptive_loci)]
+AF.pca <- gen[,c(sample(neutral_loci,8),adaptive_loci)]
 
 
 # create class which holds multiple results for each loop iteration.
@@ -96,7 +96,7 @@ modres <- foreach(i=1:ncol(AF.pca)) %dopar% {
   
   models[[2]] <- corrHLfit(SNP ~ env2 + corrMatrix(1|pop), data = df, corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
   
-  #models[[3]] <- corrHLfit(SNP ~ env1 + env2 + corrMatrix(1|pop), data = df, corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
+  models[[3]] <- corrHLfit(SNP ~ env1 + env2 + corrMatrix(1|pop), data = df, corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
   
   null.fit <- corrHLfit(SNP ~ 1 + corrMatrix(1|pop), data = df,
                         corrMatrix=Kmatrix, HLmethod="ML", family="gaussian")
