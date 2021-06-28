@@ -23,6 +23,6 @@ module load gsl
 module load gcc 
 module load imagemagick
 
-ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k.py > LGS10km25.pyout
+ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k.py > LGS10km50.pyout
 
 

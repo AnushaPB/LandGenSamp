@@ -10,7 +10,7 @@
 #SBATCH --account=fc_landgen
 #
 # Partition:
-#SBATCH --partition=savio3_bigmem
+#SBATCH --partition=savio
 #
 # Wall clock limit:
 #SBATCH --time=3-00:00:00
@@ -23,6 +23,6 @@ module load gsl
 module load gcc 
 module load imagemagick
 
-ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k_k1.py > LGS10k_phi05TT.pyout
+ipython /global/scratch/anushabishop/LandGenSamp/p1_gnxsims/LGS10k_k1.py > LGS10k_maxageTT.pyout
 
  

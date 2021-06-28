@@ -185,7 +185,7 @@ params = {
 
                 'init': {
                     #starting number of individs
-                    'N':                250,
+                    'N':                3000,
                     #carrying-capacity Layer name
                     'K_layer':          'lyr_0',
                     #multiplicative factor for carrying-capacity layer    
@@ -208,7 +208,7 @@ params = {
                     #intrinsic growth rate
                     'R':                        0.5,
                     #intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b':                        0.2,
+                    'b':                        0.5,
                     #expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda':    1,
                     #whether n births should be fixed at n_births_dist_lambda
@@ -407,7 +407,7 @@ params = {
         #seed number
         'num':          42,
         #time step interval for simplication of tskit tables
-        'tskit_simp_interval':      100,
+        'tskit_simp_interval':      25,
 
 
         #-----------------------------#
@@ -499,7 +499,7 @@ params = {
 #TESTING LOOP WILL PARALLELIZE LATER
 for K in [5]:
   for phi in [0.1]:
-    for m in[0.25]:
+    for m in[0.5]:
       for seed in [1]:
         for H in [0.5]:
           for r in [0.6]: 
