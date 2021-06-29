@@ -66,8 +66,9 @@ plot(gea_df$env2, gea_df$z2, xlim = c(0,1), ylim=c(0,1))
 #CALCULATING PC BASED GENETIC DISTANCE
 #convert gen data to matrix
 gen <- gen[s,-adaptive_loci]
+#gen <- gen[, sample(9992, 2000, replace=FALSE)]
 
-dim(gen)
+
 #perform PCA
 pc <- prcomp(gen)
 plot(pc)

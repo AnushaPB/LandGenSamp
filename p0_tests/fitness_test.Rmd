@@ -23,13 +23,14 @@ for(i in seq(0,600,100)){
   points(i, mean(abs(gsd_df$z2 - gsd_df$env2)*0.1), pch = 19, col = "blue")
 }
 
-plot(1,1,col="white", ylim=c(0,0.04), xlim=c(0,600), xlab="t", ylab="mean(|z - env|*phi)")
+plot(1,1,col="white", ylim=c(0,3000), xlim=c(0,600), xlab="t", ylab="pop size")
 for(i in seq(0,600,100)){
   #read in geospatial data
   file_path = here("data",paste0("mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-",i,"_spp-spp_0.csv"))
   gsd_df <- read.csv(file_path)
   
   points(i, nrow(gsd_df), pch = 19, col = "black")
+}
 ```
 
 ```{r}
@@ -47,6 +48,7 @@ for(i in seq(0,1000,100)){
   points(i, mean(abs(gsd_df$z2 - gsd_df$env2)*0.1), pch = 19, col = "blue")
 }
 ```
+
 
 ```{r}
 plot(1,1,col="white", ylim=c(0,0.04), xlim=c(0,1000), xlab="t", ylab="mean(|z - env|*phi)")
