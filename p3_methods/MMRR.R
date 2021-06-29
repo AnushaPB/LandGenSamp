@@ -26,7 +26,7 @@ gen <- as.matrix(x)
 
 #FOR TESTING USE SUBSAMPLE(!!!COMMENT OUT!!!)
 set.seed(42)
-s <- sample(1:nrow(gea_df),1000)
+s <- sample(1:nrow(gea_df),200)
 gsd_df <- gsd_df[s,]
 gen <- gen[s,]
 
@@ -112,3 +112,4 @@ mmrr_res <- MMRR(pc_dist, Xmats, nperm = 999)
 
 #create data frame of results
 mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
+
