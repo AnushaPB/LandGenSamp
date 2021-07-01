@@ -5,6 +5,7 @@
 *.png
 *.gif
 *.pdf
+*.Robj
 
 #Ignore data and outputs
 /data
