@@ -4,6 +4,7 @@ library("automap") #kriging
 library("parallel")
 library("foreach")
 library("doParallel")
+library("vcfR")
 
 ############
 #   Data   #
@@ -32,20 +33,23 @@ gen <- as.matrix(x)
 
 #FOR TESTING USE SUBSAMPLE(!!!COMMENT OUT!!!)
 set.seed(42)
-s <- sample(1:nrow(gea_df),1000)
+s <- sample(1:nrow(gsd_df),100)
 gsd_df <- gsd_df[s,]
 gen <- gen[s,]
 
+#adaptive loci
+loci_trait1 <- c(1731,4684,4742,6252) + 1 #add one to convert from python to R indexing
+loci_trait2 <- c(141,1512,8481,9511) + 1 #add one to convert from python to R indexing
+adaptive_loci <- c(loci_trait1, loci_trait2)
+neutral_loci <- c(1:nloci)[-adaptive_loci]
 
 ###############
 #  conStruct  #
 ###############
 
-
-
-
 #prep data
-gen <- as.matrix(gen)
+#prep data
+gen <- as.matrix(gen[,])
 if(max(gen) != 1){gen <- gen*0.5} #multiply by 0.5 to turn 0/1/2 coding to 0/0.5/1 coding
 coords <- as.matrix(gsd_df[,c("x","y")])
 geoDist <- as.matrix(dist(coords, diag = TRUE, upper = TRUE))
@@ -53,28 +57,28 @@ geoDist <- as.matrix(dist(coords, diag = TRUE, upper = TRUE))
 #cross validation to determine K
 #register cores
 cores=detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-2,type="PSOCK") #not to overload your computer
 registerDoParallel(cl)
 
 my.xvals <- x.validation(train.prop = 0.9,
                          n.reps = 8,
                          K = 1:3,
-                         freqs = gen,
+                         freqs = gen[,sample(neutral_loci,1000)],
                          data.partitions = NULL,
                          geoDist = geoDist,
                          coords = coords,
-                         n.iter = 1e3,
+                         prefix = "example",
+                         n.iter = 100, #change back to 1e3
                          make.figs = TRUE,
                          save.files = FALSE,
                          parallel = TRUE,
-                         n.nodes = 4,
-                         prefix="kselect")
+                         n.nodes = cores[1]-2)
 
 stopCluster(cl)
 
 #define K based on "true" value
 #MODIFY LATER
-K = 3
+K = 2
 
 
 #run construct
@@ -90,11 +94,11 @@ pred_admix <- results$chain_1$MAP$admix.proportions
 make.structure.plot(admix.proportions = pred_admix)
 
 
-pred_krig_admix <- stack()
+pred_krig_admix <- raster::stack()
 for(i in 1:K){
   #krig admix proportions
-  krig_df = data.frame(x = gea_df$x,
-                       y = gea_df$y, 
+  krig_df = data.frame(x = gsd_df$x,
+                       y = gsd_df$y, 
                        prop = pred_admix[,i])
   
   coordinates(krig_df)=~x+y
@@ -102,8 +106,8 @@ for(i in 1:K){
   x.range <- c(0,40)
   y.range <- c(0,40)
   
-  krig_df.grd <- expand.grid(x=seq(from=x.range[1], to=x.range[2], len=40),  
-                             y=seq(from=y.range[1], to=y.range[2], len=40))
+  krig_df.grd <- expand.grid(x=seq(from=0, to=40, len=40),  
+                             y=seq(from=0, to=40, len=40))
   coordinates(krig_df.grd) <- ~x+y
   gridded(krig_df.grd) <- TRUE
   #extent(krig_df.grid) #FIGURE OUT WHY EXTENT ISNT (0,40,0,40)
@@ -113,6 +117,8 @@ for(i in 1:K){
 }
 
 plot(pred_krig_admix)
+plot(env1)
+plot(env2)
 
 
 ############################
