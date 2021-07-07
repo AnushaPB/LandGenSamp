@@ -1,16 +1,12 @@
 ## GLMM ##
 library(spaMM)
 library(statgenGWAS)
-#BiocManager::install("LEA")
-library("LEA") #LEA
-
-#for plotting (from LEA)
-source("http://membres-timc.imag.fr/Olivier.Francois/Conversion.R")
-source("http://membres-timc.imag.fr/Olivier.Francois/POPSutilities.R")
-
 #parallel
 library(foreach)
 library(doParallel)
+#for reading in files
+library(here)
+library(vcfR)
 
 
 #define nloci 

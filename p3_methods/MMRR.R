@@ -1,7 +1,16 @@
-library("here") #paths
+library(here) #paths
+
+#parallel
+library(foreach)
+library(doParallel)
+
+#read in general functions and objects
+source("general_functions.R")
+
+
 
 ############
-#   Data   #
+#   TEST   #
 ############
 #define nloci 
 nloci = 10000
@@ -92,24 +101,80 @@ unfold<-function(X){
   return(x)
 }
 
-#Format data for MMRR
 
-##calculate genetic distance based on pca
-Y <- as.matrix(gen[,1:nloci])
-pc <- prcomp(Y)
-pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
 
-##get env vars and coords
-env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
-env_dist2 <- as.matrix(dist(gsd_df$env2, diag = TRUE, upper = TRUE))
-geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
+run_lfmm <- function(gen_filepath, gsd_filepath){
+  
+  #Read in data
+  gen <- get_gen(gen_filepath)
+  gsd_df <- get_gsd(gsd_filepath)
+  
+  #Format data for MMRR  
+  ##calculate genetic distance based on pca
+  Y <- as.matrix(gen[,1:nloci])
+  pc <- prcomp(Y)
+  pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
+  
+  ##get env vars and coords
+  env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
+  env_dist2 <- as.matrix(dist(gsd_df$env2, diag = TRUE, upper = TRUE))
+  geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
+  
+  #format X matrices
+  Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
+  
+  #Run  MMRR
+  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 999)
+  
+  #create data frame of results
+  mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
+  
+  #turn results into dataframe
+  results <- data.frame(env1_coeff = mmrr_res$coefficients["env1"],
+                        env2_coeff = mmrr_res$coefficients["env2"],
+                        geo_coeff = mmrr_res$coefficients["geography"],
+                        env1_p = mmrr_res$tpvalue["env1(p)"],
+                        env2_p = mmrr_res$tpvalue["env2(p)"],
+                        geo_p = mmrr_res$tpvalue["geography(p)"]
+                        )
+  #remove rownames
+  rownames(results) <- NULL
+  
+  return(results)
+}
 
-#format X matrices
-Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
 
-#Run  MMRR
-mmrr_res <- MMRR(pc_dist, Xmats, nperm = 999)
+#register cores
+cores <- detectCores()
+cl <- makeCluster(cores[1]-2) #not to overload your computer
+registerDoParallel(cl)
 
-#create data frame of results
-mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
 
+res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  library(here)
+  
+  gen_filepath <- create_filepath(i, "gen")
+  gsd_filepath <- create_filepath(i, "gsd")
+  
+  #skip iteration if file does not exist
+  skip_to_next <- FALSE
+  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(skip_to_next) { print("File does not exist:")
+    print(params[i,]) } 
+  if(skip_to_next) { result <- NA } 
+  
+  #run LFMM
+  if(skip_to_next == FALSE){
+    result <- run_mmrr(gen_filepath = gen_filepath,
+                       gsd_filepath = gsd_filepath)
+  }
+  
+  return(result)
+  
+}
+
+#stop cluster
+stopCluster(cl)
+
+stats_out <- cbind.data.frame(params, res_mmrr)
+write.csv(stats_out, "MMRR_results.csv")

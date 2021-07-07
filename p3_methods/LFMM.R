@@ -7,12 +7,12 @@ library("vcfR")
 library("foreach")
 library("doParallel")
 
+#read in general functions and objects
+source("general_functions.R")
+
 #################
 #   Test Data   #
 #################
-#define nloci 
-nloci = 10000
-
 #read in geospatial data
 file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
 gsd_df <- read.csv(file_path)
@@ -53,38 +53,6 @@ tmpcol<- palz[as.numeric(cut(gea_df$env2,breaks = 100))]
 plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env2", xlab="", ylab="", box=TRUE)
 
 
-
-
-
-##########
-#  Data  #
-##########
-#Get gen data
-get_gen <- function(filepath){
-  vcf <- read.vcfR(filepath)
-  x <- vcfR2genlight(vcf) #CHECK THIS
-  gen <- as.matrix(x)
-  return(gen)
-}
-
-#Get geospatial data
-get_gsd <- function(filepath){
-  gsd_df <- read.csv(filepath)
-  gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-  return(gsd_df)
-}
-
-#Create dataframe with all variable combos
-params <- expand.grid(K = c(2,5),
-            phi = c(0.1,0.5),
-            m = c(0.25,0.5,1.0),
-            seed = c(1,2,3),
-            H = c(0.05,0.5),
-            r = c(0.3, 0.6))
-
-#define nloci 
-nloci = 10000
 
 ##########
 #  LFMM  #
@@ -131,25 +99,35 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
   pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
                         env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
   
+  
   #env1 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci <- which(pvalues[,1] < 0.05) 
+  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
   #calc True Positive Rate
-  TP <- sum(lfmm_loci %in% loci_trait1)
+  TP <- sum(lfmm_loci1 %in% loci_trait1)
   TPR1 <- TP/length(loci_trait1)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% loci_trait2)
-  FDR1 <- FD/length(lfmm_loci)
+  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
+  FDR1 <- FD/length(lfmm_loci1)
   
   #env2 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci <- which(pvalues[,2] < 0.05) 
+  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
   #calc True Positive Rate
-  TP <- sum(lfmm_loci %in% loci_trait2)
+  TP <- sum(lfmm_loci2 %in% loci_trait2)
   TPR2 <- TP/length(loci_trait2)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% loci_trait1)
-  FDR2 <- FD/length(lfmm_loci)
+  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
+  FDR2 <- FD/length(lfmm_loci2)
+  
+  #stats for all loci 
+  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+  #calc True Positive Rate
+  TP <- sum(lfmm_loci %in% adaptive_loci)
+  TPR <- TP/length(adaptive_loci)
+  #calc False Discovery Rate 
+  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
+  FDR <- FD/length(adaptive_loci)
 
   #PLOT TO CHECK RESULTS
   
@@ -178,7 +156,7 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
          cex = 1.5)
   abline(h = -log10(0.05), col="red", lty=2)
   
-  return(data.frame(TPR1 = TPR1, FDR1 = FDR1, TPR2 = TPR2, FDR2 = FDR2))
+  return(data.frame(TPR = TPR, FDR = FDR, TPR1 = TPR1, FDR1 = FDR1, TPR2 = TPR2, FDR2 = FDR2))
 }
 
 
@@ -191,33 +169,15 @@ registerDoParallel(cl)
 res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library(here)
   
-  gen_filepath <- here("data",paste0("mod-K",params[i,"K"],
-                                     "_phi",params[i,"phi"]*100,
-                                     "_m",params[i,"m"]*100,
-                                     "_seed",params[i,"seed"],
-                                     "_H",params[i,"H"]*100,
-                                     "_r",params[i,"r"]*100,
-                                     "it--1_t-500_spp-spp_0.vcf"))
+  gen_filepath <- create_filepath(i, "gen")
   
-  gsd_filepath <- here("data",paste0("mod-K",params[i,"K"],
-                                     "_phi",params[i,"phi"]*100,
-                                     "_m",params[i,"m"]*100,
-                                     "_seed",params[i,"seed"],
-                                     "_H",params[i,"H"]*100,
-                                     "_r",params[i,"r"]*100,
-                                     "it--1_t-500_spp-spp_0.csv"))
+  gsd_filepath <- create_filepath(i, "gsd")
   
-  loci_filepath <- here("data",paste0("nnloci_",params[i,"K"],
-                                      "_phi",params[i,"phi"]*100,
-                                      "_m",params[i,"m"]*100,
-                                      "_seed",params[i,"seed"],
-                                      "_H",params[i,"H"]*100,
-                                      "_r",params[i,"r"]*100,
-                                      ".csv"))
+  loci_filepath <- create_filepath(i, "loci")
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | gen_filepath == FALSE | gsd_filepath == FALSE){skip_to_next <- TRUE}
+  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
                       print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
