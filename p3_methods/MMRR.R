@@ -103,7 +103,7 @@ unfold<-function(X){
 
 
 
-run_lfmm <- function(gen_filepath, gsd_filepath){
+run_mmrr <- function(gen_filepath, gsd_filepath){
   
   #Read in data
   gen <- get_gen(gen_filepath)
@@ -111,7 +111,7 @@ run_lfmm <- function(gen_filepath, gsd_filepath){
   
   #Format data for MMRR  
   ##calculate genetic distance based on pca
-  Y <- as.matrix(gen[,1:nloci])
+  Y <- as.matrix(gen)
   pc <- prcomp(Y)
   pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
   
