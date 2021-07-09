@@ -164,7 +164,7 @@ params = {
 
                 'init': {
                     # starting number of individs
-                    'N': 250,
+                    'N': 1000,
                     # carrying-capacity Layer name
                     'K_layer': 'lyr_0',
                     # multiplicative factor for carrying-capacity layer
