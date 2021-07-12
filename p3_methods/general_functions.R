@@ -47,5 +47,14 @@ params <- expand.grid(K = c(2,5), #CHANGE TO 1.5 and 3
                       r = c(0.3, 0.6),
                       it = 1:10)
 
+#TESTING PARAMS (REMOVE LATER)
+params <- expand.grid(K = c(2), #CHANGE TO 1.5 and 3
+                      phi = c(0.5),
+                      m = c(0.5),
+                      seed = c(1),
+                      H = c(0.5),
+                      r = c(0.6),
+                      it = 1)
+
 #define nloci 
 nloci = 10000

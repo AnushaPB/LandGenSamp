@@ -1,6 +1,6 @@
 library("here") #paths
 library("gdm") #GDM
-
+library("vcfR")
 #parallel
 library(foreach)
 library(doParallel)
@@ -45,7 +45,7 @@ run_gdm <- function(gen_filepath, gsd_filepath){
   #Format gdm dataframe
   site <- 1:nrow(pc_dist) #vector of sites
   gdmGen <- cbind(site, pc_dist) #bind vector of sites with gen distances
-  gdmPred <- data.frame(site = site, Longitude = gea_df$x, Latitude = gea_df$y, env1 = gea_df$env1, env2 = gea_df$env2)
+  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
   gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "Longitude", YColumn = "Latitude", siteCol = "site")
   #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1) (?MODIFY?)
   range01 <- function(x){(x-min(x))/(max(x)-min(x))}
@@ -55,7 +55,7 @@ run_gdm <- function(gen_filepath, gsd_filepath){
   gdm.model <- gdm(gdmData, geo = TRUE)
   
   #check var importance/significance (ASK IAN IF WE WANT TO DO THIS OR JUST COMPARE THE COEFFICIENTS FROM A FULL MODEL (PROS: FASTER/EASIER))
-  #vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=100)
+  vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=100)
   
 
   predictors <- coeffs(gdm.model)
@@ -78,7 +78,7 @@ cl <- makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
 
-res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library(here)
   
   gen_filepath <- create_filepath(i, "gen")
@@ -86,7 +86,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if( file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
