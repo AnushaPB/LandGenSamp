@@ -3,7 +3,6 @@ library("conStruct") #conStruct
 library("automap") #kriging
 
 #parallel
-library("parallel")
 library("foreach")
 library("doParallel")
 
@@ -47,6 +46,9 @@ gen <- gen[s,]
 ###############
 #  conStruct  #
 ###############
+library(parallel)
+library(foreach)
+library(doParallel)
 
 #prep data
 gen <- as.matrix(gen)
@@ -94,8 +96,8 @@ make.structure.plot(admix.proportions = pred_admix)
 pred_krig_admix <- stack()
 for(i in 1:K){
   #krig admix proportions
-  krig_df = data.frame(x = gsd_df$x,
-                       y = gsd_df$y, 
+  krig_df = data.frame(x = gea_df$x,
+                       y = gea_df$y, 
                        prop = pred_admix[,i])
   
   coordinates(krig_df)=~x+y

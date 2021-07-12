@@ -19,9 +19,23 @@ for(i in seq(0,600,100)){
   gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)[^,]+(?=,)'))
   gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
   
-  points(i, mean(abs(gsd_df$z1 - gsd_df$env1)*0.1), pch = 19, col = "black")
+  points(i, mean(abs(gsd_df$z1 - gsd_df$env1)*0.1), pch = 1, col = "black")
+  points(i, mean(abs(gsd_df$z2 - gsd_df$env2)*0.1), pch = 19, col = "black")
+  
+  #read in geospatial data
+  file_path = here("data",paste0("mod-10k_K2_phi50_m100_seed1_H50_r60_it--1_t-",i,"_spp-spp_0.csv"))
+  gsd_df <- read.csv(file_path)
+  gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
+  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
+  gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)[^,]+(?=,)'))
+  gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
+  
+  points(i, mean(abs(gsd_df$z1 - gsd_df$env1)*0.1), pch = 1, col = "blue")
   points(i, mean(abs(gsd_df$z2 - gsd_df$env2)*0.1), pch = 19, col = "blue")
+  
 }
+
+legend("bottomleft", pch = c(19,19), col=c("black","blue"), c("m = 0.25", "m = 1"))
 
 plot(1,1,col="white", ylim=c(0,3000), xlim=c(0,600), xlab="t", ylab="pop size")
 for(i in seq(0,600,100)){
@@ -30,7 +44,15 @@ for(i in seq(0,600,100)){
   gsd_df <- read.csv(file_path)
   
   points(i, nrow(gsd_df), pch = 19, col = "black")
+  
+  file_path = here("data",paste0("mod-10k_K2_phi50_m100_seed1_H50_r60_it--1_t-",i,"_spp-spp_0.csv"))
+  gsd_df <- read.csv(file_path)
+  
+  points(i, nrow(gsd_df), pch = 19, col = "blue")
 }
+
+legend("bottomleft", pch = c(19,19), col=c("black","blue"), c("m = 0.25", "m = 1"))
+
 ```
 
 ```{r}
@@ -47,6 +69,8 @@ for(i in seq(0,1000,100)){
   points(i, mean(abs(gsd_df$z1 - gsd_df$env1)*0.1), pch = 19, col = "black")
   points(i, mean(abs(gsd_df$z2 - gsd_df$env2)*0.1), pch = 19, col = "blue")
 }
+
+
 ```
 
 
