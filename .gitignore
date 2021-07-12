@@ -7,9 +7,11 @@
 *.pdf
 *.Robj
 
-#Ignore data and outputs
+#Ignore data. envs and outputs
 /data
 /outputs
+/venv
+/pyout
 
 #Dstore
 .DS_Store

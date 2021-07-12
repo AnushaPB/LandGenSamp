@@ -164,7 +164,7 @@ params = {
 
                 'init': {
                     # starting number of individs
-                    'N': 250,
+                    'N': 1000,
                     # carrying-capacity Layer name
                     'K_layer': 'lyr_0',
                     # multiplicative factor for carrying-capacity layer
@@ -187,7 +187,7 @@ params = {
                     # intrinsic growth rate
                     'R': 0.5,
                     # intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b': 0.2,
+                    'b': 0.5, #CHANGED FROM 0.2
                     # expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda': 1,
                     # whether n births should be fixed at n_births_dist_lambda
@@ -256,6 +256,8 @@ params = {
                 # ---------------------------------------------------#
 
                 'gen_arch': {
+                    #whether to use tskit (to record full spatial pedigree)
+                    'use_tskit': False,
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
@@ -466,9 +468,9 @@ params = {
 }  # <END> params
 
 #define parameters to vary
-K_array = [1, 5]
+K_array = [1.5, 3]
 phi_array = [0.1, 0.5]
-m_array = [0.25, 0.5, 1]
+m_array = [0.25, 1]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
@@ -511,8 +513,8 @@ def run_sims(sim_list):
     print(params)
 
     # make our params dict into a proper Geonomics ParamsDict object
-    mod_name = "10k_K" + str(K) + "_phi" + str(int(phi * 100)) + "_m" + str(
-        int(m * 100)) + "_seed" + str(seed) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "10k_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+        int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     print(mod_name)
     params = gnx.make_params_dict(params, mod_name)
     # then use it to make a model
