@@ -11,29 +11,6 @@ source("general_functions.R")
 #set seed
 set.seed(42)
 
-############
-#   TEST   #
-############
-#DEFINE NLOCI
-nloci <- 1000
-
-#NEEDS TO BE MODIFIED FOR FUTURE REAL DATA
-gea_df <- read.csv(here("data","gea_m0.5_phi0.5_H0.5_k10_t100_df.csv"))
-gea_df <- gea_df[,-1] #PROB CAN REMOVE ONCE GNX SCRIPTS ARE CORRECTED
-colnames(gea_df) <- c(paste0("X",1:nloci), colnames(gea_df)[(nloci+1):ncol(gea_df)]) # CHANGE FROM BASE 0 TO BASE 1
-
-loci_df <- read.csv(here("data","loci_m0.5_phi0.5_H0.5_k10_t100_df.csv"))
-loci_df <- data.frame(trait0 = loci_df$trait0)
-adaptive_loci <- which(loci_df$trait0 == 1) #CURRENTLY DEFINED FOR ONE TRAIT
-neutral_loci <- which(loci_df$trait0 == 0) #CURRENTLY DEFINED FOR ONE TRAIT
-
-#FOR TESTING USE SAMPLE OF 100 (!!!COMMENT OUT!!!)
-set.seed(42)
-s <- sample(1:nrow(gea_df),1000)
-loci_df <- loci_df[s,]
-gea_df <- gea_df[s,]
-
-
 ###########
 #   GDM   #
 ###########
@@ -109,7 +86,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 

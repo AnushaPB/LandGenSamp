@@ -10,50 +10,6 @@ library("doParallel")
 #read in general functions and objects
 source("general_functions.R")
 
-#################
-#   Test Data   #
-#################
-#read in geospatial data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
-gsd_df <- read.csv(file_path)
-gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-head(gsd_df)
-
-#read in genetic data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
-vcf <- read.vcfR(file_path)
-x <- vcfR2genlight(vcf) #CHECK THIS
-gen <- as.matrix(x)
-
-#create gea_df
-gea_df <- data.frame(gen,
-                     x = gsd_df$x,
-                     y = gsd_df$y, 
-                     env1 = gsd_df$env1,
-                     env2 = gsd_df$env2)
-
-
-
-loci_trait1 <- c(1731,4684,4742,6252) + 1 #add one to convert from python to R indexing
-loci_trait2 <- c(141,1512,8481,9511) + 1 #add one to convert from python to R indexing
-adaptive_loci <- c(loci_trait1, loci_trait2)
-neutral_loci <- c(1:nloci)[-adaptive_loci]
-
-#FOR TESTING USE SAMPLE OF 100 (!!!COMMENT OUT!!!)
-set.seed(42)
-s <- sample(1:nrow(gea_df),1000)
-gea_df <- gea_df[s,]
-
-palz <- magma(100)
-par(pty="s",mfrow=c(1,2))
-tmpcol<- palz[as.numeric(cut(gea_df$env1,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env1", xlab="", ylab="", box=TRUE)
-tmpcol<- palz[as.numeric(cut(gea_df$env2,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env2", xlab="", ylab="", box=TRUE)
-
-
-
 ##########
 #  LFMM  #
 ##########
@@ -177,7 +133,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
                       print(params[i,]) } 
   if(skip_to_next) { result <- NA } 

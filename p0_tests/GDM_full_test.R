@@ -2,63 +2,7 @@ library("here") #paths
 library("gdm") #GDM
 library("viridis")
 library("vcfR")
-############
-#   Data   #
-############
-#define nloci 
-nloci = 10000
 
-#read in geospatial data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
-gsd_df <- read.csv(file_path)
-#Extract env values from lists
-gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-#Extract phenotype values from lists
-gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)[^,]+(?=,)'))
-gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
-head(gsd_df)
-
-#read in genetic data
-file_path = here("data","mod-10k_K1_phi10_m1_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
-vcf <- read.vcfR(file_path)
-#convert to matrix
-x <- vcfR2genlight(vcf) 
-gen <- as.matrix(x)
-
-#create gea_df
-gea_df <- data.frame(gen,
-                     x = gsd_df$x,
-                     y = gsd_df$y, 
-                     env1 = gsd_df$env1,
-                     env2 = gsd_df$env2,
-                     z1 = gsd_df$z1,
-                     z2 = gsd_df$z2)
-
-#adaptive loci
-loci_trait1 <- c(1731,4684,4742,6252) + 1 #add one to convert from python to R indexing
-loci_trait2 <- c(141,1512,8481,9511) + 1 #add one to convert from python to R indexing
-adaptive_loci <- c(loci_trait1, loci_trait2)
-neutral_loci <- c(1:nloci)[-adaptive_loci]
-
-#FOR TESTING USE SUBSAMPLE(!!!COMMENT OUT!!!)
-set.seed(42)
-s <- sample(1:nrow(gea_df),1000)
-gea_df <- gea_df[s,]
-
-#plot to get sense of distribution
-par(pty="s",mfrow=c(2,2))
-tmpcol<- magma(100)[as.numeric(cut(gea_df$env1,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env1", xlab="", ylab="", box=TRUE)
-tmpcol<- magma(100)[as.numeric(cut(gea_df$env2,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "env2", xlab="", ylab="", box=TRUE)
-tmpcol<- magma(100)[as.numeric(cut(gea_df$z1,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "z1", xlab="", ylab="", box=TRUE)
-tmpcol<- magma(100)[as.numeric(cut(gea_df$z2,breaks = 100))]
-plot(gea_df$x, gea_df$y, col=tmpcol, pch = 19, cex=1.5, main = "z2", xlab="", ylab="", box=TRUE)
-
-plot(gea_df$env1, gea_df$z1, xlim = c(0,1), ylim=c(0,1))
-plot(gea_df$env2, gea_df$z2, xlim = c(0,1), ylim=c(0,1))
 ###########
 #   GDM   #
 ###########

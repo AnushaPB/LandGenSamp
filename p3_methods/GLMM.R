@@ -147,7 +147,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
@@ -178,7 +178,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 

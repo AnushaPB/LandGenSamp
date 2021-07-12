@@ -8,37 +8,6 @@ library(doParallel)
 source("general_functions.R")
 
 
-
-############
-#   TEST   #
-############
-#define nloci 
-nloci = 10000
-
-#read in geospatial data
-file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.csv")
-gsd_df <- read.csv(file_path)
-#Extract env values from lists
-gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-#Extract phenotype values from lists
-gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)[^,]+(?=,)'))
-gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
-head(gsd_df)
-
-#read in genetic data
-file_path = here("data","mod-10k_K2_phi50_m25_seed1_H50_r60_it--1_t-500_spp-spp_0.vcf")
-vcf <- read.vcfR(file_path)
-#convert to matrix
-x <- vcfR2genlight(vcf) 
-gen <- as.matrix(x)
-
-#FOR TESTING USE SUBSAMPLE(!!!COMMENT OUT!!!)
-set.seed(42)
-s <- sample(1:nrow(gea_df),200)
-gsd_df <- gsd_df[s,]
-gen <- gen[s,]
-
 ############
 #   MMRR   #
 ############
@@ -158,7 +127,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if(exists(loci_filepath) == FALSE | exists(gen_filepath) == FALSE | exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
