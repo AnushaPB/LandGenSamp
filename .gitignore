@@ -6,12 +6,16 @@
 *.gif
 *.pdf
 *.Robj
+*.pyout
 
 #Ignore data. envs and outputs
 /data
 /outputs
 /venv
 /pyout
+
+#ignore GNX outputs
+/GNX*
 
 #Dstore
 .DS_Store
