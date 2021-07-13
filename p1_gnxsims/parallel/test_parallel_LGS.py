@@ -468,10 +468,10 @@ params = {
 }  # <END> params
 
 #define parameters to vary
-K_array = [1.5, 3]
-phi_array = [0.1, 0.5]
+K_array = [3]
+phi_array = [0.5]
 m_array = [0.25, 1]
-seed_array = [1, 2, 3]
+seed_array = [1]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
 
@@ -513,7 +513,7 @@ def run_sims(sim_list):
     print(params)
 
     # make our params dict into a proper Geonomics ParamsDict object
-    mod_name = "10k_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     print(mod_name)
     params = gnx.make_params_dict(params, mod_name)
@@ -538,7 +538,8 @@ def run_sims(sim_list):
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
-    ncpu = mp.cpu_count()
+    #subtract 1 so computer doesn't get overloaded
+    ncpu = mp.cpu_count() - 1
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock
     #mp.set_start_method('spawn')
