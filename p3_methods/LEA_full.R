@@ -52,9 +52,51 @@ run_lea_full <- function(gen_filepath, gsd_filepath, loci_filepath){
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
-  obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:10, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:20, ploidy = 2, entropy = T, alpha = 100, project = "new")
   plot(obj.snmf, col = "blue4", cex = 1.4, pch = 19)
   
+  #define K based on "true" value
+  #MODIFY LATER TO READ FROM FILE (incorporate into main function?)
+  K = 5
+  
+  #Code for testing one K value
+  obj.snmf = snmf(here("data","temp_genotypes.geno"), K = K, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  
+  #Get Qmatrix
+  pred_admix <- Q(obj.snmf, K = K) 
+  
+  #make grid for kriging
+  x.range <- c(0,41)
+  y.range <- c(0,41)
+  krig_df.grd <- expand.grid(x=seq(from=x.range[1], to=x.range[2], len=41),  
+                             y=seq(from=y.range[1], to=y.range[2], len=41))
+  coordinates(krig_df.grd) <- ~x+y
+  gridded(krig_df.grd) <- TRUE
+  #print(extent(krig_df.grd)) #FIGURE OUT WHY EXTENT ISNT (0,41,0,41)
+  
+  pred_krig_admix <- stack()
+  for(k in 1:K){
+    #krig admix proportions
+    krig_df = data.frame(x = gsd_df$x,
+                         y = gsd_df$y, 
+                         prop = pred_admix[,k])
+    
+    coordinates(krig_df)=~x+y
+    
+    krig_res <- autoKrige(prop ~ 1, krig_df, krig_df.grd)
+    krig_raster <- raster(krig_res$krige_output)
+    print(extent(krig_raster))
+    extent(krig_raster) <- c(0,41,0,41)
+    pred_krig_admix <- stack(pred_krig_admix, krig_raster)
+  }
+  
+  plot(pred_krig_admix[[5]], zlim=c(0,0), legend=FALSE, axes=FALSE, box=FALSE, xlim=c(0,41), ylim =c(0,41))
+  for(l in 1:K){
+    cols <- c(rgb(1,1,1,0),l+1)
+    kpal <- colorRampPalette(cols, interpolate="linear")
+    plot(pred_krig_admix[[l]], zlim=c(0.5,1), col=kpal(100), add=TRUE, legend=FALSE, xlim=c(0,41), ylim =c(0,41))
+  }
+    
   #remove project
   remove.snmfProject("data/temp_genotypes.snmfProject")
 
