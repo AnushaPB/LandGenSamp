@@ -15,7 +15,6 @@ def make_unif_array(n):
 
 unifenv = make_unif_array(41)
 
-
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
 #Params to define
 ##K_factor = K
@@ -494,10 +493,13 @@ def run_sims(sim_list):
     r = float(sim_list[5])
 
     # get env layers
-    env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(seed) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+    env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
             int(r * 100)) + ".csv", delimiter=',')
-    env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(seed) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+    env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
             int(r * 100)) + ".csv", delimiter=',')
+
+    # define params as a global var
+    global params
 
     # redefine params
     params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
@@ -539,7 +541,7 @@ def run_sims(sim_list):
 if __name__ == '__main__':
     #count number of cores
     #subtract 1 so computer doesn't get overloaded
-    ncpu = mp.cpu_count() - 1
+    ncpu = mp.cpu_count() - 2
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock
     #mp.set_start_method('spawn')

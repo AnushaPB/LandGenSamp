@@ -15,7 +15,6 @@ def make_unif_array(n):
 
 unifenv = make_unif_array(41)
 
-
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
 #Params to define
 ##K_factor = K
@@ -27,6 +26,8 @@ phi = 0
 ##envs
 env1 = unifenv
 env2 = unifenv
+
+
 
 params = {
     # --------------------------------------------------------------------------#
@@ -468,10 +469,10 @@ params = {
 }  # <END> params
 
 #define parameters to vary
-K_array = [1.5, 3]
-phi_array = [0.1, 0.5]
+K_array = [3]
+phi_array = [0.5]
 m_array = [0.25, 1]
-seed_array = [1, 2, 3]
+seed_array = [1]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
 
@@ -483,6 +484,7 @@ sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_arra
 # directory where input/output data will be stored
 dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
+
 
 def run_sims(sim_list):
     # !ORDER MATTERS! must match order of params from before
@@ -500,7 +502,6 @@ def run_sims(sim_list):
             int(r * 100)) + ".csv", delimiter=',')
 
     # define params as a global var
-    # (this is kind of bad practice so go back and change this at some point)
     global params
 
     # redefine params
@@ -517,7 +518,7 @@ def run_sims(sim_list):
     print(params)
 
     # make our params dict into a proper Geonomics ParamsDict object
-    mod_name = "10k_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     print(mod_name)
     params = gnx.make_params_dict(params, mod_name)
@@ -538,21 +539,4 @@ def run_sims(sim_list):
     # run the model for 501 steps
     mod.walk(501)
 
-
-#multiprocessing
-if __name__ == '__main__':
-    #count number of cores
-    ncpu = mp.cpu_count()
-
-    #set start method to 'spawn' instead of 'fork' to avoid deadlock
-    #mp.set_start_method('spawn')
-
-    #make pool
-    pool = mp.Pool(ncpu)
-
-    #map function onto array
-    pool.map_async(run_sims, sim_array)
-
-    #close the pool
-    pool.close()
-    pool.join()
+run_sims(sim_array[0])

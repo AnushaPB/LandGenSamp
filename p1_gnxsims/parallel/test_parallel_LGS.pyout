@@ -1,0 +1,264 @@
+
+
+NOTE: No display found. Using non-interactive Agg backend
+
+NOTE: Module 'nlmpy' not found. To simulate on Neutral Landscape Model rasters, this must be installed. To install, try using `pip install nlmpy`.
+NOTE: Module 'pykrige' not found. Yosemite demo 3d plots cannot be produced.
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.47787712, 0.51201009, 0.48133331, ..., 0.54610447, 0.50475385,
+        0.51249223],
+       [0.43996666, 0.43019686, 0.5550234 , ..., 0.48591534, 0.47034058,
+        0.48534417],
+       [0.47280772, 0.4479964 , 0.6059065 , ..., 0.40454893, 0.61210033,
+        0.45943131],
+       ...,
+       [0.56317292, 0.55988555, 0.5212556 , ..., 0.45267677, 0.42581926,
+        0.25589838],
+       [0.5921785 , 0.59247334, 0.59267721, ..., 0.52379222, 0.39674525,
+        0.41816106],
+       [0.58368325, 0.513175  , 0.51223008, ..., 0.63065915, 0.38399   ,
+        0.47760975]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.57487585, 0.56628067, 0.56658991, ..., 0.45210624, 0.38466366,
+        0.33670821],
+       [0.44394837, 0.46485325, 0.5252918 , ..., 0.30392929, 0.24089274,
+        0.22198748],
+       [0.52057034, 0.51343969, 0.53613993, ..., 0.3326615 , 0.34882702,
+        0.25729316],
+       ...,
+       [0.69657759, 0.55284093, 0.50478437, ..., 0.41922815, 0.45133745,
+        0.19986005],
+       [0.54002798, 0.59621854, 0.63196372, ..., 0.37666799, 0.35477068,
+        0.29172696],
+       [0.59819344, 0.48189279, 0.33376765, ..., 0.52004684, 0.33905275,
+        0.43460921]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 0.25, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 0.25, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m25_seed1_H5_r60
+
+MAKING MODEL...
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.47787712, 0.51201009, 0.48133331, ..., 0.54610447, 0.50475385,
+        0.51249223],
+       [0.43996666, 0.43019686, 0.5550234 , ..., 0.48591534, 0.47034058,
+        0.48534417],
+       [0.47280772, 0.4479964 , 0.6059065 , ..., 0.40454893, 0.61210033,
+        0.45943131],
+       ...,
+       [0.56317292, 0.55988555, 0.5212556 , ..., 0.45267677, 0.42581926,
+        0.25589838],
+       [0.5921785 , 0.59247334, 0.59267721, ..., 0.52379222, 0.39674525,
+        0.41816106],
+       [0.58368325, 0.513175  , 0.51223008, ..., 0.63065915, 0.38399   ,
+        0.47760975]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.64498471, 0.61957659, 0.63331676, ..., 0.46469299, 0.39998482,
+        0.33779741],
+       [0.50091439, 0.5308092 , 0.55057011, ..., 0.30916948, 0.23863894,
+        0.20891713],
+       [0.58058726, 0.58264782, 0.54171379, ..., 0.37984746, 0.30927802,
+        0.26350534],
+       ...,
+       [0.75710165, 0.5822413 , 0.54012501, ..., 0.46505946, 0.51613877,
+        0.28171015],
+       [0.55246151, 0.62125048, 0.66500293, ..., 0.38188626, 0.41036303,
+        0.32371291],
+       [0.62750109, 0.51556802, 0.33430501, ..., 0.51119502, 0.39664047,
+        0.47306499]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 1.0, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 1.0, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m100_seed1_H5_r30
+
+MAKING MODEL...
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.61110537, 0.61700239, 0.61575431, ..., 0.59169406, 0.59096448,
+        0.58435665],
+       [0.61386386, 0.61778855, 0.6436026 , ..., 0.58068296, 0.58180205,
+        0.57955039],
+       [0.63023662, 0.63482392, 0.66631666, ..., 0.57731297, 0.60652884,
+        0.58145636],
+       ...,
+       [0.68476163, 0.67787852, 0.66458985, ..., 0.3776589 , 0.39353774,
+        0.41408635],
+       [0.68426784, 0.67830066, 0.66439309, ..., 0.41182609, 0.38162087,
+        0.46983417],
+       [0.65754611, 0.64248521, 0.63419628, ..., 0.46915398, 0.46887454,
+        0.54579625]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.62782537, 0.61360524, 0.60988673, ..., 0.41649076, 0.43194869,
+        0.47043125],
+       [0.61385243, 0.61713436, 0.61087241, ..., 0.378057  , 0.37555569,
+        0.4177647 ],
+       [0.62154055, 0.62496445, 0.61850506, ..., 0.38044426, 0.37366028,
+        0.40587626],
+       ...,
+       [0.577193  , 0.54744355, 0.53224   , ..., 0.42477826, 0.45456218,
+        0.46422718],
+       [0.56221213, 0.56596307, 0.54847488, ..., 0.41928901, 0.4238134 ,
+        0.473203  ],
+       [0.60893052, 0.55252888, 0.49929752, ..., 0.46569692, 0.47930837,
+        0.52673621]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 0.25, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 0.25, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m25_seed1_H50_r30
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.47787712, 0.51201009, 0.48133331, ..., 0.54610447, 0.50475385,
+        0.51249223],
+       [0.43996666, 0.43019686, 0.5550234 , ..., 0.48591534, 0.47034058,
+        0.48534417],
+       [0.47280772, 0.4479964 , 0.6059065 , ..., 0.40454893, 0.61210033,
+        0.45943131],
+       ...,
+       [0.56317292, 0.55988555, 0.5212556 , ..., 0.45267677, 0.42581926,
+        0.25589838],
+       [0.5921785 , 0.59247334, 0.59267721, ..., 0.52379222, 0.39674525,
+        0.41816106],
+       [0.58368325, 0.513175  , 0.51223008, ..., 0.63065915, 0.38399   ,
+        0.47760975]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.64498471, 0.61957659, 0.63331676, ..., 0.46469299, 0.39998482,
+        0.33779741],
+       [0.50091439, 0.5308092 , 0.55057011, ..., 0.30916948, 0.23863894,
+        0.20891713],
+       [0.58058726, 0.58264782, 0.54171379, ..., 0.37984746, 0.30927802,
+        0.26350534],
+       ...,
+       [0.75710165, 0.5822413 , 0.54012501, ..., 0.46505946, 0.51613877,
+        0.28171015],
+       [0.55246151, 0.62125048, 0.66500293, ..., 0.38188626, 0.41036303,
+        0.32371291],
+       [0.62750109, 0.51556802, 0.33430501, ..., 0.51119502, 0.39664047,
+        0.47306499]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 0.25, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 0.25, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m25_seed1_H5_r30
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.61110537, 0.61700239, 0.61575431, ..., 0.59169406, 0.59096448,
+        0.58435665],
+       [0.61386386, 0.61778855, 0.6436026 , ..., 0.58068296, 0.58180205,
+        0.57955039],
+       [0.63023662, 0.63482392, 0.66631666, ..., 0.57731297, 0.60652884,
+        0.58145636],
+       ...,
+       [0.68476163, 0.67787852, 0.66458985, ..., 0.3776589 , 0.39353774,
+        0.41408635],
+       [0.68426784, 0.67830066, 0.66439309, ..., 0.41182609, 0.38162087,
+        0.46983417],
+       [0.65754611, 0.64248521, 0.63419628, ..., 0.46915398, 0.46887454,
+        0.54579625]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.62782537, 0.61360524, 0.60988673, ..., 0.41649076, 0.43194869,
+        0.47043125],
+       [0.61385243, 0.61713436, 0.61087241, ..., 0.378057  , 0.37555569,
+        0.4177647 ],
+       [0.62154055, 0.62496445, 0.61850506, ..., 0.38044426, 0.37366028,
+        0.40587626],
+       ...,
+       [0.577193  , 0.54744355, 0.53224   , ..., 0.42477826, 0.45456218,
+        0.46422718],
+       [0.56221213, 0.56596307, 0.54847488, ..., 0.41928901, 0.4238134 ,
+        0.473203  ],
+       [0.60893052, 0.55252888, 0.49929752, ..., 0.46569692, 0.47930837,
+        0.52673621]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 1.0, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 1.0, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m100_seed1_H50_r30
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
+{'landscape': {'main': {'dim': (41, 41), 'res': (1, 1), 'ulc': (0, 0), 'prj': None}, 'layers': {'lyr_0': {'init': {'defined': {'rast': array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_1': {'init': {'defined': {'rast': array([[0.47787712, 0.51201009, 0.48133331, ..., 0.54610447, 0.50475385,
+        0.51249223],
+       [0.43996666, 0.43019686, 0.5550234 , ..., 0.48591534, 0.47034058,
+        0.48534417],
+       [0.47280772, 0.4479964 , 0.6059065 , ..., 0.40454893, 0.61210033,
+        0.45943131],
+       ...,
+       [0.56317292, 0.55988555, 0.5212556 , ..., 0.45267677, 0.42581926,
+        0.25589838],
+       [0.5921785 , 0.59247334, 0.59267721, ..., 0.52379222, 0.39674525,
+        0.41816106],
+       [0.58368325, 0.513175  , 0.51223008, ..., 0.63065915, 0.38399   ,
+        0.47760975]]), 'pts': None, 'vals': None, 'interp_method': None}}}, 'lyr_2': {'init': {'defined': {'rast': array([[0.57487585, 0.56628067, 0.56658991, ..., 0.45210624, 0.38466366,
+        0.33670821],
+       [0.44394837, 0.46485325, 0.5252918 , ..., 0.30392929, 0.24089274,
+        0.22198748],
+       [0.52057034, 0.51343969, 0.53613993, ..., 0.3326615 , 0.34882702,
+        0.25729316],
+       ...,
+       [0.69657759, 0.55284093, 0.50478437, ..., 0.41922815, 0.45133745,
+        0.19986005],
+       [0.54002798, 0.59621854, 0.63196372, ..., 0.37666799, 0.35477068,
+        0.29172696],
+       [0.59819344, 0.48189279, 0.33376765, ..., 0.52004684, 0.33905275,
+        0.43460921]]), 'pts': None, 'vals': None, 'interp_method': None}}}}}, 'comm': {'species': {'spp_0': {'init': {'N': 1000, 'K_layer': 'lyr_0', 'K_factor': 3.0}, 'mating': {'repro_age': 0, 'sex': False, 'sex_ratio': 1.0, 'dist_weighted_birth': False, 'R': 0.5, 'b': 0.5, 'n_births_distr_lambda': 1, 'n_births_fixed': True, 'choose_nearest_mate': False, 'inverse_dist_mating': False, 'mating_radius': 1}, 'mortality': {'max_age': 3, 'd_min': 0, 'd_max': 1, 'density_grid_window_width': None}, 'movement': {'move': True, 'direction_distr_mu': 1, 'direction_distr_kappa': 0, 'movement_distance_distr_param1': 0, 'movement_distance_distr_param2': 1.0, 'movement_distance_distr': 'lognormal', 'dispersal_distance_distr_param1': 0, 'dispersal_distance_distr_param2': 1.0, 'dispersal_distance_distr': 'lognormal', 'move_surf': {'layer': 'lyr_0', 'mixture': True, 'vm_distr_kappa': 12, 'approx_len': 5000}}, 'gen_arch': {'use_tskit': False, 'tskit_simp_interval': 25, 'jitter_breakpoints': False, 'gen_arch_file': None, 'L': 10000, 'l_c': [1], 'start_p_fixed': 0.5, 'start_neut_zero': False, 'mu_neut': 0, 'mu_delet': 0, 'delet_alpha_distr_shape': 0.2, 'delet_alpha_distr_scale': 0.2, 'r_distr_alpha': 0.5, 'r_distr_beta': None, 'dom': False, 'pleiotropy': False, 'recomb_rate_custom_fn': None, 'n_recomb_paths_mem': 10000, 'n_recomb_paths_tot': 100000, 'n_recomb_sims': 10000, 'allow_ad_hoc_recomb': False, 'mut_log': False, 'traits': {'trait_1': {'layer': 'lyr_1', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}, 'trait_2': {'layer': 'lyr_2', 'phi': 0.5, 'n_loci': 4, 'mu': 0, 'alpha_distr_mu': 0.25, 'alpha_distr_sigma': 0, 'max_alpha_mag': None, 'gamma': 1, 'univ_adv': False}}}}}}, 'model': {'T': 1100, 'burn_T': 100, 'num': 1.0, 'its': {'n_its': 1, 'rand_landscape': False, 'rand_comm': False, 'repeat_burn': False}, 'data': {'sampling': {'scheme': 'all', 'when': 100, 'include_landscape': False, 'include_fixed_sites': True}, 'format': {'gen_format': ['vcf', 'fasta'], 'geo_vect_format': 'csv', 'geo_rast_format': 'geotiff'}}, 'stats': {'Nt': {'calc': True, 'freq': 1}, 'het': {'calc': True, 'freq': 5, 'mean': False}, 'maf': {'calc': True, 'freq': 5}, 'mean_fit': {'calc': True, 'freq': 5}, 'ld': {'calc': False, 'freq': 100}}}}
+K3_phi50_m100_seed1_H5_r60
+
+MAKING MODEL...
+
+	MAKING LANDSCAPE...
+
+	MAKING COMMUNITY...
+
+		MAKING SPECIES spp_0...
+
+			making genomic architecture...
+
