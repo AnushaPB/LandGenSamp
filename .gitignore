@@ -62,3 +62,4 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+p1_gnxsims/parallel/test_parallel_LGS.pyout
