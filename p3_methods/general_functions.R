@@ -14,8 +14,8 @@ create_filepath <- function(i, type){
                      "_it--",params[i,"it"])
   
   #different file patterns for different data types
-  if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset, "_t-500_spp-spp_0.vcf")}
-  if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset, "_t-500_spp-spp_0.csv")}
+  if(type == "gen"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/mod-", paramset, "_t-500_spp-spp_0.vcf")}
+  if(type == "gsd"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/mod-", paramset, "_t-500_spp-spp_0.csv")}
   if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
   
   return(filepath)

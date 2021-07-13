@@ -466,9 +466,16 @@ params = {
 
 }  # <END> params
 
-#define parameters to vary
+# define parameters to vary
+#K_array = [3]
+#phi_array = [0.5]
+#m_array = [0.25, 1]
+#seed_array = [1]
+#H_array = [0.05, 0.5]
+#r_array = [0.3, 0.6]
+
 K_array = [3]
-phi_array = [0.5]
+phi_array = [0.1]
 m_array = [0.25, 1]
 seed_array = [1]
 H_array = [0.05, 0.5]
