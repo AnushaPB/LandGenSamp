@@ -13,7 +13,7 @@ def make_unif_array(n):
     return array
 
 
-unifenv = make_unif_array(41)
+unifenv = make_unif_array(40)
 
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
 #Params to define
@@ -40,7 +40,7 @@ params = {
         # ------------#
         'main': {
             # x,y (a.k.a. j,i) dimensions of the Landscape
-            'dim': (41, 41),
+            'dim': (40, 40),
             # x,y resolution of the Landscape
             'res': (1, 1),
             # x,y coords of upper-left corner of the Landscape
@@ -386,7 +386,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 1,
+            'n_its': 10,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -474,12 +474,19 @@ params = {
 #H_array = [0.05, 0.5]
 #r_array = [0.3, 0.6]
 
-K_array = [3]
-phi_array = [0.1]
+K_array = [2]
+phi_array = [0.1, 0.5]
 m_array = [0.25, 1]
 seed_array = [1]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
+
+#K_array = [4]
+#phi_array = [0.5]
+#m_array = [1]
+#seed_array = [1]
+#H_array = [0.05]
+#r_array = [0.3]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
@@ -516,7 +523,8 @@ def run_sims(sim_list):
     params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
-    params['model']['num'] = seed
+    # creates a unique random seed for every parameter set
+    params['model']['num'] = int(K*phi*m*H*r*seed*100000)
 
     # print params to confirm proper params were used (in output)
     print(params)
@@ -540,17 +548,17 @@ def run_sims(sim_list):
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
-    # run the model for 501 steps
-    mod.walk(501)
+    # run the model for 1000 steps
+    mod.walk(1001)
 
 
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
-    #subtract 1 so computer doesn't get overloaded
+    #subtract 2 so computer doesn't get overloaded (RAM cap)
     ncpu = mp.cpu_count() - 2
 
-    #set start method to 'spawn' instead of 'fork' to avoid deadlock
+    #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
 
     #make pool

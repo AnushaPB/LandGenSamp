@@ -13,7 +13,7 @@ def make_unif_array(n):
     return array
 
 
-unifenv = make_unif_array(41)
+unifenv = make_unif_array(40)
 
 
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
@@ -41,7 +41,7 @@ params = {
         # ------------#
         'main': {
             # x,y (a.k.a. j,i) dimensions of the Landscape
-            'dim': (41, 41),
+            'dim': (40, 40),
             # x,y resolution of the Landscape
             'res': (1, 1),
             # x,y coords of upper-left corner of the Landscape
@@ -511,7 +511,8 @@ def run_sims(sim_list):
     params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
-    params['model']['num'] = seed
+    # creates a unique random seed for every parameter set
+    params['model']['num'] = int(K * phi * m * H * r * seed * 100000)
 
     # print params to confirm proper params were used (in output)
     print(params)
