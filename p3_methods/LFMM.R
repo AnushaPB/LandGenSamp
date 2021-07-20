@@ -40,22 +40,16 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
   env2mat = as.matrix(gsd_df$env2)
   envmat = cbind(env1mat, env2mat)
   
-  #BOTH ENV
+  #ENV1
   #run model
-  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
-  
-  
+  lfmm_mod <- lfmm_ridge(genmat, env1mat, K = K)
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
+                  X = env1mat, 
                   lfmm = lfmm_mod, 
                   calibrate = "gif")
-  
   #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
-                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
-  
-  
+  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
   #env1 candidate loci
   #Identify LFMM cand loci
   lfmm_loci1 <- which(pvalues[,1] < 0.05) 
@@ -66,9 +60,19 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
   FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
   FDR1 <- FD/length(lfmm_loci1)
   
-  #env2 candidate loci
+  #ENV2
+  #run model
+  lfmm_mod <- lfmm_ridge(genmat, env2mat, K = K)
+  #performs association testing using the fitted model:
+  pv <- lfmm_test(Y = genmat, 
+                  X = env2mat, 
+                  lfmm = lfmm_mod, 
+                  calibrate = "gif")
+  #adjust pvalues
+  pvalues <- data.frame(env2=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
+  #env1 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
+  lfmm_loci2 <- which(pvalues[,1] < 0.05) 
   #calc True Positive Rate
   TP <- sum(lfmm_loci2 %in% loci_trait2)
   TPR2 <- TP/length(loci_trait2)
@@ -76,14 +80,45 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
   FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
   FDR2 <- FD/length(lfmm_loci2)
   
+  #BOTH ENV
+  #run model
+  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
+  #performs association testing using the fitted model:
+  pv <- lfmm_test(Y = genmat, 
+                  X = envmat, 
+                  lfmm = lfmm_mod, 
+                  calibrate = "gif")
+  #adjust pvalues
+  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
+                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
+  #env1 candidate loci
+  #Identify LFMM cand loci
+  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
+  #calc True Positive Rate
+  TP <- sum(lfmm_loci1 %in% loci_trait1)
+  TPR1COMBO <- TP/length(loci_trait1)
+  #calc False Discovery Rate 
+  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
+  FDR1COMBO <- FD/length(lfmm_loci1)
+  
+  #env2 candidate loci
+  #Identify LFMM cand loci
+  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
+  #calc True Positive Rate
+  TP <- sum(lfmm_loci2 %in% loci_trait2)
+  TPR2COMBO <- TP/length(loci_trait2)
+  #calc False Discovery Rate 
+  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
+  FDR2COMBO <- FD/length(lfmm_loci2)
+  
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   #calc True Positive Rate
   TP <- sum(lfmm_loci %in% adaptive_loci)
-  TPR <- TP/length(adaptive_loci)
+  TPRCOMBO <- TP/length(adaptive_loci)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
-  FDR <- FD/length(adaptive_loci)
+  FDRCOMBO <- FD/length(adaptive_loci)
 
   #PLOT TO CHECK RESULTS
   
@@ -112,7 +147,11 @@ run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
          cex = 1.5)
   abline(h = -log10(0.05), col="red", lty=2)
   
-  return(data.frame(TPR = TPR, FDR = FDR, TPR1 = TPR1, FDR1 = FDR1, TPR2 = TPR2, FDR2 = FDR2))
+  return(data.frame(TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
+                    TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
+                    TPR2 = TPR2COMBO, FDR2 = FDR2COMBO,
+                    TPR1 = TPR1, FDR1 = FDR1, 
+                    TPR2 = TPR2, FDR2 = FDR2))
 }
 
 

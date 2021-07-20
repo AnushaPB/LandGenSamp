@@ -93,7 +93,7 @@ run_mmrr <- function(gen_filepath, gsd_filepath){
   Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
   
   #Run  MMRR
-  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 999)
+  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 99)
   
   #create data frame of results
   mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
