@@ -15,7 +15,6 @@ def make_unif_array(n):
 
 unifenv = make_unif_array(40)
 
-
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
 #Params to define
 ##K_factor = K
@@ -387,7 +386,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 1,
+            'n_its': 10,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -467,7 +466,8 @@ params = {
 
 }  # <END> params
 
-#define parameters to vary
+# define parameters to vary
+
 K_array = [2, 4]
 phi_array = [0.1, 0.5]
 m_array = [0.25, 1]
@@ -478,7 +478,10 @@ r_array = [0.3, 0.6]
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-
+# create a 2D array of seeds for simulations
+sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
+# append simulation seeds to sim_array
+sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
 dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
@@ -492,6 +495,7 @@ def run_sims(sim_list):
     seed = float(sim_list[3])
     H = float(sim_list[4])
     r = float(sim_list[5])
+    simseed = float(sim_list[6])
 
     # get env layers
     env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
@@ -500,7 +504,6 @@ def run_sims(sim_list):
             int(r * 100)) + ".csv", delimiter=',')
 
     # define params as a global var
-    # (this is kind of bad practice so go back and change this at some point)
     global params
 
     # redefine params
@@ -512,13 +515,13 @@ def run_sims(sim_list):
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
     # creates a unique random seed for every parameter set
-    params['model']['num'] = int(K * phi * m * H * r * seed * 100000)
+    params['model']['num'] = int(simseed)
 
     # print params to confirm proper params were used (in output)
     print(params)
 
     # make our params dict into a proper Geonomics ParamsDict object
-    mod_name = "10k_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     print(mod_name)
     params = gnx.make_params_dict(params, mod_name)
@@ -532,20 +535,21 @@ def run_sims(sim_list):
     loci_df = pd.DataFrame()
     loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
     loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-    loci_df.to_csv(dir + "nnloci_" + mod_name + ".csv")
+    loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
-    # run the model for 1001 steps
+    # run the model for 1000 steps
     mod.walk(1001)
 
 
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
-    ncpu = mp.cpu_count()
+    #subtract 2 so computer doesn't get overloaded (RAM cap)
+    ncpu = mp.cpu_count() - 3
 
-    #set start method to 'spawn' instead of 'fork' to avoid deadlock
+    #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
 
     #make pool
@@ -557,3 +561,5 @@ if __name__ == '__main__':
     #close the pool
     pool.close()
     pool.join()
+
+
