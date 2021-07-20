@@ -481,17 +481,20 @@ params = {
 #H_array = [0.05, 0.5]
 #r_array = [0.3, 0.6]
 
-K_array = [2, 4]
+K_array = [2]
 phi_array = [0.5]
-m_array = [0.25, 1]
+m_array = [0.25]
 seed_array = [1]
-H_array = [0.05, 0.5]
-r_array = [0.3, 0.6]
+H_array = [0.05]
+r_array = [0.3]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-
+# create a 2D array of seeds for simulations
+sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
+# append simulation seeds to sim_array
+sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
 dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
@@ -505,6 +508,7 @@ def run_sims(sim_list):
     seed = float(sim_list[3])
     H = float(sim_list[4])
     r = float(sim_list[5])
+    simseed = float(sim_list[6])
 
     # get env layers
     env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
@@ -524,7 +528,7 @@ def run_sims(sim_list):
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
     params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
     # creates a unique random seed for every parameter set
-    params['model']['num'] = int(K*phi*m*H*r*seed*100000)
+    params['model']['num'] = int(simseed)
 
     # print params to confirm proper params were used (in output)
     print(params)
@@ -544,12 +548,12 @@ def run_sims(sim_list):
     loci_df = pd.DataFrame()
     loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
     loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-    loci_df.to_csv(dir + "nnloci_" + mod_name + ".csv")
+    loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
     # run the model for 1000 steps
-    mod.walk(1001)
+    mod.walk(101)
 
 
 #multiprocessing

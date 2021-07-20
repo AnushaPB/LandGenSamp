@@ -1,5 +1,4 @@
 library("here") #paths
-library("vegan") #RDA
 #to install LFMM:
 #devtools::install_github("bcm-uga/lfmm")
 library("lfmm") #LFMM
@@ -161,9 +160,11 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
+system.time(
 res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
+  library("lfmm")
   
   gen_filepath <- create_filepath(i, "gen")
   
@@ -189,10 +190,11 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   gc()
 }
-  
+)
+
 #stop cluster
 stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_lfmm)
-write.csv(stats_out, "LFMM_results.csv")
+write.csv(stats_out, "outputs/LFMM_results.csv")
 
