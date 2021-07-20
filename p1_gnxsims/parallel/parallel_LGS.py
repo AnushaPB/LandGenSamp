@@ -468,7 +468,7 @@ params = {
 }  # <END> params
 
 #define parameters to vary
-K_array = [1.5, 3]
+K_array = [2, 4]
 phi_array = [0.1, 0.5]
 m_array = [0.25, 1]
 seed_array = [1, 2, 3]
@@ -536,8 +536,8 @@ def run_sims(sim_list):
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
-    # run the model for 501 steps
-    mod.walk(501)
+    # run the model for 1001 steps
+    mod.walk(1001)
 
 
 #multiprocessing

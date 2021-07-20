@@ -41,7 +41,7 @@ run_gdm <- function(gen_filepath, gsd_filepath){
   pc <- prcomp(gen)
   #Calculate PC distance based on first three PCs (?MODIFY?)
   pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE))
-  
+   
   #Format gdm dataframe
   site <- 1:nrow(pc_dist) #vector of sites
   gdmGen <- cbind(site, pc_dist) #bind vector of sites with gen distances
@@ -55,7 +55,7 @@ run_gdm <- function(gen_filepath, gsd_filepath){
   gdm.model <- gdm(gdmData, geo = TRUE)
   
   #check var importance/significance (ASK IAN IF WE WANT TO DO THIS OR JUST COMPARE THE COEFFICIENTS FROM A FULL MODEL (PROS: FASTER/EASIER))
-  vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=100)
+  system.time(vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=50))
   
 
   predictors <- coeffs(gdm.model)

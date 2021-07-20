@@ -14,9 +14,9 @@ create_filepath <- function(i, type){
   
   #different file patterns for different data types
   if(type == "gen"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/it--1/spp-spp_0/mod-", paramset,
-                                       "_it--", params[i,"it"], "_t-500_spp-spp_0.vcf")}
+                                       "_it--", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/it--1/spp-spp_0/mod-", paramset,
-                                       "_it--",params[i,"it"], "_t-500_spp-spp_0.csv")}
+                                       "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
   if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
   
   return(filepath)
@@ -40,22 +40,22 @@ get_gsd <- function(filepath){
 }
 
 #Create dataframe with all variable combos
-params <- expand.grid(K = c(2,5), #CHANGE TO 1.5 and 3
-                      phi = c(0.1,0.5),
-                      m = c(0.25,1.0),
-                      seed = c(1,2,3),
-                      H = c(0.05,0.5),
+params <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
                       it = 1:10)
 
 #TESTING PARAMS (REMOVE LATER)
-params <- expand.grid(K = c(2), #CHANGE TO 1.5 and 3
-                      phi = c(0.5),
-                      m = c(0.5),
-                      seed = c(1),
-                      H = c(0.5),
-                      r = c(0.6),
-                      it = 1)
+#params <- expand.grid(K = c(2), 
+                     # phi = c(0.5),
+                     # m = c(0.25),
+                     # seed = c(1),
+                     # H = c(0.50),
+                     # r = c(0.30),
+                     # it = 1)
 
 #define nloci 
 nloci = 10000

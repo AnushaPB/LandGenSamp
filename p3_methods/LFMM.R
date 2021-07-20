@@ -123,7 +123,8 @@ cl <- makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
 res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  library(here)
+  library("here")
+  library("vcfR")
   
   gen_filepath <- create_filepath(i, "gen")
   
@@ -147,6 +148,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   return(result)
   
+  gc()
 }
   
 #stop cluster

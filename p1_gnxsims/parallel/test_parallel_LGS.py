@@ -474,19 +474,19 @@ params = {
 #H_array = [0.05, 0.5]
 #r_array = [0.3, 0.6]
 
-K_array = [2]
-phi_array = [0.1, 0.5]
+#K_array = [2]
+#phi_array = [0.1, 0.5]
+#m_array = [0.25, 1]
+#seed_array = [1]
+#H_array = [0.05, 0.5]
+#r_array = [0.3, 0.6]
+
+K_array = [2, 4]
+phi_array = [0.5]
 m_array = [0.25, 1]
 seed_array = [1]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
-
-#K_array = [4]
-#phi_array = [0.5]
-#m_array = [1]
-#seed_array = [1]
-#H_array = [0.05]
-#r_array = [0.3]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
@@ -556,7 +556,7 @@ def run_sims(sim_list):
 if __name__ == '__main__':
     #count number of cores
     #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = mp.cpu_count() - 2
+    ncpu = mp.cpu_count() - 3
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
@@ -570,3 +570,5 @@ if __name__ == '__main__':
     #close the pool
     pool.close()
     pool.join()
+
+
