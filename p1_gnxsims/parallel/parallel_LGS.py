@@ -539,8 +539,8 @@ def run_sims(sim_list):
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
-    # run the model for 1000 steps
-    mod.walk(1001)
+    # run the model
+    mod.run(verbose = True)
 
 
 #multiprocessing
