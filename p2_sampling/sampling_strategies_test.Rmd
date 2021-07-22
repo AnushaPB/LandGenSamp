@@ -1,0 +1,296 @@
+---
+title: "sampling_strategies_test"
+author: "Anusha"
+date: "7/21/2021"
+output: html_document
+---
+#libraries
+```{r}
+library("foreach")
+library("doParallel")
+source("general_functions.R")
+
+```
+
+#test data
+```{r}
+gsd_df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-10k_K1_phi50_m100_seed1_H50_r60")
+```
+
+# Grid Sampling
+
+## Single File
+*Problem:* once you get to higher resolutions of grid cells (e.g. 15x15, 18x18) you can end up with cells with no individuals in them. This results in the number of samples being lower than what you would get if exactly one individual was sampled from each cell (e.g. a smaller sample size than intended)
+```{r Solution 1: ignore this problem since the difference is only a few individuals}
+npts <- c(36, 81, 144, 225, 324)
+pts <- gsd_df[,c("idx","x","y")]
+
+dim <- 40
+subs <- vector(mode = "list", length = length(npts))
+for(n in 1:length(npts)){
+  inc <- dim/sqrt(npts[n])
+  xgrid <- ygrid <- seq(0, dim, inc) 
+    for(i in 1:(length(xgrid)-1)){ 
+      for(j in 1:(length(ygrid)-1)){ 
+        gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
+        if(dim(gridsq)[1]>0){ subs[[n]] = rbind(subs[[n]], gridsq[sample(1:dim(gridsq)[1],1 ), ]) }
+        } 
+    }
+  par(pty="s")
+  plot(subs[[n]]$x, subs[[n]]$y, pch=19, cex=0.5, main = nrow(subs[[n]]))
+  abline(h = ygrid, v = xgrid, col="gray", lty="dashed")
+}
+
+```
+```{r Solution 2: continue subsampling grid until the number of individuals desired is obtained}
+npts <- c(36, 81, 144, 225, 324)
+pts <- gsd_df[,c("idx","x","y")]
+
+dim <- 40
+subs <- vector(mode = "list", length = length(npts))
+for(n in 1:length(npts)){
+  inc <- dim/sqrt(npts[n])
+  xgrid <- ygrid <- seq(0, dim, inc) 
+  #furst round of sampling: entire grid
+  for(i in 1:(length(xgrid)-1)){ 
+    for(j in 1:(length(ygrid)-1)){ 
+      gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
+      if(dim(gridsq)[1]>0){ subs[[n]] = rbind(subs[[n]], gridsq[sample(1:dim(gridsq)[1],1 ), ]) }
+      } 
+    }
+  #reset grid indices
+  i=1
+  j=1
+  #second round of sampling: cycle through gridcells again until number of desired samples is reached
+  while(nrow(subs[[n]]) != npts[n] & i < (length(xgrid)-1) & j < (length(ygrid)-1)){
+    i = i+1
+    j = j+1
+    gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
+    if(dim(gridsq)[1]>0){ subs[[n]] = rbind(subs[[n]], gridsq[sample(1:dim(gridsq)[1],1 ), ])}
+    }
+  par(pty="s")
+  plot(subs[[n]]$x, subs[[n]]$y, pch=19, cex=0.5, main = nrow(subs[[n]]))
+  abline(h = ygrid, v = xgrid, col="gray", lty="dashed")
+  }
+```
+## All Files
+```{r}
+library("here")
+library("foreach")
+library("doParallel")
+source("general_functions.R")
+```
+
+```{r}
+grid_samp <- function(pts, npts){
+  inc <- dim/sqrt(npts)
+  xgrid <- ygrid <- seq(0, dim, inc) 
+  subs <- c()
+  #first round of sampling: entire grid
+  for(i in 1:(length(xgrid)-1)){ 
+    for(j in 1:(length(ygrid)-1)){ 
+      gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
+      if(dim(gridsq)[1]>0){ subs = rbind(subs, gridsq[sample(1:dim(gridsq)[1],1 ), ]) }
+      } 
+    }
+  #reset grid indices
+  i=1
+  j=1
+  #second round of sampling: cycle through gridcells again until number of desired samples is reached
+  while(nrow(subs) != npts & i < (length(xgrid)-1) & j < (length(ygrid)-1)){
+    i = i+1
+    j = j+1
+    gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
+    if(dim(gridsq)[1]>0){subs = rbind(subs, gridsq[sample(1:dim(gridsq)[1],1 ), ])}
+  }
+  return(subs$idx)
+}
+
+```
+
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+
+#register cores
+cores <- detectCores()
+cl <- makeCluster(cores[1]-3) #not to overload your computer
+registerDoParallel(cl)
+
+for(n in npts){
+  samples <- foreach(i=1:length(params), .combine=rbind) %dopar% {
+  library("here")
+    
+  #create file path
+  gsd_filepath <- create_filepath(i, "gsd")
+  
+  #skip iteration if file does not exist
+  skip_to_next <- FALSE
+  if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(skip_to_next) { print("File does not exist:")
+                      print(params[i,]) } 
+  if(skip_to_next) { result <- NA } 
+  
+  #run sampling
+  if(skip_to_next == FALSE){
+    gsd_df <- get_gsd(gsd_filepath)
+    pts <- gsd_df[,c("idx","x","y")]
+    samples <- grid_samp(pts, npts = n)
+  }
+  
+  #return vector of sample IDs
+  return(samples)
+  
+  }
+  
+  #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
+  samp_out <- cbind.data.frame(params, samples)
+  write.csv(samps_out, paste0("outputs/samples_grid",n,".csv"))
+}
+
+
+#stop cluster
+stopCluster(cl)
+
+```
+
+# Random Sampling
+```{r}
+library("here")
+library("foreach")
+library("doParallel")
+source("general_functions.R")
+```
+
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+
+#register cores
+cores <- detectCores()
+cl <- makeCluster(cores[1]-3) #not to overload your computer
+registerDoParallel(cl)
+
+for(n in npts){
+  samples <- foreach(i=1:length(params), .combine=rbind) %dopar% {
+  library("here")
+    
+  #create file path
+  gsd_filepath <- create_filepath(i, "gsd")
+  
+  #skip iteration if file does not exist
+  skip_to_next <- FALSE
+  if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(skip_to_next) { print("File does not exist:")
+                      print(params[i,]) } 
+  if(skip_to_next) { result <- NA } 
+  
+  #run sampling
+  if(skip_to_next == FALSE){
+    gsd_df <- get_gsd(gsd_filepath)
+    #take random sample
+    samples <- gsd_df[sample(1:nrow(gsd_df), n), "idx"]
+  }
+  
+  #return vector of sample IDs
+  return(samples)
+  
+  }
+  
+  #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
+  samp_out <- cbind.data.frame(params, samples)
+  write.csv(samps_out, paste0("outputs/samples_rand",n,".csv"))
+}
+
+
+#stop cluster
+stopCluster(cl)
+
+```
+
+# Transect Sampling
+
+## Single File
+```{r}
+ygrid = c(10, 20, 30)
+buffer = 1
+ygrid1 = ygrid - buffer
+ygrid2 = ygrid + buffer
+par(pty="s")
+plot(gsd_df$x, gsd_df$y, pch=19, cex=0.5)
+abline(h = ygrid, col="gray", lty="dashed")
+abline(h = ygrid1, col="blue", lty="dashed")
+abline(h = ygrid2, col="red", lty="dashed")
+```
+
+
+
+```{r}
+
+#dimensions of landscape
+dim <- 40
+
+#list of number of sample points
+npts <- c(36, 81, 144, 225, 324)
+
+#horizontal transects (y-coords)
+ytsct <- c(10, 20, 30)
+#buffer for transects
+buffer <- 3
+
+#subset out necessary columns from df
+pts <- gsd_df[,c("idx","x","y")]
+
+#create list to store ids
+subs <- vector(mode = "list", length = length(npts))
+for(n in 1:length(npts)){
+  #divide number of samples evenly among the transects
+  npts_tsct <- npts[n]/length(ytsct)
+  
+  #plot all points (gray)
+  par(pty="s")
+  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray")
+  for(i in 1:length(ytsct)){ 
+    #subset points around transect based on buffer
+    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i]+buffer))
+    #randomly sample subset of transect points to match number of samples needed for each transect
+    tsctsq <- tsctsq[sample(nrow(tsctsq), npts_tsct),]
+    #plot points sampled
+    points(tsctsq$x, tsctsq$y, col=i+1)
+  }
+}
+
+```
+
+```{r}
+#create list to store IDs of samples
+subs <- vector(mode = "list", length = length(npts))
+for(n in 1:length(npts)){
+  #divide number of samples evenly among the transects
+  npts_tsct <- npts[n]/length(ytsct)
+  
+  #plot all points (gray) (for debugging, comment out later)
+  par(pty="s")
+  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray")
+  
+  #create empty vector to store IDs
+  IDvec <- c()
+  for(i in 1:length(ytsct)){ 
+    #subset points around transect based on buffer
+    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i]+buffer))
+    #randomly sample subset of transect points to match number of samples needed for each transect
+    tsctsq <- tsctsq[sample(nrow(tsctsq), npts_tsct),]
+    #plot points sampled (for debugging, comment out later)
+    points(tsctsq$x, tsctsq$y, col=i+1)
+    #store IDs in list
+    IDvec <- c(IDvec, tsctsq$idx)
+  }
+  
+  #add IDs to list
+  subs[[n]] <- IDvec
+  
+  #confirm number of samples
+  stopifnot(npts[n] == length(subs[[n]]))
+}
+```
+
