@@ -26,9 +26,9 @@ create_filepath <- function(i, type){
 #Get gen data
 get_gen <- function(filepath){
   #convert to genlight from vcf
-  gen <- vcfR2genlight(vcf) #CHECK THIS
+  genlight <- vcfR2genlight(vcf) #CHECK THIS
   #convert to matrix
-  genmat <- as.matrix(gen)
+  genmat <- as.matrix(genlight)
   #assign IDs from genlight to matrix rownames
   rownames(genmat) <- gen@ind.names
   return(genmat)

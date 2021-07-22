@@ -28,11 +28,7 @@ coeffs <- function(gdm.model){
 }
 
 
-run_gdm <- function(gen_filepath, gsd_filepath){
-  
-  #Read in data
-  gen <- get_gen(gen_filepath)
-  gsd_df <- get_gsd(gsd_filepath)
+run_gdm <- function(gen, gsd_df){
   
   #CALCULATING PC BASED GENETIC DISTANCE
   #convert gen data to matrix
@@ -79,25 +75,56 @@ registerDoParallel(cl)
 
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  library(here)
-  
+  #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
   gsd_filepath <- create_filepath(i, "gsd")
   
-  #skip iteration if file does not exist
   skip_to_next <- FALSE
-  if( file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
   
-  #run LFMM
+  #run gdm
   if(skip_to_next == FALSE){
-    result <- run_gdm(gen_filepath = gen_filepath,
-                      gsd_filepath = gsd_filepath)
+    gen <- get_data(i, "gen")
+    gsd_df <- get_data(i, "gsd")
+    
+    #run model on full data set
+    full_result <- run_gdm(gen, gsd_df, loci_df)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    
+    #write full datafile (temp)
+    csv_file <- paste0("gdm_results_",paramset,".csv")
+    write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
+    
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], sampstrat, nsamp)
+        subgen <- gen[subIDs,]
+        subgsd_df <- gsd_df[subIDs,]
+        
+        #run analysis using subsample
+        subresult <- run_gdm(subgen, subgsd_df)
+        
+        #save and format new result
+        subresult <- data.frame(sampstrat = sampstrat, nsamp = nsamp, subresult)
+        
+        #export data to csv (temp)
+        csv_df <- read.csv(csv_file)
+        csv_df <- rbind(csv_df, data.frame(params[i,], subresult))
+        write.csv(csv_df, csv_file, row.names = FALSE)
+        
+        #bind results
+        result <- rbind.data.frame(result, subresult)
+      }
+    }
   }
   
   return(result)
+  
+  gc()
   
 }
 
