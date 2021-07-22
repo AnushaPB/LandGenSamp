@@ -25,10 +25,13 @@ create_filepath <- function(i, type){
 
 #Get gen data
 get_gen <- function(filepath){
-  vcf <- read.vcfR(filepath)
-  x <- vcfR2genlight(vcf) #CHECK THIS
-  gen <- as.matrix(x)
-  return(gen)
+  #convert to genlight from vcf
+  gen <- vcfR2genlight(vcf) #CHECK THIS
+  #convert to matrix
+  genmat <- as.matrix(gen)
+  #assign IDs from genlight to matrix rownames
+  rownames(genmat) <- gen@ind.names
+  return(genmat)
 }
 
 #Get geospatial data
@@ -38,6 +41,81 @@ get_gsd <- function(filepath){
   gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
   return(gsd_df)
 }
+
+#general function to get data
+get_data <- function(i, type){
+  #different file patterns for different data types
+  if(type == "gen"){
+    filepath <- create_filepath(i, type)
+    df <- get_gen(filepath)
+  }
+  
+  if(type == "gsd"){
+    filepath <- create_filepath(i, type)
+    df <- get_gsd(filepath)
+  }
+  
+  if(type == "loci"){
+    filepath <- create_filepath(i, type)
+    df <- read.csv(filepath)
+  }
+  
+  return(df)
+}
+
+#get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
+get_samples <- function(param_set, sampstrat, nsamp){
+  #param_set - vector of one set of parameters (e.g. params[i,])
+  #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
+  #nsamp - number of samples
+  
+  #Check if files for parameter exist
+  gen_filepath <- create_filepath(i, "gen")
+  gsd_filepath <- create_filepath(i, "gsd")
+  loci_filepath <- create_filepath(i, "loci")
+  file_exists <- TRUE
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
+  if(!file_exists) { 
+    print("File does not exist:")
+    print(params[i,]) 
+    } 
+  stopifnot(file_exists)
+  
+  #directory of sample ID csvs (CHANGE)
+  datadir <- "outputs/" 
+  
+  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
+    
+  subIDs <- subIDs[subIDs$K == param_set$K 
+                   & subIDs$phi == param_set$phi
+                   & subIDs$m == param_set$m 
+                   & subIDs$seed == param_set$seed
+                   & subIDs$H == param_set$H
+                   & subIDs$r == param_set$r
+                   & subIDs$it == param_set$it,]
+  
+  #confirm there is only one set of IDs being used
+  stopifnot(nrow(subIDs) == 1)
+  
+  #remove parameter columnds and convert to vector of IDs
+  subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
+  subIDs <- unlist(subIDs)
+  
+  #confirm that final set of IDs is a vector
+  stopifnot(is.vector(subIDs))
+  
+  return(as.character(subIDs))
+}
+
+
+#GENERAL OBJECTS (objects used in multiple scripts)
+#nloci 
+nloci = 10000
+
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+#sampling strategies
+sampstrats <- c("rand", "grid", "trans", "envgeo")
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 
@@ -57,5 +135,4 @@ params <- expand.grid(K = c(2, 4),
                      # r = c(0.30),
                      # it = 1)
 
-#define nloci 
-nloci = 10000
+

@@ -8,14 +8,18 @@ output: html_document
 ```{r}
 library("foreach")
 library("doParallel")
+library("vcfR")
 source("general_functions.R")
 
 ```
 
 #test data
 ```{r}
-gsd_df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-10k_K1_phi50_m100_seed1_H50_r60")
+gsd_df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.csv")
+gen_df <- get_gen("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.vcf")
 ```
+
+
 
 # Grid Sampling
 
@@ -223,61 +227,29 @@ abline(h = ygrid1, col="blue", lty="dashed")
 abline(h = ygrid2, col="red", lty="dashed")
 ```
 
+##All xfiles
 
+```{r fig.width=4, fig.height=7}
 
-```{r}
+#Transect Sampling
 
-#dimensions of landscape
-dim <- 40
-
-#list of number of sample points
-npts <- c(36, 81, 144, 225, 324)
-
-#horizontal transects (y-coords)
-ytsct <- c(10, 20, 30)
-#buffer for transects
-buffer <- 3
-
-#subset out necessary columns from df
-pts <- gsd_df[,c("idx","x","y")]
-
-#create list to store ids
-subs <- vector(mode = "list", length = length(npts))
-for(n in 1:length(npts)){
-  #divide number of samples evenly among the transects
-  npts_tsct <- npts[n]/length(ytsct)
+transect_samp <- function(pts, npts, ytsct, buffer){
+  #pts - dataframe with IDs and coords
+  #npts - total number of points to sample (evenly split across transects)
+  #buffer - buffer around transects within which points are sampled 
   
-  #plot all points (gray)
-  par(pty="s")
-  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray")
-  for(i in 1:length(ytsct)){ 
-    #subset points around transect based on buffer
-    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i]+buffer))
-    #randomly sample subset of transect points to match number of samples needed for each transect
-    tsctsq <- tsctsq[sample(nrow(tsctsq), npts_tsct),]
-    #plot points sampled
-    points(tsctsq$x, tsctsq$y, col=i+1)
-  }
-}
-
-```
-
-```{r}
-#create list to store IDs of samples
-subs <- vector(mode = "list", length = length(npts))
-for(n in 1:length(npts)){
   #divide number of samples evenly among the transects
-  npts_tsct <- npts[n]/length(ytsct)
-  
+  npts_tsct <- npts/length(ytsct)
+    
   #plot all points (gray) (for debugging, comment out later)
   par(pty="s")
-  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray")
-  
+  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray", main = npts)
+    
   #create empty vector to store IDs
   IDvec <- c()
   for(i in 1:length(ytsct)){ 
     #subset points around transect based on buffer
-    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i]+buffer))
+    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i] + buffer))
     #randomly sample subset of transect points to match number of samples needed for each transect
     tsctsq <- tsctsq[sample(nrow(tsctsq), npts_tsct),]
     #plot points sampled (for debugging, comment out later)
@@ -286,11 +258,80 @@ for(n in 1:length(npts)){
     IDvec <- c(IDvec, tsctsq$idx)
   }
   
-  #add IDs to list
-  subs[[n]] <- IDvec
+  #confirm correct number of samples were subsetted
+  stopifnot(npts == length(IDvec))
   
-  #confirm number of samples
-  stopifnot(npts[n] == length(subs[[n]]))
+  #return vec of sample IDs
+  return(IDvec)
+}
+
+#vec of number of sample points
+npts_vec <- c(36, 81, 144, 225, 324)
+#horizontal transects (y-coords)
+ytsct <- c(10, 20, 30)
+#buffer around transects
+buffer <- 1
+
+#EXAMPLE
+gsd_df <- read.csv("mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.csv")
+#subset out necessary columns from df
+pts <- gsd_df[,c("idx","x","y")]
+
+#plot of transects and buffer
+par(pty="s")
+plot(pts$x, pts$y, pch=19, col="gray", cex=0.2)
+abline(h = ytsct, col="black", lty="dashed", lwd=2)
+abline(h = ytsct + buffer, col="red", lty="dashed")
+abline(h = ytsct - buffer, col="red", lty="dashed")
+
+
+par(pty="s", mfrow = c(3,2))
+#create list to store IDs of samples
+subs <- vector(mode = "list", length = length(npts_vec))
+for(n in 1:length(npts_vec)){
+  subs[[n]] <- transect_samp(pts, npts_vec[n], ytsct, buffer)
+}
+
+```
+
+#subsetting tests
+```{r}
+vcf <- read.vcfR("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.vcf")
+gen <- vcfR2genlight(vcf) #CHECK THIS
+genmat <- as.matrix(gen)
+rownames(genmat) <- gen@ind.names
+
+genmat[as.character(subs[[1]]$idx),1:5]
+```
+
+## subsetting data frame
+```{r}
+subIDs <- read.csv("outputs/samples_rand36.csv")
+param_set <- params[1,]
+subIDs <- subIDs[subIDs$K == param_set$K 
+                 & subIDs$phi == param_set$phi
+                 & subIDs$m == param_set$m 
+                 & subIDs$seed == param_set$seed
+                 & subIDs$H == param_set$H
+                 & subIDs$r == param_set$r
+                 & subIDs$it == param_set$it,]
+
+#confirm there is only one set of IDs being used
+stopifnot(nrow(subIDs) == 1)
+
+#remove parameter columnds and convert to vector of IDs
+subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
+subIDs <- unlist(subIDs)
+
+#confirm that final set of IDs is a vector
+stopifnot(is.vector(subIDs))
+
+```
+
+```{r}
+subIDs <- read.csv("outputs/samples_rand36.csv")
+for(i in 1:nrow(params[1:2,])){
+  
 }
 ```
 

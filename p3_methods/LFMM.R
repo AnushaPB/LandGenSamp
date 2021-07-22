@@ -13,14 +13,8 @@ source("general_functions.R")
 #  LFMM  #
 ##########
 
-run_lfmm <- function(gen_filepath, gsd_filepath, loci_filepath){
-  
-  #Read in data
-  gen <- get_gen(gen_filepath)
-  gsd_df <- get_gsd(gsd_filepath)
-  
+run_lfmm <- function(gen, gsd_df, loci_df){
   #get adaptive loci
-  loci_df <- read.csv(loci_filepath)
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
   adaptive_loci <- c(loci_trait1, loci_trait2)
@@ -166,13 +160,10 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("lfmm")
   
+  #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
-  
   gsd_filepath <- create_filepath(i, "gsd")
-  
   loci_filepath <- create_filepath(i, "loci")
-  
-  #skip iteration if file does not exist
   skip_to_next <- FALSE
   if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
@@ -181,9 +172,31 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #run LFMM
   if(skip_to_next == FALSE){
-    result <- run_lfmm(gen_filepath = gen_filepath,
-                       gsd_filepath = gsd_filepath,
-                       loci_filepath = loci_filepath)
+    gen <- get_data(i, "gen")
+    gsd_df <- get_data(i, "gsd")
+    loci_df <- get_data(i, "loci")
+    
+    #run model on full data set
+    full_result <- run_lfmm(gen, gsd_df, loci_df)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], sampstrat, nsamp)
+        subgen <- gen[subIDs,]
+        subgsd_df <- gsd_df[subIDs,]
+        
+        #run analysis using subsample
+        subresult <- run_lfmm(subgen, subgsd_df, loci_df)
+        
+        #save and format new result
+        subresult <- data.frame(sampstrat = sampstrat, nsamp = nsamp, subresult)
+        
+        #bind results
+        result <- rbind.data.frame(result, subresult)
+      }
+    }
   }
   
   return(result)
