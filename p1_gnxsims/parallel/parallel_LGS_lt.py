@@ -386,7 +386,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 3,
+            'n_its': 4,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -542,12 +542,12 @@ def run_sims(sim_list):
     # run the model
     mod.run(verbose = True)
 
-run_sims(sim_array[0])
+
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
     #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = 1
+    ncpu = 2
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

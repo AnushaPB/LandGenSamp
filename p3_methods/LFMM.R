@@ -2,6 +2,7 @@ library("here") #paths
 #to install LFMM:
 #devtools::install_github("bcm-uga/lfmm")
 library("lfmm") #LFMM
+library("bigpca")
 library("vcfR")
 library("foreach")
 library("doParallel")
@@ -22,9 +23,15 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   #PCA to determine number of latent factors
   pc <- prcomp(gen)
   par(pty="s",mfrow=c(1,1))
-  plot(pc$sdev[1:100]^2, xlab = 'PC', ylab = "Variance explained")
-  K <- 10 #NUMBER OF LATENT FACTORS (NEED TO MODIFY TO MAKE AUTO)
+  eig <- pc$sdev[1:100]^2
+  #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
+  #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
+  #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
+  K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
+  plot(eig, xlab = 'PC', ylab = "Variance explained")
+  abline(v = K, col= "red", lty="dashed")
   
+
   #gen matrix
   genmat = as.matrix(gen)
   #env matrix
@@ -301,6 +308,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_H",params[i,"H"]*100,
                      "_r",params[i,"r"]*100)
   
+  #create pdf to store plots
+  pdf(paste0("lfmm_plots_",paramset,".pdf"))
+  
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
   gsd_filepath <- create_filepath(i, "gsd")
@@ -348,6 +358,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       }
     }
   }
+  
+  #end pdf()
+  dev.off()
   
   return(result)
   

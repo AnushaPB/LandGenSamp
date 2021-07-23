@@ -44,11 +44,23 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
-  obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:20, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  maxK <- 30
+  obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  
+  #determining best K and picking best replicate for best K (source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
+  ce <- list()
+  for(k in 1:maxK) ce[[k]] <- cross.entropy(obj.snmf, K=k)
+  ce.K <- c()
+  for(k in 1:maxK) ce.K[k] <- min(ce[[k]])
+  diff <- ce.K[-1] - ce.K[-maxK]
+  slope <- exp(-diff) - 1
+  #K is selected based on the smallest slope value in the upper quartile
+  K <- min(which(slope <= quantile(slope)[4]))
+  
+  
   plot(obj.snmf, col = "blue4", cex = 1.4, pch = 19, xlim = c(0,30), ylim = c(0.89,1))
-  #define K based on "true" value
-  #MODIFY LATER TO READ FROM FILE (incorporate into main function?)
-  K = 5
+  abline(v = K, col = "red", lty = "dashed")
+
   
   #Code for testing one K value
   obj.snmf = snmf(here("data","temp_genotypes.geno"), K = K, ploidy = 2, entropy = T, alpha = 100, project = "new")
@@ -244,6 +256,9 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_H",params[i,"H"]*100,
                      "_r",params[i,"r"]*100)
   
+  #save plots
+  pdf(paste0("LEA_plots_",paramset))
+  
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
   gsd_filepath <- create_filepath(i, "gsd")
@@ -291,6 +306,8 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       }
     }
   }
+  
+  dev.off()
   
   return(result)
   
