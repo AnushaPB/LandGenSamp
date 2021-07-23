@@ -46,7 +46,9 @@ for(n in 1:length(npts)){
 }
 
 ```
-```{r Solution 2: continue subsampling grid until the number of individuals desired is obtained}
+```{r Solution 2: continue subsampling grid until the number of individuals desired is obtained, fig.width=6, fig.height=8}
+
+par(pty="s", mfrow=c(3,2))
 npts <- c(36, 81, 144, 225, 324)
 pts <- gsd_df[,c("idx","x","y")]
 
@@ -72,7 +74,7 @@ for(n in 1:length(npts)){
     gridsq = subset(pts, y > ygrid[j] & y < ygrid[j+1] & x > xgrid[i] & x < xgrid[i+1]) 
     if(dim(gridsq)[1]>0){ subs[[n]] = rbind(subs[[n]], gridsq[sample(1:dim(gridsq)[1],1 ), ])}
     }
-  par(pty="s")
+
   plot(subs[[n]]$x, subs[[n]]$y, pch=19, cex=0.5, main = nrow(subs[[n]]))
   abline(h = ygrid, v = xgrid, col="gray", lty="dashed")
   }
