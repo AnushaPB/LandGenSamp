@@ -137,3 +137,4 @@ params <- expand.grid(K = c(2, 4),
                      # r = c(0.30),
                      # it = 1)
 
+
