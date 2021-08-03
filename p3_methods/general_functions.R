@@ -41,6 +41,7 @@ get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
   gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
+  rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
 
@@ -118,6 +119,8 @@ nloci = 10000
 npts <- c(36, 81, 144, 225, 324)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
+#landscape dimensions (square)
+ldim = 40
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 

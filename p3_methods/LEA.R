@@ -44,7 +44,7 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
-  maxK <- 30
+  maxK <- 20
   obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
   
   #determining best K and picking best replicate for best K (source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
@@ -58,13 +58,9 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   K <- min(which(slope <= quantile(slope)[4]))
   
   
-  plot(obj.snmf, col = "blue4", cex = 1.4, pch = 19, xlim = c(0,30), ylim = c(0.89,1))
+  plot(obj.snmf, col = "blue4", cex = 1.4, pch = 19)
   abline(v = K, col = "red", lty = "dashed")
 
-  
-  #Code for testing one K value
-  obj.snmf = snmf(here("data","temp_genotypes.geno"), K = K, ploidy = 2, entropy = T, alpha = 100, project = "new")
-  
   #Get Qmatrix
   pred_admix <- Q(obj.snmf, K = K) 
   
@@ -104,7 +100,10 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
     cols <- c(rgb(1,1,1,0), rbw[l])
     kpal <- colorRampPalette(cols, interpolate="linear")
     plot(pred_krig_admix[[l]], zlim=c(0.5,1), col=kpal(100), add=TRUE, legend=FALSE, xlim=c(0,41), ylim =c(0,41))
+    
   }
+  
+  points(gsd_df$x, gsd_df$y)
   
   #export full krig admix and Qmatrix
   full_krig_admix <- pred_krig_admix
@@ -115,7 +114,7 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   #remove project
   remove.snmfProject("data/temp_genotypes.snmfProject")
   
-  results <- data.frame(K = K, krigcor = mean(krigcor), admixcor = mean(admixcor))
+  results <- data.frame(K = K)
   
   return(results)
   

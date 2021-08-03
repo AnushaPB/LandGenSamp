@@ -8,6 +8,7 @@ transect_samp <- function(pts, npts, ytsct, buffer){
   #npts - total number of points to sample (evenly split across transects)
   #buffer - buffer around transects within which points are sampled 
   
+   .
   #divide number of samples evenly among the transects
   npts_tsct <- npts/length(ytsct)
     
@@ -35,8 +36,6 @@ transect_samp <- function(pts, npts, ytsct, buffer){
   return(samples)
 }
 
-#vec of number of sample points
-npts_vec <- c(36, 81, 144, 225, 324)
 #horizontal transects (y-coords)
 ytsct <- c(10, 20, 30)
 #buffer around transects
@@ -66,7 +65,7 @@ for(n in npts){
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       pts <- gsd_df[,c("idx","x","y")]
-      samples <- transect_samp(pts, npts_vec[n], ytsct, buffer)
+      samples <- transect_samp(pts, n, ytsct, buffer)
     }
     
     #return vector of sample IDs

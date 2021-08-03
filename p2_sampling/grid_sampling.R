@@ -3,9 +3,9 @@ library("here")
 library("foreach")
 library("doParallel")
 
-grid_samp <- function(pts, npts){
-  inc <- dim/sqrt(npts)
-  xgrid <- ygrid <- seq(0, dim, inc) 
+grid_samp <- function(pts, npts, ldim){
+  inc <- ldim/sqrt(npts)
+  xgrid <- ygrid <- seq(0, ldim, inc) 
   subs <- c()
   #first round of sampling: entire grid
   for(i in 1:(length(xgrid)-1)){ 
@@ -26,7 +26,7 @@ grid_samp <- function(pts, npts){
   }
   
   #save IDs to vector
-  samples <- subs$idx
+  samples <- as.character(subs$idx)
   
   return(samples)
 }
@@ -54,7 +54,7 @@ for(n in npts){
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       pts <- gsd_df[,c("idx","x","y")]
-      samples <- grid_samp(pts, npts = n)
+      samples <- grid_samp(pts, npts = n, ldim = ldim)
     }
     
     #return vector of sample IDs
