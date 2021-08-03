@@ -528,19 +528,16 @@ def run_sims(sim_list):
     # then use it to make a model
     mod = gnx.make_model(parameters=params, verbose=True)
 
-    # burn-in model
-    mod.walk(T=10000, mode='burn')
+    # run the model
+    mod.run(verbose=True)
 
-    # save and print all of the non-neutral loci
+    # save and print all of the non-neutral loci (should be the same across all iterations since burn-in is not repeated)
     loci_df = pd.DataFrame()
     loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
     loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
     loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
-
-    # run the model
-    mod.run(verbose = True)
 
 
 #multiprocessing
