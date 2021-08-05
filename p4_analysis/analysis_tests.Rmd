@@ -1,0 +1,147 @@
+---
+title: "analysis_tests"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(car)
+library("lsmeans")
+library(lme4)
+library(viridis)
+```
+
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+#sampling strategies
+sampstrats <- c("rand", "grid", "trans", "envgeo")
+#landscape dimensions (square)
+dim = 40
+
+#Create dataframe with all variable combos
+params_full <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
+                      r = c(0.3, 0.6),
+                      it = 1:100,
+                      npts = npts)
+```
+
+```{r}
+df <- params_full
+df$stat <- df$K/10 + df$K*10 - df$m*10 + df$H*10 + df$r*10 + sample(df$it)/100 + sample(df$seed)/100 + npts
+
+
+subdf <- df[df$npts==36,]
+plot(subdf$K, subdf$stat, col=as.factor(subdf$npts))
+plot(subdf$m, subdf$stat)
+plot(subdf$H, subdf$stat)
+plot(subdf$r, subdf$stat)
+plot(subdf$it, subdf$stat)
+plot(subdf$seed, subdf$stat)
+
+plot(df$npts, df$stat, col = df$K)
+
+head(df))
+```
+
+```{r}
+mod <- lm(stat ~ K * seed,
+                    data=df)
+
+car::Anova(mod, type=3)
+```
+
+```{r}
+mod <- lsmeans::lsmeans(mod, pairwise~K)
+```
+```{r}
+slope.model <- lmer(stat ~ K + (1|seed), data=df)
+```
+
+```{r}
+mod <- aov(stat ~ factor(K) + factor(m) + factor(phi) + factor(H) + factor(r) + factor(it)+ factor(seed), factor(npts)*factor(K), data = df)
+
+summary(mod)
+
+TukeyHSD(mod)
+```
+#Analysis
+
+#Plots
+```{r  fig.width=10, fig.height=10, warning=FALSE}
+library("pheatmap")
+npts
+sampstrats
+npts
+stats <- matrix(sample(100,20), 4)/100
+stats[1,2] <- NA
+stats[3,4] <- NA
+colnames(stats) <- npts
+rownames(stats) <- sampstrats
+
+
+heatmap(stats,  
+          keep.dendro=FALSE, 
+          Rowv = NA, Colv = NA, 
+          scale = "none", 
+          margins= c(7,7), 
+          col=magma(100), 
+          na.col="gray",
+          )
+
+par(pty="s", oma=rep(0,4), mar=rep(0,4))
+heatmap.2(stats,
+          cellnote = stats,  # same data set for cell labels
+          notecol="black",      # change font color of cell labels to black
+          density.info="none",  # turns off density plot inside color legend
+          trace="none",         # turns off trace lines inside the heat map
+          margins = c(7,7),     # widens margins around plot
+          col=plasma(100),      # use on color palette defined earlier
+          keep.dendro = FALSE,
+          Rowv = NA, Colv = NA,
+          na.color="gray",
+          key = FALSE,
+          lmat=rbind(2,3,1,4), 
+          lhei=c(0.25,0.25,5,0), 
+          lwid=c(1))      
+
+
+```
+```{r, fig.width=15, fig.height=10}
+library(gridExtra)
+titles <- c("K", "phi", "m", "H", "r")
+plts <- list()
+for(i in 1:5){
+  stats <- matrix(sample(100,20), 4)/100
+  stats[1,i] <- NA
+  stats[3,i] <- NA
+  colnames(stats) <- npts
+  rownames(stats) <- sampstrats
+
+  p <- pheatmap(stats, 
+         main = titles[i],
+         display_numbers = T, 
+         color = plasma(100), 
+         cluster_rows = F, 
+         cluster_cols = F, 
+         fontsize_number = 15,
+         border_color = "white",
+         cellwidth = 50,
+         cellheight = 50,
+         scale = "none",
+         fontsize = 18,
+         number_color = "black",
+         na_col = "gray",
+         legend=FALSE,
+         col.axis = "gray"
+         )
+  
+  plts[[i]] <- p[[4]]
+}
+do.call(grid.arrange, c(plts, nrow=2))
+```
+
