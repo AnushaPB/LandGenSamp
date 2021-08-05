@@ -9,6 +9,12 @@ library(car)
 library("lsmeans")
 library(lme4)
 library(viridis)
+library(lmerTest)
+library("ggplot2")
+library(gridExtra)
+
+BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
+BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 ```
 
 ```{r}
@@ -26,13 +32,15 @@ params_full <- expand.grid(K = c(2, 4),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 1:100,
+                      it = 1:2,
                       npts = npts)
+
+df <- params_full
+df$stat <- df$K/10 + df$K*10 - df$m*10 + df$H*10 + df$r*10 + sample(df$it)/100 + sample(df$seed)/100 + npts
+
 ```
 
 ```{r}
-df <- params_full
-df$stat <- df$K/10 + df$K*10 - df$m*10 + df$H*10 + df$r*10 + sample(df$it)/100 + sample(df$seed)/100 + npts
 
 
 subdf <- df[df$npts==36,]
@@ -69,9 +77,178 @@ summary(mod)
 
 TukeyHSD(mod)
 ```
+
+
+
 #Analysis
 
-#Plots
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+#sampling strategies
+sampstrats <- c("rand", "grid", "trans", "envgeo")
+
+#Create dataframe with all variable combos
+params_full <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
+                      r = c(0.3, 0.6),
+                      npts = npts,
+                      sampstrats = sampstrats)
+
+params_toy <- expand.grid(K = c(0, 1), 
+                      phi = c(0, 1),
+                      m = c(1, 0),
+                      seed = c(1, 1, 1),
+                      H = c(0, 1),
+                      r = c(0, 1),
+                      npts = c(0.2,0.4,0.6,0.8,1),
+                      sampstrats = c(1,2,3,4))
+
+stat <-  params_toy$K + params_toy$phi + params_toy$m + params_toy$H + params_toy$r + params_toy$npts + params_toy$sampstrats
+
+params_full <- data.frame(lapply(params_full, as.factor))
+
+df <- params_full
+df$stat <- stat
+
+plot(df$K, df$stat)
+plot(df$phi, df$stat)
+plot(df$m, df$stat)
+plot(df$H, df$stat)
+plot(df$r, df$stat)
+plot(df$npts, df$stat)
+plot(df$sampstrats, df$stat)
+```
+
+```{r example code, fig.width=15, fig.height=7}
+
+resdf <- data.frame()
+
+for(n in npts){
+  for(s in sampstrats){
+    subdf <- df[df$sampstrats == s & df$npts == npts, ]
+    subdf$stat <- sample(subdf$stat)
+    
+    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+    #mixed effect model
+    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
+
+    #anova to get p-values
+    aovmod <- anova(fullmod)
+
+    #fixed effects (minus intercept)
+    efmod <- fixef(fullmod)[-1]
+    
+    #save results
+    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
+    tempdf$param <- row.names(aovmod)
+    tempdf$npts <- n
+    tempdf$sampstrats <- s
+    resdf <- rbind.data.frame(resdf, tempdf)
+  }
+}
+
+row.names(resdf) <- NULL
+resdf$npts <- as.factor(resdf$npts)
+#resdf$padj <- p.adjust(resdf$p, "fdr")
+resdf$padj <- resdf$p
+
+
+```
+
+
+```{r fig.width=14, fig.height=7}
+
+## plot data
+plts <- list()
+for(i in 1:length(unique(resdf$param))){
+  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
+  tempdf[sample(nrow(tempdf),1), "fixef"] <- NA
+  p <- ggplot(tempdf, aes(npts, sampstrats)) +
+    ggtitle(unique(tempdf$param)) +
+    geom_tile(aes(fill = fixef)) + 
+    geom_text(aes(label = format(fixef,  scientific = TRUE, digits = 2))) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+  
+  plts[[i]] <- p
+}
+
+
+do.call(grid.arrange, c(plts, nrow=2))
+```
+
+```{r real code, fig.width=14, fig.height=7}
+
+resdf <- data.frame()
+
+for(n in npts){
+  for(s in sampstrats){
+    subdf <- df[df$sampstrats == s & df$npts == npts, ]
+    
+    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+    #mixed effect model
+    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
+
+    #anova to get p-values
+    aovmod <- anova(fullmod)
+
+    #fixed effects (minus intercept)
+    efmod <- fixef(fullmod)[-1]
+    
+    #save results
+    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
+    tempdf$param <- row.names(aovmod)
+    tempdf$npts <- n
+    tempdf$sampstrats <- s
+    resdf <- rbind.data.frame(resdf, tempdf)
+  }
+}
+
+row.names(resdf) <- NULL
+resdf$npts <- as.factor(resdf$npts)
+resdf$padj <- p.adjust(resdf$p, "fdr")
+
+## plot data
+plts <- list()
+for(i in 1:length(unique(resdf$param))){
+  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
+  tempdf[tempdf$padj > 0.05, "fixef"] <- NA
+  p <- ggplot(tempdf, aes(npts, sampstrats)) +
+    ggtitle(unique(tempdf$param)) +
+    geom_tile(aes(fill = fixef)) + 
+    geom_text(aes(label = format(fixef,  scientific = TRUE, digits = 2))) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+  
+  plts[[i]] <- p
+}
+
+
+do.call(grid.arrange, c(plts, nrow=2))
+
+```
+
+#Heatmap Plots for Matrices
 ```{r  fig.width=10, fig.height=10, warning=FALSE}
 library("pheatmap")
 npts
@@ -100,7 +277,7 @@ heatmap.2(stats,
           density.info="none",  # turns off density plot inside color legend
           trace="none",         # turns off trace lines inside the heat map
           margins = c(7,7),     # widens margins around plot
-          col=plasma(100),      # use on color palette defined earlier
+          col=BlueRed(100),      # use on color palette defined earlier
           keep.dendro = FALSE,
           Rowv = NA, Colv = NA,
           na.color="gray",
@@ -113,19 +290,17 @@ heatmap.2(stats,
 ```
 ```{r, fig.width=15, fig.height=10}
 library(gridExtra)
-titles <- c("K", "phi", "m", "H", "r")
+titles <- c("K", "phi", "m", "H", "r", "Stat Average")
 plts <- list()
-for(i in 1:5){
-  stats <- matrix(sample(100,20), 4)/100
-  stats[1,i] <- NA
-  stats[3,i] <- NA
-  colnames(stats) <- npts
-  rownames(stats) <- sampstrats
 
-  p <- pheatmap(stats, 
-         main = titles[i],
+stats <- matrix(sample(100,20), 4)/100
+colnames(stats) <- npts
+rownames(stats) <- sampstrats
+
+p <- pheatmap(stats, 
+         main = titles[6],
          display_numbers = T, 
-         color = plasma(100), 
+         color = viridis(100), 
          cluster_rows = F, 
          cluster_cols = F, 
          fontsize_number = 15,
@@ -139,8 +314,35 @@ for(i in 1:5){
          legend=FALSE,
          col.axis = "gray"
          )
+
+plts[[1]] <- p[[4]]
+
+for(i in 1:5){
+  stats <- matrix(sample(seq(-100,100),20), 4)/100
+  stats[abs(stats) < 0.1] <- NA
+  colnames(stats) <- npts
+  rownames(stats) <- sampstrats
+
+  p <- pheatmap(stats, 
+         main = titles[i],
+         display_numbers = T, 
+         color = BlueRed(100),
+         zlim = c(-1,1),
+         cluster_rows = F, 
+         cluster_cols = F, 
+         fontsize_number = 15,
+         border_color = "white",
+         cellwidth = 50,
+         cellheight = 50,
+         scale = "none",
+         fontsize = 18,
+         number_color = "black",
+         na_col = "white",
+         legend=FALSE,
+         col.axis = "gray"
+         )
   
-  plts[[i]] <- p[[4]]
+  plts[[i + 1]] <- p[[4]]
 }
 do.call(grid.arrange, c(plts, nrow=2))
 ```
