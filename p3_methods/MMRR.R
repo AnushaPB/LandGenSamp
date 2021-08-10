@@ -142,7 +142,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_mmrr(gen, gsd_df)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("MMRR_results_",paramset,".csv")
@@ -156,18 +156,25 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        subresult <- run_mmrr(subgen, subgsd_df)
+        sub_result <- run_mmrr(subgen, subgsd_df)
+        
+        #calculate RMSE
+        env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
+        env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
+        geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
         #save and format new result
-        subresult <- data.frame(sampstrat = sampstrat, nsamp = nsamp, subresult)
+        sub_result <- data.frame(sampstrat = sampstrat, nsamp = nsamp, sub_result, 
+                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, data.frame(params[i,], subresult))
+        csv_df <- rbind(csv_df, data.frame(params[i,], sub_result))
         write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
-        result <- rbind.data.frame(result, subresult)
+        result <- rbind.data.frame(result, sub_result)
+        
       }
     }
   }
@@ -176,8 +183,10 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
 }
 
-#stop cluster
-stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_mmrr)
-write.csv(stats_out, "MMRR_results.csv")
+write.csv(stats_out, "MMRR_results_coeffs.csv")
+
+
+#stop cluster
+stopCluster(cl)

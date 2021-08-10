@@ -14,6 +14,7 @@ set.seed(42)
 ###########
 #   GDM   #
 ###########
+
 # Sum coefficients for each predictor (each has 3 splines)
 coeffs <- function(gdm.model){
   coefSums <- c()
@@ -92,7 +93,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_gdm(gen, gsd_df, loci_df)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("gdm_results_",paramset,".csv")
@@ -106,18 +107,24 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        subresult <- run_gdm(subgen, subgsd_df)
+        sub_result <- run_gdm(subgen, subgsd_df)
+        
+        #calculate RMSE
+        env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
+        env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
+        geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
         #save and format new result
-        subresult <- data.frame(sampstrat = sampstrat, nsamp = nsamp, subresult)
+        sub_result <- data.frame(sampstrat = sampstrat, nsamp = nsamp, sub_result, 
+                                env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, data.frame(params[i,], subresult))
+        csv_df <- rbind(csv_df, data.frame(params[i,], sub_result))
         write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
-        result <- rbind.data.frame(result, subresult)
+        result <- rbind.data.frame(result, sub_result)
       }
     }
   }
