@@ -411,7 +411,7 @@ params = {
             },
             'format': {
                 # format for genetic data {'vcf', 'fasta'}
-                'gen_format': ['vcf'],
+                'gen_format': 'vcf',
                 # format for vector geodata {'csv', 'shapefile', 'geojson'}
                 'geo_vect_format': 'csv',
                 # format for raster geodata {'geotiff', 'txt'}
