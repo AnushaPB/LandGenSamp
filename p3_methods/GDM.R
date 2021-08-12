@@ -91,6 +91,11 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gen <- get_data(i, "gen")
     gsd_df <- get_data(i, "gsd")
     
+    #subsample full data randomly
+    s <- sample(2000, nrow(gsd_df), replace = FALSE)
+    gen <- gen[s,]
+    gsd_df <- gsd_df[s,]
+    
     #run model on full data set
     full_result <- run_gdm(gen, gsd_df, loci_df)
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)

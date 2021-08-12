@@ -105,6 +105,11 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, "gsd")
     loci_df <- get_data(i, "loci")
     
+    #subsample full data randomly
+    s <- sample(2000, nrow(gsd_df), replace = FALSE)
+    gen <- gen[s,]
+    gsd_df <- gsd_df[s,]
+    
     #run model on full data set
     full_result <- run_rda(gen, gsd_df, loci_df)
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)

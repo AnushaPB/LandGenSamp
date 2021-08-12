@@ -4,14 +4,15 @@ output: html_document
 ---
 
 ```{r}
-library(dplyr)
-library(car)
+library("dplyr")
+library("car")
 library("lsmeans")
-library(lme4)
-library(viridis)
-library(lmerTest)
+library("lme4")
+library("viridis")
+library("lmerTest")
 library("ggplot2")
-library(gridExtra)
+library("gridExtra")
+library("MuMIn")
 
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
@@ -176,7 +177,8 @@ grid.arrange(pK, pphi, pm, pH, pr, ps, nrow = 2)
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
-fullmod <- lmer(stat ~ npts + sampstrats + K + m + phi + H + r + (1 | seed), df)
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ npts + sampstrats + K + m + phi + H + r + (1 | seed), df, na.action = "na.fail")
 
 #anova
 aovmod <- anova(fullmod)
@@ -187,6 +189,10 @@ efmod <- fixef(fullmod)[-1]
 #print result
 aovmod
 efmod
+```
+```{r}
+combos <- dredge(fullmod)
+combos
 ```
 
 # model subset by sampling strategy
