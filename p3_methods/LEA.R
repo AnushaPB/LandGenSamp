@@ -1,3 +1,6 @@
+
+set.seed(42)
+
 library("here") #paths
 library("vcfR")
 #to install LEA:

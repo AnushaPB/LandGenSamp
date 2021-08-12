@@ -1,3 +1,5 @@
+set.seed(42)
+
 library("here") #paths
 #to install LFMM:
 #devtools::install_github("bcm-uga/lfmm")

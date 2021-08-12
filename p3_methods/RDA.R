@@ -1,3 +1,5 @@
+set.seed(42)
+
 library(here) #paths
 library(vwgan) #RDA
 library(vcfR)  #read VCF files
