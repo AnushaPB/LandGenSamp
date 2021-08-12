@@ -9,13 +9,14 @@ output: html_document
 library("foreach")
 library("doParallel")
 library("vcfR")
+library("vegan")
 source("general_functions.R")
 
 ```
 
 #test data
 ```{r}
-gsd_df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.csv")
+gsd_df <- get_gsd("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.csv")
 gen_df <- get_gen("/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/data/GNX_mod-K2_phi50_m25_seed3_H50_r30/it--1/spp-spp_0/mod-K2_phi50_m25_seed3_H50_r30_it--1_t-1000_spp-spp_0.vcf")
 ```
 
@@ -336,4 +337,54 @@ for(i in 1:nrow(params[1:2,])){
   
 }
 ```
+
+#Env-geo sampling
+
+```{r}
+npts <- 36
+Nreps <- 1000
+sample.sets <- matrix(nrow=Nreps, ncol=npts)
+results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
+                     Mantel.r=numeric(Nreps), Mantel.p=numeric(Nreps),
+                     mean.dist=numeric(Nreps))
+
+env.df <- gsd_df[,c("env1","env2")]
+e.dist <-  as.matrix(dist(gsd_df[,c("env1","env2")], diag = TRUE, upper = TRUE)) 
+g.dist <- as.matrix(dist(gsd_df[,c("x","y")], diag = TRUE, upper = TRUE))
+for(i in 1:Nreps){
+  NN <- sample(1:nrow(gsd_df), npts, replace = FALSE)
+  sample.sets[i,] <- NN
+  
+  env.sub <- env.df[NN,]
+  g.dist.sub <- g.dist[NN, NN]
+  e.dist.sub <- e.dist[NN, NN]
+  
+  results$mean.dist[i] <- mean(g.dist.sub)
+  
+  results$env1.var[i] <- var(env.sub$env1)
+  results$env2.var[i] <- var(env.sub$env2)
+  
+  DxE <- mantel(g.dist.sub, e.dist.sub, permutations = 99)
+  results$Mantel.r[i] <- DxE$statistic
+  results$Mantel.p[i] <- DxE$signif
+}
+
+score <- scale(1-results$Mantel.r) + scale(results$env1.var) + scale(results$env2.var)
+best_sample <- sample.sets[which.max(score),]
+sub_df <- gsd_df[best_sample,]
+
+
+env1col<- plasma(100)[as.numeric(cut(sub_df$env1,breaks = 100))]
+env2col<- viridis(100)[as.numeric(cut(sub_df$env2,breaks = 100))]
+par(mfrow=c(1,2), pty="s")
+plot(sub_df$x, sub_df$y, col = env1col, pch=19)
+plot(sub_df$x, sub_df$y, col = env2col, pch=19)
+```
+
+
+```{r}
+heatmap(e.dist[best_sample,best_sample])
+heatmap(g.dist[best_sample,best_sample])
+```
+
 
