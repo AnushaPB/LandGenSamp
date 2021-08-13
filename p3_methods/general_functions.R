@@ -1,4 +1,8 @@
 
+#####################
+# GENERAL FUNCTIONS #
+#####################
+
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
 create_filepath <- function(i, type){
@@ -136,11 +140,13 @@ get_samples <- function(param_set, sampstrat, nsamp){
   return(as.character(subIDs))
 }
 
+######################################################
+# GENERAL OBJECTS (objects used in multiple scripts) #
+######################################################
 
-#GENERAL OBJECTS (objects used in multiple scripts)
+
 #nloci 
 nloci = 10000
-
 #number of points to sample
 npts <- c(36, 81, 144, 225, 324)
 #sampling strategies
