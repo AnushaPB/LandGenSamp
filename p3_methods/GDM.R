@@ -36,6 +36,12 @@ run_gdm <- function(gen, gsd_df, npcs = 20){
   #perform PCA
   pc <- prcomp(gen)
   #Calculate PC distance based on  PCs (?MODIFY?)
+  
+  #use npcs based on quick.elbow
+  #eig <- pc$sdev^2
+  #npcs <- quick.elbow(eig, low = 0.5, max.pc = 0.9)
+  npcs <- round(nrow(gen)*0.8,0)
+  
   pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
    
   #Format gdm dataframe
@@ -99,6 +105,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #run gdm
   if(skip_to_next == FALSE){
+    
     gen <- get_data(i, "gen")
     gsd_df <- get_data(i, "gsd")
     
@@ -109,7 +116,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_gdm(gen_2k, gsd_df_2k)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
+    result <- data.frame(sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("gdm_results_",paramset,".csv")
@@ -155,7 +162,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_gdm)
-write.csv(stats_out, "gdm_results.csv")
+write.csv(stats_out, "outputs/gdm_results.csv")
 
 
 
