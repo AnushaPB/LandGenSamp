@@ -72,7 +72,7 @@ get_gen <- function(filepath){
 get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=//])')) 
+  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
   rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
@@ -119,7 +119,8 @@ get_samples <- function(param_set, sampstrat, nsamp){
   #directory of sample ID csvs (CHANGE)
   datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
   
-  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"), row.names = 1)
+  rownames(subIDs) <- NULL
     
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -174,11 +175,11 @@ params <- expand.grid(K = c(2, 4),
                       it = 1)
 
 #TESTING PARAMS (REMOVE LATER)
-params <- expand.grid(K = c(2), 
-                      phi = c(0.1),
+params <- expand.grid(K = c(4), 
+                      phi = c(0.5),
                       m = c(0.25),
                       seed = c(1),
-                      H = c(0.05),
-                      r = c(0.30),
+                      H = c(0.5),
+                      r = c(0.60),
                       it = 1)
 

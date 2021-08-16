@@ -10,8 +10,6 @@ library(doParallel)
 #read in general functions and objects
 source("general_functions.R")
 
-#set seed
-set.seed(42)
 
 ###########
 #   GDM   #
@@ -31,15 +29,14 @@ coeffs <- function(gdm.model){
 }
 
 
-run_gdm <- function(gen, gsd_df){
-  
+run_gdm <- function(gen, gsd_df, npcs = 20){
   #CALCULATING PC BASED GENETIC DISTANCE
   #convert gen data to matrix
   gen <- as.matrix(gen)
   #perform PCA
   pc <- prcomp(gen)
-  #Calculate PC distance based on first three PCs (?MODIFY?)
-  pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE))
+  #Calculate PC distance based on  PCs (?MODIFY?)
+  pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
    
   #Format gdm dataframe
   site <- 1:nrow(pc_dist) #vector of sites
@@ -54,7 +51,7 @@ run_gdm <- function(gen, gsd_df){
   gdm.model <- gdm(gdmData, geo = TRUE)
   
   #check var importance/significance (ASK IAN IF WE WANT TO DO THIS OR JUST COMPARE THE COEFFICIENTS FROM A FULL MODEL (PROS: FASTER/EASIER))
-  system.time(vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=50))
+  #system.time(vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=50))
   
 
   predictors <- coeffs(gdm.model)
@@ -78,6 +75,18 @@ registerDoParallel(cl)
 
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  #vcfR
+  library("vcfR")
+  library("gdm")
+  
+  #set of parameter names in filepath form (for creating temp files)
+  paramset <- paste0("K",params[i,"K"],
+                     "_phi",params[i,"phi"]*100,
+                     "_m",params[i,"m"]*100,
+                     "_seed",params[i,"seed"],
+                     "_H",params[i,"H"]*100,
+                     "_r",params[i,"r"]*100)
+  
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
   gsd_filepath <- create_filepath(i, "gsd")
@@ -94,12 +103,12 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, "gsd")
     
     #subsample full data randomly
-    s <- sample(2000, nrow(gsd_df), replace = FALSE)
-    gen <- gen[s,]
-    gsd_df <- gsd_df[s,]
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+    gen_2k <- gen[s,]
+    gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_gdm(gen, gsd_df, loci_df)
+    full_result <- run_gdm(gen_2k, gsd_df_2k)
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
@@ -145,7 +154,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-stats_out <- cbind.data.frame(params, res_mmrr)
+stats_out <- cbind.data.frame(params, res_gdm)
 write.csv(stats_out, "gdm_results.csv")
 
 

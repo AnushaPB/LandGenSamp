@@ -74,12 +74,12 @@ unfold<-function(X){
 
 
 
-run_mmrr <- function(gen, gsd_df){
+run_mmrr <- function(gen, gsd_df, npcs = 20){
   #Format data for MMRR  
   ##calculate genetic distance based on pca
   Y <- as.matrix(gen)
   pc <- prcomp(Y)
-  pc_dist <- as.matrix(dist(pc$x[,1:100], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
+  pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
   
   ##get env vars and coords
   env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
@@ -104,7 +104,7 @@ run_mmrr <- function(gen, gsd_df){
                         geo_p = mmrr_res$tpvalue["geography(p)"]
                         )
   #remove rownames
-  rownames(results) <- NULL
+  #rownames(results) <- NULL
   
   return(results)
 }
@@ -143,7 +143,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, "gsd")
     
     #subsample full data randomly
-    s <- sample(2000, nrow(gsd_df), replace = FALSE)
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
     gen <- gen[s,]
     gsd_df <- gsd_df[s,]
     
