@@ -1,6 +1,30 @@
 
+
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
-create_filepath <- function(i, type){
+#FOR FILES NOT NESTED IN SUBFOLDERS
+create_filepath <- function(i, type, datadir ="/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/test_data/"){
+
+  #set of parameter names in filepath form
+  paramset <- paste0("K",params[i,"K"],
+                     "_phi",params[i,"phi"]*100,
+                     "_m",params[i,"m"]*100,
+                     "_seed",params[i,"seed"],
+                     "_H",params[i,"H"]*100,
+                     "_r",params[i,"r"]*100)
+  
+  #different file patterns for different data types
+  if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset,
+                                       "_it--", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
+  if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
+                                       "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  
+  return(filepath)
+}
+
+#create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
+#FOR NESTED SUBFOLDERS
+create_filepath_nested <- function(i, type){
   #directory of data
   datadir <- "data/" 
   
@@ -17,10 +41,11 @@ create_filepath <- function(i, type){
                                        "_it--", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/it--",params[i,"it"],"/spp-spp_0/mod-", paramset,
                                        "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "nnloci/nnloci_", paramset, ".csv")}
   
   return(filepath)
 }
+
 
 
 #Get gen data
@@ -138,7 +163,7 @@ npts <- c(36, 81, 144, 225, 324)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)
-dim = 40
+ldim = 40
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 
@@ -150,12 +175,12 @@ params <- expand.grid(K = c(2, 4),
                       it = 1:10)
 
 #TESTING PARAMS (REMOVE LATER)
-#params <- expand.grid(K = c(2), 
-                     # phi = c(0.5),
-                     # m = c(0.25),
-                     # seed = c(1),
-                     # H = c(0.50),
-                     # r = c(0.30),
-                     # it = 1)
+params <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1),
+                      seed = c(1, 2, 3),
+                      H = c(0.05, 0.5),
+                      r = c(0.30, 0.60),
+                      it = 1)
 
 

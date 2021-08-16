@@ -5,9 +5,11 @@
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, type){
-  #directory of data
-  datadir <- "data/" 
+create_filepath <- function(i, type, samples = "full"){
+  
+  #datadir for subsamples
+  if(samples == "subsample"){datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"}
+  if(samples == "full"){datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/test_data/"}
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -70,7 +72,7 @@ get_gen <- function(filepath){
 get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
+  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=//])')) 
   rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
@@ -115,7 +117,7 @@ get_samples <- function(param_set, sampstrat, nsamp){
   stopifnot(file_exists)
   
   #directory of sample ID csvs (CHANGE)
-  datadir <- "outputs/" 
+  datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
   
   subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
     
@@ -144,7 +146,6 @@ get_samples <- function(param_set, sampstrat, nsamp){
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
 
-
 #nloci 
 nloci = 10000
 #number of points to sample
@@ -164,12 +165,20 @@ params <- expand.grid(K = c(2, 4),
                       it = 0:9)
 
 #TESTING PARAMS (REMOVE LATER)
-#params <- expand.grid(K = c(2), 
-                     # phi = c(0.5),
-                     # m = c(0.25),
-                     # seed = c(1),
-                     # H = c(0.50),
-                     # r = c(0.30),
-                     # it = 1)
+params <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1),
+                      seed = c(1, 2, 3),
+                      H = c(0.05, 0.5),
+                      r = c(0.30, 0.60),
+                      it = 1)
 
+#TESTING PARAMS (REMOVE LATER)
+params <- expand.grid(K = c(2), 
+                      phi = c(0.1),
+                      m = c(0.25),
+                      seed = c(1),
+                      H = c(0.05),
+                      r = c(0.30),
+                      it = 1)
 

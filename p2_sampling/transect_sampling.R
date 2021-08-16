@@ -8,7 +8,6 @@ transect_samp <- function(pts, npts, ytsct, buffer){
   #npts - total number of points to sample (evenly split across transects)
   #buffer - buffer around transects within which points are sampled 
   
-   .
   #divide number of samples evenly among the transects
   npts_tsct <- npts/length(ytsct)
     
@@ -39,7 +38,8 @@ transect_samp <- function(pts, npts, ytsct, buffer){
 #horizontal transects (y-coords)
 ytsct <- c(10, 20, 30)
 #buffer around transects
-buffer <- 1
+#NOTE: changed from 1 to 2 because a buffer of 2 did not include enough points
+buffer <- 2
 
 
 #register cores
