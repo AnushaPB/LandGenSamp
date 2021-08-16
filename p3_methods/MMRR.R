@@ -104,7 +104,7 @@ run_mmrr <- function(gen, gsd_df, npcs = 20){
                         geo_p = mmrr_res$tpvalue["geography(p)"]
                         )
   #remove rownames
-  #rownames(results) <- NULL
+  rownames(results) <- NULL
   
   return(results)
 }
@@ -152,7 +152,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
-    csv_file <- paste0("MMRR_results_",paramset,".csv")
+    csv_file <- paste0("outputs/MMRR/MMRR_results_",paramset,".csv")
     write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
     
     for(nsamp in npts){
@@ -192,7 +192,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
 
 stats_out <- cbind.data.frame(params, res_mmrr)
-write.csv(stats_out, "MMRR_results_coeffs.csv")
+write.csv(stats_out, "outputs/MMRR/MMRR_results_coeffs.csv")
 
 
 #stop cluster

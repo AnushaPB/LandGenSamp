@@ -250,7 +250,7 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_r",params[i,"r"]*100)
   
   #save plots
-  pdf(paste0("TESS_plots_",paramset))
+  pdf(paste0("outputs/TESS/TESS_plots_",paramset))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
@@ -278,7 +278,7 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("TESS_results_",paramset,".csv")
+    csv_file <- paste0("outputs/TESS/TESS_results_",paramset,".csv")
     write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
     
     for(nsamp in npts){
@@ -317,4 +317,4 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_lfmm)
-write.csv(TESS_out, "TESS_results.csv")
+write.csv(TESS_out, "outputs/TESS/TESS_results.csv")

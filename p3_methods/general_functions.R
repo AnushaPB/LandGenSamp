@@ -266,11 +266,11 @@ params <- expand.grid(K = c(2, 4),
                       it = 1)
 
 #TESTING PARAMS (REMOVE LATER)
-params <- expand.grid(K = c(4), 
-                      phi = c(0.5),
-                      m = c(0.25),
-                      seed = c(1),
-                      H = c(0.5),
-                      r = c(0.60),
-                      it = 1)
+#params <- expand.grid(K = c(4), 
+                      #phi = c(0.5),
+                      #m = c(0.25),
+                     # seed = c(1),
+                      #H = c(0.5),
+                      #r = c(0.60),
+                     # it = 1)
 

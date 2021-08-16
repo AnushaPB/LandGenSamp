@@ -117,7 +117,7 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("RDA_results_",paramset,".csv")
+    csv_file <- paste0("outputs/RDA/RDA_results_",paramset,".csv")
     write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
     
     for(nsamp in npts){
@@ -154,4 +154,4 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_rda)
-write.csv(stats_out, "rda_results.csv")
+write.csv(stats_out, "outputs/RDA/rda_results.csv")
