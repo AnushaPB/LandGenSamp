@@ -61,6 +61,7 @@ get_gen <- function(filepath){
   return(genmat)
 }
 
+
 #Get geospatial data
 get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
@@ -69,6 +70,7 @@ get_gsd <- function(filepath){
   rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
+
 
 #general function to get data
 get_data <- function(i, type){
