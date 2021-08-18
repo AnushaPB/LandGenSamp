@@ -152,7 +152,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
                     TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
-                    TPR2 = TPR2COMBO, FDR2 = FDR2COMBO,
+                    TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
                     TPR2 = TPR2, FDR2 = FDR2))
 }
@@ -285,7 +285,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
                     TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
-                    TPR2 = TPR2COMBO, FDR2 = FDR2COMBO,
+                    TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
                     TPR2 = TPR2, FDR2 = FDR2))
 }
@@ -312,7 +312,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_r",params[i,"r"]*100)
   
   #create pdf to store plots
-  pdf(paste0("lfmm_plots_",paramset,".pdf"))
+  pdf(paste0("outputs/LFMM/lfmm_plots_",paramset,".pdf"))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")

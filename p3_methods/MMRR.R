@@ -19,7 +19,7 @@ source("general_functions.R")
 # Y is a dependent distance matrix
 # X is a list of independent distance matrices (with optional names)
 
-MMRR<-function(Y,X,nperm=999){
+MMRR<-function(Y,X,nperm=99){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
   y<-unfold(Y)
@@ -74,11 +74,12 @@ unfold<-function(X){
 
 
 
-run_mmrr <- function(gen, gsd_df, npcs = 20){
+run_mmrr <- function(gen, gsd_df){
   #Format data for MMRR  
   ##calculate genetic distance based on pca
   Y <- as.matrix(gen)
   pc <- prcomp(Y)
+  npcs <- round(nrow(gen)*0.5, 0)
   pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
   
   ##get env vars and coords
@@ -112,7 +113,7 @@ run_mmrr <- function(gen, gsd_df, npcs = 20){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
 
@@ -144,12 +145,12 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #subsample full data randomly
     s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-    gen <- gen[s,]
-    gsd_df <- gsd_df[s,]
+    gen_2k <- gen[s,]
+    gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
     full_result <- run_mmrr(gen, gsd_df)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/MMRR/MMRR_results_",paramset,".csv")

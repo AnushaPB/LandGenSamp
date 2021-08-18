@@ -160,7 +160,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 stopCluster(cl)
 
 stats_out <- cbind.data.frame(params, res_gdm)
-write.csv(stats_out, "outputs/GDM/gdm_results.csv")
+write.csv(stats_out, "outputs/GDM/gdm_results.csv", row.names=FALSE)
 
 
 
