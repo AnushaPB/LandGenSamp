@@ -26,6 +26,7 @@ create_filepath <- function(i, type, samples = "full"){
                                        "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
   if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
   
+  print(filepath)
   return(filepath)
 }
 
@@ -82,16 +83,19 @@ get_data <- function(i, type){
   #different file patterns for different data types
   if(type == "gen"){
     filepath <- create_filepath(i, type)
+    print(filepath)
     df <- get_gen(filepath)
   }
   
   if(type == "gsd"){
     filepath <- create_filepath(i, type)
+    print(filepath)
     df <- get_gsd(filepath)
   }
   
   if(type == "loci"){
     filepath <- create_filepath(i, type)
+    print(filepath)
     df <- read.csv(filepath)
   }
   
@@ -106,8 +110,11 @@ get_samples <- function(param_set, sampstrat, nsamp){
   
   #Check if files for parameter exist
   gen_filepath <- create_filepath(i, "gen")
+  print(gen_filepath)
   gsd_filepath <- create_filepath(i, "gsd")
+  print(gsd_filepath)
   loci_filepath <- create_filepath(i, "loci")
+  print(loci_filepath)
   file_exists <- TRUE
   if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
   if(!file_exists) { 

@@ -242,13 +242,15 @@ run_lea <- function(gen, gsd_df, loci_df, K, full_krig_admix, full_admix){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-4) #not to overload your computer
 registerDoParallel(cl)
 
 res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
   library("lfmm")
+  library("LEA")
+  library("automap")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -278,13 +280,13 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     loci_df <- get_data(i, "loci")
     
     #subsample full data randomly
-    s <- sample(2000, nrow(gsd_df), replace = FALSE)
-    gen <- gen[s,]
-    gsd_df <- gsd_df[s,]
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+    gen_2k <- gen[s,]
+    gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lea_full(gen, gsd_df, loci_df, paramset)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    full_result <- run_lea_full(gen_2k, gsd_df_2k, loci_df, paramset)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/LEA/LEA_results_",paramset,".csv")

@@ -233,13 +233,16 @@ run_tess<- function(gen, gsd_df, loci_df, K, full_krig_admix, full_admix){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
 res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
   library("lfmm")
+  library("tess3r")
+  library("automap")
+  library("raster")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -248,9 +251,6 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_seed",params[i,"seed"],
                      "_H",params[i,"H"]*100,
                      "_r",params[i,"r"]*100)
-  
-  #save plots
-  pdf(paste0("outputs/TESS/TESS_plots_",paramset))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
@@ -262,6 +262,9 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
   
+  #save plots
+  pdf(paste0("outputs/TESS/TESS_plots_",paramset))
+  
   #run TESS
   if(skip_to_next == FALSE){
     gen <- get_data(i, "gen")
@@ -269,13 +272,13 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     loci_df <- get_data(i, "loci")
     
     #subsample full data randomly
-    s <- sample(2000, nrow(gsd_df), replace = FALSE)
-    gen <- gen[s,]
-    gsd_df <- gsd_df[s,]
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+    gen_2k <- gen[s,]
+    gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_TESS_full(gen, gsd_df, loci_df, paramset)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    full_result <- run_tess_full(gen_2k, gsd_df_2k, loci_df, paramset)
+    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/TESS/TESS_results_",paramset,".csv")
@@ -289,7 +292,7 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_TESS(subgen, subgsd_df, loci_df, K = full_result$K, full_krig_admix = full_krig_admix, full_admix = full_admix)
+        sub_result <- run_tess(subgen, subgsd_df, loci_df, K = full_result$K, full_krig_admix = full_krig_admix, full_admix = full_admix)
         
         #save and format new result
         sub_result <- data.frame(sampstrat = sampstrat, nsamp = nsamp, sub_result)

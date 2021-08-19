@@ -1,7 +1,7 @@
 set.seed(42)
 
 library(here) #paths
-library(vwgan) #RDA
+library(vegan) #RDA
 library(vcfR)  #read VCF files
 #parallel
 library(foreach)
@@ -14,7 +14,7 @@ source("general_functions.R")
 ############
 #   RDA    #
 ############
-run_rda <- function(gen, gsd_df, loci_df){
+run_rda <- function(gen, gsd_df, loci_df, nloci = 10000){
 
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
@@ -87,10 +87,21 @@ run_rda <- function(gen, gsd_df, loci_df){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
 res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  library("vcfR")
+  library("vegan")
+  
+  #set of parameter names in filepath form (for creating temp files)
+  paramset <- paste0("K",params[i,"K"],
+                     "_phi",params[i,"phi"]*100,
+                     "_m",params[i,"m"]*100,
+                     "_seed",params[i,"seed"],
+                     "_H",params[i,"H"]*100,
+                     "_r",params[i,"r"]*100)
+  
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, "gen")
   gsd_filepath <- create_filepath(i, "gsd")
@@ -153,5 +164,5 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-stats_out <- cbind.data.frame(params, res_rda)
-write.csv(stats_out, "outputs/RDA/rda_results.csv")
+#stats_out <- cbind.data.frame(params, res_rda)
+#write.csv(stats_out, "outputs/RDA/rda_results.csv")

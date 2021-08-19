@@ -15,6 +15,7 @@ library("ggplot2")
 library("gridExtra")
 library("MuMIn")
 library("emmeans")
+source("analysis_functions.R")
 
 
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
@@ -41,20 +42,15 @@ params_full <- expand.grid(K = c(2, 4),
                       sampstrat = sampstrat,
                       it = 1)
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/temp/", full.names = TRUE), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/RDA/", full.names = TRUE), read.csv))
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-colnames(df) <- c(colnames(df)[1:10], "TPRCOMBO", "FDRCOMBO", "TPR1COMBO", "FDR1COMBO", "TPR2COMBO", "FDR2COMBO", 
-                  "TPR1", "FDR1", "TPR2", "FDR2")
+
 #IMPORTANT NOTE ABOUT LFMM DATA:
 #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
 #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
 #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
-df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
-df$FDR1COMBO[df$TPR1COMBO == 0 & is.na(df$FDR1COMBO)] <- 0
-df$FDR2COMBO[df$TPR2COMBO == 0 & is.na(df$FDR2COMBO)] <- 0
-df$FDR1[df$TPR1 == 0 & is.na(df$FDR1)] <- 0
-df$FDR2[df$TPR2 == 0 & is.na(df$FDR2)] <- 0
+#df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
 
 
 #REMOVE FULL DATA FOR MODELS
@@ -62,26 +58,10 @@ moddf <- df[df$sampstrat != "full",]
 ```
 
 
-#EXPLORATORY
-
-```{r fig.width=20, fig.height=8}
-df$stat <- df$TPRCOMBO
-summary_vplot(df)
-summary_hplot(df)
-
-df$stat <- log(df$TPRCOMBO+1)
-summary_vplot(df)
-summary_hplot(df)
-
-df$stat <- sqrt(df$TPRCOMBO)
-summary_vplot(df)
-summary_hplot(df)
-```
-
 
 #TPRCOMBO
 ```{r fig.width=20, fig.height=8}
-df$stat <- df$TPRCOMBO
+df$stat <- df$TPR
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
@@ -122,8 +102,8 @@ resdf$p2 <- gsub(".*- ", "", resdf$X1)
 
 resdf$estimate[resdf$p.value > 0.05] <- NA
 
-resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(npts))
-resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(npts))
+resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(nsamp))
+resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(nsamp))
 
 ggplot(resdf, aes(p1,p2)) +
     geom_tile(aes(fill = estimate)) + 
