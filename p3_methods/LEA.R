@@ -286,11 +286,11 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_lea_full(gen_2k, gsd_df_2k, loci_df, paramset)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/LEA/LEA_results_",paramset,".csv")
-    write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
+    write.csv(result, csv_file, row.names = FALSE)
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
@@ -303,11 +303,11 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sub_result <- run_lea(subgen, subgsd_df, loci_df, K = full_result$K, full_krig_admix = full_krig_admix, full_admix = full_admix)
         
         #save and format new result
-        sub_result <- data.frame(sampstrat = sampstrat, nsamp = nsamp, sub_result)
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, data.frame(params[i,], sub_result))
+        csv_df <- rbind(csv_df, sub_result)
         write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
@@ -327,3 +327,4 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
+write.csv(lea_res, "outputs/LEA/lea_results.csv", row.names = FALSE)

@@ -150,11 +150,11 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_mmrr(gen, gsd_df)
-    result <- data.frame(sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/MMRR/MMRR_results_",paramset,".csv")
-    write.csv(data.frame(params[i,], result), csv_file, row.names = FALSE)
+    write.csv(result, csv_file, row.names = FALSE)
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
@@ -172,12 +172,12 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
         #save and format new result
-        sub_result <- data.frame(sampstrat = sampstrat, nsamp = nsamp, sub_result, 
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
                                  env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, data.frame(params[i,], sub_result))
+        csv_df <- rbind(csv_df, sub_result)
         write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
@@ -193,3 +193,5 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
 #stop cluster
 stopCluster(cl)
+
+write.csv(res_mmrr, "outputs/MMRR/mmrr_results.csv", row.names = FALSE)
