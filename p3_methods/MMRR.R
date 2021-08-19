@@ -191,10 +191,5 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
 }
 
-
-stats_out <- cbind.data.frame(params, res_mmrr)
-write.csv(stats_out, "outputs/MMRR/MMRR_results_coeffs.csv")
-
-
 #stop cluster
 stopCluster(cl)

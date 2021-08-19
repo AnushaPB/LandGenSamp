@@ -379,6 +379,3 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-stats_out <- cbind.data.frame(params, res_lfmm)
-write.csv(stats_out, "outputs/LFMM/LFMM_results.csv")
-

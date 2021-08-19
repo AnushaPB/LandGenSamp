@@ -163,6 +163,3 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
 #stop cluster
 stopCluster(cl)
-
-#stats_out <- cbind.data.frame(params, res_rda)
-#write.csv(stats_out, "outputs/RDA/rda_results.csv")

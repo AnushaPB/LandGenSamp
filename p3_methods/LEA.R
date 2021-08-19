@@ -327,5 +327,3 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-stats_out <- cbind.data.frame(params, res_lfmm)
-write.csv(lea_out, "outputs/LEA/LEA_results.csv")

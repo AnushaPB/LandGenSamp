@@ -318,6 +318,3 @@ res_TESS <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
 #stop cluster
 stopCluster(cl)
-
-stats_out <- cbind.data.frame(params, res_lfmm)
-write.csv(TESS_out, "outputs/TESS/TESS_results.csv")
