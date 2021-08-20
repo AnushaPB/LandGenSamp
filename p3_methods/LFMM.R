@@ -60,7 +60,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   TPR1 <- TP/length(loci_trait1)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1 <- FD/length(lfmm_loci1)
+  FDR1 <- FD/(FD + TP)
   
   #ENV2
   #run model
@@ -80,7 +80,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   TPR2 <- TP/length(loci_trait2)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2 <- FD/length(lfmm_loci2)
+  FDR2 <- FD/(FD + TP)
   
   #BOTH ENV
   #run model
@@ -101,7 +101,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   TPR1COMBO <- TP/length(loci_trait1)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1COMBO <- FD/length(lfmm_loci1)
+  FDR1COMBO <- FD/(FD + TP)
   
   #env2 candidate loci
   #Identify LFMM cand loci
@@ -111,7 +111,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   TPR2COMBO <- TP/length(loci_trait2)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2COMBO <- FD/length(lfmm_loci2)
+  FDR2COMBO <- FD/(FD + TP)
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -120,7 +120,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   TPRCOMBO <- TP/length(adaptive_loci)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
-  FDRCOMBO <- FD/length(adaptive_loci)
+  FDRCOMBO <- FD/(FD + TP)
   
   #PLOT TO CHECK RESULTS (for debugging, remove later)
   
@@ -193,7 +193,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   TPR1 <- TP/length(loci_trait1)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1 <- FD/length(lfmm_loci1)
+  FDR1 <-FD/(FD + TP)
   
   #ENV2
   #run model
@@ -213,7 +213,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   TPR2 <- TP/length(loci_trait2)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2 <- FD/length(lfmm_loci2)
+  FDR2 <- FD/(FD + TP)
   
   #BOTH ENV
   #run model
@@ -234,7 +234,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   TPR1COMBO <- TP/length(loci_trait1)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1COMBO <- FD/length(lfmm_loci1)
+  FDR1COMBO <- FD/(FD + TP)
   
   #env2 candidate loci
   #Identify LFMM cand loci
@@ -244,7 +244,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   TPR2COMBO <- TP/length(loci_trait2)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2COMBO <- FD/length(lfmm_loci2)
+  FDR2COMBO <- FD/(FD + TP)
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -253,7 +253,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   TPRCOMBO <- TP/length(adaptive_loci)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
-  FDRCOMBO <- FD/length(adaptive_loci)
+  FDRCOMBO <- FD/(FD + TP)
 
   #PLOT TO CHECK RESULTS
   
