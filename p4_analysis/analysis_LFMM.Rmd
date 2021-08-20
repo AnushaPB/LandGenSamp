@@ -15,7 +15,7 @@ library("ggplot2")
 library("gridExtra")
 library("MuMIn")
 library("emmeans")
-
+library("effects")
 
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
@@ -59,7 +59,18 @@ df$FDR2[df$TPR2 == 0 & is.na(df$FDR2)] <- 0
 
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
+
+
 ```
+```{r}
+range(df$FDRCOMBO)
+```
+
+```{r fig.width = 40, fig.height=40}
+MEGAPLOT(moddf, "TPRCOMBO")
+MEGAPLOT(moddf, "FDRCOMBO")
+```
+
 
 
 #EXPLORATORY
@@ -92,7 +103,12 @@ summary_hplot(df)
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
 #na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
 
 #anova
 aovmod <- anova(fullmod)
@@ -109,6 +125,78 @@ efmod
 combos <- dredge(fullmod)
 combos
 ```
+
+```{r}
+finalmod <- lmer(stat ~ nsamp + K + m + phi + H + r +
+                    K*phi + K*H + 
+                    m*phi + m*H + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+#anova
+aovmod <- anova(finalmod)
+aovmod
+
+```
+
+
+
+```{r}
+ints <- c("K*phi", "K*H", "m*phi", "m*H", "phi*H", "phi*r", "H*r")
+effplts <- list()
+for(i in 1:length(ints)){
+    eff <- effect(ints[i], finalmod)
+    effplts[[i]] <- eff
+    print(plot(eff))
+}
+
+
+par(mfrow=c(2,4))
+for(i in 1:length(effplts)){
+   p <- plot(effplts[[i]])
+   print(p)
+}
+
+graph_function(effplts)
+
+
+effplts2 <- list()
+
+for(i in 1:length(effplts)){
+    eff <- as.data.frame(effplts[[i]])
+    v1 <- eff[,1]
+    v2 <- eff[,2]
+    p <- ggplot_gtable(ggplot_build(ggplot(eff, aes(factor(v1), linetype=factor(v2),
+                                     color = factor(v2))) +
+        geom_line(aes(y = fit, group=factor(v2)), size=1) +
+        geom_ribbon(aes(ymin = lower, ymax = upper, group = factor(v2), fill = factor(v2), col = factor(v2)), 
+                  alpha=0.2, 
+                  linetype="dashed") + 
+        xlab(colnames(eff)[1]) +
+        ylab("") +
+        scale_colour_manual(values = c("#756fd6","#30D5C8")) +
+        scale_fill_manual(values = c("#756fd6", "#30D5C8")) +
+        scale_x_discrete(expand = c(0.05, 0.05)) +
+        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+              panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21),
+              plot.margin=unit(rep(0.4,4),"cm")) +
+        guides(col=guide_legend(title=colnames(eff)[2], labels = levels(factor(v2))), linetype = FALSE, fill = FALSE, size = FALSE)))
+    
+    effplts2[[i]] <- p
+    gc()
+
+}
+
+
+
+
+```
+
+
+```{r fig.width = 10, fig.height = 14}
+do.call(grid.arrange, c(effplts2, ncol=2))
+```
+
 
 ```{r pairwise comparison of npts, fig.width=5, fig.height=5}
 

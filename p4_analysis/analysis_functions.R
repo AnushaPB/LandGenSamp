@@ -1,4 +1,50 @@
 
+MEGAPLOT <- function(moddf, stat){
+  meanagg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
+  colnames(meanagg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
+  
+  
+  params <- expand.grid(K = c(2, 4), 
+                        phi = c(0.1, 0.5),
+                        m = c(0.25, 1.0),
+                        seed = c(1, 2, 3),
+                        H = c(0.05 , 0.5),
+                        r = c(0.3, 0.6))
+  
+  plts <- list()
+  for(i in 1:nrow(params)){
+    tempdf <- merge(params[i,], meanagg)
+    
+    ptitle <- paramset <- paste0("K=",params[i,"K"],
+                                 " phi=",params[i,"phi"],
+                                 " m=",params[i,"m"],
+                                 "\nH=",params[i,"H"],
+                                 " r=",params[i,"r"])
+    
+    p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
+      ggtitle(ptitle) +
+      geom_tile(aes(fill = mean)) + 
+      geom_text(aes(label = round(mean, digits = 2), hjust = 0.5), size = 5) +
+      scale_fill_viridis(limits=c(0,1), option = "plasma") +
+      theme_bw() +
+      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(), legend.position = "none",
+            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+            axis.text.x = element_text(color = "grey50", size = 18),
+            axis.text.y = element_text(color = "gray50", size = 18),
+            plot.title = element_text(size=20),
+            plot.margin=unit(rep(0.4,4),"cm")) +
+      coord_fixed()
+    
+    plts[[i]] <- p
+  }
+  
+  
+  bp <- do.call(grid.arrange, c(plts, nrow=12))
+}
+
+
 summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
   (pK <- ggplot(df, aes(fill=K, y=stat, x=factor(nsamp))) + 
      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
