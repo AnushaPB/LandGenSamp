@@ -71,7 +71,6 @@ get_data <- function(i, params, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-#get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
 get_samples <- function(param_set, params = params, sampstrat, nsamp){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
