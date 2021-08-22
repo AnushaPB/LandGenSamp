@@ -3,6 +3,8 @@ library("here")
 library("foreach")
 library("doParallel")
 
+set.seed(42)
+
 cores <- detectCores()
 cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
@@ -12,7 +14,7 @@ for(n in npts){
     library("here")
     
     #create file path
-    gsd_filepath <- create_filepath(i, "gsd")
+    gsd_filepath <- create_filepath(i, params = params, "gsd")
     
     #skip iteration if file does not exist
     skip_to_next <- FALSE
@@ -34,10 +36,10 @@ for(n in npts){
   }
   
   #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
-  colnames(samples) <- paste0("rand",1:ncol(samples))
+  colnames(samples) <- paste0("rand", 1:ncol(samples))
   samp_out <- params
   for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, samples[,i])}
-  colnames(samp_out) <- c(colnames(params),colnames(samples))
+  colnames(samp_out) <- c(colnames(params), colnames(samples))
   write.csv(samp_out, paste0("outputs/samples_rand",n,".csv"), row.names = FALSE)
 }
 

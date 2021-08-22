@@ -39,13 +39,15 @@ params_full <- expand.grid(K = c(2, 4),
                       r = c(0.3, 0.6),
                       nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 1)
+                      it = 0:8)
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/temp/", full.names = TRUE), read.csv))
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
+
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-colnames(df) <- c(colnames(df)[1:10], "TPRCOMBO", "FDRCOMBO", "TPR1COMBO", "FDR1COMBO", "TPR2COMBO", "FDR2COMBO", 
-                  "TPR1", "FDR1", "TPR2", "FDR2")
+
 #IMPORTANT NOTE ABOUT LFMM DATA:
 #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
 #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
@@ -60,10 +62,9 @@ df$FDR2[df$TPR2 == 0 & is.na(df$FDR2)] <- 0
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-
 ```
 ```{r}
-range(df$FDRCOMBO)
+range(df$TPRCOMBO)
 ```
 
 ```{r fig.width = 40, fig.height=40}

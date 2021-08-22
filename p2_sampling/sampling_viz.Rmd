@@ -1,0 +1,26 @@
+---
+title: "sampling_viz"
+output: html_document
+---
+```{r fig.width=10, fig.height = 13}
+source("general_functions.R")
+
+i=400
+
+
+par(mfrow=c(length(npts), length(sampstrats)), pty="s", mar = rep(2, 4))
+for(i in 1:nrow(params)){
+    gsd_df <- get_data(i, params = params, "gsd")
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], params = params, sampstrat, nsamp)
+        subgsd_df <- gsd_df[subIDs,]
+        plot(subgsd_df$x, subgsd_df$y, xlim = c(0,40), ylim = c(0,40), main = paste0(nsamp," / ", sampstrat),
+             xlab = "", ylab = "", pch = 19, col = "#756fd6")
+      }
+    }
+  }
+
+```
+

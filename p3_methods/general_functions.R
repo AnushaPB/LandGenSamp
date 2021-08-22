@@ -5,11 +5,11 @@
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, type, samples = "full"){
+create_filepath <- function(i, params, type, samples = "full"){
   
   #datadir for subsamples
   if(samples == "subsample"){datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"}
-  if(samples == "full"){datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/test_data/"}
+  if(samples == "full"){datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/LGS_data/"}
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -21,39 +21,14 @@ create_filepath <- function(i, type, samples = "full"){
   
   #different file patterns for different data types
   if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset,
-                                       "_it--", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
+                                       "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
-                                       "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
+                                       "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
   if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
   
   print(filepath)
   return(filepath)
 }
-
-#create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
-#FOR NESTED SUBFOLDERS
-create_filepath_nested <- function(i, type){
-  #directory of data
-  datadir <- "data/" 
-  
-  #set of parameter names in filepath form
-  paramset <- paste0("K",params[i,"K"],
-                     "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100)
-  
-  #different file patterns for different data types
-  if(type == "gen"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/it--",params[i,"it"],"/spp-spp_0/mod-", paramset,
-                                       "_it--", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
-  if(type == "gsd"){filepath <- paste0(datadir, "GNX_mod-", paramset, "/it--",params[i,"it"],"/spp-spp_0/mod-", paramset,
-                                       "_it--",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci/nnloci_", paramset, ".csv")}
-  
-  return(filepath)
-}
-
 
 
 #Get gen data
@@ -79,22 +54,22 @@ get_gsd <- function(filepath){
 }
 
 #general function to get data
-get_data <- function(i, type){
+get_data <- function(i, params, type){
   #different file patterns for different data types
   if(type == "gen"){
-    filepath <- create_filepath(i, type)
+    filepath <- create_filepath(i, params, type)
     print(filepath)
     df <- get_gen(filepath)
   }
   
   if(type == "gsd"){
-    filepath <- create_filepath(i, type)
+    filepath <- create_filepath(i, params, type)
     print(filepath)
     df <- get_gsd(filepath)
   }
   
   if(type == "loci"){
-    filepath <- create_filepath(i, type)
+    filepath <- create_filepath(i, params, type)
     print(filepath)
     df <- read.csv(filepath)
   }
@@ -103,17 +78,17 @@ get_data <- function(i, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, sampstrat, nsamp){
+get_samples <- function(param_set, params, sampstrat, nsamp){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
   #Check if files for parameter exist
-  gen_filepath <- create_filepath(i, "gen")
+  gen_filepath <- create_filepath(i, params = params, "gen")
   print(gen_filepath)
-  gsd_filepath <- create_filepath(i, "gsd")
+  gsd_filepath <- create_filepath(i, params = params, "gsd")
   print(gsd_filepath)
-  loci_filepath <- create_filepath(i, "loci")
+  loci_filepath <- create_filepath(i, params = params, "loci")
   print(loci_filepath)
   file_exists <- TRUE
   if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
@@ -126,8 +101,7 @@ get_samples <- function(param_set, sampstrat, nsamp){
   #directory of sample ID csvs (CHANGE)
   datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
   
-  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"), row.names = 1)
-  rownames(subIDs) <- NULL
+  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
     
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -261,23 +235,6 @@ params <- expand.grid(K = c(2, 4),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0:9)
+                      it = 0:8)
 
-#TESTING PARAMS (REMOVE LATER)
-params <- expand.grid(K = c(2, 4), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.30, 0.60),
-                      it = 1)
-
-#TESTING PARAMS (REMOVE LATER)
-#params <- expand.grid(K = c(4), 
-                      #phi = c(0.5),
-                      #m = c(0.25),
-                     # seed = c(1),
-                      #H = c(0.5),
-                      #r = c(0.60),
-                     # it = 1)
 
