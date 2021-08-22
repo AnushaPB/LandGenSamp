@@ -313,7 +313,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_it",params[i,"it"])
   
   #create pdf to store plots
-  pdf(paste0("outputs/LFMM/lfmm_plots_",paramset,".pdf"))
+  pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, params = params, "gen")
