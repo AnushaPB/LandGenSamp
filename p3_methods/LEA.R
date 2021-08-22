@@ -258,15 +258,16 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_m",params[i,"m"]*100,
                      "_seed",params[i,"seed"],
                      "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100)
+                     "_r",params[i,"r"]*100,
+                     "_it",params[i,"it"])
   
   #save plots
   pdf(paste0("outputs/LEA/LEA_plots_",paramset))
   
   #skip iteration if files do not exist
-  gen_filepath <- create_filepath(i, "gen")
-  gsd_filepath <- create_filepath(i, "gsd")
-  loci_filepath <- create_filepath(i, "loci")
+  gen_filepath <- create_filepath(i, params = params, "gen")
+  gsd_filepath <- create_filepath(i, params = params, "gsd")
+  loci_filepath <- create_filepath(i, params = params, "loci")
   skip_to_next <- FALSE
   if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
@@ -275,9 +276,9 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   
   #run LEA
   if(skip_to_next == FALSE){
-    gen <- get_data(i, "gen")
-    gsd_df <- get_data(i, "gsd")
-    loci_df <- get_data(i, "loci")
+    gen <- get_data(i, params = params, "gen")
+    gsd_df <- get_data(i, params = params, "gsd")
+    loci_df <- get_data(i, params = params, "loci")
     
     #subsample full data randomly
     s <- sample(nrow(gsd_df), 2000, replace = FALSE)
