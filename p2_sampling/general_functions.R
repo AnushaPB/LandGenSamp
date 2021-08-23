@@ -155,7 +155,7 @@ params <- expand.grid(K = c(2, 4),
                       seed = c(1, 2, 3),
                       H = c(0.05, 0.5),
                       r = c(0.30, 0.60),
-                      it = 1)
+                      it = 9)
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 
