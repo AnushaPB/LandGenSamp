@@ -347,7 +347,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     for(nsamp in npts){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         

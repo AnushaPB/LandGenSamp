@@ -76,23 +76,9 @@ get_data <- function(i, params, type){
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
 get_samples <- function(param_set, params, sampstrat, nsamp){
   #param_set - vector of one set of parameters (e.g. params[i,])
+  #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
-  
-  #Check if files for parameter exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  print(gen_filepath)
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  print(gsd_filepath)
-  loci_filepath <- create_filepath(i, params = params, "loci")
-  print(loci_filepath)
-  file_exists <- TRUE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
-  if(!file_exists) { 
-    print("File does not exist:")
-    print(params[i,]) 
-    } 
-  stopifnot(file_exists)
   
   #directory of sample ID csvs (CHANGE)
   datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
@@ -110,7 +96,7 @@ get_samples <- function(param_set, params, sampstrat, nsamp){
   #confirm there is only one set of IDs being used
   stopifnot(nrow(subIDs) == 1)
   
-  #remove parameter columnds and convert to vector of IDs
+  #remove parameter columns and convert to vector of IDs
   subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
   subIDs <- unlist(subIDs)
   

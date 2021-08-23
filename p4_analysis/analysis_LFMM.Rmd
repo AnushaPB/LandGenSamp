@@ -17,6 +17,7 @@ library("MuMIn")
 library("emmeans")
 library("effects")
 
+source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 ```
@@ -41,7 +42,7 @@ params_full <- expand.grid(K = c(2, 4),
                       sampstrat = sampstrat,
                       it = 0:8)
 
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
 
 df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
 
@@ -64,7 +65,7 @@ moddf <- df[df$sampstrat != "full",]
 
 ```
 ```{r}
-range(df$TPRCOMBO)
+range(df$FDRCOMBO)
 ```
 
 ```{r fig.width = 40, fig.height=40}
