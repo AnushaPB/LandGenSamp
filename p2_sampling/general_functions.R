@@ -17,7 +17,7 @@ create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, "_it-",params[i,"it"], ".csv")}
   
   print(filepath)
   return(filepath)
@@ -154,7 +154,7 @@ params <- expand.grid(K = c(2, 4),
                       seed = c(1, 2, 3),
                       H = c(0.05, 0.5),
                       r = c(0.30, 0.60),
-                      it = 1)
+                      it = 9)
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 

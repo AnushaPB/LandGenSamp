@@ -3,6 +3,8 @@ library("here")
 library("foreach")
 library("doParallel")
 
+set.seed(42)
+
 grid_samp <- function(pts, npts, ldim){
   inc <- ldim/sqrt(npts)
   xgrid <- ygrid <- seq(0, ldim, inc) 
@@ -41,7 +43,7 @@ for(n in npts){
     library("here")
     
     #create file path
-    gsd_filepath <- create_filepath(i, "gsd")
+    gsd_filepath <- create_filepath(i, params = params, "gsd")
     
     #skip iteration if file does not exist
     skip_to_next <- FALSE

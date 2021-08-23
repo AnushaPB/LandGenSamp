@@ -4,6 +4,8 @@ library("foreach")
 library("doParallel")
 library("vegan")
 
+set.seed(42)
+
 envgeo_samp <- function(pts, npts, Nreps = 1000){
   Nreps <- 1000
   sample.sets <- matrix(nrow=Nreps, ncol=npts)
@@ -53,7 +55,7 @@ for(n in npts){
     library("vegan")
     
     #create file path
-    gsd_filepath <- create_filepath(i, "gsd")
+    gsd_filepath <- create_filepath(i, params = params, "gsd")
     
     #skip iteration if file does not exist
     skip_to_next <- FALSE

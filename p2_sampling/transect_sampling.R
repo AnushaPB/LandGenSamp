@@ -3,6 +3,8 @@ library("here")
 library("foreach")
 library("doParallel")
 
+set.seed(42)
+
 transect_samp <- function(pts, npts, ytsct, buffer){
   #pts - dataframe with IDs and coords
   #npts - total number of points to sample (evenly split across transects)
@@ -52,7 +54,7 @@ for(n in npts){
     library("here")
     
     #create file path
-    gsd_filepath <- create_filepath(i, "gsd")
+    gsd_filepath <- create_filepath(i, params = params, "gsd")
     
     #skip iteration if file does not exist
     skip_to_next <- FALSE
