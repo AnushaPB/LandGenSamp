@@ -247,7 +247,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   FDR2COMBO <- FD/(FD + TP)
   
   #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+  lfmm_loci <- unique(lfmm_loci1, lfmm_loci2)
   #calc True Positive Rate
   TP <- sum(lfmm_loci %in% adaptive_loci)
   TPRCOMBO <- TP/length(adaptive_loci)
@@ -294,7 +294,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
 system.time(
