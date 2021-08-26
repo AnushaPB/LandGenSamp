@@ -36,11 +36,11 @@ params_full <- expand.grid(K = c(2, 4),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      nsamp = npts,
+                      nsamp = nsamp,
                       sampstrat = sampstrat,
                       it = 1)
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/GDM/temp/", full.names = TRUE), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/GDM/", full.names = TRUE), read.csv))
 
 #df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/GDM/gdm_results.csv")
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
@@ -78,6 +78,29 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ## full model
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
@@ -188,6 +211,29 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ## full model
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
@@ -298,6 +344,29 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ## full model
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
@@ -410,6 +479,28 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ## full model
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
@@ -541,6 +632,28 @@ moddf <- df[df$sampstrat != "full",]
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
 #na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
 fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 #anova
@@ -664,6 +777,28 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ## full model
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model

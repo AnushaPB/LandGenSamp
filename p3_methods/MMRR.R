@@ -19,7 +19,7 @@ source("general_functions.R")
 # Y is a dependent distance matrix
 # X is a list of independent distance matrices (with optional names)
 
-MMRR<-function(Y,X,nperm=99){
+MMRR<-function(Y,X,nperm=50){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
   y<-unfold(Y)
@@ -79,8 +79,8 @@ run_mmrr <- function(gen, gsd_df){
   ##calculate genetic distance based on pca
   Y <- as.matrix(gen)
   pc <- prcomp(Y)
-  npcs <- round(nrow(gen)*0.5, 0)
-  pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0998.12684)
+  npcs <- round(nrow(gen)*0.5,0)
+  pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0508.12684)
   
   ##get env vars and coords
   env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
@@ -91,7 +91,7 @@ run_mmrr <- function(gen, gsd_df){
   Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
   
   #Run  MMRR
-  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 99)
+  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 50)
   
   #create data frame of results
   mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
@@ -145,12 +145,12 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     
     #subsample full data randomly
-    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+    s <- sample(nrow(gsd_df), 1000, replace = FALSE)
     gen_2k <- gen[s,]
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_mmrr(gen, gsd_df)
+    full_result <- run_mmrr(gen_2k, gsd_df_2k)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)

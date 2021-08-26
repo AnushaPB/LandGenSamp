@@ -16,6 +16,7 @@ source("http://membres-timc.imag.fr/Olivier.Francois/POPSutilities.R")
 #kriging
 library("automap")
 library("raster")
+library("rgdal")
 
 #parallel
 library("foreach")
@@ -47,7 +48,7 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
-  maxK <- 20
+  maxK <- 10
   obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
   
   #determining best K and picking best replicate for best K (source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
@@ -92,13 +93,14 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
     pred_krig_admix <- stack(pred_krig_admix, krig_raster)
   }
   
+  
   #convert all values greater than 1 to 1 and all values less than 0 to 0
   pred_krig_admix[pred_krig_admix > 1] <- 1
   pred_krig_admix[pred_krig_admix < 0] <- 0
   
   rbw <- turbo(K)
   par(pty="s", mar=rep(0,4), oma=rep(0,4))
-  plot(1, type="n", xlab="", ylab="", axes = NULL, xlim=c(0,40), ylim=c(0,40))
+  plot(1, type="n", xlab="", ylab="", xlim=c(0,40), ylim=c(0,40))
   for(l in 1:K){
     cols <- c(rgb(1,1,1,0), rbw[l])
     kpal <- colorRampPalette(cols, interpolate="linear")
@@ -328,4 +330,4 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(lea_res, "outputs/LEA/lea_results.csv", row.names = FALSE)
+write.csv(res_lea, "outputs/LEA/lea_results.csv", row.names = FALSE)

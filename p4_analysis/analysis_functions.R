@@ -1,5 +1,5 @@
 
-MEGAPLOT <- function(moddf, stat){
+  MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma"){
   meanagg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
   colnames(meanagg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
@@ -25,7 +25,7 @@ MEGAPLOT <- function(moddf, stat){
       ggtitle(ptitle) +
       geom_tile(aes(fill = mean)) + 
       geom_text(aes(label = round(mean, digits = 2), hjust = 0.5), size = 5) +
-      scale_fill_viridis(limits=c(0,1), option = "plasma") +
+      scale_fill_viridis(limits=c(minv, maxv), option = option) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(), legend.position = "none",
@@ -165,7 +165,7 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE){
     p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
       ggtitle(unique(tempdf$group)) +
       geom_tile(aes(fill = mean)) + 
-      geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
+      geom_text(aes(label = signif(mean, digits = 2), hjust = 0.5)) +
       scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = colpal) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
@@ -349,7 +349,7 @@ sampstrat_nsamp_mod_params <- function(df, alpha = 0.05, padj = "fdr", sampstrat
     p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
       ggtitle(unique(tempdf$param)) +
       geom_tile(aes(fill = fixef)) + 
-      geom_text(aes(label = round(fixef, digits = 2), hjust = 0.5, fontface = lab, size = 10)) +
+      geom_text(aes(label = signif(fixef, digits = 1), hjust = 0.5, fontface = lab, size = 10)) +
       scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
