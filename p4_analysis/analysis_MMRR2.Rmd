@@ -52,14 +52,14 @@ df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-
+moddf[!complete.cases(moddf),]
 
 ```
 
 
 ```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.6)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.6)
+MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
 ```
 
 # GEO RMSE
@@ -302,7 +302,7 @@ sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.1
 
 # ENV COMBO RMSE
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$env1_coeff
+df$stat <- df$comboenv_rmse
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
@@ -527,6 +527,7 @@ Determine how sampling strategy affects the relationships between the sim vars/n
 ```{r fig.width=5, fig.height=4}
 sampstrat_mod(df, sampstrat = sampstrat, full = TRUE)
 ```
+
 ```{r fig.width=5, fig.height=4}
 nsamp_mod(df, nsamp = nsamp, full = TRUE)
 ```
