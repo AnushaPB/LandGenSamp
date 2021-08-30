@@ -41,15 +41,17 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   #create gen matrix
   gen <- as.matrix(gen)
   
+
   #create temporary file with genotypes
-  write.geno(gen, here("data","temp_genotypes.geno"))
+  #!names must be unique for running in parallel!
+  write.geno(gen, here("data", paste0(paramset,"_temp_genotypes.geno")))
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
   maxK <- 10
-  obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  obj.snmf <- snmf(here("data", paste0(paramset,"_temp_genotypes.geno")), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
   
   #determining best K and picking best replicate for best K (source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
   ce <- list()
@@ -68,64 +70,21 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   #Get Qmatrix
   pred_admix <- Q(obj.snmf, K = K) 
   
-  #make grid for kriging
-  x.range <- c(0,40)
-  y.range <- c(0,40)
-  krig_df.grd <- expand.grid(x=seq(from=x.range[1], to=x.range[2], len=40),  
-                             y=seq(from=y.range[1], to=y.range[2], len=40))
-  coordinates(krig_df.grd) <- ~x+y
-  gridded(krig_df.grd) <- TRUE
-  #print(extent(krig_df.grd)) #FIGURE OUT WHY EXTENT ISNT (0,41,0,41)
-  
-  pred_krig_admix <- stack()
-  for(k in 1:K){
-    #krig admix proportions
-    krig_df = data.frame(x = gsd_df$x,
-                         y = gsd_df$y, 
-                         prop = pred_admix[,k])
-    
-    coordinates(krig_df)=~x+y
-    
-    krig_res <- autoKrige(prop ~ 1, krig_df, krig_df.grd)
-    krig_raster <- raster(krig_res$krige_output)
-    print(extent(krig_raster))
-    extent(krig_raster) <- c(0,40,0,40)
-    pred_krig_admix <- stack(pred_krig_admix, krig_raster)
-  }
-  
-  
-  #convert all values greater than 1 to 1 and all values less than 0 to 0
-  pred_krig_admix[pred_krig_admix > 1] <- 1
-  pred_krig_admix[pred_krig_admix < 0] <- 0
-  
-  rbw <- turbo(K)
-  par(pty="s", mar=rep(0,4), oma=rep(0,4))
-  plot(1, type="n", xlab="", ylab="", xlim=c(0,40), ylim=c(0,40))
-  for(l in 1:K){
-    cols <- c(rgb(1,1,1,0), rbw[l])
-    kpal <- colorRampPalette(cols, interpolate="linear")
-    plot(pred_krig_admix[[l]], zlim=c(0.5,1), col=kpal(100), add=TRUE, legend=FALSE, xlim=c(0,41), ylim =c(0,41))
-    
-  }
-  
-  points(gsd_df$x, gsd_df$y)
-  
   #export full krig admix and Qmatrix
-  full_krig_admix <- pred_krig_admix
   full_admix <- pred_admix
-  writeRaster(full_krig_admix, paste0("outputs/LEA/",paramset,"_krig_admix.tif"), format="GTiff", overwrite = TRUE)
-  write.csv(full_admix, paste0("outputs/LEA/",paramset,"_qmat.csv"), row.names = FALSE)
+  rownames(full_admix) <- rownames(gen)
+  write.csv(full_admix, paste0("outputs/LEA/",paramset,"_qmat.csv"))
   
   #remove project
-  remove.snmfProject("data/temp_genotypes.snmfProject")
+  remove.snmfProject(here("data", paste0(paramset,"_temp_genotypes.geno")))
   
-  results <- data.frame(popK = K)
+  results <- data.frame(popK = K, cor = NA, rmse = NA)
   
   return(results)
   
 }
 
-run_lea <- function(gen, gsd_df, loci_df, K, full_krig_admix, full_admix){
+run_lea <- function(gen, gsd_df, loci_df, K, full_admix){
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
@@ -139,76 +98,29 @@ run_lea <- function(gen, gsd_df, loci_df, K, full_krig_admix, full_admix){
   gen <- as.matrix(gen)
   
   #create temporary file with genotypes
-  write.geno(gen, here("data","temp_genotypes.geno"))
+  write.geno(gen, here("data", paste0(paramset,"_temp_genotypes.geno")))
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for running one K value
-  obj.snmf = snmf(here("data","temp_genotypes.geno"), K = K, ploidy = 2, entropy = T, alpha = 100, project = "new")
+  obj.snmf = snmf(here("data", paste0(paramset,"_temp_genotypes.geno")), K = K, ploidy = 2, entropy = T, alpha = 100, project = "new")
   
   #Get Qmatrix
   pred_admix <- Q(obj.snmf, K = K) 
   
-  pred_krig_admix <- stack()
-  for(k in 1:K){
-    #krig admix proportions
-    krig_df = data.frame(x = gsd_df$x,
-                         y = gsd_df$y, 
-                         prop = pred_admix[,k])
-    
-    coordinates(krig_df)=~x+y
-    
-    x.range <- c(0,40)
-    y.range <- c(0,40)
-    
-    krig_df.grd <- expand.grid(x=seq(from=x.range[1], to=x.range[2], len=40),  
-                               y=seq(from=y.range[1], to=y.range[2], len=40))
-    coordinates(krig_df.grd) <- ~x+y
-    gridded(krig_df.grd) <- TRUE
-    #extent(krig_df.grid) #FIGURE OUT WHY EXTENT ISNT (0,40,0,40)
-    
-    krig_res <- autoKrige(prop ~ 1, krig_df, krig_df.grd)
-    pred_krig_admix <- stack(pred_krig_admix, raster(krig_res$krige_output))
-  }
-  
-  plot(pred_krig_admix)
-  
   #remove project
-  remove.snmfProject("data/temp_genotypes.snmfProject")
-  
-  
-  ###########################
-  #  Admix Krig Comparison  #
-  ###########################
-  #correlation between all layers in stacks
-  full_cor <- layerStats(stack(pred_krig_admix, full_krig_admix), "pearson")$'pearson correlation coefficient'
-  #use the absolute value of the correlation (in case the layers are flipped) (e.g. so a correlation of -1 would be treated like a correlation of 1) (THINK THROUGH THIS)
-  full_cor <- abs(full_cor)
-  
-  #subset of correlation matrix to just compare pred admix to true admix (pred admix is rows, true admix is columns)
-  sub_cor <- full_cor[1:K,1:K+K]
-  
-  #this loop works by first identifying the max correlation between the layers, which presumably should be the K layers that correspond to each other
-  #then it removes those layers from the matrix and calculates the next maximum correlation (e.g. the next corresponding K layers)
-  #it repeats this process until the final iteration
-  #this should get the correlations between the sampe K layers (hopefully)
-  krigcor <- c()
-  for(k in 1:K){
-    #pull out max correlation
-    krigcor <- c(krigcor, max(sub_cor))
-    #identify index of max correlation
-    loc <- which(sub_cor == max(sub_cor), arr.ind=TRUE)
-    #remove layers corresponding to max correlation until the last iteration of the loop (when there will be only one number remaining)
-    #pred admix is rows, true admix is columns
-    if(k != K){sub_cor <- sub_cor[-loc[,"row"], -loc[,"col"]]} 
-  }
-  print(krigcor)
-  
+  remove.snmfProject(here("data", paste0(paramset,"_temp_genotypes.geno")))
   
   ############################
   #  Admix Coeff Comparison  #
   ############################
+  
+  rownames(pred_admix) <- rownames(full_admix)
   colnames(pred_admix) <- paste0("pred",1:K)
   colnames(full_admix) <- paste0("full",1:K)
+  
+  #TEMP TO DEAL WITH NAS
+  full_admix <- full_admix[complete.cases(full_admix),]
+  pred_admix <- pred_admix[row.names(full_admix),]
   
   rmse <- c()
   for(k in 1:K){
@@ -219,28 +131,14 @@ run_lea <- function(gen, gsd_df, loci_df, K, full_krig_admix, full_admix){
   sub_cor <- cor(pred_admix, full_admix)
   #use the absolute value of the correlation (in case the layers are flipped) (e.g. so a correlation of -1 would be treated like a correlation of 1) (THINK THROUGH THIS)
   sub_cor <- abs(sub_cor)
-  #this loop works by first identifying the max correlation between the layers, which presumably should be the K layers that correspond to each other
-  #then it removes those layers from the matrix and calculates the next maximum correlation (e.g. the next corresponding K layers)
-  #it repeats this process until the final iteration
-  #this should get the correlations between the sampe K layers (hopefully)
-  admixcor <- c()
-  for(k in 1:K){
-    #pull out max correlation
-    admixcor <- c(admixcor, max(sub_cor))
-    #identify index of max correlation
-    loc <- which(sub_cor == max(sub_cor), arr.ind=TRUE)
-    #remove layers corresponding to max correlation until the last iteration of the loop (when there will be only one number remaining)
-    #pred admix is rows, true admix is columns
-    if(k != K){sub_cor <- sub_cor[-loc[,"row"], -loc[,"col"]]} 
-  }
-  print(admixcor)
   
-  results <- data.frame(krigcor = mean(krigcor), admixcor = mean(admixcor))
+  results <- data.frame(popK = K, cor = mean(sub_cor), rmse = mean(rmse))
   
   return(results)
   
 
 }
+
 
 #register cores
 cores <- detectCores()
@@ -282,18 +180,38 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
     
-    #subsample full data randomly
-    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-    gen_2k <- gen[s,]
-    gsd_df_2k <- gsd_df[s,]
+    #TEMP FIX: SAMPLE INCLUDES IDS USED IN SUB SAMPLING
+    allsubIDs <- c()
+    #get list of subIDs
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        allsubIDs <- c(allsubIDs, subIDs)
+      }
+    }
+    allsubIDs <- unique(allsubIDs)
+    
+    leftoverIDs <- setdiff(row.names(gsd_df), allsubIDs)
+    
+    #subsample full data randomly from subIDS (plus extra to hit 2000)
+    if(length(allsubIDs) < 2000){
+      s <- sample(leftoverIDs, 2000 - length(allsubIDs), replace = FALSE)
+      s <- c(allsubIDs, s)
+      gen_2k <- gen[s,]
+      gsd_df_2k <- gsd_df[s,]
+    } else {
+      gen_2k <- gen[allsubIDs,]
+      gsd_df_2k <- gsd_df[allsubIDs,]
+    }
+    
     
     #run model on full data set
     full_result <- run_lea_full(gen_2k, gsd_df_2k, loci_df, paramset)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
     #get admix and krig_admix from full data
-    full_krig_admix <- raster(paste0("outputs/LEA/",paramset,"_krig_admix.tif"))
-    full_admix <- read.csv(paste0("outputs/LEA/",paramset,"_qmat.csv"))
+    full_admix <- read.csv(paste0("outputs/LEA/",paramset,"_qmat.csv"), row.names = 1)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/LEA/LEA_results_",paramset,".csv")
@@ -305,9 +223,10 @@ res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
+        subfull_admix <- full_admix[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lea(subgen, subgsd_df, loci_df, K = full_result$popK, full_krig_admix = full_krig_admix, full_admix = full_admix)
+        sub_result <- run_lea(subgen, subgsd_df, loci_df, K = full_result$popK, full_admix = subfull_admix)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
