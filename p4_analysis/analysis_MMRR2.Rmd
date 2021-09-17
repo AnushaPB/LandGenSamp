@@ -57,6 +57,7 @@ moddf[!complete.cases(moddf),]
 ```
 
 
+
 ```{r fig.width = 30, fig.height=40}
 MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
 MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)

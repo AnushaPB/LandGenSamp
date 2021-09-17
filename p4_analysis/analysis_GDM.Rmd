@@ -74,6 +74,8 @@ summary_vplot(df)
 summary_hplot(df)
 
 moddf <- df[df$sampstrat != "full",]
+
+
 ```
 
 
@@ -615,7 +617,56 @@ Determine how sampling strategy/nsamp affects the affects of the sim vars
 ```{r real code, fig.width=20, fig.height=4}
 sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.10)
 ```
+## Env1 + Env2 RMSE
+```{r fig.width=20, fig.height=8}
+df$stat <- (df$env1_rmse + df$env2_rmse)/2
+summary_vplot(df)
+summary_hplot(df, colpal = "plasma")
 
+moddf <- df[df$sampstrat != "full",]
+```
+
+
+## full model
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
 
 ## Env1 RMSE
 ```{r fig.width=20, fig.height=8}

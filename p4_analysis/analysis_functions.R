@@ -1,5 +1,5 @@
 
-  MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma"){
+MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma"){
   meanagg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
   colnames(meanagg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
