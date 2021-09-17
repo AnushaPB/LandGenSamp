@@ -38,11 +38,10 @@ transect_samp <- function(pts, npts, ytsct, buffer){
 }
 
 #horizontal transects (y-coords)
-ytsct <- c(10, 20, 30)
+ytsct <- c(30, 45, 60)
 #buffer around transects
 #NOTE: changed from 1 to 2 because a buffer of 2 did not include enough points
 buffer <- 2
-
 
 #register cores
 cores <- detectCores()

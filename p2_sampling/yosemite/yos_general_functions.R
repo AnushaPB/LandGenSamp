@@ -139,7 +139,7 @@ npts <- c(36, 81, 144, 225, 324)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)
-ldim = 40
+ldim = 90
 
 
 #Create dataframe with all variable combos
