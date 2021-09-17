@@ -2,22 +2,19 @@
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/LGS_data/"){
+create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/LGS_data/"){
   
   #set of parameter names in filepath form
-  paramset <- paste0("K",params[i,"K"],
+  paramset <- paste0("yosemite_K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100)
+                     "_m",params[i,"m"]*100)
   
   #different file patterns for different data types
   if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset,
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, "_it-",params[i,"it"], ".csv")}
   
   print(filepath)
   return(filepath)
@@ -98,10 +95,7 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp){
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
-                   & subIDs$m == param_set$m 
-                   & subIDs$seed == param_set$seed
-                   & subIDs$H == param_set$H
-                   & subIDs$r == param_set$r
+                   & subIDs$m == param_set$m
                    & subIDs$it == param_set$it,]
   
   #confirm there is only one set of IDs being used
@@ -147,23 +141,12 @@ sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)
 ldim = 40
 
-#TESTING PARAMS (REMOVE LATER)
-params <- expand.grid(K = c(2, 4), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.30, 0.60),
-                      it = 1)
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05 , 0.5),
-                      r = c(0.3, 0.6),
-                      it = 0:8)
+                      it = 0:9)
 
 
 
