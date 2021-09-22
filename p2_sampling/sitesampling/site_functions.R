@@ -26,5 +26,6 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
     site_samples <- rbind(site_samples, buffer_samples_df)
     site_samples$xsite
   }
+  return(site_samples)
 }
   
