@@ -1,5 +1,5 @@
 source("general_functions.R")
-source("sitesampling/site_functions.R")
+source("site_functions.R")
 library("here")
 library("foreach")
 library("doParallel")
@@ -44,7 +44,27 @@ for(n in nsite){
       #points(coords_buffer, col="red")
       sample_sites <- coords_buffer[sample(1:length(coords_buffer), n),]
 
-      site_samples <- SiteSample(sample_sites, coords, npts, buffer_size = 300000)
+      site_samples <- data.frame()
+      for(s in 1:n){
+        #create buffer around sites from which to sample points
+        site_buffers <- buffer(sample_sites[s,], 300000)
+        #subset out only coordinates falling within site buffers
+        buffer_samples <- coords[site_buffers,]
+        #convert from SPDF to df
+        buffer_samples_df <- data.frame(buffer_samples)
+        #randomly sample samples from coordinates
+        buffer_samples_df <- buffer_samples_df[sample(nrow(buffer_samples_df), npts),]
+        
+        #THINK ABOUT THIS CODE
+        #calculate the mean x coord (psuedo-site)
+        #buffer_samples_df$xsite <- mean(buffer_samples_df$x)
+        #calculate the mean y coord (psuedo-site)
+        #buffer_samples_df$ysite <- mean(buffer_samples_df$y)
+        
+        #bind samples
+        site_samples <- rbind(site_samples, buffer_samples_df)
+        site_samples$xsite
+      }
       
       #plot (for debugging)
       plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
