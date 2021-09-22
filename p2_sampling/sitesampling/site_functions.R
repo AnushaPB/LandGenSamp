@@ -4,10 +4,11 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   #coords - coordinates of all individuals in data set
   #npts - number of points to sample from each site
   #buffer - buffer around site from which to draw samples randomly
+  #edge_buffer - buffer from landscape edges to prevent sampling of sites
   site_samples <- data.frame()
-  for(i in 1:nrow(sample_sites)){
+  for(s in 1:nrow(sample_sites)){
     #create buffer around sites from which to sample points
-    site_buffers <- buffer(sample_sites[i,], 200000)
+    site_buffers <- buffer(sample_sites[s,], buffer_size)
     #subset out only coordinates falling within site buffers
     buffer_samples <- coords[site_buffers,]
     #convert from SPDF to df
