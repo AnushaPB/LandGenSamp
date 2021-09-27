@@ -243,6 +243,7 @@ res_tess <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("tess3r")
   library("automap")
   library("raster")
+  library("LEA")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
