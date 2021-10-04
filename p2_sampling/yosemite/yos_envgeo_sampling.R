@@ -81,7 +81,7 @@ for(n in npts){
   samp_out <- params
   for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, samples[,i])}
   colnames(samp_out) <- c(colnames(params),colnames(samples))
-  write.csv(samp_out, paste0("outputs/samples_envgeo",n,".csv"), row.names = FALSE)
+  write.csv(samp_out, paste0("outputs/yos_samples_envgeo",n,".csv"), row.names = FALSE)
 }
 
 

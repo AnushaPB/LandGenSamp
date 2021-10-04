@@ -142,7 +142,7 @@ run_lea <- function(gen, gsd_df, loci_df, K, full_admix){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-4) #not to overload your computer
+cl <- makeCluster(cores[1]-5) #not to overload your computer
 registerDoParallel(cl)
 
 res_lea <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {

@@ -35,18 +35,31 @@ sampstrat <- c("rand", "grid", "trans", "envgeo", "full")
 params_full <- expand.grid(K = c(2, 4), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05 , 0.5),
-                      r = c(0.3, 0.6),
                       nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 0:8)
+                      it = 0:9)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/RDA/RDA_results.csv")
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/yosemite/outputs/LFMM/LFMM_results.csv")
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/RDA/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/yosemite/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
+
+
+#CORRECT TPRCOMBO CALC
+#SEE NOTION NOTES (accidentally calculated non-unique loci)
+df$TPRCOMBO <- (df$TPR1COMBO + df$TPR2COMBO)/2
+
+#IMPORTANT NOTE ABOUT LFMM DATA:
+#CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+#NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+#I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
+df$FDR1COMBO[df$TPR1COMBO == 0 & is.na(df$FDR1COMBO)] <- 0
+df$FDR2COMBO[df$TPR2COMBO == 0 & is.na(df$FDR2COMBO)] <- 0
+df$FDR1[df$TPR1 == 0 & is.na(df$FDR1)] <- 0
+df$FDR2[df$TPR2 == 0 & is.na(df$FDR2)] <- 0
+
 
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
@@ -54,14 +67,14 @@ moddf <- df[df$sampstrat != "full",]
 ```
 
 ```{r}
-range(df$FDR)
-range(df$TPR)
+range(df$FDRCOMBO)
+range(df$TPRCOMBO)
 
 ```
 
 ```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "TPR", max = 0.7, option = "turbo")
-MEGAPLOT(moddf, "COMBO")
+MEGAPLOT(moddf, "TPRCOMBO", max = 0.7, option = "turbo")
+MEGAPLOT(moddf, "FDRCOMBO")
 ```
 
 
@@ -69,15 +82,15 @@ MEGAPLOT(moddf, "COMBO")
 #EXPLORATORY
 
 ```{r fig.width=20, fig.height=8}
-df$stat <- df$TPR
+df$stat <- df$TPRCOMBO
 summary_vplot(df)
 summary_hplot(df)
 
-df$stat <- log(df$TPR+1)
+df$stat <- log(df$TPRCOMBO+1)
 summary_vplot(df)
 summary_hplot(df)
 
-df$stat <- sqrt(df$TPR)
+df$stat <- sqrt(df$TPRCOMBO)
 summary_vplot(df)
 summary_hplot(df)
 ```

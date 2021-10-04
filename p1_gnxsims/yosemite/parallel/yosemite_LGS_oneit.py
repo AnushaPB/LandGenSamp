@@ -7,7 +7,8 @@ import sys
 import matplotlib.pyplot as plt
 
 # directory where input/output data will be stored
-dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+#dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
 
@@ -469,29 +470,7 @@ params = {
 
 }  # <END> params
 
-# define parameters to vary
-
-K_array = [2, 4]
-phi_array = [0.1, 0.5]
-m_array = [0.25, 1]
-
-# create an array of all combinations of those parameters
-# (second argument of reshape should be the number of parameters being varied)
-sim_array = np.array(np.meshgrid(K_array, phi_array, m_array)).T.reshape(-1, 3)
-# create a 2D array of seeds for simulations
-sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
-# append simulation seeds to sim_array
-sim_array = np.append(sim_array, sim_seeds, 1)
-
-
-
-def run_sims(sim_list):
-    # !ORDER MATTERS! must match order of params from before
-    K = float(sim_list[0])
-    phi = float(sim_list[1])
-    m = float(sim_list[2])
-    simseed = float(sim_list[3])
-
+def run_sims(K, phi, m, simseed = 10):
     # set params as a global variable (not good practice - fix this later)
     global params
 
@@ -508,7 +487,7 @@ def run_sims(sim_list):
     print(params)
 
     # make our params dict into a proper Geonomics ParamsDict object
-    mod_name = "yosemite_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "yosemite1_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100))
     print(mod_name)
     params = gnx.make_params_dict(params, mod_name)
@@ -522,29 +501,11 @@ def run_sims(sim_list):
     loci_df = pd.DataFrame()
     loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
     loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-    loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
+    loci_df.to_csv(dir + "parallel/nnloci/nnloci1_" + mod_name + ".csv")
     print("\nNON-NEUTRAL LOCI:")
     print(mod.comm[0].gen_arch.nonneut_loci)
 
 
 
-#multiprocessing
-if __name__ == '__main__':
-    #count number of cores
-    #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = mp.cpu_count() - 3
-
-    #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
-    #mp.set_start_method('spawn')
-
-    #make pool
-    pool = mp.Pool(ncpu)
-
-    #map function onto array
-    pool.map_async(run_sims, sim_array)
-
-    #close the pool
-    pool.close()
-    pool.join()
-
+run_sims(K = 4, phi = 0.5, m = 1)
 
