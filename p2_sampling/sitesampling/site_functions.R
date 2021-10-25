@@ -28,4 +28,7 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   }
   return(site_samples)
 }
-  
+
+nsite <- c(9, 18, 36)
+npts <- 10
+
