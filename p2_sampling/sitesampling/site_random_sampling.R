@@ -49,7 +49,7 @@ for(n in nsite){
       points(site_samples[,c("x","y")], col = "red")
       #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
-      samples <- site_samples$idx 
+      samples <- paste0(site_samples$idx, "_", site_samples$site)
     }
     
     #return vector of sample IDs
@@ -59,10 +59,23 @@ for(n in nsite){
   
   #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
   colnames(samples) <- paste0("rand", 1:ncol(samples))
+  #sample IDs
+  sampleIDs <- gsub("\\_.*","",samples)
+  #site IDs
+  siteIDs <- gsub("^.*\\_","", samples)
+  
+  #create df of sample IDs
   samp_out <- params
-  for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, samples[,i])}
+  for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, sampleIDs[,i])}
   colnames(samp_out) <- c(colnames(params), colnames(samples))
   write.csv(samp_out, paste0("outputs/site_samples_rand",n,".csv"), row.names = FALSE)
+  
+  #create df of site IDs
+  site_out <- params
+  for(i in 1:ncol(samples)){site_out <- cbind.data.frame(site_out, siteIDs[,i])}
+  colnames(site_out) <- c(colnames(params), colnames(samples))
+  write.csv(site_out, paste0("outputs/site_ids_rand",n,".csv"), row.names = FALSE)
+  
 }
 
 #stop cluster

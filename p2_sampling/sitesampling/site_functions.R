@@ -22,6 +22,9 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
     #calculate the mean y coord (psuedo-site)
     #buffer_samples_df$ysite <- mean(buffer_samples_df$y)
     
+    #save site IDs
+    buffer_samples_df$site <- s
+    
     #bind samples
     site_samples <- rbind(site_samples, buffer_samples_df)
     site_samples$xsite
@@ -29,6 +32,6 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   return(site_samples)
 }
 
-nsite <- c(9, 18, 36)
+nsite <- c(9, 14, 25)
 npts <- 10
 
