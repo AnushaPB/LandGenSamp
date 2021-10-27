@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 
 # directory where input/output data will be stored
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
-dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+#dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+
 # note: currently gnx dumps most output files in a folder where the script is run
 
 
@@ -532,8 +534,9 @@ def run_sims(sim_list):
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
-    #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = mp.cpu_count() - 6
+    #don't use all cpu so computer doesn't get overloaded (RAM cap)
+    #ncpu = mp.cpu_count() - 2
+    ncpu = 7
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

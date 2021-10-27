@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 # directory where input/output data will be stored
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
-dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+#dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
 
@@ -507,5 +508,5 @@ def run_sims(K, phi, m, simseed = 10):
 
 
 
-run_sims(K = 4, phi = 0.5, m = 1)
+run_sims(K = 4, phi = 0.1, m = 0.25)
 
