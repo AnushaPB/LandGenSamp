@@ -255,32 +255,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
   FDRCOMBO <- FD/(FD + TP)
 
-  #PLOT TO CHECK RESULTS
-  
-  par(mfrow=c(1,2))
-  plot(-log10(pvalues[,1]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env1")
-  points(loci_trait1, 
-         -log10(pvalues[,1])[loci_trait1], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
-  
-  plot(-log10(pvalues[,2]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env2")
-  points(loci_trait2, 
-         -log10(pvalues[,2])[loci_trait2], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
@@ -356,12 +330,12 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
         #calculate allele frequency by site (average)
-        sitegen <- aggregate(subgen, list(siteIDs), FUN=mean) 
+        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
         #calculate env values by site
-        sitegsd_df <- aggregate(subgsd_df, list(siteIDs), FUN=mean) 
-        
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
         
         #run analysis using subsample
+        #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
         sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = full_result$K)
         
         #save and format new result
@@ -390,5 +364,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM/lfmm_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/LFMM/lfmm_sitesampling_results.csv", row.names = FALSE)
 
