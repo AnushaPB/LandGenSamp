@@ -6,7 +6,13 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   #buffer - buffer around site from which to draw samples randomly
   #edge_buffer - buffer from landscape edges to prevent sampling of sites
   site_samples <- data.frame()
-  for(s in 1:nrow(sample_sites)){
+  
+  #if dataframe
+  if(class(sample_sites) == "data.frame"){nloop <- nrow(sample_sites)}
+  #if sp
+  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)}
+  
+  for(s in 1:nloop){
     #create buffer around sites from which to sample points
     site_buffers <- buffer(sample_sites[s,], buffer_size)
     #subset out only coordinates falling within site buffers
@@ -14,7 +20,11 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
     #convert from SPDF to df
     buffer_samples_df <- data.frame(buffer_samples)
     #randomly sample samples from coordinates
-    buffer_samples_df <- buffer_samples_df[sample(nrow(buffer_samples_df), npts),]
+    randsamp <- sample(nrow(buffer_samples_df), npts)
+    #subset df
+    buffer_samples_df <- buffer_samples_df[randsamp,]
+    #IMPORTANT: remove sample from coords so they are not sampled twice
+    coords <- coords[-c(coords$idx %in% buffer_samples_df$idx),]
     
     #THINK ABOUT THIS CODE
     #calculate the mean x coord (psuedo-site)
@@ -22,10 +32,16 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
     #calculate the mean y coord (psuedo-site)
     #buffer_samples_df$ysite <- mean(buffer_samples_df$y)
     
+    #save site IDs
+    buffer_samples_df$site <- s
+    
     #bind samples
     site_samples <- rbind(site_samples, buffer_samples_df)
     site_samples$xsite
   }
   return(site_samples)
 }
-  
+
+nsites <- c(9, 14, 25)
+npts <- 10
+

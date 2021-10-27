@@ -6,7 +6,7 @@ library("vegan")
 
 set.seed(42)
 
-envgeo_samp <- function(pts, npts, Nreps = 1000){
+envgeo_samp <- function(gsd_df, npts, Nreps = 1000){
   Nreps <- 1000
   sample.sets <- matrix(nrow=Nreps, ncol=npts)
   results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
@@ -67,8 +67,7 @@ for(n in npts){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
-      pts <- gsd_df[,c("idx","x","y")]
-      samples <- envgeo_samp(pts, npts = n, Nreps = 1000)
+      samples <- envgeo_samp(gsd_df, npts = n, Nreps = 1000)
     }
     
     #return vector of sample IDs
