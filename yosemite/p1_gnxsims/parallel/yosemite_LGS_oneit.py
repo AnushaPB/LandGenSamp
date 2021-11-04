@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 # directory where input/output data will be stored
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
 #dir = "/mnt/c/Users/Anusha/My Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
-dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+#dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/yosemite/"
+dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/yosemite/p1_gnxsims/"
+
 # note: currently gnx dumps most output files in a folder where the script is run
 
 

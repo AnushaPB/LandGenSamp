@@ -1,3 +1,7 @@
+#SCRIPT TO GET THE NLOCI IN CASE I FORGET TO MAKE AN NNLOCI FOLDER
+#because I am dumb
+#
+#THE ONLY THING THAT IS CHANGING IS THE RUN TIME (AND FOLDER SAVING)
 
 import geonomics as gnx
 import numpy as np
@@ -382,7 +386,7 @@ params = {
     # -------------#
     'model': {
         # total Model runtime (in timesteps)
-        'T': 1001,
+        'T': 1,
         # min burn-in runtime (in timesteps)
         'burn_T': 100,
         # seed number
@@ -401,73 +405,6 @@ params = {
             # whether to burn in each iteration
             'repeat_burn': False,
         },  # <END> 'iterations'
-
-        # -----------------------------------#
-        # --- data-collection parameters ---#
-        # -----------------------------------#
-        'data': {
-            'sampling': {
-                # sampling scheme {'all', 'random', 'point', 'transect'}
-                'scheme': 'all',
-                # when to collect data
-                'when': 1000,
-                # whether to save current Layers when data is collected
-                'include_landscape': False,
-                # whether to include fixed loci in VCF files
-                'include_fixed_sites': True,
-            },
-            'format': {
-                # format for genetic data {'vcf', 'fasta'}
-                'gen_format': 'vcf',
-                # format for vector geodata {'csv', 'shapefile', 'geojson'}
-                'geo_vect_format': 'csv',
-                # format for raster geodata {'geotiff', 'txt'}
-                'geo_rast_format': 'geotiff',
-            },
-        },  # <END> 'data'
-
-        # -----------------------------------#
-        # --- stats-collection parameters ---#
-        # -----------------------------------#
-        'stats': {
-            # number of individs at time t
-            'Nt': {
-                # whether to calculate
-                'calc': True,
-                # calculation frequency (in timesteps)
-                'freq': 1,
-            },
-            # heterozgosity
-            'het': {
-                # whether to calculate
-                'calc': True,
-                # calculation frequency (in timesteps)
-                'freq': 5,
-                # whether to mean across sampled individs
-                'mean': False,
-            },
-            # minor allele freq
-            'maf': {
-                # whether to calculate
-                'calc': True,
-                # calculation frequency (in timesteps)
-                'freq': 5,
-            },
-            # mean fitness
-            'mean_fit': {
-                # whether to calculate
-                'calc': True,
-                # calculation frequency (in timesteps)
-                'freq': 5,
-            },
-            # linkage disequilibirum
-            'ld': {
-                # whether to calculate
-                'calc': False,
-                # calculation frequency (in timesteps)
-                'freq': 100,
-            },
-        },  # <END> 'stats'
 
     }  # <END> 'model'
 
