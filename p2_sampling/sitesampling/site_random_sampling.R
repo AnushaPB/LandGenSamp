@@ -10,6 +10,7 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
+nistes <- c(9, 16, 25)
 for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
