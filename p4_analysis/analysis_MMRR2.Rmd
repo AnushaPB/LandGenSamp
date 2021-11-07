@@ -49,6 +49,10 @@ df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/La
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
 df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
+
+
+
+
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
