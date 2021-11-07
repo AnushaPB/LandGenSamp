@@ -27,7 +27,7 @@ BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 
 ```{r}
 #number of points to sample
-nsamp <- c(36, 81, 144, 225, 324, 2000)
+nsamp <- c(36, 81, 144, 225, 2000)
 #sampling strategies
 sampstrat <- c("rand", "grid", "trans", "envgeo", "full")
 
@@ -40,7 +40,7 @@ params_full <- expand.grid(K = c(2, 4),
                       r = c(0.3, 0.6),
                       nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 0:8)
+                      it = 0:9)
 
 #df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
 
@@ -58,10 +58,16 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.6)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.6)
+MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 3)
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 1)
 ```
 
+```{r fig.width=20, fig.height=7}
+df$stat <- df$geo_rmse
+moddf <- df[df$sampstrat != "full",]
+summary_vplot(df)
+summary_hplot(df)
+```
 
 ```{r fig.width=20, fig.height=7}
 df$stat <- df$comboenv_rmse
@@ -240,10 +246,10 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
-```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+```{r pairwise comparison of sampstrat, fig.width=10, fig.height=10}
 #TukeyHSD
 
-model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+model <- lmer(log(stat) ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 pw <- emmeans(model, list(pairwise ~ sampstrat), adjust = "tukey")
 
@@ -271,6 +277,30 @@ ggplot(resdf, aes(p1,p2)) +
           axis.text.y = element_text(color = "gray50", size = 12), 
           plot.margin=unit(rep(0.4,4),"cm")) +
     coord_fixed()
+
+ggplot(moddf, aes(fill=sampstrat, y=log(stat), x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+ggplot(moddf, aes(fill=sampstrat, y=stat, x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+
 
 ```
 
