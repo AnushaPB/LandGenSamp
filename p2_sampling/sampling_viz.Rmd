@@ -24,3 +24,28 @@ for(i in 1:nrow(params)){
 
 ```
 
+```{r fig.width=10, fig.height = 13}
+
+i=490
+gsd_df <- get_data(i, params = params, "gsd")
+
+
+envpc <- prcomp(gsd_df[, c("env1","env2")])
+envpc1 <- envpc$x[,1]
+palz <- magma(100)
+envcol <- palz[as.numeric(cut(envpc1, breaks = 100))]
+names(envcol) <- rownames(gsd_df)
+
+
+par(mfrow=c(length(npts), length(sampstrats)), pty="s", mar = rep(2, 4), bg = "black")
+for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], params = params, sampstrat, nsamp)
+        subgsd_df <- gsd_df[subIDs,]
+        plot(subgsd_df$x, subgsd_df$y, xlim = c(0,40), ylim = c(0,40), main = paste0(nsamp," / ", sampstrat),
+             xlab = "", ylab = "", pch = 19, col = envcol[subIDs])
+      }
+    }
+```
+
