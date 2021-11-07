@@ -43,6 +43,8 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
+nsites <- c(9,16,25)
+
 for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
@@ -78,8 +80,9 @@ for(n in nsites){
       site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 400000)
       
       #plot (for debugging)
-      plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
-      points(gsd_df[,c("x","y")], col = "gray")
+      par(pty="s")
+      plot(gsd_df[,c("x","y")], xlim = c(0,40), ylim = c(0,40), col = "gray")
+      points(sample_sites, pch = 3)
       points(site_samples[,c("x","y")], col = "red")
       #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
@@ -91,12 +94,26 @@ for(n in nsites){
     
   }
   
+  
   #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
-  colnames(samples) <- paste0("grid",1:ncol(samples))
+  colnames(samples) <- paste0("rand", 1:ncol(samples))
+  #sample IDs
+  sampleIDs <- gsub("\\_.*","",samples)
+  #site IDs
+  siteIDs <- gsub("^.*\\_","", samples)
+  
+  #create df of sample IDs
   samp_out <- params
-  for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, samples[,i])}
-  colnames(samp_out) <- c(colnames(params),colnames(samples))
-  write.csv(samp_out, paste0("outputs/samples_grid",n,".csv"), row.names = FALSE)
+  for(i in 1:ncol(samples)){samp_out <- cbind.data.frame(samp_out, sampleIDs[,i])}
+  colnames(samp_out) <- c(colnames(params), colnames(samples))
+  write.csv(samp_out, paste0("outputs/site_samples_grid",n,".csv"), row.names = FALSE)
+  
+  #create df of site IDs
+  site_out <- params
+  for(i in 1:ncol(samples)){site_out <- cbind.data.frame(site_out, siteIDs[,i])}
+  colnames(site_out) <- c(colnames(params), colnames(samples))
+  write.csv(site_out, paste0("outputs/site_ids_grid",n,".csv"), row.names = FALSE)
+  
 }
 
 
