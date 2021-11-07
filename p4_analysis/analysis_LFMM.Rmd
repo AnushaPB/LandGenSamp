@@ -2,9 +2,6 @@
 title: "analysis_tests"
 output: html_document
 ---
-```{r}
-
-```
 
 
 ```{r}
@@ -23,6 +20,8 @@ library("effects")
 source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
+
+
 ```
 
 
@@ -86,6 +85,19 @@ MEGAPLOT(moddf, "FDRCOMBO")
 
 
 #EXPLORATORY
+```{r fig.width=20, fig.height=7}
+df$stat <- df$TPRCOMBO
+moddf <- df[df$sampstrat != "full",]
+summary_vplot(df)
+summary_hplot(df)
+
+
+df$stat <- df$FDRCOMBO
+moddf <- df[df$sampstrat != "full",]
+summary_vplot(df)
+summary_hplot(df)
+```
+
 
 ```{r fig.width=20, fig.height=8}
 df$stat <- df$TPRCOMBO
@@ -280,7 +292,9 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
-```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+
+
+```{r pairwise comparison of sampstrat, fig.width=8, fig.height=8}
 #TukeyHSD
 
 model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
@@ -311,6 +325,18 @@ ggplot(resdf, aes(p1,p2)) +
           axis.text.y = element_text(color = "gray50", size = 12), 
           plot.margin=unit(rep(0.4,4),"cm")) +
     coord_fixed()
+
+ggplot(moddf, aes(fill=sampstrat, y=stat, x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5, jitter.height = 0.01), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
 
 ```
 
