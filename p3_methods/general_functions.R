@@ -41,6 +41,7 @@ get_gen <- function(filepath){
   return(genmat)
 }
 
+
 #Get geospatial data
 get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
@@ -205,7 +206,7 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 #nloci 
 nloci = 10000
 #number of points to sample
-npts <- c(36, 81, 144, 225, 324)
+npts <- c(36, 81, 144, 225)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)
@@ -221,11 +222,5 @@ params <- expand.grid(K = c(2, 4),
                       it = 0:9)
 
 #TESTING PARAMS (REMOVE LATER)
-#params <- expand.grid(K = c(2, 4), 
-                      #phi = c(0.1, 0.5),
-                     # m = c(0.25, 1),
-                      #seed = c(1, 2, 3),
-                      #H = c(0.05, 0.5),
-                     # r = c(0.30, 0.60),
-                     # it = 1)
+#params <- expand.grid(K = c(2, 4), phi = c(0.1, 0.5), m = c(0.25, 1), seed = c(1, 2, 3),H = c(0.05, 0.5),r = c(0.30, 0.60),it = 3:9)
 
