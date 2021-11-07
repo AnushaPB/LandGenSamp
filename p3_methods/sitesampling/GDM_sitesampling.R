@@ -1,5 +1,3 @@
-set.seed(42)
-
 library("here") #paths
 library("gdm") #GDM
 library("vcfR")
@@ -9,6 +7,9 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
+source("sitesampling/sitesampling_functions.R")
+
+set.seed(42)
 
 
 ###########
@@ -27,7 +28,6 @@ coeffs <- function(gdm.model){
   coeffs <- data.frame(predictor = gdm.model$predictors, coefficient = coefSums)
   return(coeffs)
 }
-
 
 
 run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
@@ -114,6 +114,8 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
+nsites <- c(9, 16, 25)
+
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   #vcfR
@@ -154,26 +156,43 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/GDM/gdm_results_",paramset,".csv")
+    csv_file <- paste0("sitesampling/outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
-    for(nsamp in npts){
+    for(nsite in nsites){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
+        #get sites
+        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        #confirm that number of sites matches number of sample IDs
+        stopifnot(length(subIDs) == length(siteIDs))
+        #calculate allele frequency by site (average)
+        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+        #calculate env values by site
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
+
         #run analysis using subsample
-        sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "dps")
+        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "dps")
         
-        #calculate RMSE
-        env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
-        env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
-        geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
+        
+        #calculate RMSE if not null
+        if(sub_result$env1_coeff == "NULL"){
+          env1_rmse <- "NULL"
+          env2_rmse <- "NULL"
+          geo_rmse <- "NULL"
+        } else {
+          env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
+          env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
+          geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
+          
+        }
         
         #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result, 
                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
         
         #export data to csv (temp)
@@ -196,5 +215,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "outputs/gdm_results_dps.csv", row.names = FALSE)
+write.csv(res_gdm, "sitesampling/outputs/gdm_sitesampling_results_dps.csv", row.names = FALSE)
 

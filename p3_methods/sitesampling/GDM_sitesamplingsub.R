@@ -1,14 +1,16 @@
-set.seed(42)
-
 library("here") #paths
 library("gdm") #GDM
 library("vcfR")
+
 #parallel
 library(foreach)
 library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
+source("sitesampling/sitesampling_functions.R")
+
+set.seed(42)
 
 
 ###########
@@ -29,8 +31,7 @@ coeffs <- function(gdm.model){
 }
 
 
-
-run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
+run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   
   if(distmeasure == "bray"){
     K <- nrow(gen)
@@ -45,7 +46,9 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
       }
     }
     gendist <- ret
-  } else if(distmeasure == "dps"){
+  }
+  
+  if(distmeasure == "dps"){
     #DPS GENETIC DISTANCE
     gen[gen == 0] <- "11"
     gen[gen == 1] <- "12"
@@ -55,7 +58,9 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
     psh <- propShared(genindobj)
     dps <- 1 - psh
     gendist <- dps
-  } else if(distmeasure == "pca"){
+  }
+  
+  if(distmeasure == "pca"){
     #perform PCA
     pc <- prcomp(gen)
     #Calculate PC distance based on  PCs (?MODIFY?)
@@ -64,12 +69,12 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
     
     pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
     gendist <- pc_dist
-  } else if(distmeasure == "euc"){
-    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
-  } else {
-    print("appropriate gen dist measure not specified")
   }
   
+  if(distmeasure == "euc"){
+    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
+  }
+   
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
@@ -85,24 +90,15 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
   #check var importance/significance (ASK IAN IF WE WANT TO DO THIS OR JUST COMPARE THE COEFFICIENTS FROM A FULL MODEL (PROS: FASTER/EASIER))
   #system.time(vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=50))
   
-  if(is.null(gdm.model)){
-    #turn results into dataframe
-    results <- data.frame(env1_coeff = "NULL",
-                          env2_coeff = "NULL",
-                          geo_coeff = "NULL"
-    )
-  } else {
-    predictors <- coeffs(gdm.model)
-    predictors
-    
-    #turn results into dataframe
-    results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
-                          env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
-                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"]
-    )
-  }
-  
-  
+
+  predictors <- coeffs(gdm.model)
+  predictors
+
+  #turn results into dataframe
+  results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
+                        env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
+                        geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"]
+                        )
   #remove rownames
   rownames(results) <- NULL
   
@@ -114,12 +110,13 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
+nsites <- c(9, 16, 25)
+sampstrats <- "equi"
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   #vcfR
   library("vcfR")
   library("gdm")
-  library("adegenet")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -150,22 +147,31 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "dps")
+    full_result <- run_gdm(gen_2k, gsd_df_2k)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/GDM/gdm_results_",paramset,".csv")
-    write.csv(result, csv_file, row.names = FALSE)
+    csv_file <- paste0("sitesampling/outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
+    #write.csv(result, csv_file, row.names = FALSE)
     
-    for(nsamp in npts){
+    for(nsite in nsites){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
+        #get sites
+        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        #confirm that number of sites matches number of sample IDs
+        stopifnot(length(subIDs) == length(siteIDs))
+        #calculate allele frequency by site (average)
+        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+        #calculate env values by site
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
+
         #run analysis using subsample
-        sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "dps")
+        sub_result <- run_gdm(sitegen, sitegsd_df)
         
         #calculate RMSE
         env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
@@ -173,7 +179,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
         #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result, 
                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
         
         #export data to csv (temp)
@@ -196,5 +202,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "outputs/gdm_results_dps.csv", row.names = FALSE)
+#write.csv(res_gdm, "sitesampling/outputs/gdm_sitesampling_results.csv", row.names = FALSE)
 
