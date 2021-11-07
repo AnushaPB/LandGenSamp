@@ -9,6 +9,7 @@ library("foreach")
 library("doParallel")
 
 #read in general functions and objects
+source("general_functions.R")
 source("sitesampling/sitesampling_functions.R")
 
 ##########
@@ -158,6 +159,8 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
 }
 
 
+
+
 run_lfmm <- function(gen, gsd_df, loci_df, K){
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
@@ -265,6 +268,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
 }
 
 
+nsites <- c(9, 16, 25)
 
 #register cores
 cores <- detectCores()
@@ -318,15 +322,15 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     csv_file <- paste0("sitesampling/outputs/LFMM/LFMM_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
-    for(nsamp in npts){
+    for(nsite in nsites){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
         #get sites
-        siteIDs <- get_sites(params[i,], params, sampstrat, nsamp)
+        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
         #confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
         #calculate allele frequency by site (average)
@@ -339,7 +343,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = full_result$K)
         
         #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
