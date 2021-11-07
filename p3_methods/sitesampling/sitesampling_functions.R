@@ -273,7 +273,7 @@ nloci = 10000
 #number of sites
 npts <- c(9, 14, 25)
 #sampling strategies
-sampstrats <- c("rand")
+sampstrats <- c("rand", "equi", "envgeo")
 #landscape dimensions (square)
 ldim = 40
 
