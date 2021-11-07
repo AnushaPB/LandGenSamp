@@ -7,10 +7,8 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   #edge_buffer - buffer from landscape edges to prevent sampling of sites
   site_samples <- data.frame()
   
-  #if dataframe
-  if(class(sample_sites) == "data.frame"){nloop <- nrow(sample_sites)}
   #if sp
-  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)}
+  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)} else {nloop <- nrow(sample_sites)}
   
   for(s in 1:nloop){
     #create buffer around sites from which to sample points
@@ -43,5 +41,6 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
 }
 
 nsites <- c(9, 14, 25)
+sampstrats <- c("rand", "grid", "envgeo")
 npts <- 10
 
