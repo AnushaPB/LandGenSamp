@@ -126,7 +126,8 @@ summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
 }
 
 
-summary_hplot <- function(df, colpal = "plasma", full=FALSE){
+#FIX TO INCLUDE sampstratsub/nsampsub
+summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2){
   
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
   if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
@@ -165,7 +166,7 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE){
     p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
       ggtitle(unique(tempdf$group)) +
       geom_tile(aes(fill = mean)) + 
-      geom_text(aes(label = signif(mean, digits = 2), hjust = 0.5)) +
+      geom_text(aes(label = signif(mean, digits = sigdig), hjust = 0.5)) +
       scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = colpal) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
