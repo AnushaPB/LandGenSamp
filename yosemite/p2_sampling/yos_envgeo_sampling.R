@@ -45,8 +45,8 @@ envgeo_samp <- function(pts, npts, Nreps = 1000){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 2
+cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
 for(n in npts){

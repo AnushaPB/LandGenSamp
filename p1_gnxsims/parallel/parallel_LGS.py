@@ -13,7 +13,7 @@ def make_unif_array(n):
     return array
 
 
-unifenv = make_unif_array(40)
+unifenv = make_unif_array(100)
 
 #define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
 #Params to define
@@ -40,7 +40,7 @@ params = {
         # ------------#
         'main': {
             # x,y (a.k.a. j,i) dimensions of the Landscape
-            'dim': (40, 40),
+            'dim': (100, 100),
             # x,y resolution of the Landscape
             'res': (1, 1),
             # x,y coords of upper-left corner of the Landscape
@@ -386,7 +386,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 9,
+            'n_its': 1,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -484,7 +484,8 @@ sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
 sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
-dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
+#dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
+dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
 def run_sims(sim_list):
@@ -545,7 +546,7 @@ def run_sims(sim_list):
 if __name__ == '__main__':
     #count number of cores
     #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = mp.cpu_count() - 3
+    ncpu = 4
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

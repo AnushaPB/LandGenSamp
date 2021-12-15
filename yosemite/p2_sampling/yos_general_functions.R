@@ -2,7 +2,7 @@
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/yosemite/LGS_data/"){
+create_filepath <- function(i, params, type, datadir = "/home/wanglab/Anusha/GitHub/LandGenSamp/yosemite/p1_gnxsims/parallel/yos_data/"){
   
   #set of parameter names in filepath form
   paramset <- paste0("yosemite_K",params[i,"K"],

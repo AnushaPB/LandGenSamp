@@ -3,6 +3,11 @@ title: "MNLM"
 output: html_document
 ---
 ```{r}
+install.packages("devtools")
+devtools::install_github("ropensci/NLMR")
+```
+
+```{r}
 library(raster)
 library(here)
 library(wesanderson)
@@ -118,6 +123,7 @@ for(seed in c(1,2,3)){
 ```{r CHUNK TO WRITE FILES fig.width=8, fig.height=10, warning=FALSE}
 f <- matrix(c(0,1,0,1,0,1,0,1,0), nrow=3)
 
+dim <- 100
 n <- 3
 d <- (n^2-1)/2
 f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
@@ -140,17 +146,17 @@ for(seed in c(1, 2, 3)){
       env2 <- crop(env2, c(0,40,0,40))
       MI2 <- round(Moran(env2,  w=f),2)
       
-      pearcor <- round(layerStats(stack(env1,env2),"pearson")$`pearson correlation coefficient`,1)[1,2]
+      #pearcor <- round(layerStats(stack(env1,env2),"pearson")$`pearson correlation coefficient`,1)[1,2]
       
-      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, 
-           main = paste0("env1 (Moran's I = ",MI1,")"))
-      plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2,
-           main = paste0("env2 (Moran's I = ",MI2,")"))
+      #plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, 
+          # main = paste0("env1 (Moran's I = ",MI1,")"))
+      #plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2,
+         #  main = paste0("env2 (Moran's I = ",MI2,")"))
       
-      rascor <- rasterCorrelation(env1,env2,5)
-      MIr <- round(Moran(rascor),2)
-      plot(rascor, col=paldiv(100), box=FALSE, axes=FALSE, zlim = c(-1,1),
-           main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
+      #rascor <- rasterCorrelation(env1,env2,5)
+      #MIr <- round(Moran(rascor),2)
+      #plot(rascor, col=paldiv(100), box=FALSE, axes=FALSE, zlim = c(-1,1),
+           #main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
       
       write.table(as.matrix(env1), row.names = FALSE, col.names=FALSE, sep=",",
                 here("layers", paste0("seed",seed,
