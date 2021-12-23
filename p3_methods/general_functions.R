@@ -47,9 +47,13 @@ get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
   gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
+  gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)(.*?)(?=\\,)'))
+  gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
   rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
+
+
 
 #general function to get data
 get_data <- function(i, params, type){
