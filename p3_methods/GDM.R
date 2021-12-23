@@ -28,6 +28,8 @@ coeffs <- function(gdm.model){
   return(coeffs)
 }
 
+#for scaling genetic distances from 0 to 1 for GDM
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 
 run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
@@ -63,7 +65,9 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
     npcs <- round(nrow(gen)*0.5,0)
     
     pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
-    gendist <- pc_dist
+    
+    #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1) (?MODIFY?)
+    gendist <- range01(pc_dist)
   } else if(distmeasure == "euc"){
     gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
   } else {
@@ -75,8 +79,8 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
   gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
   gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "Longitude", YColumn = "Latitude", siteCol = "site")
-  #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1) (?MODIFY?)
-  range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+  
+  
   gdmData$distance <- range01(gdmData$distance) 
   
   #run GDM
