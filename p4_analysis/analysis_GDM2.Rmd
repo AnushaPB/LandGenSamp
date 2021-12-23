@@ -57,6 +57,9 @@ moddf <- df[df$sampstrat != "full",]
 ```
 
 
+
+#summary plots
+
 ```{r fig.width = 30, fig.height=40}
 MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 3)
 MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 1)
@@ -67,6 +70,9 @@ df$stat <- df$geo_rmse
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
+
+
+summary_hplot(df, aggfunc = "mean", colpal = "viridis", direction = -1)
 ```
 
 ```{r fig.width=20, fig.height=7}
@@ -74,7 +80,56 @@ df$stat <- df$comboenv_rmse
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
+
+summary_hplot(df, aggfunc = "sd")
+summary_hplot(df, aggfunc = "mean", colpal = "viridis", direction = -1)
 ```
+
+#VARIANCE EXPLORATION
+```{r}
+df$stat <- df$geo_rmse
+
+df %>%
+  group_by(seed) %>%
+  summarise(var = var(geo_rmse, na.rm=TRUE)) %>%
+  arrange(var)
+
+
+ggplot(df, aes(fill=seed, y=geo_rmse, x=factor(seed))) + 
+     #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+     scale_fill_viridis(discrete=T, option="viridis") +
+     theme_bw()+
+     geom_point(aes(col=seed),position = position_jitterdodge(dodge.width = 0.9, jitter.width=0.9), alpha=0.1)+
+     geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.5)+
+     scale_colour_viridis(discrete=T, option="viridis") +
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+ggplot(df, aes(fill=seed, y=log(geo_rmse), x=factor(seed))) + 
+     #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+     scale_fill_viridis(discrete=T, option="viridis") +
+     theme_bw()+
+     geom_point(aes(col=seed),position = position_jitterdodge(dodge.width = 0.9, jitter.width=0.9), alpha=0.1)+
+     geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.5)+
+     scale_colour_viridis(discrete=T, option="viridis") +
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+```
+
+
+#FOR COMPARISON WITH YOSEMITE
+```{r fig.width=15, fig.height=7}
+df$stat <- df$geo_rmse
+ydf <- df[df$H == 0.5 & df$r == 0.3,]
+
+summary_hplot(ydf, aggfunc = "mean", colpal = "viridis", direction = -1)
+
+df$stat <- df$comboenv_rmse
+ydf <- df[df$H == 0.5 & df$r == 0.3,]
+
+summary_hplot(ydf, aggfunc = "mean", colpal = "viridis", direction = -1)
+```
+
 
 # full model w/ interactions
 ```{r}
