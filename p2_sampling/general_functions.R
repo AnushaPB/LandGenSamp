@@ -1,11 +1,10 @@
+#library to create paths
+library("here")
 
-#create paths
-parentpath = dirname(getwd())
-datadir = paste0(parentpath, "p1_gnxsims/parallel/LGS_data/")
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = datadir){
+create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -16,11 +15,11 @@ create_filepath <- function(i, params, type, datadir = datadir){
                      "_r",params[i,"r"]*100)
   
   #different file patterns for different data types
-  if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset,
+  if(type == "gen"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
-  if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
+  if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "/nnloci_", paramset, ".csv")}
   
   print(filepath)
   return(filepath)
@@ -74,7 +73,7 @@ get_data <- function(i, params, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params = params, sampstrat, nsamp){
+get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
@@ -94,10 +93,7 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp){
   } 
   stopifnot(file_exists)
   
-  #directory of sample ID csvs (CHANGE)
-  datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
-  
-  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(outdir, "/samples_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
