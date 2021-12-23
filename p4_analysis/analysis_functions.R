@@ -1,7 +1,14 @@
 
-MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma"){
-  meanagg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
-  colnames(meanagg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
+MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean"){
+  if(aggfunc == "mean"){
+    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
+  }
+  
+  if(aggfunc == "var") {
+    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), var)
+  }
+  
+  colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
   
   params <- expand.grid(K = c(2, 4), 
@@ -13,7 +20,7 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
   
   plts <- list()
   for(i in 1:nrow(params)){
-    tempdf <- merge(params[i,], meanagg)
+    tempdf <- merge(params[i,], agg)
     
     ptitle <- paramset <- paste0("K=",params[i,"K"],
                                  " phi=",params[i,"phi"],
@@ -127,7 +134,9 @@ summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
 
 
 #FIX TO INCLUDE sampstratsub/nsampsub
-summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2){
+summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", maxv = NULL, direction = 1){
+  
+  
   
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
   if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
@@ -140,7 +149,11 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2){
       
       meandf <- data.frame()
       for(p in c("K", "m", "phi", "H", "r")){
-        aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
+        if(aggfunc == "mean"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)}
+        if(aggfunc == "sd"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), sd)}
+        if(aggfunc == "max"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), max)}
+        if(aggfunc == "min"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), min)}
+        if(aggfunc == "var"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), var)}
         aggdf[,1] <- paste(p,"=", aggdf[,1])
         aggdf$param <- p
         meandf <- rbind.data.frame(meandf, aggdf)
@@ -159,6 +172,8 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2){
   row.names(resdf) <- NULL
   resdf$nsamp <- as.factor(resdf$nsamp)
   
+  if(!is.null(maxv)){maxv <- maxv} else { maxv <- max(resdf$mean)}
+  
   ## plot data
   plts <- list()
   for(i in 1:length(unique(resdf$group))){
@@ -167,7 +182,7 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2){
       ggtitle(unique(tempdf$group)) +
       geom_tile(aes(fill = mean)) + 
       geom_text(aes(label = signif(mean, digits = sigdig), hjust = 0.5)) +
-      scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = colpal) +
+      scale_fill_viridis(limits=c(min(resdf$mean),maxv), option = colpal, direction = direction) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(), legend.position = "none",
