@@ -74,13 +74,47 @@ unfold<-function(X){
 
 
 
-run_mmrr <- function(gen, gsd_df){
+run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   #Format data for MMRR  
-  ##calculate genetic distance based on pca
-  Y <- as.matrix(gen)
-  pc <- prcomp(Y)
-  npcs <- round(nrow(gen)*0.5,0)
-  pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE)) #CHANGE NUMBER OF PCS? (see Shirk et al. 2016:  10.1111/1755-0508.12684)
+  if(distmeasure == "bray"){
+    K <- nrow(gen)
+    nloc <- ncol(gen)
+    ret <- matrix(0,K,K)
+    rownames(ret) <- colnames(ret) <- rownames(gen)
+    for( i in 1:K){
+      for( j in 1:i){
+        if( i != j){
+          ret[i,j] <- ret[j,i] <- sum(apply(gen[ c(i,j), ], 2, min)) / nloc
+        }
+      }
+    }
+    gendist <- ret
+  } else if(distmeasure == "dps"){
+    #DPS GENETIC DISTANCE
+    gen[gen == 0] <- "11"
+    gen[gen == 1] <- "12"
+    gen[gen == 2] <- "22"
+    
+    genindobj <- df2genind(gen, ploidy=2, ncode=1)
+    psh <- propShared(genindobj)
+    dps <- 1 - psh
+    gendist <- dps
+  } else if(distmeasure == "pca"){
+    #perform PCA
+    pc <- prcomp(gen)
+    #Calculate PC distance based on  PCs (?MODIFY?)
+    #use npcs based on sample size
+    npcs <- round(nrow(gen)*0.5,0)
+    
+    pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
+    
+    #SCALE DISTANCE FROM 0 to 1 if max(distance) >1 (gdm only works for 0<vals<1) (?MODIFY?)
+    gendist <- range01(pc_dist)
+  } else if(distmeasure == "euc"){
+    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
+  } else {
+    print("appropriate gen dist measure not specified")
+  }
   
   ##get env vars and coords
   env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
@@ -91,7 +125,7 @@ run_mmrr <- function(gen, gsd_df){
   Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
   
   #Run  MMRR
-  mmrr_res <- MMRR(pc_dist, Xmats, nperm = 50)
+  mmrr_res <- MMRR(gendist, Xmats, nperm = 50)
   
   #create data frame of results
   mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
@@ -120,6 +154,7 @@ registerDoParallel(cl)
 res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
+  library("adegenet")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -151,7 +186,10 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_mmrr(gen_2k, gsd_df_2k)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
+    fullratio <- (full_result$env1_coeff + full_result$env2_coeff)/full_result$geo_coeff
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, 
+                         ratio = fullratio, 
+                         env1_rmse = NA, env2_rmse = NA, geo_rmse = NA, ratio_rmse = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/MMRR/MMRR_results_",paramset,".csv")
@@ -172,9 +210,14 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
         geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
+        subratio <- (sub_result$env1_coeff + sub_result$env2_coeff)/sub_result$geo_coeff
+        ratio_rmse <- rmse_coeff(fullratio, subratio)
+        
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
-                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse)
+                                 ratio = subratio,
+                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse,
+                                 ratio_rmse = ratio_rmse)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
