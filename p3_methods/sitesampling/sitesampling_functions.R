@@ -271,7 +271,7 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 #nloci 
 nloci = 10000
 #number of sites
-npts <- c(9, 14, 25)
+nsites <- c(9, 16, 25)
 #sampling strategies
 sampstrats <- c("rand", "equi", "envgeo")
 #landscape dimensions (square)
