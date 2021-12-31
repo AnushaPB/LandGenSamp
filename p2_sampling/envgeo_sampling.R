@@ -45,8 +45,9 @@ envgeo_samp <- function(gsd_df, npts, Nreps = 1000){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+#THIS PROCESS USES A LOT OF RAM SO ONLY RUN TWO AT A TIME
+cores <- 2
+cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
 for(n in npts){
