@@ -1,3 +1,6 @@
+#library to create paths
+library("here")
+
 
 #####################
 # GENERAL FUNCTIONS #
@@ -5,7 +8,7 @@
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/parallel/LGS_data/"){
+create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -16,12 +19,11 @@ create_filepath <- function(i, params, type, datadir = "/Users/Anusha/Documents/
                      "_r",params[i,"r"]*100)
   
   #different file patterns for different data types
-  if(type == "gen"){filepath <- paste0(datadir, "mod-", paramset,
+  if(type == "gen"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
-  if(type == "gsd"){filepath <- paste0(datadir, "mod-", paramset,
+  if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  #if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, "_it-",params[i,"it"], ".csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "nnloci_", paramset, ".csv")}
+  if(type == "loci"){filepath <- paste0(datadir, "/nnloci_", paramset, ".csv")}
   
   print(filepath)
   return(filepath)
@@ -41,19 +43,14 @@ get_gen <- function(filepath){
   return(genmat)
 }
 
-
 #Get geospatial data
 get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
   gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-  gsd_df$z1 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=\\[)(.*?)(?=\\,)'))
-  gsd_df$z2 <- as.numeric(stringr::str_extract(gsd_df$z, '(?<=, )[^,]+(?=\\])')) 
   rownames(gsd_df) <- gsd_df$idx
   return(gsd_df)
 }
-
-
 
 #general function to get data
 get_data <- function(i, params, type){
@@ -80,17 +77,28 @@ get_data <- function(i, params, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params, sampstrat, nsamp){
+get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
-  #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  #directory of sample ID csvs (CHANGE)
-  datadir <- "/Users/Anusha/Documents/GitHub/LandGenSamp/p2_sampling/outputs/"
+  #Check if files for parameter exist
+  gen_filepath <- create_filepath(i, params = params, "gen")
+  print(gen_filepath)
+  gsd_filepath <- create_filepath(i, params = params, "gsd")
+  print(gsd_filepath)
+  loci_filepath <- create_filepath(i, params = params, "loci")
+  print(loci_filepath)
+  file_exists <- TRUE
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
+  if(!file_exists) { 
+    print("File does not exist:")
+    print(params[i,]) 
+  } 
+  stopifnot(file_exists)
   
-  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
-    
+  subIDs <- read.csv(paste0(outdir, "/samples_", sampstrat, nsamp, ".csv"))
+  
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
                    & subIDs$m == param_set$m 
@@ -102,7 +110,7 @@ get_samples <- function(param_set, params, sampstrat, nsamp){
   #confirm there is only one set of IDs being used
   stopifnot(nrow(subIDs) == 1)
   
-  #remove parameter columns and convert to vector of IDs
+  #remove parameter columnds and convert to vector of IDs
   subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
   subIDs <- unlist(subIDs)
   
@@ -111,6 +119,7 @@ get_samples <- function(param_set, params, sampstrat, nsamp){
   
   return(as.character(subIDs))
 }
+
 
 #function to calculate RMSE
 #currently two functions because I am not sure whether to calculate the RMSE when the coeffs aren't signif
@@ -214,7 +223,7 @@ npts <- c(36, 81, 144, 225)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)
-ldim = 40
+ldim = 100
 
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(2, 4), 
