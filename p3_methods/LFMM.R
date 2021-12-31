@@ -124,30 +124,30 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   
   #PLOT TO CHECK RESULTS (for debugging, remove later)
   
-  par(mfrow=c(1,2))
-  plot(-log10(pvalues[,1]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env1")
-  points(loci_trait1, 
-         -log10(pvalues[,1])[loci_trait1], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
+#  par(mfrow=c(1,2))
+ # plot(-log10(pvalues[,1]), 
+  #     pch = 19, 
+   #    cex = .2, 
+    #   xlab = "SNP", ylab = "-Log P",
+     #  col = "grey",
+      # main = "env1")
+#  points(loci_trait1, 
+ #        -log10(pvalues[,1])[loci_trait1], 
+  #       col = "red", 
+   #      cex = 1.5)
+ # abline(h = -log10(0.05), col="red", lty=2)
   
-  plot(-log10(pvalues[,2]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env2")
-  points(loci_trait2, 
-         -log10(pvalues[,2])[loci_trait2], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
+  #plot(-log10(pvalues[,2]), 
+   #    pch = 19, 
+    #   cex = .2, 
+     #  xlab = "SNP", ylab = "-Log P",
+      # col = "grey",
+      # main = "env2")
+#  points(loci_trait2, 
+ #        -log10(pvalues[,2])[loci_trait2], 
+  #       col = "red", 
+   #      cex = 1.5)
+ # abline(h = -log10(0.05), col="red", lty=2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
@@ -256,30 +256,30 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
 
   #PLOT TO CHECK RESULTS
   
-  par(mfrow=c(1,2))
-  plot(-log10(pvalues[,1]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env1")
-  points(loci_trait1, 
-         -log10(pvalues[,1])[loci_trait1], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
+  #par(mfrow=c(1,2))
+  #plot(-log10(pvalues[,1]), 
+   #    pch = 19, 
+    #   cex = .2, 
+     #  xlab = "SNP", ylab = "-Log P",
+      # col = "grey",
+     #  main = "env1")
+ # points(loci_trait1, 
+  #       -log10(pvalues[,1])[loci_trait1], 
+   #      col = "red", 
+    #     cex = 1.5)
+  #abline(h = -log10(0.05), col="red", lty=2)
   
-  plot(-log10(pvalues[,2]), 
-       pch = 19, 
-       cex = .2, 
-       xlab = "SNP", ylab = "-Log P",
-       col = "grey",
-       main = "env2")
-  points(loci_trait2, 
-         -log10(pvalues[,2])[loci_trait2], 
-         col = "red", 
-         cex = 1.5)
-  abline(h = -log10(0.05), col="red", lty=2)
+  #plot(-log10(pvalues[,2]), 
+   #    pch = 19, 
+    #   cex = .2, 
+     #  xlab = "SNP", ylab = "-Log P",
+      # col = "grey",
+       #main = "env2")
+  # points(loci_trait2, 
+    #     -log10(pvalues[,2])[loci_trait2], 
+     #    col = "red", 
+      #   cex = 1.5)
+  # abline(h = -log10(0.05), col="red", lty=2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
@@ -292,8 +292,9 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
 
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores)
+#not to overload your computer
 registerDoParallel(cl)
 
 system.time(
@@ -312,7 +313,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_it",params[i,"it"])
   
   #create pdf to store plots
-  pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
+  # pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, params = params, "gen")
@@ -368,7 +369,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   }
   
   #end pdf()
-  dev.off()
+  # dev.off()
   
   return(result)
   
