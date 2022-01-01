@@ -40,7 +40,7 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   return(site_samples)
 }
 
-nsites <- c(9, 14, 25)
-sampstrats <- c("rand", "grid", "envgeo")
+nsites <- c(9, 16, 25)
+sampstrats <- c("rand", "equi", "envgeo")
 npts <- 10
 
