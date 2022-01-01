@@ -46,9 +46,9 @@ for(n in nsites){
       site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
       
       #plot (for debugging)
-      plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
-      points(gsd_df[,c("x","y")], col = "gray")
-      points(site_samples[,c("x","y")], col = "red")
+      #plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
+      #points(gsd_df[,c("x","y")], col = "gray")
+      #points(site_samples[,c("x","y")], col = "red")
       #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
       samples <- paste0(site_samples$idx, "_", site_samples$site)
