@@ -10,7 +10,6 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
-nistes <- c(9, 16, 25)
 for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
@@ -36,7 +35,7 @@ for(n in nsites){
       
       
       #buffer away from edges
-      coords_buffer <- crop(coords, extent(5,35,5,35))
+      coords_buffer <- crop(coords, extent(5,ldim-5,5,ldim-5))
       #plot(coords)
       #points(coords_buffer, col="red")
       #randomly select points to act as sites

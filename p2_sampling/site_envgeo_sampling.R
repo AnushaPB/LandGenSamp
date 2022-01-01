@@ -87,7 +87,7 @@ for(n in nsites){
       
       #grid sample sites
       #note - buffer 5 from ldim so sites aren't sampled close to the edge
-      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, buffer = 5, ldim = 40)
+      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, buffer = 5, ldim = ldim)
       #overwrite sample sites with coordinates for sample sites using indexes
       sample_sites <- gsd_df[sample_sites, c("x","y")]
       #convert to coordinates
