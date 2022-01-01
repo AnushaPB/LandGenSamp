@@ -56,8 +56,8 @@ for(n in nsites){
       sample_sites <- equi_samp(nsite = n, ldim = ldim)
       
       #sample from around sites based on a buffer
-      #400000 chosen arbitrarily, 300000 was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 400000)
+      #chosen arbitrarily, lower was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 600000)
       
       #plot (for debugging)
       #par(pty="s")

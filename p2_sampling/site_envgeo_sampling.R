@@ -54,8 +54,9 @@ envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, buffer = 5, ldim = 40){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+#these calculations are RAM intensive so only run two at a time
+cores <- 2
+cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
 #sites 
@@ -93,8 +94,8 @@ for(n in nsites){
       coordinates(sample_sites) <- ~x+y
       
       #sample from around sites based on a buffer
-      #400000 chosen arbitrarily, 300000 was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 400000)
+      #500000 chosen arbitrarily, 400000 was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
       
       #plot (for debugging)
       plot(sample_sites, xlim = c(0,40), ylim = c(0,40))

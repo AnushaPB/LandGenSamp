@@ -76,8 +76,8 @@ for(n in nsites){
       coordinates(sample_sites) <- ~x+y
       
       #sample from around sites based on a buffer
-      #400000 chosen arbitrarily, 300000 was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 400000)
+      #500000 chosen arbitrarily, 400000 was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
       
       #plot (for debugging)
       par(pty="s")
