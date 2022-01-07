@@ -184,9 +184,9 @@ params = {
                     # whether P(birth) should be weighted by parental dist
                     'dist_weighted_birth': False,
                     # intrinsic growth rate
-                    'R': 0.5,
+                    'R': 0.8,
                     # intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b': 0.5,
+                    'b': 0.8,
                     # expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda': 1,
                     # whether n births should be fixed at n_births_dist_lambda
@@ -545,8 +545,8 @@ def run_sims(sim_list):
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
-    #subtract 2 so computer doesn't get overloaded (RAM cap)
-    ncpu = 4
+    #only use a few so computer doesn't get overloaded (RAM cap)
+    ncpu = 5
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
