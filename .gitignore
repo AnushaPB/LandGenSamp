@@ -18,6 +18,9 @@
 #ignore GNX outputs
 /GNX*
 
+#KEEP ENV CSVs (these are small and necessary for stuff to run)
+!/layers
+
 #Dstore
 .DS_Store
 
