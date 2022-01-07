@@ -19,7 +19,7 @@
 /GNX*
 
 #KEEP ENV CSVs (these are small and necessary for stuff to run)
-!p1_gnxsims/MNLM/layers
+!/p1_gnxsims/MNLM/layers
 
 #Dstore
 .DS_Store
