@@ -92,7 +92,7 @@ for(n in nsites){
       
       #sample from around sites based on a buffer
       #600000 chosen arbitrarily, other size was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = global_buffer_size)
+      site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
       
       #plot (for debugging)
       plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
