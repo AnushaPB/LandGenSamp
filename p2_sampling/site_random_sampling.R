@@ -32,8 +32,7 @@ for(n in nsites){
       #get data
       gsd_df <- get_gsd(gsd_filepath)
       coords <- gsd_df[,c("idx", "x","y")]
-      coordinates(coords) <- ~x+y
-      
+      coordinates(coords) <- ~x+y      
       
       #buffer away from edges
       coords_buffer <- crop(coords, extent(5,ldim-5,5,ldim-5))
@@ -47,7 +46,7 @@ for(n in nsites){
       site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
       
       #plot (for debugging)
-      #plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
+      #plot(sample_sites, xlim = c(0,ldim), ylim = c(0,ldim))
       #points(gsd_df[,c("x","y")], col = "gray")
       #points(site_samples[,c("x","y")], col = "red")
       #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
