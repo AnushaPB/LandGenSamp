@@ -140,7 +140,7 @@ rmse_coeff_p <- function(full_coeff, sub_coeff, alpha = 0.05){
 nloci = 10000
 
 #number of points to sample
-npts <- c(36, 81, 144, 225, 324)
+npts <- c(36, 81, 144, 225)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #landscape dimensions (square)

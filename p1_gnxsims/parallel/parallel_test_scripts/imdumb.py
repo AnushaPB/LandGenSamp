@@ -184,9 +184,9 @@ params = {
                     # whether P(birth) should be weighted by parental dist
                     'dist_weighted_birth': False,
                     # intrinsic growth rate
-                    'R': 0.5,
+                    'R': 0.8,
                     # intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b': 0.5,
+                    'b': 0.8,
                     # expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda': 1,
                     # whether n births should be fixed at n_births_dist_lambda
@@ -468,12 +468,12 @@ params = {
 
 # define parameters to vary
 
-K_array = [2, 4]
-phi_array = [0.1, 0.5]
+K_array = [1]
+phi_array = [0.5]
 m_array = [1]
-seed_array = [1, 2, 3]
-H_array = [0.05, 0.5]
-r_array = [0.3, 0.6]
+seed_array = [3]
+H_array = [0.05]
+r_array = [0.3]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
