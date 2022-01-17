@@ -93,5 +93,7 @@ nsites <- c(9, 16, 25)
 sampstrats <- c("rand", "equi", "envgeo")
 #number of individuals to sample per site
 global_npts <- 10
+#buffer away from edge for site selection
+global_edge_buffer <- 20
 #buffer size around sites from which individuals (pts) are sampled
-global_buffer_size <- 600000
+global_buffer_size <- 500000

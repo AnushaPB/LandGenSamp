@@ -8,7 +8,7 @@ library("vegan")
 
 set.seed(42)
 
-envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = 5, ldim){
+envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer, ldim){
   Nreps <- 1000
   sample.sets <- matrix(nrow=Nreps, ncol=nsite)
   results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
@@ -83,15 +83,15 @@ for(n in nsites){
       coordinates(coords) <- ~x+y
       
       #grid sample sites
-      #note - buffer 5 from ldim so sites aren't sampled close to the edge
-      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, edge_buffer = 5, ldim = ldim)
+      #note - add an edge buffer from ldim so sites aren't sampled close to the edge
+      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, edge_buffer = global_edge_buffer, ldim = ldim)
       #overwrite sample sites with coordinates for sample sites using indexes
       sample_sites <- gsd_df[sample_sites, c("x","y")]
       #convert to coordinates
       coordinates(sample_sites) <- ~x+y
       
       #sample from around sites based on a buffer
-      #600000 chosen arbitrarily, other size was too small/not enough points in buffer for smaller sample sizes
+      #buffer size chosen arbitrarily, other size was too small/not enough points in buffer for smaller sample sizes
       site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
       
       #plot (for debugging)

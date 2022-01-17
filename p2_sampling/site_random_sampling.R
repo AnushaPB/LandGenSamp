@@ -35,7 +35,7 @@ for(n in nsites){
       coordinates(coords) <- ~x+y      
       
       #buffer away from edges
-      coords_buffer <- crop(coords, extent(5,ldim-5,5,ldim-5))
+      coords_buffer <- crop(coords, extent(global_edge_buffer,ldim-global_edge_buffer,global_edge_buffer,ldim-global_edge_buffer))
       #plot(coords)
       #points(coords_buffer, col="red")
       #randomly select points to act as sites
