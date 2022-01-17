@@ -23,8 +23,9 @@ equi_samp <- function(nsite, ldim){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores) 
+#not to overload your computer
 registerDoParallel(cl)
 
 #confirm correct ldim
@@ -57,7 +58,7 @@ for(n in nsites){
       
       #sample from around sites based on a buffer
       #chosen arbitrarily, lower was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 600000)
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = global_buffer_size)
       
       #plot (for debugging)
       #par(pty="s")

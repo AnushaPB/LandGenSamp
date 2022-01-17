@@ -6,8 +6,9 @@ library("doParallel")
 
 set.seed(42)
 
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores) 
+#not to overload your computer
 registerDoParallel(cl)
 
 for(n in nsites){
@@ -42,8 +43,8 @@ for(n in nsites){
       sample_sites <- coords_buffer[sample(1:length(coords_buffer), n),]
 
       #sample from around sites based on a buffer
-      #500000 chosen arbitrarily, 400000 was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
+      #600000 chosen arbitrarily, smaller was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = global_buffer_size)
       
       #plot (for debugging)
       #plot(sample_sites, xlim = c(0,40), ylim = c(0,40))

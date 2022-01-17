@@ -8,15 +8,15 @@ library("vegan")
 
 set.seed(42)
 
-envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, buffer = 5, ldim = 40){
+envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = 5, ldim = 40){
   Nreps <- 1000
   sample.sets <- matrix(nrow=Nreps, ncol=nsite)
   results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
                         Mantel.r=numeric(Nreps), Mantel.p=numeric(Nreps),
                         mean.dist=numeric(Nreps))
   #define buffer
-  buffmin <- buffer
-  buffmax <- ldim - buffer
+  buffmin <- edge_buffer
+  buffmax <- ldim - edge_buffer
   #buffer coordinates away from edge
   gsd_df <- gsd_df[gsd_df$x > buffmin & gsd_df$x < buffmax & gsd_df$y > buffmin & gsd_df$y < buffmax,]
   
@@ -59,9 +59,6 @@ cores <- 2
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
-#sites 
-nsites <- c(9, 16, 25)
-
 for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
@@ -87,15 +84,15 @@ for(n in nsites){
       
       #grid sample sites
       #note - buffer 5 from ldim so sites aren't sampled close to the edge
-      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, buffer = 5, ldim = ldim)
+      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, edge_buffer = 5, ldim = ldim)
       #overwrite sample sites with coordinates for sample sites using indexes
       sample_sites <- gsd_df[sample_sites, c("x","y")]
       #convert to coordinates
       coordinates(sample_sites) <- ~x+y
       
       #sample from around sites based on a buffer
-      #500000 chosen arbitrarily, 400000 was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
+      #600000 chosen arbitrarily, other size was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = global_buffer_size)
       
       #plot (for debugging)
       plot(sample_sites, xlim = c(0,40), ylim = c(0,40))
