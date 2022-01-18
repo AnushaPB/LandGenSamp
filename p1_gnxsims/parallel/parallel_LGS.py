@@ -484,11 +484,12 @@ sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
 sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
+#FIX THIS SO IT ISN'T  A HARD PATH
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
 dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
-def run_sims(sim_list):
+def run_sims(sim_list, params):
     # !ORDER MATTERS! must match order of params from before
     K = float(sim_list[0])
     phi = float(sim_list[1])
@@ -503,9 +504,6 @@ def run_sims(sim_list):
             int(r * 100)) + ".csv", delimiter=',')
     env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
             int(r * 100)) + ".csv", delimiter=',')
-
-    # define params as a global var
-    global params
 
     # redefine params
     params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
@@ -550,15 +548,14 @@ if __name__ == '__main__':
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
-
     #make pool
     pool = mp.Pool(ncpu)
 
+    #setup function (params is a constant argument)
+    run_sims_params = partial(run_sims, params = params)
     #map function onto array
-    pool.map_async(run_sims, sim_array)
+    pool.map_async(run_sims_params, sim_array)
 
     #close the pool
     pool.close()
     pool.join()
-
-
