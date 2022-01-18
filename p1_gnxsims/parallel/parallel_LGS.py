@@ -5,6 +5,7 @@ import pandas as pd
 import multiprocessing as mp
 import sys
 import matplotlib.pyplot as plt
+from functools import partial
 
 # Make uniform array
 def make_unif_array(n):
