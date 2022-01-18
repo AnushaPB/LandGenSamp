@@ -218,13 +218,12 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 
 #nloci 
 nloci = 10000
+#landscape dimensions (square)
+ldim = 100
 #number of points to sample
 npts <- c(36, 81, 144, 225)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
-#landscape dimensions (square)
-ldim = 100
-
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 
                       phi = c(0.1, 0.5),
