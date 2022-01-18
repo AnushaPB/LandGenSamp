@@ -1,13 +1,13 @@
 
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params, sampstrat, nsamp, datadir =  here(dirname(getwd()), "p2_gnxsims", "outputs")){
+get_samples <- function(param_set, params, sampstrat, nsamp, datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(datadir, "samples_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(datadir, "/samples_", sampstrat, nsamp, ".csv"))
     
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -31,13 +31,13 @@ get_samples <- function(param_set, params, sampstrat, nsamp, datadir =  here(dir
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_gnxsims", "outputs")){
+get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(datadir, "site_samples_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(datadir, "/site_samples_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -61,13 +61,13 @@ get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(di
 }
 
 #get list of site IDs that correspond with parameter set, sampling strategy, and number of samples (and sample IDs)
-get_sites <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_gnxsims", "outputs")){
+get_sites <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(datadir, "site_ids_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(datadir, "/site_ids_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -195,7 +195,7 @@ sampstrats <- c("rand", "equi", "envgeo")
 ldim = 40
 
 #Create dataframe with all variable combos
-params <- expand.grid(K = c(2, 4), 
+params <- expand.grid(K = c(1,2), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
