@@ -35,6 +35,7 @@ for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
+    library("rgeos")
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
@@ -60,11 +61,11 @@ for(n in nsites){
       #chosen arbitrarily, lower was too small/not enough points in buffer for smaller sample sizes
       site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
       
-      #plot (for debugging)
-      #par(pty="s")
-      #plot(gsd_df[,c("x","y")], xlim = c(0,ldim), ylim = c(0,ldim), col = "gray")
-      #points(sample_sites, pch = 3)
-      #points(site_samples[,c("x","y")], col = "red")
+      ##plot (for debugging)
+      par(pty="s")
+      plot(gsd_df[,c("x","y")], xlim = c(0,ldim), ylim = c(0,ldim), col = "gray")
+      points(sample_sites, pch = 3)
+      points(site_samples[,c("x","y")], col = "red")
       #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
       samples <- paste0(site_samples$idx, "_", site_samples$site)
