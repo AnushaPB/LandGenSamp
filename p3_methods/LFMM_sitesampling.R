@@ -122,7 +122,11 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2) + sum(lfmm_loci2 %in% loci_trait1)
   FDRCOMBO <- FD/(FD + TP)
-  
+  #calc True Negatives
+  `%notin%` <- Negate(`%in%`)
+  TN <- sum(lfmm_loci %notin% neutral_loci) + sum(lfmm_loci1 %notin% loci_trait2)  + sum(lfmm_loci2 %notin% loci_trait1)
+  #calc FNR
+  FPRCOMBO <- FD/(FD+TN)
   #PLOT TO CHECK RESULTS (for debugging, remove later)
   
   #par(mfrow=c(1,2))
@@ -156,7 +160,8 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
                     TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
                     TPR2 = TPR2, FDR2 = FDR2,
-                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD))
+                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD, TOTALTN = TN,
+                    TOTALTN = TN, FPRCOMBO = FPRCOMBO))
 }
 
 
@@ -261,8 +266,37 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2) + sum(lfmm_loci2 %in% loci_trait1)
   FDRCOMBO <- FD/(FD + TP)
+  #calc True Negatives
+  `%notin%` <- Negate(`%in%`)
+  TN <- sum(lfmm_loci %notin% neutral_loci) + sum(lfmm_loci1 %notin% loci_trait2)  + sum(lfmm_loci2 %notin% loci_trait1)
+  #calc FNR
+  FPRCOMBO <- FD/(FD+TN)
+  #PLOT TO CHECK RESULTS (for debugging, remove later)
   
-
+  #par(mfrow=c(1,2))
+  #plot(-log10(pvalues[,1]), 
+  #     pch = 19, 
+  #     cex = .2, 
+  #     xlab = "SNP", ylab = "-Log P",
+  #     col = "grey",
+  #     main = "env1")
+  #points(loci_trait1, 
+  #       -log10(pvalues[,1])[loci_trait1], 
+  #       col = "red", 
+  #       cex = 1.5)
+  #abline(h = -log10(0.05), col="red", lty=2)
+  #
+  #plot(-log10(pvalues[,2]), 
+  #     pch = 19, 
+  #     cex = .2, 
+  #     xlab = "SNP", ylab = "-Log P",
+  #     col = "grey",
+  #     main = "env2")
+  #points(loci_trait2, 
+  #       -log10(pvalues[,2])[loci_trait2], 
+  #       col = "red", 
+  #       cex = 1.5)
+  #abline(h = -log10(0.05), col="red", lty=2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
@@ -270,7 +304,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
                     TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
                     TPR2 = TPR2, FDR2 = FDR2,
-                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD))
+                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD, TOTALTN = TN,
+                    TOTALTN = TN, FPRCOMBO = FPRCOMBO))
 }
 
 
