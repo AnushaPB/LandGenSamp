@@ -155,7 +155,8 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
                     TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
                     TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
-                    TPR2 = TPR2, FDR2 = FDR2))
+                    TPR2 = TPR2, FDR2 = FDR2,
+                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD))
 }
 
 
@@ -233,27 +234,28 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   #Identify LFMM cand loci
   lfmm_loci1 <- which(pvalues[,1] < 0.05) 
   #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1)
-  TPR1COMBO <- TP/length(loci_trait1)
+  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
+  TPR1COMBO <- TP1/length(loci_trait1)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1COMBO <- FD/(FD + TP)
+  FD1 <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
+  FDR1COMBO <- FD1/(FD1 + TP1)
   
   #env2 candidate loci
   #Identify LFMM cand loci
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
   #calc True Positive Rate
-  TP <- sum(lfmm_loci2 %in% loci_trait2)
-  TPR2COMBO <- TP/length(loci_trait2)
+  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
+  TPR2COMBO <- TP2/length(loci_trait2)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2COMBO <- FD/(FD + TP)
+  FD2 <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
+  FDR2COMBO <- FD2/(FD2 + TP2)
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   
   #calc True Positive Rate
-  TPRCOMBO <- (TPR1COMBO + TPR2COMBO)/2
+  TP <- sum(lfmm_loci %in% adaptive_loci)
+  TPRCOMBO <- TP/length(adaptive_loci)
   #calc False Discovery Rate 
   FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
   FDRCOMBO <- FD/(FD + TP)
@@ -264,7 +266,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
                     TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
                     TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
                     TPR1 = TPR1, FDR1 = FDR1, 
-                    TPR2 = TPR2, FDR2 = FDR2))
+                    TPR2 = TPR2, FDR2 = FDR2,
+                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD))
 }
 
 
