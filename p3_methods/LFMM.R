@@ -249,10 +249,12 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   #calc True Positive Rate
-  TPRCOMBO <- (TPR1COMBO + TPR2COMBO)/2
+  TP <- sum(lfmm_loci1 %in% loci_trait1) + sum(lfmm_loci2 %in% loci_trait2)
+  TPRCOMBO <- TP/length(adaptive_loci)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci %in% adaptive_loci)
+  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2) + sum(lfmm_loci2 %in% loci_trait1)
   FDRCOMBO <- FD/(FD + TP)
+  
 
   #PLOT TO CHECK RESULTS
   
