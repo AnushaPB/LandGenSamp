@@ -46,7 +46,7 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = h
 }
 
 
-SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
+SiteSample <- function(sample_sites, coords, npts, buffer_size = 5){
   #sample_sites - coordinates of sampling sites
   #coords - coordinates of all individuals in data set
   #npts - number of points to sample from each site
@@ -54,12 +54,12 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
   #edge_buffer - buffer from landscape edges to prevent sampling of sites
   site_samples <- data.frame()
   
-  #if sp
+  #sample sites can be provided as either sp or coords in vector format (nloop just counts how many sites)
   if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)} else {nloop <- nrow(sample_sites)}
   
   for(s in 1:nloop){
     #create buffer around sites from which to sample points
-    site_buffers <- buffer(sample_sites[s,], buffer_size)
+    site_buffers <- gBuffer(sample_sites[s,], width = buffer_size)
     #subset out only coordinates falling within site buffers
     buffer_samples <- coords[site_buffers,]
     #convert from SPDF to df
@@ -82,7 +82,6 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 300000){
     
     #bind samples
     site_samples <- rbind(site_samples, buffer_samples_df)
-    site_samples$xsite
   }
   return(site_samples)
 }
@@ -94,6 +93,6 @@ sampstrats <- c("rand", "equi", "envgeo")
 #number of individuals to sample per site
 global_npts <- 10
 #buffer away from edge for site selection
-global_edge_buffer <- 20
+global_edge_buffer <- 5
 #buffer size around sites from which individuals (pts) are sampled
-global_buffer_size <- 500000
+global_buffer_size <- 5
