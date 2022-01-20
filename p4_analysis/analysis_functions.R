@@ -11,10 +11,10 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
   colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
   
-  params <- expand.grid(K = c(2, 4), 
+  #SEED NOT INCLUDED
+  params <- expand.grid(K = c(1, 2), 
                         phi = c(0.1, 0.5),
                         m = c(0.25, 1.0),
-                        seed = c(1, 2, 3),
                         H = c(0.05 , 0.5),
                         r = c(0.3, 0.6))
   
@@ -48,7 +48,7 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
   }
   
   
-  bp <- do.call(grid.arrange, c(plts, nrow=12))
+  bp <- do.call(grid.arrange, c(plts, nrow=8))
 }
 
 
