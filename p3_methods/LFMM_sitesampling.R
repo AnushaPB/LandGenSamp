@@ -97,7 +97,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
   #calc False Positive Rate
-  FPRCOMBO <- FD/(FD + TN)
+  FPRCOMBO <- FP/(FP + TN)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
@@ -182,7 +182,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
   #calc False Positive Rate
-  FPRCOMBO <- FD/(FD + TN)
+  FPRCOMBO <- FP/(FP + TN)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
