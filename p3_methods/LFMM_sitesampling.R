@@ -16,6 +16,8 @@ source("sitesampling_functions.R")
 #  LFMM  #
 ##########
 
+#for readibility, just negates the in function
+`%notin%` <- Negate(`%in%`)
 
 run_lfmm_full <- function(gen, gsd_df, loci_df){
   #get adaptive loci
@@ -43,46 +45,6 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   env2mat = as.matrix(gsd_df$env2)
   envmat = cbind(env1mat, env2mat)
   
-  #ENV1
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, env1mat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = env1mat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1)
-  TPR1 <- TP/length(loci_trait1)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1 <- FD/(FD + TP)
-  
-  #ENV2
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, env2mat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = env2mat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env2=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci2 %in% loci_trait2)
-  TPR2 <- TP/length(loci_trait2)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2 <- FD/(FD + TP)
-  
   #BOTH ENV
   #run model
   lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
@@ -97,71 +59,56 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   #env1 candidate loci
   #Identify LFMM cand loci
   lfmm_loci1 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1)
-  TPR1COMBO <- TP/length(loci_trait1)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1COMBO <- FD/(FD + TP)
+  #get confusion matrix values
+  #True Positives
+  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
+  #False Positives
+  FP1 <- length(lfmm_loci1) - TP1
+  #True Negatives
+  TN1 <- sum(neutral_loci %notin% lfmm_loci1) + sum(loci_trait2 %notin% lfmm_loci1) 
+  #False Negatives
+  FN1 <- length(c(neutral_loci, loci_trait2) %notin% lfmm_loci1) - TN1
   
   #env2 candidate loci
   #Identify LFMM cand loci
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci2 %in% loci_trait2)
-  TPR2COMBO <- TP/length(loci_trait2)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2COMBO <- FD/(FD + TP)
+  #get confusion matrix values
+  #True Positives
+  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
+  #False Positives
+  FP2 <- length(lfmm_loci2) - TP2
+  #True Negatives
+  TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
+  #False Negatives
+  FN2 <- length(c(neutral_loci, loci_trait1) %notin% lfmm_loci2) - TN2
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1) + sum(lfmm_loci2 %in% loci_trait2)
-  TPRCOMBO <- TP/length(adaptive_loci)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2) + sum(lfmm_loci2 %in% loci_trait1)
-  FDRCOMBO <- FD/(FD + TP)
-  #calc True Negatives
-  `%notin%` <- Negate(`%in%`)
-  TN <- sum(neutral_loci %notin% lfmm_loci) + sum(loci_trait2 %notin% lfmm_loci1)  + sum(loci_trait1 %notin% lfmm_loci2)
-  #calc FNR
-  FPRCOMBO <- FD/(FD+TN)
-  #PLOT TO CHECK RESULTS (for debugging, remove later)
+  #calc confusion matrix
+  TP <- TP1 + TP2
+  FP <- FP1 + FP2
+  TN <- TN1 + TN2
+  FN <- FN1 + FN2
   
-  #par(mfrow=c(1,2))
-  #plot(-log10(pvalues[,1]), 
-  #     pch = 19, 
-  #     cex = .2, 
-  #     xlab = "SNP", ylab = "-Log P",
-  #     col = "grey",
-  #     main = "env1")
-  #points(loci_trait1, 
-  #       -log10(pvalues[,1])[loci_trait1], 
-  #       col = "red", 
-  #       cex = 1.5)
-  #abline(h = -log10(0.05), col="red", lty=2)
-  #
-  #plot(-log10(pvalues[,2]), 
-  #     pch = 19, 
-  #     cex = .2, 
-  #     xlab = "SNP", ylab = "-Log P",
-  #     col = "grey",
-  #     main = "env2")
-  #points(loci_trait2, 
-  #       -log10(pvalues[,2])[loci_trait2], 
-  #       col = "red", 
-  #       cex = 1.5)
-  #abline(h = -log10(0.05), col="red", lty=2)
+  #calc True Positive Rate
+  TPRCOMBO <- TP/(TP + FN)
+  #calc True Negative Rate
+  TNRCOMBO <- TN/(TN + FP)
+  #calc False Discovery Rate 
+  FDRCOMBO <- FP/(FP + TP)
+  #calc False Positive Rate
+  FPRCOMBO <- FD/(FD + TN)
   
   return(data.frame(K = K,
-                    TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
-                    TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
-                    TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
-                    TPR1 = TPR1, FDR1 = FDR1, 
-                    TPR2 = TPR2, FDR2 = FDR2,
-                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD, TOTALTN = TN,
-                    TOTALTN = TN, FPRCOMBO = FPRCOMBO))
+                    TPRCOMBO = TPRCOMBO, 
+                    TNRCOMBO = TNRCOMBO,
+                    FDRCOMBO = FDRCOMBO, 
+                    FPRCOMBO = FPRCOMBO,
+                    TOTALN = length(lfmm_loci), 
+                    TOTALTP = TP, 
+                    TOTALFP = FP, 
+                    TOTALTN = TN,
+                    TOTALFN = FN))
 }
 
 
@@ -183,47 +130,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   env1mat = as.matrix(gsd_df$env1)
   env2mat = as.matrix(gsd_df$env2)
   envmat = cbind(env1mat, env2mat)
-  
-  #ENV1
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, env1mat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = env1mat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1)
-  TPR1 <- TP/length(loci_trait1)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1 <-FD/(FD + TP)
-  
-  #ENV2
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, env2mat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = env2mat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env2=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
-  TP <- sum(lfmm_loci2 %in% loci_trait2)
-  TPR2 <- TP/length(loci_trait2)
-  #calc False Discovery Rate 
-  FD <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2 <- FD/(FD + TP)
-  
   #BOTH ENV
   #run model
   lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
@@ -238,78 +144,57 @@ run_lfmm <- function(gen, gsd_df, loci_df, K){
   #env1 candidate loci
   #Identify LFMM cand loci
   lfmm_loci1 <- which(pvalues[,1] < 0.05) 
-  #calc True Positive Rate
+  #get confusion matrix values
+  #True Positives
   TP1 <- sum(lfmm_loci1 %in% loci_trait1)
-  TPR1COMBO <- TP1/length(loci_trait1)
-  #calc False Discovery Rate 
-  FD1 <- sum(lfmm_loci1 %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2)
-  FDR1COMBO <- FD1/(FD1 + TP1)
+  #False Positives
+  FP1 <- length(lfmm_loci1) - TP1
+  #True Negatives
+  TN1 <- sum(neutral_loci %notin% lfmm_loci1) + sum(loci_trait2 %notin% lfmm_loci1) 
+  #False Negatives
+  FN1 <- length(c(neutral_loci, loci_trait2) %notin% lfmm_loci1) - TN1
   
   #env2 candidate loci
   #Identify LFMM cand loci
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
-  #calc True Positive Rate
+  #get confusion matrix values
+  #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
-  TPR2COMBO <- TP2/length(loci_trait2)
-  #calc False Discovery Rate 
-  FD2 <- sum(lfmm_loci2 %in% neutral_loci) + sum(lfmm_loci2 %in% loci_trait1)
-  FDR2COMBO <- FD2/(FD2 + TP2)
+  #False Positives
+  FP2 <- length(lfmm_loci2) - TP2
+  #True Negatives
+  TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
+  #False Negatives
+  FN2 <- length(c(neutral_loci, loci_trait1) %notin% lfmm_loci2) - TN2
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+  #calc confusion matrix
+  TP <- TP1 + TP2
+  FP <- FP1 + FP2
+  TN <- TN1 + TN2
+  FN <- FN1 + FN2
   
-  #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   #calc True Positive Rate
-  TP <- sum(lfmm_loci1 %in% loci_trait1) + sum(lfmm_loci2 %in% loci_trait2)
-  TPRCOMBO <- TP/length(adaptive_loci)
+  TPRCOMBO <- TP/(TP + FN)
+  #calc True Negative Rate
+  TNRCOMBO <- TN/(TN + FP)
   #calc False Discovery Rate 
-  FD <- sum(lfmm_loci %in% neutral_loci) + sum(lfmm_loci1 %in% loci_trait2) + sum(lfmm_loci2 %in% loci_trait1)
-  FDRCOMBO <- FD/(FD + TP)
-  #calc True Negatives
-  `%notin%` <- Negate(`%in%`)
-  TN <- sum(neutral_loci %notin% lfmm_loci) + sum(loci_trait2 %notin% lfmm_loci1)  + sum(loci_trait1 %notin% lfmm_loci2)
-  #calc FNR
-  FPRCOMBO <- FD/(FD+TN)
-  #PLOT TO CHECK RESULTS (for debugging, remove later)
-  
-  #par(mfrow=c(1,2))
-  #plot(-log10(pvalues[,1]), 
-  #     pch = 19, 
-  #     cex = .2, 
-  #     xlab = "SNP", ylab = "-Log P",
-  #     col = "grey",
-  #     main = "env1")
-  #points(loci_trait1, 
-  #       -log10(pvalues[,1])[loci_trait1], 
-  #       col = "red", 
-  #       cex = 1.5)
-  #abline(h = -log10(0.05), col="red", lty=2)
-  #
-  #plot(-log10(pvalues[,2]), 
-  #     pch = 19, 
-  #     cex = .2, 
-  #     xlab = "SNP", ylab = "-Log P",
-  #     col = "grey",
-  #     main = "env2")
-  #points(loci_trait2, 
-  #       -log10(pvalues[,2])[loci_trait2], 
-  #       col = "red", 
-  #       cex = 1.5)
-  #abline(h = -log10(0.05), col="red", lty=2)
+  FDRCOMBO <- FP/(FP + TP)
+  #calc False Positive Rate
+  FPRCOMBO <- FD/(FD + TN)
   
   return(data.frame(K = K,
-                    TPRCOMBO = TPRCOMBO, FDRCOMBO = FDRCOMBO, 
-                    TPR1COMBO = TPR1COMBO, FDR1COMBO = FDR1COMBO, 
-                    TPR2COMBO = TPR2COMBO, FDR2COMBO = FDR2COMBO,
-                    TPR1 = TPR1, FDR1 = FDR1, 
-                    TPR2 = TPR2, FDR2 = FDR2,
-                    TOTALN = length(lfmm_loci), TOTALT = TP, TOTALF = FD, TOTALTN = TN,
-                    TOTALTN = TN, FPRCOMBO = FPRCOMBO))
+                    TPRCOMBO = TPRCOMBO, 
+                    TNRCOMBO = TNRCOMBO,
+                    FDRCOMBO = FDRCOMBO, 
+                    FPRCOMBO = FPRCOMBO,
+                    TOTALN = length(lfmm_loci), 
+                    TOTALTP = TP, 
+                    TOTALFP = FP, 
+                    TOTALTN = TN,
+                    TOTALFN = FN))
 }
-
-
-nsites <- c(9, 16, 25)
 
 #register cores
 cores <- 10
