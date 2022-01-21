@@ -124,7 +124,7 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   FDRCOMBO <- FD/(FD + TP)
   #calc True Negatives
   `%notin%` <- Negate(`%in%`)
-  TN <- sum(lfmm_loci %notin% neutral_loci) + sum(lfmm_loci1 %notin% loci_trait2)  + sum(lfmm_loci2 %notin% loci_trait1)
+  TN <- sum(neutral_loci %notin% lfmm_loci) + sum(loci_trait2 %notin% lfmm_loci1)  + sum(loci_trait1 %notin% lfmm_loci2)
   #calc FNR
   FPRCOMBO <- FD/(FD+TN)
   #PLOT TO CHECK RESULTS (for debugging, remove later)
