@@ -84,7 +84,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
   #False Positives
-<<<<<<< HEAD
   FP2 <- length(lfmm_loci2) - TP2
   #True Negatives
   TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
