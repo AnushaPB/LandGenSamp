@@ -19,7 +19,7 @@ source("sitesampling_functions.R")
 #for readibility, just negates the in function
 `%notin%` <- Negate(`%in%`)
 
-run_lfmm_full <- function(gen, gsd_df, loci_df){
+run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
@@ -27,15 +27,18 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   #PCA to determine number of latent factors
-  pc <- prcomp(gen)
-  par(pty="s",mfrow=c(1,1))
-  eig <- pc$sdev[1:100]^2
-  #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
-  #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-  #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
-  K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
-  plot(eig, xlab = 'PC', ylab = "Variance explained")
-  abline(v = K, col= "red", lty="dashed")
+  #if K is not specified it is calculated based on PCs
+  if(is.null(K)){
+    pc <- prcomp(gen)
+    par(pty="s",mfrow=c(1,1))
+    eig <- pc$sdev[1:100]^2
+    #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
+    #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
+    #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
+    K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
+    plot(eig, xlab = 'PC', ylab = "Variance explained")
+    abline(v = K, col= "red", lty="dashed")
+  }
   
 
   #gen matrix
@@ -57,115 +60,35 @@ run_lfmm_full <- function(gen, gsd_df, loci_df){
   pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
                         env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
   #env1 candidate loci
-  #Identify LFMM cand loci
+  #Identify LFMM cand loci (P)
   lfmm_loci1 <- which(pvalues[,1] < 0.05) 
+  #Identify negatives
+  lfmm_neg1 <- which(!(pvalues[,1] < 0.05))
   #get confusion matrix values
   #True Positives
   TP1 <- sum(lfmm_loci1 %in% loci_trait1)
   #False Positives
-  FP1 <- length(lfmm_loci1) - TP1
+  FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
   #True Negatives
-  TN1 <- sum(neutral_loci %notin% lfmm_loci1) + sum(loci_trait2 %notin% lfmm_loci1) 
+  TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
   #False Negatives
-  FN1 <- length(c(neutral_loci, loci_trait2) %notin% lfmm_loci1) - TN1
+  FN1 <- sum(lfmm_neg1 %in% loci_trait1)
   
   #env2 candidate loci
   #Identify LFMM cand loci
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
+  #Identify negatives
+  lfmm_neg2 <- which(!(pvalues[,2] < 0.05))
   #get confusion matrix values
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
   #False Positives
-  FP2 <- length(lfmm_loci2) - TP2
+  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
   #True Negatives
-  TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
+  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
   #False Negatives
-  FN2 <- length(c(neutral_loci, loci_trait1) %notin% lfmm_loci2) - TN2
+  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
   
-  #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
-  #calc confusion matrix
-  TP <- TP1 + TP2
-  FP <- FP1 + FP2
-  TN <- TN1 + TN2
-  FN <- FN1 + FN2
-  
-  #calc True Positive Rate
-  TPRCOMBO <- TP/(TP + FN)
-  #calc True Negative Rate
-  TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate 
-  FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate
-  FPRCOMBO <- FD/(FD + TN)
-  
-  return(data.frame(K = K,
-                    TPRCOMBO = TPRCOMBO, 
-                    TNRCOMBO = TNRCOMBO,
-                    FDRCOMBO = FDRCOMBO, 
-                    FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(lfmm_loci), 
-                    TOTALTP = TP, 
-                    TOTALFP = FP, 
-                    TOTALTN = TN,
-                    TOTALFN = FN))
-}
-
-
-
-
-run_lfmm <- function(gen, gsd_df, loci_df, K){
-  #get adaptive loci
-  loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
-  loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
-  adaptive_loci <- c(loci_trait1, loci_trait2)
-  neutral_loci <- c(1:nloci)[-adaptive_loci]
-  
-  #PCA to determine number of latent factors
-  pc <- prcomp(gen)
-  
-  #gen matrix
-  genmat = as.matrix(gen)
-  #env matrix
-  env1mat = as.matrix(gsd_df$env1)
-  env2mat = as.matrix(gsd_df$env2)
-  envmat = cbind(env1mat, env2mat)
-  #BOTH ENV
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
-                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
-  #get confusion matrix values
-  #True Positives
-  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
-  #False Positives
-  FP1 <- length(lfmm_loci1) - TP1
-  #True Negatives
-  TN1 <- sum(neutral_loci %notin% lfmm_loci1) + sum(loci_trait2 %notin% lfmm_loci1) 
-  #False Negatives
-  FN1 <- length(c(neutral_loci, loci_trait2) %notin% lfmm_loci1) - TN1
-  
-  #env2 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
-  #get confusion matrix values
-  #True Positives
-  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
-  #False Positives
-  FP2 <- length(lfmm_loci2) - TP2
-  #True Negatives
-  TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
-  #False Negatives
-  FN2 <- length(c(neutral_loci, loci_trait1) %notin% lfmm_loci2) - TN2
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -241,7 +164,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm_full(gen_2k, gsd_df_2k, loci_df)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
