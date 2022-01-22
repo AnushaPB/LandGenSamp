@@ -15,10 +15,12 @@ source("general_functions.R")
 #  LFMM  #
 ##########
 
-#for readibility, just negates the in function
-`%notin%` <- Negate(`%in%`)
 
 run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
+  
+  #for readibility, just negates the in function
+  `%notin%` <- Negate(`%in%`)
+  
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
