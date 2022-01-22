@@ -80,15 +80,14 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
   #Identify negatives
   lfmm_neg2 <- which(!(pvalues[,2] < 0.05))
-  #get confusion matrix values
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
   #False Positives
-  FP2 <- length(lfmm_loci2) - TP2
+  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
   #True Negatives
-  TN2 <- sum(neutral_loci %notin% lfmm_loci2) + sum(loci_trait1 %notin% lfmm_loci2) 
+  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
   #False Negatives
-  FN2 <- length(c(neutral_loci, loci_trait1) %notin% lfmm_loci2) - TN2
+  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
