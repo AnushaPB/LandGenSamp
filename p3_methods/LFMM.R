@@ -80,7 +80,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   lfmm_loci2 <- which(pvalues[,2] < 0.05) 
   #Identify negatives
   lfmm_neg2 <- which(!(pvalues[,2] < 0.05))
-  #get confusion matrix values
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
   #False Positives
@@ -89,7 +88,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
   #False Negatives
   FN2 <- sum(lfmm_neg2 %in% loci_trait2)
-  
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -106,7 +104,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
   #calc False Positive Rate
-  FPRCOMBO <- FD/(FD + TN)
+  FPRCOMBO <- FP/(FP + TN)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
