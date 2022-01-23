@@ -472,7 +472,7 @@ params = {
 }  # <END> params
 
 # mod_name
-mod_name <- "TEST_IGNORE"
+mod_name = "TEST_IGNORE"
 
 # run test model
 params = gnx.make_params_dict(params, mod_name)
