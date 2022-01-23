@@ -11,7 +11,8 @@ nloci <- 100000
 #create data frame
 df <- data.frame(locus = 1:nloci,
            p = 0.5,
-           dom = NA,
+           #codominance = 0 (default)
+           dom = 0,
            r = NA,
            trait = NA,
            alpha = NA)
