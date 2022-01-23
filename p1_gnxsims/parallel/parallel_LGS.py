@@ -394,6 +394,8 @@ params = {
             'rand_comm': False,
             # whether to burn in each iteration
             'repeat_burn': False,
+            #whether to randomize GenomicArchitectures each iteration
+            'rand_genarch':     True,
         },  # <END> 'iterations'
 
         # -----------------------------------#
@@ -417,6 +419,8 @@ params = {
                 'geo_vect_format': 'csv',
                 # format for raster geodata {'geotiff', 'txt'}
                 'geo_rast_format': 'geotiff',
+                #format for files containing non-neutral loci
+                'nonneut_loc_format':      'csv',
             },
         },  # <END> 'data'
 
