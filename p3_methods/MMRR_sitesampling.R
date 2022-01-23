@@ -8,7 +8,7 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
-source("sitesampling/sitesampling_functions.R")
+source("sitesampling_functions.R")
 
 ############
 #   MMRR   #
@@ -146,8 +146,8 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
 
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 
@@ -192,7 +192,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                          env1_rmse = NA, env2_rmse = NA, geo_rmse = NA, ratio_rmse = NA)
     
     #write full datafile (temp)
-    csv_file <- paste0("sitesampling/outputs/MMRR/MMRR_results_",paramset,".csv")
+    csv_file <- paste0("outputs/MMRR/MMRR_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
     for(nsite in nsites){
@@ -247,4 +247,4 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_mmrr, "sitesampling/outputs/MMRR/mmrr_results.csv", row.names = FALSE)
+write.csv(res_mmrr, "outputs/MMRR/mmrr_sitesampling_results.csv", row.names = FALSE)
