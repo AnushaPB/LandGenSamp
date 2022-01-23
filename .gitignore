@@ -68,3 +68,6 @@ vignettes/*.pdf
 .Renviron
 p1_gnxsims/parallel/test_parallel_LGS.pyout
 .Rproj.user
+
+#keep genomic architecture file
+!genomic_architecture.csv
