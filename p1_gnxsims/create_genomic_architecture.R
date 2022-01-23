@@ -13,7 +13,7 @@ df <- data.frame(locus = 1:nloci,
            p = 0.5,
            #codominance = 0 (default)
            dom = 0,
-           r = NA,
+           r = "None",
            trait = NA,
            alpha = NA)
 
@@ -26,3 +26,4 @@ df$trait[5:8] <- "trait_2"
 #write out file
 path <- here(dirname(getwd()), "p1_gnxsims", "genomic_architecture.csv")
 write.csv(df, path, row.names = FALSE)
+
