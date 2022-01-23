@@ -13,7 +13,7 @@ df <- data.frame(locus = 1:nloci,
            p = 0.5,
            #codominance = 0 (default)
            dom = 0,
-           r = "None",
+           r = 0,
            trait = NA,
            alpha = NA)
 
