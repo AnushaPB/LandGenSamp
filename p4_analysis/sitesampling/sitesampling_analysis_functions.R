@@ -1,19 +1,26 @@
 
-MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma"){
-  meanagg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
-  colnames(meanagg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
+MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean"){
+  if(aggfunc == "mean"){
+    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
+  }
+  
+  if(aggfunc == "var") {
+    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), var)
+  }
+  
+  colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
   
-  params <- expand.grid(K = c(2, 4), 
+  #SEED NOT INCLUDED
+  params <- expand.grid(K = c(1, 2), 
                         phi = c(0.1, 0.5),
                         m = c(0.25, 1.0),
-                        seed = c(1, 2, 3),
                         H = c(0.05 , 0.5),
                         r = c(0.3, 0.6))
   
   plts <- list()
   for(i in 1:nrow(params)){
-    tempdf <- merge(params[i,], meanagg)
+    tempdf <- merge(params[i,], agg)
     
     ptitle <- paramset <- paste0("K=",params[i,"K"],
                                  " phi=",params[i,"phi"],
@@ -41,7 +48,7 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
   }
   
   
-  bp <- do.call(grid.arrange, c(plts, nrow=12))
+  bp <- do.call(grid.arrange, c(plts, nrow=4))
 }
 
 

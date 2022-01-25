@@ -48,7 +48,7 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
   }
   
   
-  bp <- do.call(grid.arrange, c(plts, nrow=8))
+  bp <- do.call(grid.arrange, c(plts, nrow=4))
 }
 
 

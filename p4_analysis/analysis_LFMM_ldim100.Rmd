@@ -20,6 +20,8 @@ library("effects")
 source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
+
+
 ```
 
 
@@ -40,26 +42,28 @@ params_full <- expand.grid(K = c(1, 2),
                       r = c(0.3, 0.6),
                       nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 0:8)
+                      it = 0)
 
 #df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/MMRR/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
-
-
+#IMPORTANT NOTE ABOUT LFMM DATA:
+#CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+#NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+#I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+#df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
+df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
+df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 
 
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-moddf[!complete.cases(moddf),]
-
 ```
-#CALCULATE NEW STATS
+
 ```{r}
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1, 2), 
@@ -76,54 +80,125 @@ for(i in 1:nrow(params)){
   subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
   full <- subdf[subdf$sampstrat == "full",]
   sub <- subdf[subdf$sampstrat != "full",]
-  fullratio <- (full$geo_coeff - (full$env1_coeff + full$env2_coeff))/full$geo_coeff
-  subratio <- (sub$geo_coeff - (sub$env1_coeff + sub$env2_coeff))/sub$geo_coeff
-  sub$ratio2_ae <- abs(fullratio - subratio)
+  sub$TPRCOMBO_corrected <- (full$TPRCOMBO-sub$TPRCOMBO)/(full$TPRCOMBO)
+  sub$TPRCOMBO_corrected[sub$TPRCOMBO == 0] <- 0
   cdf <- rbind(cdf, sub)
 }
+
+cdf <- data.frame()
+for(i in 1:nrow(params)){
+  p <- params[i,]
+  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
+  full <- subdf[subdf$sampstrat == "full",]
+  sub <- subdf[subdf$sampstrat != "full",]
+  sub$TPRCOMBO_corrected <- sub$TPRCOMBO-full$TPRCOMBO
+  sub$TPRCOMBO_corrected[sub$TPRCOMBO == 0] <- 0
+  cdf <- rbind(cdf, sub)
+}
+
 ```
+
+```{r}
+range(df$FDRCOMBO)
+range(df$TPRCOMBO)
+
+```
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
+#MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
+MEGAPLOT(moddf, "FDRCOMBO")
+```
+
+#FOR COMPARISON WITH YOSEMITE
+```{r fig.width=15, fig.height=7}
+ydf <- df[df$H == 0.5 & df$r == 0.3,]
+
+summary_hplot(ydf, maxv = 0.6)
+
+```
+
 
 #EXPLORATORY
-
-```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
-```
-
-```{r fig.width=20, fig.height=8}
-#should be close to 1 since env1 and env2 should have equal impact (not sure if this is true though because it could vary based on overlap between env1 and 2)
-df$stat <- abs(1 - abs(df$env1_coeff/df$env2_coeff))
-summary_hplot(df)
-
-df$stat <- df$comboenv_rmse
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$geo_rmse
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$ratio
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$geo_coeff
-summary_hplot(df, colpal = "mako", sigdig = 3)
-
-
-cdf$stat <- cdf$ratio2_ae
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
-
-cdf$stat <- log(cdf$ratio2_ae)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
-```
-
-
-# GEO RMSE
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$geo_rmse
+df$stat <- df$TPRCOMBO
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
+
+
+df$stat <- df$FDRCOMBO
+moddf <- df[df$sampstrat != "full",]
+summary_vplot(df)
+summary_hplot(df)
+```
+
+
+```{r fig.width=20, fig.height=8}
+df$stat <- df$TPRCOMBO
+summary_vplot(df)
+summary_hplot(df)
+
+df$stat <- log(df$TPRCOMBO+1)
+summary_vplot(df)
+summary_hplot(df)
+
+df$stat <- sqrt(df$TPRCOMBO)
+summary_vplot(df)
+summary_hplot(df)
+```
+
+```{r fig.width=20, fig.height=7}
+df$stat <- df$TPRCOMBO
+moddf <- df[df$sampstrat != "full",]
+summary_hplot(df, aggfunc = "var")
+summary_hplot(df, aggfunc = "mean")
+```
+
+```{r fig.width=10, fig.height=10}
+site_hist <- function(df, stat, breaks = seq(0,1,0.10), xlim, ylim){
+    colv <- list(c(0,1,1),c(1,0,1),c(0,1,0),c(1,1,0))
+    par(mfrow=c(4,4))
+    for(n in nsamp[-5]){
+        c <- 1
+        for(s in sampstrat[-5]){
+            d <- df[df$nsamp == n & df$sampstrat == s, stat]
+            hist(d, main = paste0(n, " | ", s), 
+                 xlim = xlim, ylim = ylim,
+                 xlab = "", ylab = "", add = F, 
+                 col = rgb(colv[[c]][1],colv[[c]][2],colv[[c]][3], alpha = 0.2), breaks = breaks)
+            c <- c+1
+        }
+    }
+
+}
+
+site_hist(df, "TPRCOMBO", breaks = seq(0,1,0.125), ylim = c(0, 80), xlim = c(0,1))
+site_hist(df, "FDRCOMBO", breaks = seq(0,1,0.05), ylim = c(0, 100), xlim = c(0,1))
+
+site_hist(df, "TOTALN", breaks = seq(0, max(df$TOTALN)+20, 5), ylim = c(0, 100), xlim = range(df$TOTALN))
+site_hist(df, "TOTALFP", breaks = seq(0, max(df$TOTALN)+20, 2), ylim = c(0, 100), xlim = range(df$TOTALN))
+```
+
+#TPRCOMBO
+```{r fig.width=20, fig.height=7}
+df$stat <- df$TPRCOMBO
+moddf <- df[df$sampstrat != "full",]
+summary_vplot(df)
+summary_hplot(df)
+```
+```{r fig.width=20, fig.height=7}
+df$stat <- (df$TOTALN)
+summary_hplot(df, sigdig = 4)
+
+df$stat <- (df$TOTALFP)
+summary_hplot(df, sigdig = 4)
+
+df$stat <- (df$TOTALTN)
+summary_hplot(df, sigdig = 4)
+
+df$stat <- ((df$TPRCOMBO+1)/(df$FDRCOMBO+1))
+summary_hplot(df, sigdig = 4)
 ```
 
 # full model w/ interactions
@@ -162,8 +237,8 @@ combos
 
 
 ```{r}
-finalmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + 
+finalmod <- lmer(stat ~ nsamp + K + m + phi + H + r +
+                    K*phi + K*H + 
                     m*phi + m*H + m*r + 
                     phi*H + phi*r + 
                     H*r +
@@ -176,7 +251,7 @@ aovmod
 
 
 ```{r}
-ints <- c("K*phi", "K*H", "K*m", 
+ints <- c("K*phi", "K*H", 
           "m*phi", "m*H", "m*r",
           "phi*H", "phi*r", 
           "H*r")
@@ -296,7 +371,9 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
-```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+
+
+```{r pairwise comparison of sampstrat, fig.width=8, fig.height=8}
 #TukeyHSD
 
 model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
@@ -328,6 +405,18 @@ ggplot(resdf, aes(p1,p2)) +
           plot.margin=unit(rep(0.4,4),"cm")) +
     coord_fixed()
 
+ggplot(moddf, aes(fill=sampstrat, y=log(stat+1), x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5, jitter.height = 0.01), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+
 ```
 
 #which is best when?
@@ -356,25 +445,22 @@ sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.1
 ```
 
 
-# ENV COMBO RMSE
-```{r fig.width=20, fig.height=7}
-df$stat <- df$comboenv_rmse
-moddf <- df[df$sampstrat != "full",]
+#FDRCOMBO
+```{r fig.width=20, fig.height=8}
+df$stat <- df$FDRCOMBO
 summary_vplot(df)
 summary_hplot(df)
+
+moddf <- df[df$sampstrat != "full",]
 ```
 
-# full model w/ interactions
+
+# full model
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
 #na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + K*r +
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 #anova
 aovmod <- anova(fullmod)
@@ -388,120 +474,9 @@ efmod
 ```
 
 ```{r}
-fullmod <-  lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + 
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
 combos <- dredge(fullmod)
 combos
 ```
-
-
-```{r}
-finalmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + 
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
-#anova
-aovmod <- anova(finalmod)
-aovmod
-
-```
-
-
-```{r}
-ints <- c("K*phi", "K*H", "K*m", 
-          "m*phi", "m*H", "m*r",
-          "phi*H", "phi*r", 
-          "H*r")
-
-effplts <- list()
-for(i in 1:length(ints)){
-    eff <- effect(ints[i], finalmod)
-    effplts[[i]] <- eff
-    print(plot(eff))
-}
-
-
-par(mfrow=c(2,4))
-for(i in 1:length(effplts)){
-   p <- plot(effplts[[i]])
-   print(p)
-}
-
-
-
-effplts2 <- list()
-
-for(i in 1:length(effplts)){
-    eff <- as.data.frame(effplts[[i]])
-    v1 <- eff[,1]
-    v2 <- eff[,2]
-    p <- ggplot_gtable(ggplot_build(ggplot(eff, aes(factor(v1), linetype=factor(v2),
-                                     color = factor(v2))) +
-        geom_line(aes(y = fit, group=factor(v2)), size=1) +
-        geom_ribbon(aes(ymin = lower, ymax = upper, group = factor(v2), fill = factor(v2), col = factor(v2)), 
-                  alpha=0.2, 
-                  linetype="dashed") + 
-        xlab(colnames(eff)[1]) +
-        ylab("") +
-        scale_colour_manual(values = c("#756fd6","#30D5C8")) +
-        scale_fill_manual(values = c("#756fd6", "#30D5C8")) +
-        scale_x_discrete(expand = c(0.05, 0.05)) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-              panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21),
-              plot.margin=unit(rep(0.4,4),"cm")) +
-        guides(col=guide_legend(title=colnames(eff)[2], labels = levels(factor(v2))), linetype = FALSE, fill = FALSE, size = FALSE)))
-    
-    effplts2[[i]] <- p
-    gc()
-
-}
-
-
-
-
-```
-
-
-```{r fig.width = 10, fig.height = 14}
-do.call(grid.arrange, c(effplts2, ncol=2))
-```
-
-
-# full model w/o interactions
-```{r}
-#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-#mixed effect model
-#na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    (1 | seed), moddf, na.action = "na.fail")
-
-#anova
-aovmod <- anova(fullmod)
-
-#fixed effects (minus intercept)
-efmod <- fixef(fullmod)[-1]
-
-#print result
-aovmod
-efmod
-```
-```{r}
-combos <- dredge(fullmod)
-combos
-```
-
-```{r}
-combos <- dredge(fullmod, rank = "BIC")
-combos
-```
-
-
 
 ```{r pairwise comparison of npts, fig.width=5, fig.height=5}
 
@@ -534,6 +509,9 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
+
+
+
 ```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
 #TukeyHSD
 
