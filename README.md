@@ -1,4 +1,4 @@
-# Optimizing sampling strategies for landscape genomic studies
+# Landscape Genomic Sampling Project
 
 My coding lab notebook can be found [here](https://www.notion.so/Landscape-Genomic-Sampling-d8b9fd266ecc4ecba9bd48de1a0e59c9)
 
