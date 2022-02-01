@@ -185,9 +185,9 @@ params = {
                     # whether P(birth) should be weighted by parental dist
                     'dist_weighted_birth': False,
                     # intrinsic growth rate
-                    'R': 0.8,
+                    'R': 0.9,
                     # intrinsic birth rate (MUST BE 0<=b<=1)
-                    'b': 0.8,
+                    'b': 0.9,
                     # expectation of distr of n offspring per mating pair
                     'n_births_distr_lambda': 1,
                     # whether n births should be fixed at n_births_dist_lambda
