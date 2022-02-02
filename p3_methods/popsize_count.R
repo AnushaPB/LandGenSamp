@@ -28,9 +28,8 @@ res_popsize <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
   #skip iteration if files do not exist
   gsd_filepath <- create_filepath(i, params = params, "gsd")
-  loci_filepath <- create_filepath(i, params = params, "loci")
   skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
                       print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
