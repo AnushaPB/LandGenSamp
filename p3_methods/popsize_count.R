@@ -54,3 +54,33 @@ res_popsize <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 stopCluster(cl)
 
 write.csv(res_popsize, "outputs/popsize_results.csv", row.names = FALSE)
+
+
+#Code for analysis (seperate out later)
+library(apa)
+df <- read.csv("popsize_results.csv")
+
+#remove empty rows (there shouldn't be any, but just in case I do a partial run)
+df <- df[complete.cases(df),]
+
+#create result df
+tdf <- matrix(ncol = 8)
+
+#ttests
+for(i in c("m", "phi", "H", "r", "K")){
+  tt <- t.test(df$popsize ~ df[,i], var.equal=TRUE)
+  mean1 <- tt$estimate[[1]]
+  mean2 <- tt$estimate[[2]]
+  t.value  <- tt[1]
+  dfs <- tt[2]
+  conf.int1 <- tt$conf.int[1]
+  conf.int2 <- tt$conf.int[2]
+  p.value <- tt[3]
+  t.vect <- cbind(param=i, mean1, mean2, t.value, dfs, conf.int1, conf.int2, p.value)
+  tdf <- rbind(tdf, t.vect)
+}
+
+results_popsize <- tdf[-1,]
+
+write.csv(results_popsize, "popsize_ttest_results.csv")
+
