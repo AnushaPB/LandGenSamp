@@ -1,6 +1,6 @@
 # Landscape Genomic Sampling Project
 
-My coding lab notebook can be found [here](https://www.notion.so/Landscape-Genomic-Sampling-d8b9fd266ecc4ecba9bd48de1a0e59c9)
+Coding lab notebook can be found [here](https://www.notion.so/Landscape-Genomic-Sampling-d8b9fd266ecc4ecba9bd48de1a0e59c9)
 
 ## 1. Main Pipeline
 
