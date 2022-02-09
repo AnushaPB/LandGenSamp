@@ -197,7 +197,7 @@ params = {
                     # ADDED BY AB: choose nearest mate
                     'inverse_dist_mating': False,
                     # radius of mate-search area
-                    'mating_radius': 2,  
+                    'mating_radius': 2,
                 },  # <END> 'mating'
 
                 # ----------------------------------------#
@@ -504,44 +504,50 @@ def run_sims(sim_list, params):
     r = float(sim_list[5])
     simseed = float(sim_list[6])
 
-    # get env layers
-    env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
-            int(r * 100)) + ".csv", delimiter=',')
-    env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
-            int(r * 100)) + ".csv", delimiter=',')
-
-    # redefine params
-    params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
-    params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
-    params['comm']['species']['spp_0']['init']['K_factor'] = K
-    params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
-    params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-    params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-    params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
-    # creates a unique random seed for every parameter set
-    params['model']['num'] = int(simseed)
-
-    # print params to confirm proper params were used (in output)
-    print(params)
-
-    # make our params dict into a proper Geonomics ParamsDict object
+    #create mod name
     mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
-    print(mod_name)
-    params = gnx.make_params_dict(params, mod_name)
-    # then use it to make a model
-    mod = gnx.make_model(parameters=params, verbose=True)
+    #check if file path already exists
+    path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+    if exists(path_to_file):
+        print(mod_name + " exists, skipping")
+    else:
+        print(mod_name + " starting")
+        # get env layers
+        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
 
-    # run the model
-    mod.run(verbose = True)
+        # redefine params
+        params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
+        params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
+        params['comm']['species']['spp_0']['init']['K_factor'] = K
+        params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
+        # creates a unique random seed for every parameter set
+        params['model']['num'] = int(simseed)
 
-    # save and print all of the non-neutral loci
-    loci_df = pd.DataFrame()
-    loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-    loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-    loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-    print("\nNON-NEUTRAL LOCI:")
-    print(mod.comm[0].gen_arch.nonneut_loci)
+        # print params to confirm proper params were used (in output)
+        print(params)
+
+        # make our params dict into a proper Geonomics ParamsDict object
+        params = gnx.make_params_dict(params, mod_name)
+        # then use it to make a model
+        mod = gnx.make_model(parameters=params, verbose=True)
+
+        # run the model
+        mod.run(verbose = True)
+
+        # save and print all of the non-neutral loci
+        loci_df = pd.DataFrame()
+        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
+        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
+        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
+        print("\nNON-NEUTRAL LOCI:")
+        print(mod.comm[0].gen_arch.nonneut_loci)
 
 
 
