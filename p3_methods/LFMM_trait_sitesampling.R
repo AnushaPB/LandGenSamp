@@ -10,6 +10,7 @@ library("doParallel")
 
 #read in general functions and objects
 source("general_functions.R")
+source("sitesampling_functions.R")
 
 ##########
 #  LFMM  #
@@ -118,11 +119,9 @@ run_lfmm_trait <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
-
 #register cores
 cores <- 10
-cl <- makeCluster(cores)
-#not to overload your computer
+cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
 system.time(
@@ -142,7 +141,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_it",params[i,"it"])
   
   #create pdf to store plots
-  # pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
+  #pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, params = params, "gen")
@@ -165,25 +164,36 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gen_2k <- gen[s,]
     gsd_df_2k <- gsd_df[s,]
     
+    #run model on full data set
     full_result <- run_lfmm_trait(gen_2k, gsd_df_2k, loci_df)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM_trait/LFMM_trait_results_",paramset,".csv")
+    csv_file <- paste0("outputs/LFMM_trait/LFMM_trait_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
-    for(nsamp in npts){
+    for(nsite in nsites){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
+        #get sites
+        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        #confirm that number of sites matches number of sample IDs
+        stopifnot(length(subIDs) == length(siteIDs))
+        #calculate allele frequency by site (average)
+        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+        #calculate env/z values by site
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+        
         #run analysis using subsample
-        sub_result <- run_lfmm_trait(subgen, subgsd_df, loci_df, K = full_result$K)
+        #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
+        sub_result <- run_lfmm_trait(sitegen, sitegsd_df, loci_df, K = full_result$K)
         
         #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
@@ -197,7 +207,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   }
   
   #end pdf()
-  # dev.off()
+  #dev.off()
   
   return(result)
   
@@ -208,5 +218,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM_trait/lfmm_trait_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/LFMM_trait/lfmm_trait_sitesampling_results.csv", row.names = FALSE)
 
