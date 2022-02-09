@@ -512,11 +512,11 @@ def run_sims(sim_list, params):
 
     #check if file path already exists
     path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+
     if exists(path_to_file):
-        #add fun here
-	print("file exists")
+        print("file exists")
     else:
-        print(mod_name + " does not exist")
+        print("mod_name + " does not exist"")   
 
 
 #multiprocessing
