@@ -508,15 +508,14 @@ def run_sims(sim_list, params):
     # make our params dict into a proper Geonomics ParamsDict object
     mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
-    print(mod_name)
 
     #check if file path already exists
     path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
 
     if exists(path_to_file):
-        print("file exists")
+        potato = 1 + 1
     else:
-        print("mod_name + " does not exist"")   
+        print(mod_name + "does not exist")   
 
 
 #multiprocessing
