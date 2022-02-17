@@ -1,6 +1,6 @@
 #library to create paths
 library("here")
-
+library("stringr")
 
 #####################
 # GENERAL FUNCTIONS #

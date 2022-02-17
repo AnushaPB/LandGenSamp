@@ -169,7 +169,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM_trait/LFMM_trait_sitesampling_results_",paramset,".csv")
+    csv_file <- paste0("outputs/LFMM_trait/LFMM_trait_sitesampling_test_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
     for(nsite in nsites){
@@ -180,13 +180,13 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #get sites
-        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        #siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
         #confirm that number of sites matches number of sample IDs
-        stopifnot(length(subIDs) == length(siteIDs))
+        #stopifnot(length(subIDs) == length(siteIDs))
         #calculate allele frequency by site (average)
-        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+        sitegen <- subgen
         #calculate env/z values by site
-        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+        sitegsd_df <- subgsd_df 
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
@@ -218,5 +218,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM_trait/lfmm_trait_sitesampling_results.csv", row.names = FALSE)
+#write.csv(res_lfmm, "outputs/LFMM_trait/lfmm_trait_sitesampling_results.csv", row.names = FALSE)
 

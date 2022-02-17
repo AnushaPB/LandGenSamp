@@ -6,6 +6,7 @@ import multiprocessing as mp
 import sys
 import matplotlib.pyplot as plt
 from functools import partial
+from os.path import exists
 
 # Make uniform array
 def make_unif_array(n):
@@ -164,7 +165,7 @@ params = {
 
                 'init': {
                     # starting number of individs
-                    'N': 1000,
+                    'N': 10000,
                     # carrying-capacity Layer name
                     'K_layer': 'lyr_0',
                     # multiplicative factor for carrying-capacity layer
@@ -185,11 +186,11 @@ params = {
                     # whether P(birth) should be weighted by parental dist
                     'dist_weighted_birth': False,
                     # intrinsic growth rate
-                    'R': 0.8,
+                    'R': 1,
                     # intrinsic birth rate (MUST BE 0<=b<=1)
                     'b': 0.8,
                     # expectation of distr of n offspring per mating pair
-                    'n_births_distr_lambda': 1,
+                    'n_births_distr_lambda': 2,
                     # whether n births should be fixed at n_births_dist_lambda
                     'n_births_fixed': True,
                     # ADDED BY AB: choose nearest mate
@@ -197,7 +198,7 @@ params = {
                     # ADDED BY AB: choose nearest mate
                     'inverse_dist_mating': False,
                     # radius of mate-search area
-                    'mating_radius': 1,  # CHECK!
+                    'mating_radius': 2,
                 },  # <END> 'mating'
 
                 # ----------------------------------------#
@@ -263,7 +264,7 @@ params = {
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
-                    'gen_arch_file': None,
+                    'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
                     'L': 10000,
                     # num of chromosomes (doesn't matter when there is no linkage)
@@ -387,7 +388,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 1,
+            'n_its': 10,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -440,7 +441,7 @@ params = {
                 # whether to calculate
                 'calc': True,
                 # calculation frequency (in timesteps)
-                'freq': 5,
+                'freq': 10,
                 # whether to mean across sampled individs
                 'mean': False,
             },
@@ -449,14 +450,14 @@ params = {
                 # whether to calculate
                 'calc': True,
                 # calculation frequency (in timesteps)
-                'freq': 5,
+                'freq': 10,
             },
             # mean fitness
             'mean_fit': {
                 # whether to calculate
                 'calc': True,
                 # calculation frequency (in timesteps)
-                'freq': 5,
+                'freq': 10,
             },
             # linkage disequilibirum
             'ld': {
@@ -475,7 +476,7 @@ params = {
 
 K_array = [1, 2]
 phi_array = [0.1, 0.5]
-m_array = [0.25, 1]
+m_array = [0.25]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
@@ -504,44 +505,50 @@ def run_sims(sim_list, params):
     r = float(sim_list[5])
     simseed = float(sim_list[6])
 
-    # get env layers
-    env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
-            int(r * 100)) + ".csv", delimiter=',')
-    env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
-            int(r * 100)) + ".csv", delimiter=',')
-
-    # redefine params
-    params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
-    params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
-    params['comm']['species']['spp_0']['init']['K_factor'] = K
-    params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
-    params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-    params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-    params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
-    # creates a unique random seed for every parameter set
-    params['model']['num'] = int(simseed)
-
-    # print params to confirm proper params were used (in output)
-    print(params)
-
-    # make our params dict into a proper Geonomics ParamsDict object
+    #create mod name
     mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
-    print(mod_name)
-    params = gnx.make_params_dict(params, mod_name)
-    # then use it to make a model
-    mod = gnx.make_model(parameters=params, verbose=True)
+    #check if file path already exists
+    path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+    if exists(path_to_file):
+        print(mod_name + " exists, skipping")
+    else:
+        print(mod_name + " starting")
+        # get env layers
+        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
 
-    # run the model
-    mod.run(verbose = True)
+        # redefine params
+        params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
+        params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
+        params['comm']['species']['spp_0']['init']['K_factor'] = K
+        params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
+        # creates a unique random seed for every parameter set
+        params['model']['num'] = int(simseed)
 
-    # save and print all of the non-neutral loci
-    loci_df = pd.DataFrame()
-    loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-    loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-    loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-    print("\nNON-NEUTRAL LOCI:")
-    print(mod.comm[0].gen_arch.nonneut_loci)
+        # print params to confirm proper params were used (in output)
+        print(params)
+
+        # make our params dict into a proper Geonomics ParamsDict object
+        params = gnx.make_params_dict(params, mod_name)
+        # then use it to make a model
+        mod = gnx.make_model(parameters=params, verbose=True)
+
+        # run the model
+        mod.run(verbose = True)
+
+        # save and print all of the non-neutral loci
+        loci_df = pd.DataFrame()
+        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
+        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
+        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
+        print("\nNON-NEUTRAL LOCI:")
+        print(mod.comm[0].gen_arch.nonneut_loci)
 
 
 
@@ -549,7 +556,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 2
+    ncpu = 8
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

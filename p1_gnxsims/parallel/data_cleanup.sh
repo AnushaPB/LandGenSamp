@@ -25,7 +25,7 @@ rm -r data
 find nnloci -type f -print0 | xargs -0 mv -t LGS_data
 
 #move into the final dir
-mv LGS_data
+cd LGS_data
 
 #create a dir to move the stats into
 mkdir -p stats
