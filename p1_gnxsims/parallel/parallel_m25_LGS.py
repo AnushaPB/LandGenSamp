@@ -484,8 +484,8 @@ r_array = [0.3, 0.6]
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-# create a 2D array of seeds for simulations
-sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
+# create a 2D array of seeds for simulations  (add 1000 to make it different from m100
+sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
 
@@ -556,7 +556,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 8
+    ncpu = 10
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
