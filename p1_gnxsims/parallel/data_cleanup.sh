@@ -34,9 +34,10 @@ mkdir -p stats
 mv *HET* stats
 mv *MAF* stats
 mv *OTHER_STATS* stats
+mv *NONNEUTS* stats
 
 #create a dir for the t0 data
-mkdir t0_data
+mkdir -p t0_data
 
 #move t0 data into the new dir
 #NOTE - I didn't use *t-0* as the pattern because this would move all the it-0 files
