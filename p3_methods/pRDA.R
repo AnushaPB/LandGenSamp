@@ -143,13 +143,16 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
 
 #register cores
 cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(cores[1]-5) #not to overload your computer
 registerDoParallel(cl)
 
 res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
-  
+  library("qvalue")
+  library("robust")
+  library("here")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
