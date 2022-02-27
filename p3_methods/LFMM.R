@@ -120,7 +120,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
 
 
 #register cores
-cores <- 10
+cores <- 25
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
@@ -166,7 +166,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K=NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
@@ -181,7 +181,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
+        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
