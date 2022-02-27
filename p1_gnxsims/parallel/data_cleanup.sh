@@ -25,7 +25,7 @@ rm -r data
 find nnloci -type f -print0 | xargs -0 mv -t LGS_data
 
 #move into the final dir
-mv LGS_data
+cd LGS_data
 
 #create a dir to move the stats into
 mkdir -p stats
@@ -34,9 +34,10 @@ mkdir -p stats
 mv *HET* stats
 mv *MAF* stats
 mv *OTHER_STATS* stats
+mv *NONNEUTS* stats
 
 #create a dir for the t0 data
-mkdir t0_data
+mkdir -p t0_data
 
 #move t0 data into the new dir
 #NOTE - I didn't use *t-0* as the pattern because this would move all the it-0 files

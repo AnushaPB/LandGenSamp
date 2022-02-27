@@ -16,12 +16,12 @@ library("gridExtra")
 library("MuMIn")
 library("emmeans")
 library("effects")
+library("here")
 
-source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 
-
+install.packages("ggplot2")
 ```
 
 
@@ -46,7 +46,8 @@ params_full <- expand.grid(K = c(1, 2),
 
 #df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
+path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
+df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
