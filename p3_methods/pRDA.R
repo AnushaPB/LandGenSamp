@@ -35,7 +35,14 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   if(is.null(K)){
     pc <- prcomp(gen)
     par(pty="s",mfrow=c(1,1))
-    eig <- pc$sdev[1:100]^2
+    
+    #if number of samples is greater than 1000 (i.e. full dataset), only look at fits 100 PCs (shouldn't make a dif either way)
+    if(nrow(gen)>1000){
+      eig <- pc$sdev[1:100]^2
+    } else {
+      eig <- pc$sdev^2
+    }
+    #FIX LATER only use first 20
     #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
     #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
     #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
