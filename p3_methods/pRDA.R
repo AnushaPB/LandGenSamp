@@ -1,25 +1,29 @@
 set.seed(42)
 
-library("here") #paths
-#to install LFMM:
-#devtools::install_github("bcm-uga/lfmm")
-library("lfmm") #LFMM
-library("vcfR")
-library("foreach")
-library("doParallel")
+library(here) #paths
+library(vegan) #RDA
+library(vcfR)  #read VCF files
+#parallel
+library(foreach)
+library(doParallel)
+#RDA
+#devtools::install_github("jdstorey/qvalue")
+library(qvalue)
+library(robust)
 
 #read in general functions and objects
 source("general_functions.R")
 
-##########
-#  LFMM  #
-##########
+
+############
+#   RDA    #
+############
 
 
-run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
-  
-  #for readibility, just negates the in function
-  `%notin%` <- Negate(`%in%`)
+run_rda <- function(gen, gsd_df, loci_df, K=NULL){
+
+  #define nloci
+  nloci = ncol(gen)
   
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
@@ -27,8 +31,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   adaptive_loci <- c(loci_trait1, loci_trait2)
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #PCA to determine number of latent factors
-  #if K is not specified it is calculated based on PCs
+  #determine PCs
   if(is.null(K)){
     pc <- prcomp(gen)
     par(pty="s",mfrow=c(1,1))
@@ -39,58 +42,56 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
     K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
     plot(eig, xlab = 'PC', ylab = "Variance explained")
     abline(v = K, col= "red", lty="dashed")
+  } else {
+    pc <- prcomp(gen)
   }
   
+  #get pc axes
+  pc <- data.frame(pc$x[,1:K])
   
-  #gen matrix
-  genmat = as.matrix(gen)
-  #env matrix
-  env1mat = as.matrix(gsd_df$env1)
-  env2mat = as.matrix(gsd_df$env2)
-  envmat = cbind(env1mat, env2mat)
+  #Run RDA
+  pcform <- paste(paste0("pc$", colnames(pc)), collapse="+")
+  #create formula such that it can change based on the number of PCs
+  f <- as.formula(paste("gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2 + Condition(", pcform, ")"))
+  mod <- rda(f)
   
-  #BOTH ENV
-  #run model
-  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
-                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
-  #env1 candidate loci
-  #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
+  #### Function to conduct a RDA based genome scan from Capblancq & Forester 2021
+  rdadapt <- function(rda,K)
+  {
+    zscores<-rda$CCA$v[,1:as.numeric(K)]
+    resscale <- apply(zscores, 2, scale)
+    resmaha <- covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dist
+    lambda <- median(resmaha)/qchisq(0.5,df=K)
+    reschi2test <- pchisq(resmaha/lambda,K,lower.tail=FALSE)
+    qval <- qvalue(reschi2test)
+    q.values_rdadapt<-qval$qvalues
+    return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
+  }
+  
+  ## Running the function with two axes (two env variables)
+  rdadapt_env <- rdadapt(mod, 2)
+   
+  ## P-values threshold after FDR correction (different from Capblancq & Forester)
+  pvalues <- p.adjust(rdadapt_env$p.values, method="fdr")
+  #Capblancq include a step where they only take pvalues with highest loading for each contig to deal with LD (not applied here)
+  
+  ## Identifying the loci that are below the p-value threshold
+  #Identify rda cand loci (P)
+  rda_loci <- which(pvalues < 0.05) 
   #Identify negatives
-  lfmm_neg1 <- which(!(pvalues[,1] < 0.05))
+  rda_neg <- which(!(pvalues < 0.05))
+  #for readibility, just negates the in function
+  `%notin%` <- Negate(`%in%`)
   #get confusion matrix values
   #True Positives
-  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
+  TP <- sum(rda_loci %in% adaptive_loci)
   #False Positives
-  FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
+  FP <- sum(rda_loci %notin% adaptive_loci)
   #True Negatives
-  TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
+  TN <- sum(rda_neg %notin% adaptive_loci)
   #False Negatives
-  FN1 <- sum(lfmm_neg1 %in% loci_trait1)
+  FN1 <- sum(rda_neg %in% adaptive_loci)
   
-  #env2 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
-  #Identify negatives
-  lfmm_neg2 <- which(!(pvalues[,2] < 0.05))
-  #True Positives
-  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
-  #False Positives
-  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
-  #True Negatives
-  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
-  #False Negatives
-  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
-  
-  #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   #calc confusion matrix
   TP <- TP1 + TP2
   FP <- FP1 + FP2
@@ -106,31 +107,48 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #calc False Positive Rate
   FPRCOMBO <- FP/(FP + TN)
   
+  #VARIANCE EXPLAINED CODE (placeholder - might add in later)
+  ## Full model
+  #full <- as.formula(paste("gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2 + gsd_df$x + gsd_df$y +", pcform))
+  #pRDAfull <- rda(full)
+  #RsquareAdj(pRDAfull)
+  #anova(pRDAfull)
+  ## Pure climate model
+  #env <- as.formula(paste("gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2 + Condition(gsd_df$x + gsd_df$y +", pcform, ")"))
+  #pRDAenv<- rda(env)
+  #RsquareAdj(pRDAenv)
+  #anova(pRDAenv)
+  ## Pure neutral population structure model  
+  #struct <- as.formula(paste("gen[, 1:nloci] ~ ", pcform, "+ Condition(gsd_df$env1 + gsd_df$env2 + gsd_df$x + gsd_df$y)"))
+  #pRDAstruct <- rda(struct),  Variables)
+  #RsquareAdj(pRDAstruct)
+  #anova(pRDAstruct)
+  ##Pure geography model 
+  #struct <- as.formula(paste("gen[, 1:nloci] ~ gsd_df$x + gsd_df$y + Condition(gsd_df$env1 + gsd_df$env2 +", pcform, ")"))
+  #pRDAgeog <- rda(AllFreq ~ Longitude + Latitude + Condition(MAR + EMT + MWMT + CMD + Tave_wt + DD_18 + MAP + Eref + PAS + PC1 + PC2 + PC3),  Variables)
+  #RsquareAdj(pRDAgeog)
+  #anova(pRDAgeog)
+  
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
                     FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(lfmm_loci), 
+                    TOTALN = length(rda_loci), 
                     TOTALTP = TP, 
                     TOTALFP = FP, 
                     TOTALTN = TN,
                     TOTALFN = FN))
 }
 
-
 #register cores
-cores <- 25
-cl <- makeCluster(cores)
-#not to overload your computer
+cores <- detectCores()
+cl <- makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
-system.time(
-res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  library("here")
+res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
-  library("lfmm")
-  library("stringr")
+  library("vegan")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -141,9 +159,6 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_r",params[i,"r"]*100,
                      "_it",params[i,"it"])
   
-  #create pdf to store plots
-  # pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
-  
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, params = params, "gen")
   gsd_filepath <- create_filepath(i, params = params, "gsd")
@@ -151,10 +166,10 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   skip_to_next <- FALSE
   if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
-                      print(params[i,]) } 
+    print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
   
-  #run LFMM
+  #run RDA
   if(skip_to_next == FALSE){
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
@@ -166,11 +181,11 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
+    full_result <- run_rda(gen_2k, gsd_df_2k, loci_df, K=NULL)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,".csv")
+    csv_file <- paste0("outputs/RDA/RDA_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
     for(nsamp in npts){
@@ -181,7 +196,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
+        sub_result <- run_rda(subgen, subgsd_df, loci_df, K=NULL)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
@@ -197,17 +212,13 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     }
   }
   
-  #end pdf()
-  # dev.off()
-  
   return(result)
   
   gc()
+  
 }
-)
 
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM/lfmm_results.csv", row.names = FALSE)
-
+write.csv(res_rda, "outputs/RDA/rda_results.csv", row.names = FALSE)

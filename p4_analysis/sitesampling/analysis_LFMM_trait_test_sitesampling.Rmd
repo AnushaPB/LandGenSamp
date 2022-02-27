@@ -17,6 +17,7 @@ library("MuMIn")
 library("emmeans")
 library("effects")
 source("sitesampling_analysis_functions.R")
+source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 
@@ -42,9 +43,9 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/LFMM_sitesampling_results.csv")
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM_trait/LFMM_trait_sitesampling_results.csv")
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM_trait_test/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
@@ -64,6 +65,7 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ```
+
 ```{r}
 range(df$FDRCOMBO)
 range(df$TPRCOMBO)
@@ -75,7 +77,7 @@ summary(df)
 ```
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "TPRCOMBO", max = 0.9, option = "turbo")
+MEGAPLOT(moddf, "TPRCOMBO", max = 1, option = "turbo")
 MEGAPLOT(moddf, "FDRCOMBO")
 ```
 

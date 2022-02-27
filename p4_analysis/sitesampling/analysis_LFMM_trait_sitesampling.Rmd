@@ -42,9 +42,9 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/LFMM_sitesampling_results.csv")
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM_trait/LFMM_trait_sitesampling_results.csv")
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM_trait/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
@@ -64,6 +64,7 @@ moddf <- df[df$sampstrat != "full",]
 
 
 ```
+
 ```{r}
 range(df$FDRCOMBO)
 range(df$TPRCOMBO)
