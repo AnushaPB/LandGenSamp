@@ -140,8 +140,7 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-5) #not to overload your computer
 registerDoParallel(cl)
 
-#res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  
+#res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {  
 res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
