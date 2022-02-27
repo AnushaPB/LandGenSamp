@@ -45,13 +45,11 @@ run_lea_full <- function(gen, gsd_df, loci_df, paramset){
   write.geno(gen, here("data","temp_genotypes.geno"))
   
   #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
-  
-  #Estimate admixture coefficients using sparse Non-Negative Matrix Factorization algorithms,
   #Code for testing multiple K values:
   maxK <- 10
   obj.snmf <- snmf(here("data","temp_genotypes.geno"), K = 1:maxK, ploidy = 2, entropy = T, alpha = 100, project = "new")
   
-  #determining best K and picking best replicate for best K (source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
+  #determining best K and picking best replicate for best K (source:https://chazhyseni.github.io/NALgen/post/determining_bestk/)
   ce <- list()
   for(k in 1:maxK) ce[[k]] <- cross.entropy(obj.snmf, K=k)
   ce.K <- c()
