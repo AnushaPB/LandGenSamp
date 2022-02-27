@@ -90,13 +90,7 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   #True Negatives
   TN <- sum(rda_neg %notin% adaptive_loci)
   #False Negatives
-  FN1 <- sum(rda_neg %in% adaptive_loci)
-  
-  #calc confusion matrix
-  TP <- TP1 + TP2
-  FP <- FP1 + FP2
-  TN <- TN1 + TN2
-  FN <- FN1 + FN2
+  FN <- sum(rda_neg %in% adaptive_loci)
   
   #calc True Positive Rate
   TPRCOMBO <- TP/(TP + FN)
@@ -146,7 +140,9 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-5) #not to overload your computer
 registerDoParallel(cl)
 
-res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+#res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  
+res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
   library("qvalue")
