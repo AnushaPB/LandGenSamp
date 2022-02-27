@@ -243,5 +243,5 @@ params <- expand.grid(K = c(1,2),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
-#TEMPORARY it = 0
+                      it = 0:9)
+
