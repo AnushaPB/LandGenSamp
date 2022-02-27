@@ -148,6 +148,7 @@ res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
   library("qvalue")
   library("robust")
   library("here")
+  library("stringr")
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
