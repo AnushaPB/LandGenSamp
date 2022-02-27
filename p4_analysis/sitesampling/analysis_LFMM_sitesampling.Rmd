@@ -75,7 +75,7 @@ summary(df)
 ```
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
+MEGAPLOT(moddf, "TPRCOMBO", max = 0.9, option = "turbo")
 MEGAPLOT(moddf, "FDRCOMBO")
 ```
 
