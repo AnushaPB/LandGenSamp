@@ -1,6 +1,6 @@
 set.seed(42)
-
-library("here") #paths
+#paths
+library("here") 
 #to install LFMM:
 #devtools::install_github("bcm-uga/lfmm")
 library("lfmm") #LFMM
@@ -181,7 +181,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
+        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = K)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
