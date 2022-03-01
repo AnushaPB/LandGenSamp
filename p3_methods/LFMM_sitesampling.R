@@ -62,9 +62,12 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                         env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
   #env1 candidate loci
   #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,1] < 0.05) 
+  lfmm_loci1 <- which(pvalues[,"env1"] < 0.05) 
   #Identify negatives
-  lfmm_neg1 <- which(!(pvalues[,1] < 0.05))
+  lfmm_neg1 <- which(pvalues[,"env1"] >= 0.05 | is.na(pvalues[,"env1"]))
+  #check length makes sense
+  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == ncol(gen))
+  
   #get confusion matrix values
   #True Positives
   TP1 <- sum(lfmm_loci1 %in% loci_trait1)
@@ -74,12 +77,17 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
   #False Negatives
   FN1 <- sum(lfmm_neg1 %in% loci_trait1)
+  #check sum makes sense
+  stopifnot(sum(TP1, FP1, TN1, FN1) == ncol(gen))
   
   #env2 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,2] < 0.05) 
+  lfmm_loci2 <- which(pvalues[,"env2"] < 0.05) 
   #Identify negatives
-  lfmm_neg2 <- which(!(pvalues[,2] < 0.05))
+  lfmm_neg2 <- which(pvalues[,"env2"] >= 0.05 | is.na(pvalues[,"env2"]))
+  #check length makes sense
+  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == ncol(gen))
+  
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
   #False Positives
@@ -88,6 +96,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
   #False Negatives
   FN2 <- sum(lfmm_neg2 %in% loci_trait2)
+  #check length makes sense
+  stopifnot(sum(TP2, FP2, TN2, FN2) == ncol(gen))
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -96,15 +106,19 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   FP <- FP1 + FP2
   TN <- TN1 + TN2
   FN <- FN1 + FN2
+  #check sum makes sense
+  stopifnot(sum(TP, FP, TN, FN) == 2*ncol(gen))
   
-  #calc True Positive Rate
+  #calc True Positive Rate (i.e. Sensitivity)
   TPRCOMBO <- TP/(TP + FN)
-  #calc True Negative Rate
+  #calc True Negative Rate (i.e. Specificity)
   TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate 
+  #calc False Discovery Rate (i.e. 1 - TPR)
   FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate
+  #calc False Positive Rate (i.e. 1 - TNR)
   FPRCOMBO <- FP/(FP + TN)
+  #check sum makes sense
+  stopifnot(sum(TPRCOMBO, TNRCOMBO, FDRCOMBO, FPRCOMBO) == 2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
