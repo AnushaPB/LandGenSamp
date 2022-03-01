@@ -32,8 +32,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   if(is.null(K)){
     pc <- prcomp(gen)
     par(pty="s",mfrow=c(1,1))
-    #if number of samples is greater than 1000 (i.e. full dataset), only look at fits 100 PCs (shouldn't make a dif either way)
-    if(nrow(gen)>1000){
+    #if number of samples is greater than 100, only look at fits 100 PCs (shouldn't make a dif either way)
+    if(nrow(gen)>100){
       eig <- pc$sdev[1:100]^2
     } else {
       eig <- pc$sdev^2
@@ -186,7 +186,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = K)
+        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
