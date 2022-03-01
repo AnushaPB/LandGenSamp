@@ -69,7 +69,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #Identify LFMM cand loci (P)
   lfmm_loci1 <- which(pvalues[,"env1"] < 0.05) 
   #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= 0.05 | is.na(pvalues[,1]))
+  lfmm_neg1 <- which(pvalues[,"env1"] >= 0.05 | is.na(pvalues[,"env1"]))
   #check length makes sense
   stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == ncol(gen))
   
@@ -89,7 +89,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #Identify LFMM cand loci
   lfmm_loci2 <- which(pvalues[,"env2"] < 0.05) 
   #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= 0.05 | is.na(pvalues[,1]))
+  lfmm_neg2 <- which(pvalues[,"env2"] >= 0.05 | is.na(pvalues[,"env2"]))
   #check length makes sense
   stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == ncol(gen))
   

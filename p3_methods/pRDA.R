@@ -86,7 +86,7 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   #Identify rda cand loci (P)
   rda_loci <- which(pvalues < 0.05) 
   #Identify negatives
-  rda_neg <- which(!(pvalues < 0.05))
+  rda_neg <- which(pvalues >= 0.05 | is.na(pvalues))
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
   #get confusion matrix values
