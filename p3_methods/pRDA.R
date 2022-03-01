@@ -31,35 +31,8 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   adaptive_loci <- c(loci_trait1, loci_trait2)
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #determine PCs
-  if(is.null(K)){
-    pc <- prcomp(gen)
-    par(pty="s",mfrow=c(1,1))
-    
-    #if number of samples is greater than 1000 (i.e. full dataset), only look at fits 100 PCs (shouldn't make a dif either way)
-    if(nrow(gen)>1000){
-      eig <- pc$sdev[1:100]^2
-    } else {
-      eig <- pc$sdev^2
-    }
-    #FIX LATER only use first 20
-    #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
-    #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-    #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
-    K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
-    plot(eig, xlab = 'PC', ylab = "Variance explained")
-    abline(v = K, col= "red", lty="dashed")
-  } else {
-    pc <- prcomp(gen)
-  }
-  
-  #get pc axes
-  pc <- data.frame(pc$x[,1:K])
-  
-  #Run RDA
-  pcform <- paste(paste0("pc$", colnames(pc)), collapse="+")
-  #create formula such that it can change based on the number of PCs
-  f <- as.formula(paste("gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2 + Condition(", pcform, ")"))
+  #create formula such that it can change
+  f <- as.formula("gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2")
   mod <- rda(f)
   
   #### Function to conduct a RDA based genome scan from Capblancq & Forester 2021
@@ -130,7 +103,7 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   #RsquareAdj(pRDAgeog)
   #anova(pRDAgeog)
   
-  return(data.frame(K = K,
+  return(data.frame(
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
@@ -147,8 +120,8 @@ cores <- detectCores()
 cl <- makeCluster(cores[1]-5) #not to overload your computer
 registerDoParallel(cl)
 
-#res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {  
-res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
+res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {  
+# res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
   library("qvalue")
@@ -187,7 +160,7 @@ res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_rda(gen_2k, gsd_df_2k, loci_df, K=NULL)
+    full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), full_result)
     
     #write full datafile (temp)
@@ -202,7 +175,7 @@ res_rda <- foreach(i=1:2, .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_rda(subgen, subgsd_df, loci_df, K=NULL)
+        sub_result <- run_rda(subgen, subgsd_df, loci_df)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
