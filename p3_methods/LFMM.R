@@ -118,13 +118,11 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TPRCOMBO <- TP/(TP + FN)
   #calc True Negative Rate (i.e. Specificity)
   TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate (i.e. 1 - TPR)
+  #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate (i.e. 1 - TNR)
+  #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
-  #check sum makes sense
-  stopifnot(sum(TPRCOMBO, TNRCOMBO, FDRCOMBO, FPRCOMBO) == 2)
-  
+ 
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
