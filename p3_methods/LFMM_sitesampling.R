@@ -32,7 +32,12 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   if(is.null(K)){
     pc <- prcomp(gen)
     par(pty="s",mfrow=c(1,1))
-    eig <- pc$sdev[1:100]^2
+    #if number of samples is greater than 100, only look at fits 100 PCs (shouldn't make a dif either way)	
+    if(nrow(gen)>100){	
+      eig <- pc$sdev[1:100]^2	
+    } else {	
+      eig <- pc$sdev^2	
+    }
     #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
     #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
     #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
@@ -141,6 +146,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
   library("lfmm")
+  library("stringr")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -176,7 +182,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_dfm  K = NULL)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
