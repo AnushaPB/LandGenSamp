@@ -176,7 +176,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_dfm  K = NULL)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
