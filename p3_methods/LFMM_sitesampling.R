@@ -180,7 +180,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM/LFMM_sitesampling_results_",paramset,".csv")
+    csv_file <- paste0("outputs/LFMM_sitesampling/LFMM_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
     for(nsite in nsites){
@@ -229,5 +229,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM/lfmm_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/LFMM_sitesampling/lfmm_sitesampling_results.csv", row.names = FALSE)
 
