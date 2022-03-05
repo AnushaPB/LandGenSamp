@@ -16,12 +16,10 @@ library("gridExtra")
 library("MuMIn")
 library("emmeans")
 library("effects")
-library("here")
 
+source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
-
-install.packages("ggplot2")
 ```
 
 
@@ -42,20 +40,18 @@ params_full <- expand.grid(K = c(1, 2),
                       r = c(0.3, 0.6),
                       nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 0)
+                      it = 0:2)
 
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/RDA/RDA_results.csv")
 
-path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
-df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
+df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/pRDA/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-#IMPORTANT NOTE ABOUT LFMM DATA:
 #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
 #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
 #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
-df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
+#df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
 df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
 df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 
@@ -63,79 +59,6 @@ df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-#remove duplicates FIX THIS
-df <- unique(df)
-```
-
-```{r}
-#Create dataframe with all variable combos
-params <- expand.grid(K = c(1, 2), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.3, 0.6),
-                      it = 0:9)
-
-cdf <- data.frame()
-for(i in 1:nrow(params)){
-  p <- params[i,]
-  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
-  full <- subdf[subdf$sampstrat == "full",]
-  sub <- subdf[subdf$sampstrat != "full",]
-  sub$TPRCOMBO_corrected <- (full$TPRCOMBO-sub$TPRCOMBO)/(full$TPRCOMBO)
-  sub$TPRCOMBO_corrected[sub$TPRCOMBO == 0] <- 0
-  cdf <- rbind(cdf, sub)
-}
-
-cdf <- data.frame()
-for(i in 1:nrow(params)){
-  p <- params[i,]
-  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
-  full <- subdf[subdf$sampstrat == "full",]
-  sub <- subdf[subdf$sampstrat != "full",]
-  sub$TPRCOMBO_corrected <- sub$TPRCOMBO-full$TPRCOMBO
-  sub$TPRCOMBO_corrected[sub$TPRCOMBO == 0] <- 0
-  cdf <- rbind(cdf, sub)
-}
-
-```
-
-```{r fig.width = 30, fig.height=15}
-#Create dataframe with all variable combos
-params_it <- expand.grid(K = c(1, 2), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.3, 0.6),
-                      nsamp = c(36, 81, 144, 225),
-                      sampstrat =  c("rand", "grid", "trans", "envgeo"))
-
-lmdf <- data.frame()
-for(i in 1:nrow(params_it)){
-  p <- params_it[i,]
-  
-  subdf  <- df[df$K == p$K & 
-                df$phi == p$phi & 
-                df$m == p$m & 
-                df$seed == p$seed & 
-                df$H == p$H & 
-                df$r == p$r & 
-                df$nsamp == p$nsamp & 
-                as.character(df$sampstrat) == as.character(p$sampstrat), ]
-  
-  #stopifnot(nrow(subdf) == 10)
-  
-  mod <- lm(subdf$TPRCOMBO ~ subdf$FPRCOMBO)
-  subdf$coeff <- mod$coefficients[2]
-  
-  lmdf <- rbind(lmdf, subdf)
-}
-
-
-MEGAPLOT(lmdf, "coeff")
-lmdf$coeff
 
 ```
 
@@ -144,6 +67,10 @@ range(df$FDRCOMBO)
 range(df$TPRCOMBO)
 
 ```
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "K.1")
+```
+
 
 ```{r fig.width = 30, fig.height=15}
 MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
@@ -151,21 +78,21 @@ MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
 MEGAPLOT(moddf, "FDRCOMBO")
 ```
 
-#FOR COMPARISON WITH YOSEMITE
-```{r fig.width=15, fig.height=7}
-ydf <- df[df$H == 0.5 & df$r == 0.3,]
-
-summary_hplot(ydf, maxv = 0.6)
-
-```
 
 
 #EXPLORATORY
+
+```{r fig.width=20, fig.height=7}
+df$stat <- df$K.1
+summary_vplot(df)
+summary_hplot(df)
+```
+
 ```{r fig.width=20, fig.height=7}
 df$stat <- df$TPRCOMBO
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
-summary_hplot(df, maxv=0.30)
+summary_hplot(df)
 
 
 df$stat <- df$FDRCOMBO
@@ -612,4 +539,5 @@ Determine how sampling strategy/nsamp affects the affects of the sim vars
 ```{r real code, fig.width=20, fig.height=4}
 sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.10)
 ```
+
 

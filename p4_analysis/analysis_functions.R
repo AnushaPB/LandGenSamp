@@ -1,5 +1,5 @@
 
-MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean"){
+MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean", divergent = FALSE){
   if(aggfunc == "mean"){
     agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
   }
@@ -32,7 +32,6 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
       ggtitle(ptitle) +
       geom_tile(aes(fill = mean)) + 
       geom_text(aes(label = round(mean, digits = 2), hjust = 0.5), size = 5) +
-      scale_fill_viridis(limits=c(minv, maxv), option = option) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(), legend.position = "none",
@@ -44,6 +43,12 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
             plot.margin=unit(rep(0.4,4),"cm")) +
       coord_fixed()
     
+    if(divergent){
+      p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
+    } else {
+      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = option) 
+    }
+    
     plts[[i]] <- p
   }
   
@@ -52,7 +57,10 @@ MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "
 }
 
 
-summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
+summary_vplot <- function(df, stat = "stat", allplots = TRUE, colpal = "plasma"){
+  
+  df$stat <- df[,stat]
+  
   (pK <- ggplot(df, aes(fill=K, y=stat, x=factor(nsamp))) + 
      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
      scale_fill_viridis(discrete=T, option=colpal) +
@@ -134,9 +142,9 @@ summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
 
 
 #FIX TO INCLUDE sampstratsub/nsampsub
-summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", maxv = NULL, direction = 1){
+summary_hplot <- function(df, stat = "stat", colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = min(resdf$mean), maxv = NULL, direction = 1, divergent = FALSE){
   
-  
+  df$stat <- df[,stat]
   
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
   if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
@@ -182,7 +190,6 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2, aggfunc =
       ggtitle(unique(tempdf$group)) +
       geom_tile(aes(fill = mean)) + 
       geom_text(aes(label = signif(mean, digits = sigdig), hjust = 0.5)) +
-      scale_fill_viridis(limits=c(min(resdf$mean),maxv), option = colpal, direction = direction) +
       theme_bw() +
       theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(), legend.position = "none",
@@ -192,6 +199,12 @@ summary_hplot <- function(df, colpal = "plasma", full=FALSE, sigdig=2, aggfunc =
             axis.text.y = element_text(color = "gray50", size = 14), 
             plot.margin=unit(rep(0.4,4),"cm")) +
       coord_fixed()
+    
+    if(divergent){
+      p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
+    } else {
+      p <- p + scale_fill_viridis(limits=c(minv,maxv), option = colpal, direction = direction)
+    }
     
     plts[[i]] <- p
   }

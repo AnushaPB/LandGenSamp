@@ -17,7 +17,9 @@ library("MuMIn")
 library("emmeans")
 library("effects")
 library("here")
+library("ggthemes")
 
+source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 
@@ -44,10 +46,10 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0)
 
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+df <- read.csv(here(dirname(getwd()),"p3_methods","outputs","LFMM_c","LFMM_results.csv"))
 
-path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
-df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
+#path <- here(dirname(getwd()),"p3_methods","outputs","LFMM_c")
+#df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
@@ -143,35 +145,36 @@ lmdf$coeff
 range(df$FDRCOMBO)
 range(df$TPRCOMBO)
 
+moddf$statratio <- moddf$TPRCOMBO + moddf$TNRCOMBO
+
 ```
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
+MEGAPLOT(moddf, "TPRCOMBO",  option = "turbo")
+MEGAPLOT(moddf, "statratio", option = "turbo")
 #MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
-MEGAPLOT(moddf, "FDRCOMBO")
-```
-
-#FOR COMPARISON WITH YOSEMITE
-```{r fig.width=15, fig.height=7}
-ydf <- df[df$H == 0.5 & df$r == 0.3,]
-
-summary_hplot(ydf, maxv = 0.6)
-
+MEGAPLOT(moddf, "K.1", option = "turbo")
 ```
 
 
 #EXPLORATORY
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$TPRCOMBO
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df, maxv=0.30)
+summary_vplot(df, "TPRCOMBO")
+summary_hplot(df, "TPRCOMBO")
 
+summary_vplot(df, "FDRCOMBO")
+summary_hplot(df, "FDRCOMBO")
+```
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "TPRCOMBO")
+summary_hplot(df, "FDRCOMBO")
+summary_hplot(df, "FPRCOMBO")
+summary_hplot(df, "TNRCOMBO")
+```
 
-df$stat <- df$FDRCOMBO
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df)
+```{r fig.width=20, fig.height=7}
+moddf$stat <- moddf$statratio
+summary_hplot(moddf, divergent = TRUE)
 ```
 
 
