@@ -113,12 +113,10 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TPRCOMBO <- TP/(TP + FN)
   #calc True Negative Rate (i.e. Specificity)
   TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate (i.e. 1 - TPR)
+  #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate (i.e. 1 - TNR)
+  #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
-  #check sum makes sense
-  stopifnot(sum(TPRCOMBO, TNRCOMBO, FDRCOMBO, FPRCOMBO) == 2)
   
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
@@ -134,7 +132,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
 
 
 #register cores
-cores <- 10
+cores <- 25
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
@@ -178,7 +176,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_dfm K=NULL)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_dfm  K = NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
