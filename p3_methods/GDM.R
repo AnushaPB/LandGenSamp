@@ -31,8 +31,7 @@ coeffs <- function(gdm.model){
 #for scaling genetic distances from 0 to 1 for GDM
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
-
-run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
+run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   
   if(distmeasure == "bray"){
     K <- nrow(gen)
@@ -71,7 +70,8 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
   } else if(distmeasure == "euc"){
     gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
   } else {
-    print("appropriate gen dist measure not specified")
+    print("appropriate gen dist measure not specified, defaulting to euclidean")
+    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
   }
   
   #Format gdm dataframe
@@ -154,7 +154,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "dps")
+    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "euc")
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
@@ -169,7 +169,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "dps")
+        sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "euc")
         
         #calculate RMSE
         env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
@@ -200,5 +200,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "outputs/gdm_results_dps.csv", row.names = FALSE)
+write.csv(res_gdm, "outputs/gdm_results_euc.csv", row.names = FALSE)
 
