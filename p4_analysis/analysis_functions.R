@@ -1,12 +1,38 @@
 
-MEGAPLOT <- function(moddf, stat, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean", divergent = FALSE){
+library(dplyr)
+
+MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean", divergent = FALSE, na.rm=TRUE){
+  
+  moddf$stat <- moddf[,stat_name]
+
+  
   if(aggfunc == "mean"){
-    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), mean)
+    agg <- moddf %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = mean(stat, na.rm=na.rm))
+  }
+  
+  
+  if(aggfunc == "count_na"){
+    agg <- moddf %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = sum(is.na(stat)))
+  }
+  
+  
+  if(aggfunc == "prop_na"){
+    agg <- moddf %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = mean(is.na(stat)))
   }
   
   if(aggfunc == "var") {
-    agg <- aggregate(moddf[,stat], list(moddf$K, moddf$phi, moddf$m, moddf$H, moddf$r, moddf$nsamp, moddf$sampstrat), var)
+    agg <- moddf %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = var(stat, na.rm=na.rm))
   }
+  
+  
   
   colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
@@ -142,26 +168,51 @@ summary_vplot <- function(df, stat = "stat", allplots = TRUE, colpal = "plasma")
 
 
 #FIX TO INCLUDE sampstratsub/nsampsub
-summary_hplot <- function(df, stat = "stat", colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = min(resdf$mean), maxv = NULL, direction = 1, divergent = FALSE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = min(resdf$mean), maxv = NULL, direction = 1, divergent = FALSE){
+  #create column with stat called "stat"
+  df$stat <- df[,stat_name]
   
-  df$stat <- df[,stat]
-  
+  #remove full data from data frame
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
   if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
   
+  #create dataframe to store results from summaries
   resdf <- data.frame()
   
+  #loop through each number of samples and sampling strategy and summarize the stat
   for(n in nsampsub){
     for(s in sampstratsub){
+      #subset the sampling number and strategy
       subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-      
+      #create empty dataframe to store results
       meandf <- data.frame()
+      #loop through each parameter
       for(p in c("K", "m", "phi", "H", "r")){
-        if(aggfunc == "mean"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)}
-        if(aggfunc == "sd"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), sd)}
+        #create new column for each parameter named p (will be overwritten, probably a cleaner way to do this)
+        
+        #calculate summary stat for each level of parameter given a function
+        #rewrite in tidy
+        mean_na <- function(x){
+          y <- mean(x, na.rm = TRUE) 
+          return(y)
+        }
+        
+        sd_na <- function(x){
+          y <- sd(x, na.rm = TRUE) 
+          return(y)
+        }
+        
+        prop_na <- function(x){
+          y <- mean(is.na(x))
+        }
+        
+        if(aggfunc == "mean"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean_na)}
+        if(aggfunc == "sd"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), sd_na)}
+        if(aggfunc == "prop_na"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), prop_na)}
         if(aggfunc == "max"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), max)}
         if(aggfunc == "min"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), min)}
         if(aggfunc == "var"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), var)}
+        
         aggdf[,1] <- paste(p,"=", aggdf[,1])
         aggdf$param <- p
         meandf <- rbind.data.frame(meandf, aggdf)
