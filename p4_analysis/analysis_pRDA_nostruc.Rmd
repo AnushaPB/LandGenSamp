@@ -73,6 +73,8 @@ range(df$TPRCOMBO)
 MEGAPLOT(moddf, "TPRCOMBO", max = 0.20, option = "turbo")
 #MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
 MEGAPLOT(moddf, "FDRCOMBO")
+MEGAPLOT(moddf, "FPRCOMBO")
+MEGAPLOT(moddf, "TNRCOMBO")
 ```
 
 

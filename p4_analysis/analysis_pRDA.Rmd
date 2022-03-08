@@ -73,7 +73,7 @@ MEGAPLOT(moddf, "K.1")
 
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
+MEGAPLOT(moddf, "TPRCOMBO", max = 0.1, option = "turbo")
 #MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
 MEGAPLOT(moddf, "FDRCOMBO")
 ```
