@@ -56,6 +56,7 @@ run_rda <- function(gen, gsd_df, loci_df, K=NULL){
   #Capblancq include a step where they only take pvalues with highest loading for each contig to deal with LD (not applied here)
   
   ## Identifying the loci that are below the p-value threshold
+  ##ADD THIS: . Selected loci can then be tested for their association with proposed environmental drivers using simple correlations  with  allele  frequencies,  or  permutations  (e.g.,  Pavlova  et al., 2013).
   #Identify rda cand loci (P)
   rda_loci <- which(pvalues < 0.05) 
   #Identify negatives
