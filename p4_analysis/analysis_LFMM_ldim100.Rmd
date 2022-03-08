@@ -34,23 +34,37 @@ nsamp <- c(36, 81, 144, 225, 2000)
 sampstrat <- c("rand", "grid", "trans", "envgeo", "full")
 
 #Create dataframe with all variable combos
-params_full <- expand.grid(K = c(1, 2), 
+params_full_samp <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      nsamp = nsamp,
-                      sampstrat = sampstrat,
-                      it = 0)
+                      nsamp = nsamp[-5],
+                      sampstrat = sampstrat[-5],
+                      it = 0:9)
 
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+params_full_full <- expand.grid(K = c(1, 2), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
+                      r = c(0.3, 0.6),
+                      nsamp = nsamp[5],
+                      sampstrat = sampstrat[5],
+                      it = 0:9)
+
+params_full <- rbind(params_full_samp, params_full_full)
+dim(params_full)
+
+
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
 
 path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
 df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
+nrow(df) == nrow(params_full)
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
-
 #IMPORTANT NOTE ABOUT LFMM DATA:
 #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
 #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
@@ -63,8 +77,6 @@ df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-#remove duplicates FIX THIS
-df <- unique(df)
 ```
 
 ```{r}
@@ -144,6 +156,7 @@ range(df$FDRCOMBO)
 range(df$TPRCOMBO)
 
 ```
+
 
 ```{r fig.width = 30, fig.height=15}
 MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
