@@ -67,6 +67,8 @@ moddf <- df[df$sampstrat != "full",]
 
 #remove duplicates FIX THIS
 df <- unique(df)
+
+nrow(df)
 ```
 
 ```{r}
@@ -150,8 +152,11 @@ moddf$statratio <- moddf$TPRCOMBO + moddf$TNRCOMBO
 ```
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "TPRCOMBO",  option = "turbo")
-MEGAPLOT(moddf, "statratio", option = "turbo")
+MEGAPLOT(moddf, "TPRCOMBO", maxv=0.3,  option = "turbo")
+MEGAPLOT(moddf, "FDRCOMBO",  option = "turbo")
+MEGAPLOT(moddf, "TNRCOMBO",  option = "turbo")
+MEGAPLOT(moddf, "FPRCOMBO",  option = "turbo")
+#MEGAPLOT(moddf, "statratio", option = "turbo")
 #MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
 MEGAPLOT(moddf, "K.1", option = "turbo")
 ```
@@ -171,6 +176,12 @@ summary_hplot(df, "FDRCOMBO")
 summary_hplot(df, "FPRCOMBO")
 summary_hplot(df, "TNRCOMBO")
 ```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "K.1")
+summary_hplot(df, "K.1", aggfunc = "sd")
+```
+
 
 ```{r fig.width=20, fig.height=7}
 moddf$stat <- moddf$statratio
