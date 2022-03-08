@@ -7,6 +7,7 @@ library("stringr")
 #####################
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
+#REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMMS
 #FOR FILES NOT NESTED IN SUBFOLDERS
 create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
   
