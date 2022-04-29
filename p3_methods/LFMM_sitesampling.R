@@ -29,21 +29,9 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #PCA to determine number of latent factors
   #if K is not specified it is calculated based on PCs
+  #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    pc <- prcomp(gen)
-    par(pty="s",mfrow=c(1,1))
-    #if number of samples is greater than 100, only look at fits 100 PCs (shouldn't make a dif either way)	
-    if(nrow(gen)>100){	
-      eig <- pc$sdev[1:100]^2	
-    } else {	
-      eig <- pc$sdev^2	
-    }
-    #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
-    #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-    #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
-    K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
-    plot(eig, xlab = 'PC', ylab = "Variance explained")
-    abline(v = K, col= "red", lty="dashed")
+    K <- get_K_tw(gen)
   }
   
 

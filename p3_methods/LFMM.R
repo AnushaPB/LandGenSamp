@@ -7,6 +7,7 @@ library("lfmm") #LFMM
 library("vcfR")
 library("foreach")
 library("doParallel")
+library("AssocTests")
 
 #read in general functions and objects
 source("general_functions.R")
@@ -27,23 +28,10 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   adaptive_loci <- c(loci_trait1, loci_trait2)
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #PCA to determine number of latent factors
-  #if K is not specified it is calculated based on PCs
+  
+  #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    pc <- prcomp(gen)
-    par(pty="s",mfrow=c(1,1))
-    #if number of samples is greater than 100, only look at fits 100 PCs (shouldn't make a dif either way)
-    if(nrow(gen)>100){
-      eig <- pc$sdev[1:100]^2
-    } else {
-      eig <- pc$sdev^2
-    }
-    #estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
-    #this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-    #(low defaults to 0.08, but this was too high imo so I changed it t0 0.05)
-    K <- quick.elbow(eig, low = 0.05, max.pc = 0.9)
-    plot(eig, xlab = 'PC', ylab = "Variance explained")
-    abline(v = K, col= "red", lty="dashed")
+    K <- get_K_tw(gen)
   }
   
   
@@ -135,6 +123,26 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
+get_K_tw <- function(gen){
+  # run pca
+  pc <- prcomp(gen)
+  
+  # get eig
+  eig <- pc$sdev^2
+  
+  # run tracy widom test
+  # NOTE: 	
+  # the critical point is a numeric value corresponding to the significance level. 
+  # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
+  # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
+  # The default is 2.0234.
+  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 0.9793)
+  
+  # get K based on number of significant eigenvalues
+  K <- tw_result$SigntEigenL
+  
+  return(K)
+}
 
 #register cores
 cores <- 25
@@ -222,6 +230,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   gc()
 }
 )
+
 
 #stop cluster
 stopCluster(cl)
