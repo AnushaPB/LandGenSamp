@@ -19,6 +19,13 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
       summarize(stat = sum(is.na(stat)))
   }
   
+  if(aggfunc == "count_null"){
+    agg <- moddf %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = sum(is.na(stat)))
+  }
+  
+  
   
   if(aggfunc == "prop_na"){
     agg <- moddf %>%

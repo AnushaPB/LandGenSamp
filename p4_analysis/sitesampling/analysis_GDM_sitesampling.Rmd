@@ -45,8 +45,12 @@ params_full <- expand.grid(K = c(2, 4),
 df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/GDM/", full.names = TRUE, pattern="*.csv"), read.csv))
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
-nrow(df[df$env1_coeff == "NULL",])
-df <- df[df$env1_coeff != "NULL",]
+summary(df)
+
+#df <- df[df$env1_coeff != "NULL",]
+#df <- df[df$env2_coeff != "NULL",]
+#df <- df[df$geo_coeff != "NULL",]
+
 df$geo_rmse <- as.numeric(df$geo_rmse)
 df$env1_rmse <- as.numeric(df$env1_rmse)
 df$env2_rmse <- as.numeric(df$env2_rmse)
@@ -55,33 +59,124 @@ df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
+```
 
+```{r}
+#Create dataframe with all variable combos
+params <- expand.grid(K = c(1, 2), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05, 0.5),
+                      r = c(0.3, 0.6),
+                      it = 0:9)
+
+cdf <- data.frame()
+for(i in 1:nrow(params)){
+  p <- params[i,]
+  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
+  full <- subdf[subdf$sampstrat == "full",]
+  sub <- subdf[subdf$sampstrat != "full",]
+  sub$geo_mpe <-sub$geo_rmse/full$geo_coeffn
+  actual <- sub$env1_coeffn + sub$env2_coeffn
+  forecast <- full$env1_coeffn + full$env2_coeffn
+  sub$comboenv_mpe <- abs(actual - forecast)/actual
+  cdf <- rbind(cdf, sub)
+}
 
 ```
 
-```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo")
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo")
+
+#summary plots
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_rmse", option = "turbo", maxv = 3, na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", maxv = 3, na.rm = TRUE)
 ```
 
-```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 3)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 1)
+
+
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "ratio", option = "turbo", maxv = 0.3,  na.rm=TRUE)
+```
+
+```{r fig.width = 30, fig.height=15}
+
+maxv = 0.85
+MEGAPLOT(moddf, "comboenv_rmse", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+MEGAPLOT(moddf, "geo_rmse", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+MEGAPLOT(moddf, "geo_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+
+MEGAPLOT(moddf, "env1_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+MEGAPLOT(moddf, "env2_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+```
+
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_coeffn", option = "turbo", max = 4, na.rm=TRUE)
+MEGAPLOT(moddf, "comboenv_coeffn", option = "turbo", max = 0.5, na.rm=TRUE)
+
+MEGAPLOT(moddf, "env1_coeffn", option = "turbo", max = 0.3, na.rm=TRUE)
+MEGAPLOT(moddf, "env2_coeffn", option = "turbo", max = 0.3, na.rm=TRUE)
 ```
 
 ```{r fig.width=20, fig.height=7}
+summary_vplot(df, "geo_rmse")
+summary_hplot(df, "geo_rmse")
+
+summary_hplot(df, stat_name = "geo_rmse", aggfunc = "mean", colpal = "viridis", direction = -1, na.rm=TRUE)
+```
+
+```{r fig.width=20, fig.height=7}
+summary_vplot(df, "comboenv_rmse")
+summary_hplot(df, "comboenv_rmse")
+
+summary_hplot(df, "comboenv_rmse", aggfunc = "sd")
+summary_hplot(df, "comboenv_rmse", aggfunc = "mean", colpal = "viridis", direction = -1)
+```
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "ratio", aggfunc = "sd")
+summary_hplot(df, "ratio", aggfunc = "mean", colpal = "viridis", direction = -1)
+summary_hplot(df, "ratio", aggfunc = "prop_na", colpal = "viridis", direction = -1)
+```
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "geo_coeff", aggfunc = "prop_na", colpal = "viridis", direction = -1)
+```
+
+#VARIANCE EXPLORATION
+```{r}
 df$stat <- df$geo_rmse
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df, sigdig=3)
+
+df %>%
+  group_by(seed) %>%
+  summarise(var = var(geo_rmse, na.rm=TRUE)) %>%
+  arrange(var)
+
+
+ggplot(df, aes(fill=seed, y=geo_rmse, x=factor(seed))) + 
+     #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+     scale_fill_viridis(discrete=T, option="viridis") +
+     theme_bw()+
+     geom_point(aes(col=seed),position = position_jitterdodge(dodge.width = 0.9, jitter.width=0.9), alpha=0.1)+
+     geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.5)+
+     scale_colour_viridis(discrete=T, option="viridis") +
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+ggplot(df, aes(fill=seed, y=log(geo_rmse), x=factor(seed))) + 
+     #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+     scale_fill_viridis(discrete=T, option="viridis") +
+     theme_bw()+
+     geom_point(aes(col=seed),position = position_jitterdodge(dodge.width = 0.9, jitter.width=0.9), alpha=0.1)+
+     geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.5)+
+     scale_colour_viridis(discrete=T, option="viridis") +
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
 ```
 
-```{r fig.width=20, fig.height=7}
-df$stat <- df$comboenv_rmse
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df)
-```
+
+
 
 # full model w/ interactions
 ```{r}
@@ -253,10 +348,10 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
-```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+```{r pairwise comparison of sampstrat, fig.width=10, fig.height=10}
 #TukeyHSD
 
-model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+model <- lmer(log(stat) ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 pw <- emmeans(model, list(pairwise ~ sampstrat), adjust = "tukey")
 
@@ -285,6 +380,30 @@ ggplot(resdf, aes(p1,p2)) +
           plot.margin=unit(rep(0.4,4),"cm")) +
     coord_fixed()
 
+ggplot(moddf, aes(fill=sampstrat, y=log(stat), x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+ggplot(moddf, aes(fill=sampstrat, y=stat, x=factor(nsamp))) + 
+      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+      scale_fill_viridis(discrete=T, option="mako") +
+      xlab("nsamp") +
+      theme_bw()+
+    geom_point(aes(fill=sampstrat, col=sampstrat), position = position_jitterdodge(dodge.width = 0.9, jitter.width = 0.5), alpha=0.2, size = 1)+
+      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9), alpha = 0.8)+
+      scale_colour_viridis(discrete=T, option="mako") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+
+
+
 ```
 
 #which is best when?
@@ -311,6 +430,5 @@ Determine how sampling strategy/nsamp affects the affects of the sim vars
 ```{r real code, fig.width=20, fig.height=4}
 sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.10)
 ```
-
 
 
