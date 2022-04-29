@@ -36,7 +36,8 @@ get_gen <- function(filepath){
   #read vcf
   vcf <- read.vcfR(filepath)
   #convert to genlight from vcf
-  genlight <- vcfR2genlight(vcf) #CHECK THIS
+  #CHECK THIS
+  genlight <- vcfR2genlight(vcf) 
   #convert to matrix
   genmat <- as.matrix(genlight)
   #assign IDs from genlight to matrix rownames

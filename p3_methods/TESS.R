@@ -2,7 +2,7 @@ set.seed(42)
 
 library("here") #paths
 library("vcfR")
-#to install TESS:
+# to install TESS:
 # install.packages("devtools")
 # devtools::install_github("bcm-uga/TESS3_encho_sen")
 library("tess3r") #TESS

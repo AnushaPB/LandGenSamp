@@ -62,10 +62,9 @@ df$ratio2 <- abs(df$env1_coeffn - df$env2_coeffn)
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
-
-nrow(df)
-dim(params_full)
-dim(df)
+```
+```{r}
+unique(df[is.na(df$geo_coeff), 1:9])
 ```
 
 ```{r}

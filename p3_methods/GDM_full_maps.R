@@ -73,7 +73,7 @@ run_gdm_map <- function(gen, gsd_df, envlayers, distmeasure = "euc"){
   #run GDM
   gdm_model <- gdm(gdmData, geo = TRUE)
   
-  if(is.null(gdm.model)){
+  if(is.null(gdm_model)){
     #create and return empty raster
     pcaRast <- raster(matrix(nrow=100,ncol=100))
     extent(pcaRast) <- c(0,100,0,100)
@@ -87,15 +87,19 @@ run_gdm_map <- function(gen, gsd_df, envlayers, distmeasure = "euc"){
     pcaSamp <- prcomp(rastDat)
     
     # make PCA raster
-    pcaRast <- predict(rastTrans, pcaSamp, index=1:3)
+    nl <- nlayers(rastTrans)
+    pcaRast <- predict(rastTrans, pcaSamp, index=1:nl)
     
     # scale rasters to get colors
-    pcaRast[[1]] <- (pcaRast[[1]]-pcaRast[[1]]@data@min) /
-      (pcaRast[[1]]@data@max-pcaRast[[1]]@data@min)*255
-    pcaRast[[2]] <- (pcaRast[[2]]-pcaRast[[2]]@data@min) /
-      (pcaRast[[2]]@data@max-pcaRast[[2]]@data@min)*255
-    pcaRast[[3]] <- (pcaRast[[3]]-pcaRast[[3]]@data@min) /
-      (pcaRast[[3]]@data@max-pcaRast[[3]]@data@min)*255
+    for(i in 1:nl){
+      pcaRast[[i]] <- (pcaRast[[i]]-pcaRast[[i]]@data@min) /
+        (pcaRast[[i]]@data@max-pcaRast[[i]]@data@min)*255
+    }
+    if(nl == 2){
+      pcaRast <- stack(pcaRast, pcaRast[[2]]*0+255)
+    } else if (nl == 1){
+      pcaRast <- stack(pcaRast, pcaRast[[2]]*0+255, pcaRast[[2]]*0+225)
+    }
   }
   
   
@@ -171,6 +175,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     #save as png
     file_name <- paste0("outputs/GDM_maps/gdm_map_",paramset,".png")
     png(file_name)
+    par(mfrow=c(1,1))
     plotRGB(full_map, r=1, g=2, b=3)
     dev.off()
     

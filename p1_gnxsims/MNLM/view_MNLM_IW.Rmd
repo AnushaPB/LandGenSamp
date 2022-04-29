@@ -88,14 +88,14 @@ for(seed in c(1,2,3)){
                                           "_H", gsub("\\.", "", as.character(H*100)),
                                           "_r", gsub("\\.", "", as.character(r*100)),
                                           ".csv"
-                                          )))
+                                          )), header=FALSE)
       
       env2 <- read.csv(here("data", paste0("seed",seed,
                                           "_env2",
                                           "_H", gsub("\\.", "", as.character(H*100)),
                                           "_r", gsub("\\.", "", as.character(r*100)),
                                           ".csv"
-                                          )))
+                                          )), header=FALSE)
       env1 <- raster(as.matrix(env1))
       env2 <- raster(as.matrix(env2))
     
