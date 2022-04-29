@@ -30,7 +30,7 @@ coeffs <- function(gdm.model){
 }
 
 
-run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
+run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   
   if(distmeasure == "bray"){
     K <- nrow(gen)
@@ -152,7 +152,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "dps")
+    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "euc")
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
@@ -176,7 +176,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
 
         #run analysis using subsample
-        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "dps")
+        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "euc")
         
         
         #calculate RMSE if not null
