@@ -59,9 +59,9 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   } else if(distmeasure == "pca"){
     #perform PCA
     pc <- prcomp(gen)
-    #Calculate PC distance based on  PCs (MODIFY to make based on % var explained)
+    #Calculate PC distance based on  PCs (MODIFY to make based on % var explained or tracy widom test)
     #use npcs based on sample size
-    npcs <- round(nrow(gen)*0.5,0)
+    #npcs <- round(nrow(gen)*0.5,0)
     pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
     gendist <- range01(pc_dist)
   } else if(distmeasure == "euc"){

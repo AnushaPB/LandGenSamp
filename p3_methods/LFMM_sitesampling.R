@@ -33,7 +33,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   if(is.null(K)){
     K <- get_K_tw(gen)
   }
-  
 
   #gen matrix
   genmat = as.matrix(gen)
