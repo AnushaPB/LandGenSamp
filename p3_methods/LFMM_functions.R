@@ -1,5 +1,102 @@
 
-run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
+# Function to take params and run analyses
+run_lfmm_params <- function(i, params, path, mode = "ind"){
+  #set of parameter names in filepath form (for creating temp files)
+  paramset <- paste0("K",params[i,"K"],
+                     "_phi",params[i,"phi"]*100,
+                     "_m",params[i,"m"]*100,
+                     "_seed",params[i,"seed"],
+                     "_H",params[i,"H"]*100,
+                     "_r",params[i,"r"]*100,
+                     "_it",params[i,"it"])
+  
+  #create pdf to store plots
+  # pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
+  
+  #skip iteration if files do not exist
+  gen_filepath <- create_filepath(i, params = params, "gen")
+  gsd_filepath <- create_filepath(i, params = params, "gsd")
+  loci_filepath <- create_filepath(i, params = params, "loci")
+  skip_to_next <- FALSE
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(skip_to_next) { print("File does not exist:"); print(params[i,]) } 
+  if(skip_to_next) { result <- NA } 
+  
+  #run LFMM
+  if(skip_to_next == FALSE){
+    gen <- get_data(i, params = params, "gen")
+    gsd_df <- get_data(i, params = params, "gsd")
+    loci_df <- get_data(i, params = params, "loci")
+    
+    #subsample full data randomly
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+    gen_2k <- gen[s,]
+    gsd_df_2k <- gsd_df[s,]
+    
+    #run model on full data set
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL, maxK = 20)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
+    
+    #write full datafile (temp)
+    csv_file <- paste0(path, paramset,".csv")
+    write.csv(result, csv_file, row.names = FALSE)
+    
+    #run subset data
+    sampcombos <- expand.grid(sampstrats, npts)
+    sub_result <- map_dfr(sampcombos, run_sub, i, params, gen, gsd_df, mode, maxK = 20)
+    
+    #bind results
+    result <- rbind.data.frame(result, sub_result)
+    
+    #export data to csv (temp)
+    csv_df <- read.csv(csv_file)
+    csv_df <- rbind(csv_df, sub_result)
+    write.csv(csv_df, csv_file, row.names = FALSE)
+    
+    return(results)
+  }
+  
+  #end pdf()
+  # dev.off()
+  
+  return(result)
+}
+
+# function to run analyses on subset of data
+run_sub <- function(sampcombo, i, params, gen, gsd_df, mode = "ind", maxK = NULL){
+  
+  # get nsamp and sampstrat
+  nsamp <- sampcombos[1]
+  sampstrat <- sampcombos[2]
+  
+  #subsample from data based on sampling strategy and number of samples
+  subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+  subgen <- gen[subIDs,]
+  subgsd_df <- gsd_df[subIDs,]
+  
+  if(mode == "site"){
+    #get sites
+    siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+    #confirm that number of sites matches number of sample IDs
+    stopifnot(length(subIDs) == length(siteIDs))
+    #calculate allele frequency by site (average)
+    subgen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+    #calculate env values by site
+    subgsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+  }
+  
+  #run analysis using subsample
+  sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL, maxK)
+  
+  #save and format new result
+  sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+  
+  #bind results
+  return(sub_result)
+}
+
+# Function to run LFMM
+run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, maxK = NULL){
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
@@ -13,9 +110,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K_tw(gen)
+    K <- get_K_tw(gen, maxK = maxK)
   }
-  
   
   #gen matrix
   genmat = as.matrix(gen)
@@ -105,12 +201,16 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
-get_K_tw <- function(gen){
+# Function to  determine best K using tracy widom test
+get_K_tw <- function(gen, maxK = NULL){
   # run pca
   pc <- prcomp(gen)
   
   # get eig
   eig <- pc$sdev^2
+  
+  # reduce K values if max is provided
+  if(!is.null(maxK)){eig <- eig[1:maxK]}
   
   # run tracy widom test
   # NOTE: 	
@@ -128,34 +228,3 @@ get_K_tw <- function(gen){
   return(K)
 }
 
-run_sub <- function(sampcombo, i, params, gen, gsd_df, mode = "ind"){
-  
-  # get nsamp and sampstrat
-  nsamp <- sampcombos[1]
-  sampstrat <- sampcombos[2]
-  
-  #subsample from data based on sampling strategy and number of samples
-  subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
-  subgen <- gen[subIDs,]
-  subgsd_df <- gsd_df[subIDs,]
-  
-  if(mode == "site"){
-    #get sites
-    siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
-    #confirm that number of sites matches number of sample IDs
-    stopifnot(length(subIDs) == length(siteIDs))
-    #calculate allele frequency by site (average)
-    subgen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
-    #calculate env values by site
-    subgsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
-  }
-  
-  #run analysis using subsample
-  sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
-  
-  #save and format new result
-  sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
-  
-  #bind results
-  return(sub_result)
-}
