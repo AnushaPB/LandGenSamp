@@ -143,6 +143,17 @@ run_sub_gdm <- function(sampcombo, i, params, gen, gsd_df, full_result, mode = "
   subgen <- gen[subIDs,]
   subgsd_df <- gsd_df[subIDs,]
   
+  if(mode == "site"){
+    #get sites
+    siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+    #confirm that number of sites matches number of sample IDs
+    stopifnot(length(subIDs) == length(siteIDs))
+    #calculate allele frequency by site (average)
+    subgen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+    #calculate env values by site
+    subgsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+  }
+  
   #run analysis using subsample
   sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "euc")
   
