@@ -112,8 +112,8 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 
@@ -122,7 +122,9 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("gdm")
   library("adegenet")
-  
+  library("stringr")
+  library("here")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,

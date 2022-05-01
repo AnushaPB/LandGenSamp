@@ -134,7 +134,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("lfmm")
   library("stringr")
-  
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
