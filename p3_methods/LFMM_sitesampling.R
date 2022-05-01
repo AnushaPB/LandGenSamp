@@ -30,9 +30,9 @@ system.time(
     library("lfmm")
     library("stringr")
     
-    run_lfmm_params(i, params, path = "outputs/LFMM/lfmm_sitesampling_results", mode = "site")
+    results <- run_lfmm_params(i, params, path = "outputs/LFMM/lfmm_sitesampling_results", mode = "site")
     
-    gc()
+    return(results)
   }
 )
 

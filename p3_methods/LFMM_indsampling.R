@@ -31,9 +31,9 @@ system.time(
     library("lfmm")
     library("stringr")
     
-    run_lfmm_params(i, params, path = "outputs/LFMM/lfmm_results", mode = "ind")
+    results <- run_lfmm_params(i, params, path = "outputs/LFMM/lfmm_results", mode = "ind")
     
-    gc()
+    return(results)
   }
 )
 

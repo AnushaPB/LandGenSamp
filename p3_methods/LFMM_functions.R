@@ -43,7 +43,7 @@ run_lfmm_params <- function(i, params, path, mode = "ind"){
     
     #run subset data
     sampcombos <- expand.grid(sampstrats, npts)
-    sub_result <- map_dfr(sampcombos, run_sub, i, params, gen, gsd_df, mode)
+    sub_result <- map_dfr(sampcombos, run_sub_lfmm, i, params, gen, gsd_df, loci_df, mode)
     
     #bind results
     result <- rbind.data.frame(result, sub_result)
@@ -63,7 +63,7 @@ run_lfmm_params <- function(i, params, path, mode = "ind"){
 }
 
 # function to run analyses on subset of data
-run_sub <- function(sampcombo, i, params, gen, gsd_df, mode = "ind", maxK = NULL){
+run_sub_lfmm <- function(sampcombo, i, params, gen, gsd_df, loci_df, mode = "ind", maxK = NULL){
   
   # get nsamp and sampstrat
   nsamp <- sampcombos[1]
