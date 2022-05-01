@@ -135,18 +135,23 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = h
 }
 
 
-#function to calculate RMSE
+err_coeff <- function(full_coeff, sub_coeff){
+  err <- (full_coeff - sub_coeff)
+  return(err)
+}
+
+#function to calculate RMSE (NO LONGER USING BECAUSE THERE AREN"T MULTIPLE VALUES (USING MAE INSTEAD))
 #currently two functions because I am not sure whether to calculate the RMSE when the coeffs aren't signif
 #on the one hand insignificant coeffs aren't meaningful, but it is hard to calculate averages for stats with NAs
 #e.g. if the coeffs aren't signif they are likely to be far from the true values/should be represented in the mean stat
 #currently using the first function for this reason (rmse_coeff)
-rmse_coeff <- function(full_coeff, sub_coeff, full_p, sub_p, alpha = 0.05){
+rmse_coeff <- function(full_coeff, sub_coeff){
   sqerr <- (full_coeff - sub_coeff)^2
   res <- sqrt(mean(sqerr))
   return(res)
 }
 
-rmse_coeff_p <- function(full_coeff, sub_coeff, alpha = 0.05){
+rmse_coeff_p <- function(full_coeff, sub_coeff, full_p, sub_p, alpha = 0.05){
   sqerr <- (full_coeff - sub_coeff)^2
   res <- sqrt(mean(sqerr))
   res[full_p > alpha] <- NA
