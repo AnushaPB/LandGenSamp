@@ -1,3 +1,5 @@
+# CODE TO COUNT POPULATION SIZES TO MAKE SURE THEY ARE COMPARABLE
+
 set.seed(42)
 
 library("here") 

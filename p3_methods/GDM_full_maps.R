@@ -1,3 +1,5 @@
+# CODE TO PLOT RGB MAPS FROM MODELS TO VISUALIZE GDM
+
 set.seed(42)
 
 library("here") #paths

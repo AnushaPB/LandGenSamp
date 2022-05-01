@@ -11,16 +11,11 @@ library("doParallel")
 #read in general functions and objects
 source("general_functions.R")
 source("sitesampling_functions.R")
+source("LFMM_functions.R")
 
 ##########
 #  LFMM  #
 ##########
-
-#register cores
-cores <- 25
-cl <- makeCluster(cores) #not to overload your computer
-registerDoParallel(cl)
-
 
 #register cores
 cores <- 25
@@ -40,9 +35,6 @@ system.time(
     gc()
   }
 )
-
-#stop cluster
-stopCluster(cl)
 
 #stop cluster
 stopCluster(cl)

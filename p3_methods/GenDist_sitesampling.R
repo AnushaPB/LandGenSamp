@@ -1,3 +1,5 @@
+# CODE TO CALCULATE AND COMPARE GENETIC DISTANCE FOR SITE BASED SAMPLING
+
 set.seed(42)
 
 library("here") #paths

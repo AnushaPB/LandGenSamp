@@ -1,3 +1,5 @@
+# CODE TO CALCULATE AND COMPARE DIFFERENT GENETIC DISTANCE MEASURES
+
 set.seed(42)
 
 library("here") #paths

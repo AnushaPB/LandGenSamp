@@ -34,7 +34,7 @@ run_lfmm_params <- function(i, params, path, mode = "ind"){
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL, maxK = 20)
+    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
@@ -43,7 +43,7 @@ run_lfmm_params <- function(i, params, path, mode = "ind"){
     
     #run subset data
     sampcombos <- expand.grid(sampstrats, npts)
-    sub_result <- map_dfr(sampcombos, run_sub, i, params, gen, gsd_df, mode, maxK = 20)
+    sub_result <- map_dfr(sampcombos, run_sub, i, params, gen, gsd_df, mode)
     
     #bind results
     result <- rbind.data.frame(result, sub_result)
@@ -218,12 +218,13 @@ get_K_tw <- function(gen, maxK = NULL){
   # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
   # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
   # The default is 2.0234.
-  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 0.9793)
+  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 3.2724)
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
   
   plot(eig)
+  abline(v = K)
   
   return(K)
 }
