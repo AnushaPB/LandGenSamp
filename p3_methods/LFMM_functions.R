@@ -76,7 +76,7 @@ run_sub_lfmm <- function(sampcombo, i, params, gen, gsd_df, loci_df, mode = "ind
   
   if(mode == "site"){
     #get sites
-    siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+    siteIDs <- get_sites(params[i,], params, sampstrat, nsamp)
     #confirm that number of sites matches number of sample IDs
     stopifnot(length(subIDs) == length(siteIDs))
     #calculate allele frequency by site (average)

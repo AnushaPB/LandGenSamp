@@ -145,7 +145,7 @@ run_sub_gdm <- function(sampcombo, i, params, gen, gsd_df, full_result, mode = "
   
   if(mode == "site"){
     #get sites
-    siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+    siteIDs <- get_sites(params[i,], params, sampstrat, nsamp)
     #confirm that number of sites matches number of sample IDs
     stopifnot(length(subIDs) == length(siteIDs))
     #calculate allele frequency by site (average)

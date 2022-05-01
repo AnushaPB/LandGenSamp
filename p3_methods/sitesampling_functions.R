@@ -96,7 +96,7 @@ get_sites <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirn
 ######################################################
 
 #number of sites
-nsites <- c(9, 16, 25)
+npts <- c(9, 16, 25)
 #sampling strategies
 sampstrats <- c("rand", "equi", "envgeo")
 
