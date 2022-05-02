@@ -18,7 +18,7 @@ set.seed(42)
 #   GDM   #
 ###########
 #register cores
-cores <- 20
+cores <- 2
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 

@@ -40,7 +40,7 @@ run_gdm_params <- function(i, params, sampstrats, npts, path, mode = "ind"){
     sampcombos <- expand.grid(sampstrats, npts, stringsAsFactors = FALSE) %>% as_tibble() %>% rename("sampstrat" = "Var1", "nsamp" = "Var2")
     sub_result <- pmap_dfr(sampcombos, .f = run_sub_gdm, i = i, params = params, gen = gen, gsd_df = gsd_df, full_result = full_result, mode = "site")
  
-    #bind results
+    sub#bind results
     result <- rbind.data.frame(result, sub_result)
     
     #export data to csv (temp)
