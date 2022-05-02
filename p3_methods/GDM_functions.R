@@ -154,15 +154,17 @@ run_sub_gdm <- function(sampstrat, nsamp, i, params, gen, gsd_df, full_result, m
   sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "euc")
   
   #calculate err
-  print(full_result)
-  print(sub_result)
+  #print(full_result)
+  #print(sub_result)
   
-  if((sub_result$env1_coeff == "NULL") | (full_result$env1_coeff == "NULL")){env1_err <-"NULL"} else {env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)}
-  if((sub_result$env2_coeff == "NULL") | (full_result$env2_coeff == "NULL")){env2_err <-"NULL"} else {env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)}
-  if((sub_result$geo_coeff == "NULL") | (full_result$geo_coeff == "NULL")){geo_err <-"NULL"} else {geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)}
+  if((sub_result$env1_coeff == "NULL") | (full_result$env1_coeff == "NULL")){sub_result$env1_err <-"NULL"} else {sub_result$env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)}
+  if((sub_result$env2_coeff == "NULL") | (full_result$env2_coeff == "NULL")){sub_result$env2_err <-"NULL"} else {sub_result$env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)}
+  if((sub_result$geo_coeff == "NULL") | (full_result$geo_coeff == "NULL")){sub_result$geo_err <-"NULL"} else {sub_result$geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)}
+  
   #save and format new result
-  sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
-                           env1_err = env1_err, env2_err = env2_err, geo_err = geo_err)
+  # need to be characters to bind NULL and "numeric"
+  sub_result <- sub_result %>% as_tibble() %>% mutate_all(as.character)
+  sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
   
   #bind results
   return(sub_result)
