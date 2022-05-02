@@ -4,10 +4,11 @@ library("vcfR")
 #parallel
 library(foreach)
 library(doParallel)
+library(tidyverse)
 
 #read in general functions and objects
 source("general_functions.R")
-source("sitesampling/sitesampling_functions.R")
+source("sitesampling_functions.R")
 source("GDM_functions.R")
 
 set.seed(42)
@@ -27,7 +28,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("gdm")
   library("adegenet")
   
-  results <- run_gdm_params(i, params, "outputs/GDM/gdm_sitesampling_results", mode = "site")
+  results <- run_gdm_params(i, params, sampstrats, npts, "outputs/GDM/gdm_sitesampling_results", mode = "site")
   
   return(results)
 }

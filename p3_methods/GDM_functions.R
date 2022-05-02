@@ -1,5 +1,5 @@
 
-run_gdm_params <- function(i, params, path, mode = "ind"){
+run_gdm_params <- function(i, params, sampstrats, npts, path, mode = "ind"){
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -37,9 +37,9 @@ run_gdm_params <- function(i, params, path, mode = "ind"){
     write.csv(result, csv_file, row.names = FALSE)
     
     #run subset data
-    sampcombos <- expand.grid(sampstrats, npts)
-    sub_result <- map_dfr(sampcombos, run_sub_gdm, i, params, gen, gsd_df, mode)
-    
+    sampcombos <- expand.grid(sampstrats, npts, stringsAsFactors = FALSE) %>% as_tibble() %>% rename("sampstrat" = "Var1", "nsamp" = "Var2")
+    sub_result <- pmap_dfr(sampcombos, .f = run_sub_gdm, i = i, params = params, gen = gen, gsd_df = gsd_df, full_result = full_result, mode = "site")
+ 
     #bind results
     result <- rbind.data.frame(result, sub_result)
     
@@ -132,11 +132,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   return(results)
 }
 
-run_sub_gdm <- function(sampcombo, i, params, gen, gsd_df, full_result, mode = "ind"){
-  
-  # get nsamp and sampstrat
-  nsamp <- sampcombos[1]
-  sampstrat <- sampcombos[2]
+run_sub_gdm <- function(sampstrat, nsamp, i, params, gen, gsd_df, full_result, mode = "ind"){
   
   #subsample from data based on sampling strategy and number of samples
   subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
@@ -158,10 +154,12 @@ run_sub_gdm <- function(sampcombo, i, params, gen, gsd_df, full_result, mode = "
   sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "euc")
   
   #calculate err
-  env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)
-  env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)
-  geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)
+  print(full_result)
+  print(sub_result)
   
+  if((sub_result$env1_coeff == "NULL") | (full_result$env1_coeff == "NULL")){env1_err <-"NULL"} else {env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)}
+  if((sub_result$env2_coeff == "NULL") | (full_result$env2_coeff == "NULL")){env2_err <-"NULL"} else {env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)}
+  if((sub_result$geo_coeff == "NULL") | (full_result$geo_coeff == "NULL")){geo_err <-"NULL"} else {geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)}
   #save and format new result
   sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result, 
                            env1_err = env1_err, env2_err = env2_err, geo_err = geo_err)
@@ -170,7 +168,7 @@ run_sub_gdm <- function(sampcombo, i, params, gen, gsd_df, full_result, mode = "
   return(sub_result)
 }
 
-# Sum coefficients for each predictor (each has 3 splines)
+1# Sum coefficients for each predictor (each has 3 splines)
 coeffs <- function(gdm.model){
   coefSums <- c()
   for (i in 1:length(gdm.model$predictors)){

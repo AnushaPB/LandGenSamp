@@ -28,7 +28,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("gdm")
   library("adegenet")
   
-  results <- run_gdm_params(i, params, "outputs/GDM/gdm_results", mode = "ind")
+  results <- run_gdm_params(i, params, sampstrats, npts, "outputs/GDM/gdm_results", mode = "ind")
   
   return(results)
   

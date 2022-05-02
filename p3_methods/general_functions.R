@@ -244,7 +244,7 @@ npts <- c(36, 81, 144, 225)
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #Create dataframe with all variable combos
-params <- expand.grid(K = c(1,2), 
+params <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
