@@ -18,7 +18,7 @@ set.seed(42)
 #   GDM   #
 ###########
 #register cores
-cores <- 2
+cores <- 5
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
@@ -27,7 +27,9 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("gdm")
   library("adegenet")
-  
+  library("here")
+  library("stringr")
+  library("tidyverse")
   results <- run_gdm_params(i, params, sampstrats, npts, "outputs/GDM/gdm_sitesampling_results", mode = "site")
   
   return(results)
@@ -36,5 +38,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "sitesampling/outputs/gdm_sitesampling_results_dps.csv", row.names = FALSE)
+write.csv(res_gdm, "outputs/gdm_sitesampling_results.csv", row.names = FALSE)
 
