@@ -146,7 +146,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
 
 
 #register cores
-cores <- 10
+cores <- 5
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -155,7 +155,8 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
   library("vcfR")
   library("adegenet")
-  
+  library("stringr")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
