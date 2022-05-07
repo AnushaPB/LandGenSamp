@@ -17,7 +17,7 @@ source("GDM_functions.R")
 ###########
 
 #register cores
-cores <- 20
+cores <- 5
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
