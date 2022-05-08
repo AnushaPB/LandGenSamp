@@ -1,7 +1,10 @@
 
 library(dplyr)
 
-MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean", divergent = FALSE, na.rm=TRUE){
+MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, option = "plasma", aggfunc = "mean", divergent = FALSE, na.rm=TRUE){
+  
+  if(is.null(minv)){minv <- min(moddf[,stat_name])}
+  if(is.null(maxv)){maxv <- max(moddf[,stat_name])}
   
   moddf$stat <- moddf[,stat_name]
 
@@ -90,87 +93,30 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
 }
 
 
+vplot <- function(var, df, stat, colpal = "plasma"){
+  p <- ggplot(df, aes(fill=get(var), y=stat, x=factor(nsamp))) + 
+    #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option=colpal, name = var) +
+    xlab("nsamp") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(col=K),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option=colpal, name = var)+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
+  
+  return(p)
+}
+
 summary_vplot <- function(df, stat = "stat", allplots = TRUE, colpal = "plasma"){
   
   df$stat <- df[,stat]
   
-  (pK <- ggplot(df, aes(fill=K, y=stat, x=factor(nsamp))) + 
-     #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-     scale_fill_viridis(discrete=T, option=colpal) +
-     xlab("nsamp") +
-     theme_bw()+
-     geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-     #geom_point(aes(col=K),position = position_dodge(width = 0.9), alpha=0.1)+
-     scale_colour_viridis(discrete=T, option=colpal) +
-     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-           panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  (pphi <- ggplot(df, aes(fill=phi, y=stat, x=factor(nsamp))) + 
-      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option=colpal) +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=phi),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option=colpal) +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  (pH <- ggplot(df, aes(fill=H, y=stat, x=factor(nsamp))) + 
-      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option=colpal) +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=H),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option=colpal) +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  (pr <- ggplot(df, aes(fill=r, y=stat, x=factor(nsamp))) + 
-      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option=colpal) +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=r),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option=colpal) +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  (pm <- ggplot(df, aes(fill=m, y=stat, x=factor(nsamp))) + 
-      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option=colpal) +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      scale_colour_viridis(discrete=T, option=colpal) +
-      #geom_point(aes(col=m),position = position_dodge(width = 0.9), alpha=0.1)+
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  (ps <- ggplot(df, aes(fill=sampstrat, y=stat, x=factor(nsamp))) + 
-      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option=colpal) +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(fill=sampstrat, col=sampstrat),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option=col) +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)))
-  
-  if(allplots){
-    print(pK)
-    print(pphi)
-    print(pm)
-    print(pH)
-    print(pr)
-    print(ps)
-  }
+  plot_list <- map(c("K", "phi", "H", "r", "m", "sampstrat"), vplot, df, stat, colpal)
 
-  plt <- grid.arrange(pK, pphi, pm, pH, pr, ps, nrow = 2)
-  return(plt)
+  pl <- do.call("grid.arrange", c(plot_list, nrow=2))
+  
+  return(pl)
 }
 
 
