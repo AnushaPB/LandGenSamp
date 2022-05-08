@@ -181,7 +181,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     
     #subsample full data randomly
-    s <- sample(nrow(gsd_df), 1000, replace = FALSE)
+    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
     gen_2k <- gen[s,]
     gsd_df_2k <- gsd_df[s,]
     
@@ -248,4 +248,4 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_mmrr, "outputs/MMRR/mmrr_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_mmrr, "outputs/mmrr_sitesampling_results.csv", row.names = FALSE)
