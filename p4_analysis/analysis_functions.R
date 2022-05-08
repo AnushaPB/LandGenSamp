@@ -108,20 +108,72 @@ vplot <- function(var, df, stat, colpal = "plasma"){
   return(p)
 }
 
-summary_vplot <- function(df, stat = "stat", allplots = TRUE, colpal = "plasma"){
+
+rain_plot <- function(var, df, stat, colpal = "plasma"){
+  p <- ggplot(df, aes(fill=get(var), y=stat, x=factor(nsamp))) + 
+    ## add half-violin from {ggdist} package
+    ggdist::stat_halfeye(
+      ## custom bandwidth
+      adjust = .5, 
+      ## adjust height
+      width = .6, 
+      ## move geom to the right
+      justification = -.2, 
+      ## remove slab interval
+      .width = 0, 
+      point_colour = NA,
+      position = position_dodge(width = 0.9)
+    ) + 
+    geom_boxplot(
+      width = .12, 
+      ## remove outliers
+      outlier.color = NA, ## `outlier.shape = NA` works as well
+      position = position_dodge(width = 0.9)
+    ) +
+    ## add justified jitter from the {gghalves} package
+    gghalves::geom_half_point(
+      aes(col = get(var)),
+      ## draw jitter on the left
+      side = "l", 
+      ## control range of jitter
+      range_scale = .2, 
+      ## add some transparency
+      alpha = .1,
+      ## size of points
+      position = position_dodge(width = 0.9)
+    )+
+    # color
+    scale_fill_viridis(discrete=T, 
+                       option=colpal, 
+                       name = var) +
+    
+    scale_colour_viridis(discrete=T, 
+                       option=colpal, 
+                       name = var) +
+    xlab("nsamp") +
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)) + 
+    ## remove white space on the left
+    coord_cartesian(xlim = c(1.2, NA))
+  
+  return(p)
+}
+
+summary_vplot <- function(df, stat = "stat", plot.type = "rain_plot", varlist = c("K", "phi", "H", "r", "m", "sampstrat"), colpal = "plasma", nrow = 2){
   
   df$stat <- df[,stat]
   
-  plot_list <- map(c("K", "phi", "H", "r", "m", "sampstrat"), vplot, df, stat, colpal)
+  plot_list <- map(varlist, get(plot.type), df, stat, colpal)
 
-  pl <- do.call("grid.arrange", c(plot_list, nrow=2))
+  pl <- do.call("grid.arrange", c(plot_list, nrow = nrow))
   
   return(pl)
 }
 
 
 #FIX TO INCLUDE sampstratsub/nsampsub
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = min(resdf$mean), maxv = NULL, direction = 1, divergent = FALSE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
   #create column with stat called "stat"
   df$stat <- df[,stat_name]
   
@@ -184,7 +236,8 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
   row.names(resdf) <- NULL
   resdf$nsamp <- as.factor(resdf$nsamp)
   
-  if(!is.null(maxv)){maxv <- maxv} else { maxv <- max(resdf$mean)}
+  if(!is.null(maxv)){ maxv <- max(resdf$mean)}
+  if(!is.null(minv)){ minv <- min(resdf$mean)}
   
   ## plot data
   plts <- list()
@@ -213,7 +266,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     plts[[i]] <- p
   }
   
-  
+  # TODO: COME BACK AND ANNOTATE THIS (functionally, this part just plots the pairs of parameters together)
   plts2 <- list()
   o <- 1
   for(i in seq(1, length(plts), 2)){

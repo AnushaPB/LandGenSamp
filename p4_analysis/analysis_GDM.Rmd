@@ -93,8 +93,8 @@ for(i in 1:nrow(params)){
 #summary plots
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", maxv = 0.6)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", maxv = 3)
+MEGAPLOT(moddf, "geo_rmse", option = "turbo")
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo")
 ```
 
 ```{r fig.width = 30, fig.height=15}
@@ -126,13 +126,25 @@ MEGAPLOT(moddf, "comboenv_coeffn", option = "turbo", max = 0.5, na.rm=TRUE)
 MEGAPLOT(moddf, "env1_coeffn", option = "turbo", max = 0.3, na.rm=TRUE)
 MEGAPLOT(moddf, "env2_coeffn", option = "turbo", max = 0.3, na.rm=TRUE)
 ```
+```{r fig.width=20, fig.height=7}
+
+summary_vplot(df, "geo_coeffn")
+
+summary_vplot(df, "comboenv_coeffn")
+
+summary_hplot(moddf, "geo_coeffn")
+
+summary_hplot(moddf, "comboenv_coeffn")
+```
 
 ```{r fig.width=20, fig.height=7}
 summary_vplot(df, "geo_rmse")
 summary_hplot(df, "geo_rmse")
 
 summary_hplot(df, stat_name = "geo_rmse", aggfunc = "mean", colpal = "viridis", direction = -1, na.rm=TRUE)
+summary_hplot(df, stat_name = "comboenv_rmse", aggfunc = "mean", colpal = "viridis", direction = -1, na.rm=TRUE)
 ```
+
 
 ```{r fig.width=20, fig.height=7}
 summary_vplot(df, "comboenv_rmse")
@@ -184,122 +196,14 @@ ggplot(df, aes(fill=seed, y=log(geo_rmse), x=factor(seed))) +
 
 
 
-# full model w/ interactions
-```{r}
-#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-#mixed effect model
-#na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + K*r +
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
-
-#anova
-aovmod <- anova(fullmod)
-
-#fixed effects (minus intercept)
-efmod <- fixef(fullmod)[-1]
-
-#print result
-aovmod
-efmod
-```
-
-```{r}
-fullmod <-  lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + 
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
-combos <- dredge(fullmod)
-combos
-```
-
-
-```{r}
-finalmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    K*m + K*phi + K*H + 
-                    m*phi + m*H + m*r + 
-                    phi*H + phi*r + 
-                    H*r +
-                    (1 | seed), moddf, na.action = "na.fail")
-#anova
-aovmod <- anova(finalmod)
-aovmod
-
-```
-
-
-```{r}
-ints <- c("K*phi", "K*H", "K*m", 
-          "m*phi", "m*H", "m*r",
-          "phi*H", "phi*r", 
-          "H*r")
-
-effplts <- list()
-for(i in 1:length(ints)){
-    eff <- effect(ints[i], finalmod)
-    effplts[[i]] <- eff
-    print(plot(eff))
-}
-
-
-par(mfrow=c(2,4))
-for(i in 1:length(effplts)){
-   p <- plot(effplts[[i]])
-   print(p)
-}
-
-
-
-effplts2 <- list()
-
-for(i in 1:length(effplts)){
-    eff <- as.data.frame(effplts[[i]])
-    v1 <- eff[,1]
-    v2 <- eff[,2]
-    p <- ggplot_gtable(ggplot_build(ggplot(eff, aes(factor(v1), linetype=factor(v2),
-                                     color = factor(v2))) +
-        geom_line(aes(y = fit, group=factor(v2)), size=1) +
-        geom_ribbon(aes(ymin = lower, ymax = upper, group = factor(v2), fill = factor(v2), col = factor(v2)), 
-                  alpha=0.2, 
-                  linetype="dashed") + 
-        xlab(colnames(eff)[1]) +
-        ylab("") +
-        scale_colour_manual(values = c("#756fd6","#30D5C8")) +
-        scale_fill_manual(values = c("#756fd6", "#30D5C8")) +
-        scale_x_discrete(expand = c(0.05, 0.05)) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-              panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21),
-              plot.margin=unit(rep(0.4,4),"cm")) +
-        guides(col=guide_legend(title=colnames(eff)[2], labels = levels(factor(v2))), linetype = FALSE, fill = FALSE, size = FALSE)))
-    
-    effplts2[[i]] <- p
-    gc()
-
-}
-
-
-
-
-```
-
-
-```{r fig.width = 10, fig.height = 14}
-do.call(grid.arrange, c(effplts2, ncol=2))
-```
-
-
 # full model w/o interactions
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
-#na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
-                    (1 | seed), moddf, na.action = "na.fail")
+#NOTE: na.action needs to be set to na.fail for dredge to work
+moddf$stat <- moddf$geo_rmse
+moddf$stat <- moddf$comboenv_rmse
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r +  (1 | seed), moddf, na.action = "na.omit")
 
 #anova
 aovmod <- anova(fullmod)
@@ -311,6 +215,7 @@ efmod <- fixef(fullmod)[-1]
 aovmod
 efmod
 ```
+
 ```{r}
 combos <- dredge(fullmod)
 combos
@@ -322,10 +227,9 @@ combos
 ```
 
 
-
 ```{r pairwise comparison of npts, fig.width=5, fig.height=5}
 
-model <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+model <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.omit")
 
 pw <- emmeans(model, list(pairwise ~ nsamp), adjust = "tukey")
 
@@ -354,10 +258,11 @@ ggplot(resdf, aes(p1,p2)) +
     coord_fixed()
 
 ```
+
 ```{r pairwise comparison of sampstrat, fig.width=10, fig.height=10}
 #TukeyHSD
 
-model <- lmer(log(stat) ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+model <- lmer(log(stat) ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.omit")
 
 pw <- emmeans(model, list(pairwise ~ sampstrat), adjust = "tukey")
 

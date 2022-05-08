@@ -20,6 +20,7 @@ run_mmrr_params <- function(i, params, path, mode = "ind"){
   
   #run MMRR
   if(skip_to_next == FALSE){
+    
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
     

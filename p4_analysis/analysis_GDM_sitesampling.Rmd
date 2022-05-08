@@ -16,6 +16,7 @@ library("gridExtra")
 library("MuMIn")
 library("emmeans")
 library("effects")
+library("here")
 
 source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
@@ -42,8 +43,7 @@ params_full <- expand.grid(K = c(2, 4),
                       sampstrat = sampstrat,
                       it = 0:9)
 
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/GDM/", full.names = TRUE, pattern="*.csv"), read.csv))
-
+df <- read.csv(here("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/gdm_sitesampling_results.csv"))
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 summary(df)
 
@@ -51,17 +51,38 @@ summary(df)
 #df <- df[df$env2_coeff != "NULL",]
 #df <- df[df$geo_coeff != "NULL",]
 
-df$geo_rmse <- as.numeric(df$geo_rmse)
-df$env1_rmse <- as.numeric(df$env1_rmse)
-df$env2_rmse <- as.numeric(df$env2_rmse)
 
-df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
+df$geo_err <- abs(as.numeric(df$geo_err))
+df$env1_err <- abs(as.numeric(df$env1_err))
+df$env2_err <- abs(as.numeric(df$env2_err))
+
+
+df$geo_coeff <- (as.numeric(df$geo_coeff))
+df$env1_coeff <- (as.numeric(df$env1_coeff))
+df$env2_coeff <- (as.numeric(df$env2_coeff))
+
+
+df$comboenv_coeff <- df$env1_coeff + df$env2_coeff
+df$ratio <- (df$geo_coeff - df$comboenv_coeff)/df$comboenv_coeff
+
+df$comboenv_err <- (df$env1_err + df$env2_err)/2
+
+# TEST REMOVE
+df$env1_coeff[df$env1_coeff == 0] <- NA
+df$env2_coeff[df$env2_coeff == 0] <- NA
+df$geo_coeff[df$geo_coeff == 0] <- NA
+
+
+
+df$comboenv_coeff <- df$env1_coeff + df$env2_coeff
+df$ratio <- df$geo_coeff/df$comboenv_coeff
+
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
 ```
 
-```{r}
+```{r fig.width=20, fig.height=7}
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
@@ -77,25 +98,36 @@ for(i in 1:nrow(params)){
   subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
   full <- subdf[subdf$sampstrat == "full",]
   sub <- subdf[subdf$sampstrat != "full",]
-  sub$geo_mpe <-sub$geo_rmse/full$geo_coeffn
-  actual <- sub$env1_coeffn + sub$env2_coeffn
-  forecast <- full$env1_coeffn + full$env2_coeffn
-  sub$comboenv_mpe <- abs(actual - forecast)/actual
-  cdf <- rbind(cdf, sub)
+  
+  full$ratio_err <- NA
+  full$ratio_mpe <- NA
+  sub$ratio_err <- full$ratio -  sub$ratio
+  sub$ratio_mpe <- abs(full$ratio -  sub$ratio)/abs(full$ratio)
+  cdf <- rbind(cdf, sub, full)
 }
 
+summary_hplot(cdf, "ratio_err")
+summary_hplot(cdf, "ratio_mpe")
+
+summary_hplot(cdf, "ratio")
+summary_vplot(cdf, "ratio")
+
+summary_hplot(cdf, "geo_coeff")
+summary_hplot(cdf, "env1_coeff")
+summary_hplot(cdf, "env2_coeff")
+```
+```{r fig.width = 30, fig.height=15}
+
+MEGAPLOT(cdf, "ratio_err", option = "turbo")
 ```
 
 
 #summary plots
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", maxv = 3, na.rm = TRUE)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", maxv = 3, na.rm = TRUE)
+MEGAPLOT(moddf, "geo_err", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_err", option = "turbo", maxv = 3, na.rm = TRUE)
 ```
-
-
-
 
 ```{r fig.width = 30, fig.height=15}
 MEGAPLOT(moddf, "ratio", option = "turbo", maxv = 0.3,  na.rm=TRUE)
@@ -103,13 +135,12 @@ MEGAPLOT(moddf, "ratio", option = "turbo", maxv = 0.3,  na.rm=TRUE)
 
 ```{r fig.width = 30, fig.height=15}
 
-maxv = 0.85
-MEGAPLOT(moddf, "comboenv_rmse", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
-MEGAPLOT(moddf, "geo_rmse", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
-MEGAPLOT(moddf, "geo_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+MEGAPLOT(moddf, "comboenv_err", aggfunc = "prop_na", option = "turbo")
+MEGAPLOT(moddf, "geo_err", aggfunc = "prop_na", option = "turbo")
+MEGAPLOT(moddf, "geo_coeff", aggfunc = "prop_na", option = "turbo")
 
-MEGAPLOT(moddf, "env1_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
-MEGAPLOT(moddf, "env2_coeff", aggfunc = "prop_na", option = "turbo", maxv = maxv,  na.rm=TRUE)
+MEGAPLOT(moddf, "env1_coeff", aggfunc = "prop_na", option = "turbo")
+MEGAPLOT(moddf, "env2_coeff", aggfunc = "prop_na", option = "turbo")
 ```
 
 
@@ -122,19 +153,20 @@ MEGAPLOT(moddf, "env2_coeffn", option = "turbo", max = 0.3, na.rm=TRUE)
 ```
 
 ```{r fig.width=20, fig.height=7}
-summary_vplot(df, "geo_rmse")
-summary_hplot(df, "geo_rmse")
+summary_vplot(df, "geo_err")
+summary_hplot(df, "geo_err")
 
-summary_hplot(df, stat_name = "geo_rmse", aggfunc = "mean", colpal = "viridis", direction = -1, na.rm=TRUE)
+summary_hplot(df, stat_name = "geo_err", aggfunc = "mean", colpal = "viridis", direction = -1, na.rm=TRUE)
 ```
 
 ```{r fig.width=20, fig.height=7}
-summary_vplot(df, "comboenv_rmse")
-summary_hplot(df, "comboenv_rmse")
+summary_vplot(df, "comboenv_err")
+summary_hplot(df, "comboenv_err")
 
-summary_hplot(df, "comboenv_rmse", aggfunc = "sd")
-summary_hplot(df, "comboenv_rmse", aggfunc = "mean", colpal = "viridis", direction = -1)
+summary_hplot(df, "comboenv_err", aggfunc = "sd")
+summary_hplot(df, "comboenv_err", aggfunc = "mean", colpal = "viridis", direction = -1)
 ```
+
 ```{r fig.width=20, fig.height=7}
 summary_hplot(df, "ratio", aggfunc = "sd")
 summary_hplot(df, "ratio", aggfunc = "mean", colpal = "viridis", direction = -1)
@@ -142,19 +174,32 @@ summary_hplot(df, "ratio", aggfunc = "prop_na", colpal = "viridis", direction = 
 ```
 ```{r fig.width=20, fig.height=7}
 summary_hplot(df, "geo_coeff", aggfunc = "prop_na", colpal = "viridis", direction = -1)
+summary_hplot(df, "comboenv_coeff", aggfunc = "prop_na", colpal = "viridis", direction = -1)
+```
+
+```{r, fig.width = 30, fig.height=15}
+MEGAPLOT(df, "geo_coeff")
+MEGAPLOT(df, "ratio", option = "turbo")
+```
+
+
+```{r fig.width=20, fig.height=7}
+summary_vplot(df, "geo_coeff")
+summary_vplot(df, "comboenv_coeff")
+summary_vplot(df, "ratio")
 ```
 
 #VARIANCE EXPLORATION
 ```{r}
-df$stat <- df$geo_rmse
+df$stat <- df$geo_err
 
 df %>%
   group_by(seed) %>%
-  summarise(var = var(geo_rmse, na.rm=TRUE)) %>%
+  summarise(var = var(geo_err, na.rm=TRUE)) %>%
   arrange(var)
 
 
-ggplot(df, aes(fill=seed, y=geo_rmse, x=factor(seed))) + 
+ggplot(df, aes(fill=seed, y=geo_err, x=factor(seed))) + 
      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
      scale_fill_viridis(discrete=T, option="viridis") +
      theme_bw()+
@@ -164,7 +209,7 @@ ggplot(df, aes(fill=seed, y=geo_rmse, x=factor(seed))) +
      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
            panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
 
-ggplot(df, aes(fill=seed, y=log(geo_rmse), x=factor(seed))) + 
+ggplot(df, aes(fill=seed, y=log(geo_err), x=factor(seed))) + 
      #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
      scale_fill_viridis(discrete=T, option="viridis") +
      theme_bw()+

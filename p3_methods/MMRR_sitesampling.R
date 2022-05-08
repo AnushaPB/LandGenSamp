@@ -19,12 +19,13 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 
-res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
+  library("mmrr")
   library("adegenet")
+  library("here")
   library("tidyverse")
-  
-  results <- run_gdm_params(i, params, sampstrats, npts, "outputs/GDM/gdm_sitesampling_results", mode = "site")
+  results <- run_mmrr_params(i, params, sampstrats, npts, "outputs/MMRR/mmrr_sitesampling_results", mode = "site")
   
   return(results)
 }
@@ -32,4 +33,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "sitesampling/outputs/gdm_sitesampling_results_dps.csv", row.names = FALSE)
+write.csv(res_mmrr, "outputs/mmrr_sitesampling_results.csv", row.names = FALSE)
+
