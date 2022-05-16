@@ -7,7 +7,7 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
-source("sitesampling/sitesampling_functions.R")
+source("sitesampling_functions.R")
 
 set.seed(42)
 
@@ -30,7 +30,7 @@ coeffs <- function(gdm.model){
 }
 
 
-run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
+run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   
   if(distmeasure == "bray"){
     K <- nrow(gen)
@@ -110,19 +110,20 @@ run_gdm <- function(gen, gsd_df, distmeasure = "dps"){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-2) #not to overload your computer
+cores <- 5
+cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
 nsites <- c(9, 16, 25)
-
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   #vcfR
   library("vcfR")
   library("gdm")
   library("adegenet")
-  
+  library("stringr")
+  library("here")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -152,11 +153,11 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "dps")
+    full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "euc")
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result, env1_rmse = NA, env2_rmse = NA, geo_rmse = NA)
     
     #write full datafile (temp)
-    csv_file <- paste0("sitesampling/outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
+    csv_file <- paste0("outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
     write.csv(result, csv_file, row.names = FALSE)
     
     for(nsite in nsites){
@@ -176,7 +177,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
 
         #run analysis using subsample
-        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "dps")
+        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "euc")
         
         
         #calculate RMSE if not null
@@ -215,5 +216,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "sitesampling/outputs/gdm_sitesampling_results_dps.csv", row.names = FALSE)
+write.csv(res_gdm, "outputs/gdm_sitesampling_results.csv", row.names = FALSE)
 

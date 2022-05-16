@@ -112,7 +112,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
 }
 
 #register cores
-cores <- 10
+cores <- 5
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
