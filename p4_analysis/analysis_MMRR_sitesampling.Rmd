@@ -16,6 +16,7 @@ library("gridExtra")
 library("MuMIn")
 library("emmeans")
 library("effects")
+library(tidyverse)
 
 source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
@@ -83,11 +84,44 @@ for(i in 1:nrow(params)){
 }
 ```
 
+```{r}
+#Create dataframe with all variable combos
+params <- expand.grid(K = c(1, 2), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05, 0.5),
+                      r = c(0.3, 0.6),
+                      it = 0)
+
+cdf <- data.frame()
+for(i in 1:nrow(params)){
+  p <- params[i,]
+  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
+  full <- subdf[subdf$sampstrat == "full",]
+  sub <- subdf[subdf$sampstrat != "full",]
+  sub$err <-  abs(sub$geo_coeff - full$geo_coeff)
+  cdf <- rbind(cdf, sub)
+}
+
+summary_hplot(cdf, "err")
+```
+
+
 #EXPLORATORY
 
+<<<<<<< Updated upstream:p4_analysis/sitesampling/analysis_MMRR_sitesampling.Rmd
 ```{r fig.width = 30, fig.height=40}
 MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
 MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
+=======
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_coeff", option = "turbo", na.rm = TRUE)
+
+MEGAPLOT(moddf, "geo_rmse", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", na.rm = TRUE)
+>>>>>>> Stashed changes:p4_analysis/analysis_MMRR_sitesampling.Rmd
 ```
 
 ```{r fig.width=20, fig.height=8}

@@ -42,16 +42,12 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0:8)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
-
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/MMRR/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mmrr_results.csv")
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
 df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
-
-
-
+df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)
 
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
@@ -85,36 +81,27 @@ for(i in 1:nrow(params)){
 
 #EXPLORATORY
 
-```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
+```{r fig.width = 30, fig.height=15}
+
+MEGAPLOT(moddf, "geo_coeff", option = "turbo", na.rm = TRUE)
 ```
 
-```{r fig.width=20, fig.height=8}
-#should be close to 1 since env1 and env2 should have equal impact (not sure if this is true though because it could vary based on overlap between env1 and 2)
-df$stat <- abs(1 - abs(df$env1_coeff/df$env2_coeff))
-summary_hplot(df)
-
-df$stat <- df$comboenv_rmse
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$geo_rmse
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$ratio
-summary_hplot(df, colpal = "viridis", sigdig = 3)
-
-df$stat <- df$geo_coeff
-summary_hplot(df, colpal = "mako", sigdig = 3)
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_rmse", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", na.rm = TRUE)
+```
 
 
-cdf$stat <- cdf$ratio2_ae
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
 
-cdf$stat <- log(cdf$ratio2_ae)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
+
+```{r fig.width=20, fig.height=7}
+summary_vplot(df, "geo_coeff")
+summary_vplot(df, "comboenv_coeff")
+```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "geo_rmse")
+summary_hplot(df, "comboenv_rmse")
 ```
 
 
