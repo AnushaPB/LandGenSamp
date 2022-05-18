@@ -64,7 +64,7 @@ params <- expand.grid(K = c(1, 2),
                       seed = c(1, 2, 3),
                       H = c(0.05, 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
+                      it = 0:9)
 
 cdf <- data.frame()
 for(i in 1:nrow(params)){
@@ -77,6 +77,9 @@ for(i in 1:nrow(params)){
   sub$ratio2_ae <- abs(fullratio - subratio)
   cdf <- rbind(cdf, sub)
 }
+
+
+summary_hplot(cdf, "ratio2_ae")
 ```
 
 #EXPLORATORY
