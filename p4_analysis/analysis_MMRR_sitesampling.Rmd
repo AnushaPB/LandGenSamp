@@ -61,7 +61,7 @@ moddf[!complete.cases(moddf),]
 
 ```
 #CALCULATE NEW STATS
-```{r}
+```{r,  fig.width=15, fig.height=7}
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
@@ -69,7 +69,7 @@ params <- expand.grid(K = c(1, 2),
                       seed = c(1, 2, 3),
                       H = c(0.05, 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
+                      it = 0:9)
 
 cdf <- data.frame()
 for(i in 1:nrow(params)){
@@ -82,9 +82,11 @@ for(i in 1:nrow(params)){
   sub$ratio2_ae <- abs(fullratio - subratio)
   cdf <- rbind(cdf, sub)
 }
+
+summary_hplot(cdf, "ratio2_ae")
 ```
 
-```{r}
+```{r fig.width=20, fig.height=8}
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
@@ -92,7 +94,7 @@ params <- expand.grid(K = c(1, 2),
                       seed = c(1, 2, 3),
                       H = c(0.05, 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
+                      it = 0:9)
 
 cdf <- data.frame()
 for(i in 1:nrow(params)){
@@ -110,18 +112,15 @@ summary_hplot(cdf, "err")
 
 #EXPLORATORY
 
-<<<<<<< Updated upstream:p4_analysis/sitesampling/analysis_MMRR_sitesampling.Rmd
 ```{r fig.width = 30, fig.height=40}
 MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
 MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
-=======
-
+```
 ```{r fig.width = 30, fig.height=15}
 MEGAPLOT(moddf, "geo_coeff", option = "turbo", na.rm = TRUE)
 
 MEGAPLOT(moddf, "geo_rmse", option = "turbo", na.rm = TRUE)
 MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", na.rm = TRUE)
->>>>>>> Stashed changes:p4_analysis/analysis_MMRR_sitesampling.Rmd
 ```
 
 ```{r fig.width=20, fig.height=8}
