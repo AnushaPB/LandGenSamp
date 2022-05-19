@@ -123,12 +123,16 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
-get_K_tw <- function(gen){
+# Function to  determine best K using tracy widom test
+get_K_tw <- function(gen, maxK = NULL){
   # run pca
   pc <- prcomp(gen)
   
   # get eig
   eig <- pc$sdev^2
+  
+  # reduce K values if max is provided
+  if(!is.null(maxK)){eig <- eig[1:maxK]}
   
   # run tracy widom test
   # NOTE: 	
@@ -136,13 +140,17 @@ get_K_tw <- function(gen){
   # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
   # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
   # The default is 2.0234.
-  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 0.9793)
+  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 3.2724)
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
   
+  plot(eig)
+  abline(v = K)
+  
   return(K)
 }
+
 
 #register cores
 cores <- 25
