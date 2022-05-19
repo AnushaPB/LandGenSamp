@@ -190,7 +190,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     fullratio <- (full_result$env1_coeff + full_result$env2_coeff)/full_result$geo_coeff
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, 
                          ratio = fullratio, 
-                         env1_rmse = NA, env2_rmse = NA, geo_rmse = NA, ratio_rmse = NA)
+                         env1_err = NA, env2_err = NA, geo_err = NA, ratio_err = NA)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/MMRR/MMRR_sitesampling_results_",paramset,".csv")
@@ -215,19 +215,19 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #run analysis using subsample
         sub_result <- run_mmrr(subgen, subgsd_df)
         
-        #calculate RMSE
-        env1_rmse <- rmse_coeff(full_result$env1_coeff, sub_result$env1_coeff)
-        env2_rmse <- rmse_coeff(full_result$env2_coeff, sub_result$env2_coeff)
-        geo_rmse <- rmse_coeff(full_result$geo_coeff, sub_result$geo_coeff)
+        #calculate err
+        env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)
+        env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)
+        geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)
         
         subratio <- (sub_result$env1_coeff + sub_result$env2_coeff)/sub_result$geo_coeff
-        ratio_rmse <- rmse_coeff(fullratio, subratio)
+        ratio_err <- err_coeff(fullratio, subratio)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result, 
                                  ratio = subratio,
-                                 env1_rmse = env1_rmse, env2_rmse = env2_rmse, geo_rmse = geo_rmse,
-                                 ratio_rmse = ratio_rmse)
+                                 env1_err = env1_err, env2_err = env2_err, geo_err = geo_err,
+                                 ratio_err = ratio_err)
         
         #export data to csv (temp)
         csv_df <- read.csv(csv_file)
