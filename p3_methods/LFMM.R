@@ -145,7 +145,7 @@ get_K_tw <- function(gen){
 }
 
 #register cores
-cores <- 25
+cores <- 10
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
@@ -156,7 +156,8 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("lfmm")
   library("stringr")
-  
+  library("AssocTests")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
