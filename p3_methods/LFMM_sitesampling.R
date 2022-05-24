@@ -17,6 +17,7 @@ source("sitesampling_functions.R")
 #  LFMM  #
 ##########
 
+
 run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #for readibility, just negates the in function
@@ -28,13 +29,13 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   adaptive_loci <- c(loci_trait1, loci_trait2)
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #PCA to determine number of latent factors
-  #if K is not specified it is calculated based on PCs
+  
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K_tw(gen)
+    K <- get_K(gen, k_selection = "quick.elbow")
   }
-
+  
+  
   #gen matrix
   genmat = as.matrix(gen)
   #env matrix
@@ -123,7 +124,36 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
-# Function to  determine best K using tracy widom test
+
+# function to determine K
+get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals, ...){
+  
+  if(k_selection == "tracy.widom"){K <- get_K_tw(gen)}
+  
+  if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
+  
+  return(K)
+}
+
+# Function to determine best K based on elbow
+get_K_elbow <- function(gen){
+  # run pca
+  pc <- prcomp(gen)
+  
+  # get eig
+  eig <- pc$sdev^2
+  # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
+  # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
+  K <- quick.elbow(eig, low = 0.08, max.pc = 0.9)
+  
+  par(pty = "s",mfrow = c(1,1))
+  plot(eig, xlab = 'PC', ylab = "Variance explained")
+  abline(v = K, col = "red", lty = "dashed")
+  
+  return(K)
+}
+
+# Function to determine best K using tracy widom test
 get_K_tw <- function(gen, maxK = NULL){
   # run pca
   pc <- prcomp(gen)
@@ -151,8 +181,9 @@ get_K_tw <- function(gen, maxK = NULL){
   return(K)
 }
 
+
 #register cores
-cores <- 20
+cores <- 10
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
@@ -223,7 +254,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
-        sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL)
+        sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = full_result$K)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
@@ -251,5 +282,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM_sitesampling/lfmm_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
 
