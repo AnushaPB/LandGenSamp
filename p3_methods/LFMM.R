@@ -31,7 +31,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K_tw(gen)
+    K <- get_K(gen, k_selection = "quick.elbow")
   }
   
   
@@ -123,7 +123,36 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALFN = FN))
 }
 
-# Function to  determine best K using tracy widom test
+
+# function to determine K
+get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals, ...){
+  
+  if(k_selection == "tracy.widom"){K <- get_K_tw(gen)}
+  
+  if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
+  
+  return(K)
+}
+
+# Function to determine best K based on elbow
+get_K_elbow <- function(gen){
+  # run pca
+  pc <- prcomp(gen)
+  
+  # get eig
+  eig <- pc$sdev^2
+  # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
+  # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
+  K <- quick.elbow(eig, low = 0.08, max.pc = 0.9)
+  
+  par(pty = "s",mfrow = c(1,1))
+  plot(eig, xlab = 'PC', ylab = "Variance explained")
+  abline(v = K, col = "red", lty = "dashed")
+  
+  return(K)
+}
+
+# Function to determine best K using tracy widom test
 get_K_tw <- function(gen, maxK = NULL){
   # run pca
   pc <- prcomp(gen)
@@ -244,5 +273,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/LFMM/lfmm_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_results.csv", row.names = FALSE)
 
