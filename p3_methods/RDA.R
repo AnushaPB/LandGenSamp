@@ -14,7 +14,7 @@ source("general_functions.R")
 ############
 #   RDA    #
 ############
-run_rda <- function(gen, gsd_df, loci_df, nloci = 10000){
+run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
 
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
@@ -31,63 +31,64 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000){
   #Plot screeplot
   screeplot(mod)
   
-  #SIGNIFICANCE CALCS (decide later if these are worth calculating)
-  #Determine significance of full model
-  #signif.full <- anova.cca(mod, parallel = getOption("mc.cores")) # default is permutation=999
-  #print(signif.full)
+  #load scores and get pvalues
+  naxes <- ncol(mod$CCA$v)
+  rdadapt_env <- rdadapt(final_mod, naxes)
   
-  #Determine significance of axes (variables)
-  #signif.axis <- anova.cca(mod, by="axis", parallel = getOption("mc.cores"))
-  #print(signif.axis)
-  
-  #Look at VIF
-  #vif.cca(mod)
-  
-  #load scores
-  load.rda <- scores(mod, choices=c(1:2), display="species")  #Choices are RDAs (2 vars = 2 RDAs max)
-  
-  #OUTLIER FUNCTION
-  outliers <- function(x,z){
-    lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
-    x[x < lims[1] | x > lims[2]]               # locus names in these tails
-  }
-  
-  #Define z (default to 2 or 3)
-  z = 2
-  cand1 <- outliers(load.rda[,1], z = z) 
-  cand2 <- outliers(load.rda[,2], z = z)
-  
-  #Determine number of candidate loci
-  ncand <- length(cand1) + length(cand2)
-  ncand
-  
-  #Create dataframes for each 
-  cand1 <- cbind.data.frame(rep(1, times=length(cand1)), names(cand1), unname(cand1))
-  cand2 <- cbind.data.frame(rep(2, times=length(cand2)), names(cand2), unname(cand2))
-  
-  colnames(cand1) <- colnames(cand2) <- c("axis","snp","loading")
-  
-  #combine into one DF
-  cand <- rbind(cand1, cand2)
-  cand$snp <- as.character(cand$snp)
-  
-  #Remove X and change to numeric for comparison
-  rda_loci <- as.numeric(gsub("0_", "", cand$snp))
+  # P-values threshold after FDR correction (different from Capblancq & Forester 2021)
+  pvalues <- p.adjust(rdadapt_env$p.values, method = padj_method)
+ 
+  ## Identifying the loci that are below the p-value threshold
+  # NEED TO ADD STEP TO FIGURE OUT SIGNIFICANCE OF ENV VARS
+  #Identify rda cand loci (P)
+  rda_loci <- which(pvalues < sig) 
   
   #Calc True Positive Rate
-  TP <- sum(adaptive_loci %in% rda_loci)
+  TP <- sum(rda_loci %in% adaptive_loci)
   TPR <- TP/length(adaptive_loci)
   
   #Calc False Discovery Rate
   FD <- sum(neutral_loci %in% rda_loci)
   FDR <- FD/length(rda_loci)
   
-  return(data.frame(TPR = TPR, FDR = FDR))
+  #get confusion matrix values
+  #True Positives
+  TP <- sum(adaptive_loci %in% rda_loci)
+  #False Positives
+  FP <- sum(neutral_loci %in% rda_loci)
+  #True Negatives
+  TN <- sum(neutral_loci %notin% rda_loci)
+  #False Negatives
+  FN <- sum(adaptive_loci %noti% rda_loci)
+  
+  
+  return(data.frame(TPR = TPR, 
+                    FDR = FDR,
+                    TP = TP,
+                    FP = FP,
+                    TN = TN,
+                    FN = FN))
+}
+
+
+# Function to conduct a RDA based genome scan from Capblancq & Forester 2021
+# https://github.com/Capblancq/RDA-landscape-genomics/blob/main/RDA_landscape_genomics.Rmd
+# NOTE: GO THROUGH THIS CODE
+rdadapt <- function(rda,K)
+{
+  zscores<-rda$CCA$v[,1:as.numeric(K)]
+  resscale <- apply(zscores, 2, scale)
+  resmaha <- covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dist
+  lambda <- median(resmaha)/qchisq(0.5,df=K)
+  reschi2test <- pchisq(resmaha/lambda,K,lower.tail=FALSE)
+  qval <- qvalue(reschi2test)
+  q.values_rdadapt<-qval$qvalues
+  return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cores <- 10
+cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
 res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
@@ -165,4 +166,4 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_rda, "outputs/RDA/rda_results.csv", row.names = FALSE)
+write.csv(res_rda, "outputs/rda_results.csv", row.names = FALSE)
