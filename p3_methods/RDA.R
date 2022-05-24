@@ -52,6 +52,9 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   FDR <- FD/length(rda_loci)
   
   #get confusion matrix values
+  
+  #for readibility, just negates the in function
+  `%notin%` <- Negate(`%in%`)
   #True Positives
   TP <- sum(adaptive_loci %in% rda_loci)
   #False Positives
@@ -59,7 +62,7 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   #True Negatives
   TN <- sum(neutral_loci %notin% rda_loci)
   #False Negatives
-  FN <- sum(adaptive_loci %noti% rda_loci)
+  FN <- sum(adaptive_loci %notin% rda_loci)
   
   
   return(data.frame(TPR = TPR, 
