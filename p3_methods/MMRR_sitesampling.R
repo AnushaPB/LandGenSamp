@@ -1,6 +1,6 @@
 set.seed(42)
 
-library(here) #paths
+library(here)
 
 #parallel
 library(foreach)

@@ -7,6 +7,7 @@ library("lfmm") #LFMM
 library("vcfR")
 library("foreach")
 library("doParallel")
+library("AssocTests")
 
 #read in general functions and objects
 source("general_functions.R")
@@ -161,6 +162,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("lfmm")
   library("stringr")
+  library("AssocTests")
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
