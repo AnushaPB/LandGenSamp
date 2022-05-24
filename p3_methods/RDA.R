@@ -97,6 +97,7 @@ registerDoParallel(cl)
 res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
+  library("here")
   
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
