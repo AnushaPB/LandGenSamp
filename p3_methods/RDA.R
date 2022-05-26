@@ -33,7 +33,7 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   
   #load scores and get pvalues
   naxes <- ncol(mod$CCA$v)
-  rdadapt_env <- rdadapt(final_mod, naxes)
+  rdadapt_env <- rdadapt(mod, naxes)
   
   # P-values threshold after FDR correction (different from Capblancq & Forester 2021)
   pvalues <- p.adjust(rdadapt_env$p.values, method = padj_method)
@@ -90,7 +90,7 @@ rdadapt <- function(rda,K)
 }
 
 #register cores
-cores <- 10
+cores <- 20
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
@@ -98,7 +98,8 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("vcfR")
   library("vegan")
   library("here")
-  
+  library("stringr")
+
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -131,7 +132,7 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     #run model on full data set
     full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), full_result)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
     #write full datafile (temp)
     csv_file <- paste0("outputs/RDA/RDA_results_",paramset,".csv")

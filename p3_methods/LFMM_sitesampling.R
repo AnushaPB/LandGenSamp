@@ -183,6 +183,7 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
+
 cores <- 10
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
@@ -253,8 +254,13 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
         
         #run analysis using subsample
+<<<<<<< HEAD
+        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
+        #sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL)
+=======
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
         sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = full_result$K)
+>>>>>>> 96589a51ea35d1eb81cd8a0b2a6eb8ceda0092b0
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
