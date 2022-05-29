@@ -146,7 +146,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
 
 
 #register cores
-cores <- 5
+cores <- 8
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -213,7 +213,7 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
         
         #run analysis using subsample
-        sub_result <- run_mmrr(subgen, subgsd_df)
+        sub_result <- run_mmrr(sitegen, sitegsd_df)
         
         #calculate err
         env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)
