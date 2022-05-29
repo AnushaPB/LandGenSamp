@@ -36,7 +36,7 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   rdadapt_env <- rdadapt(mod, naxes)
   
   # P-values threshold after FDR correction (different from Capblancq & Forester 2021)
-  pvalues <- p.adjust(rdadapt_env$p.values, method = padj_method)
+  pvalues <- p.adjust(rdadapt_env$p.values, method = "fdr")
  
   ## Identifying the loci that are below the p-value threshold
   # NEED TO ADD STEP TO FIGURE OUT SIGNIFICANCE OF ENV VARS
