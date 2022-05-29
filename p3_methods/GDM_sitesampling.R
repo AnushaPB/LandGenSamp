@@ -179,7 +179,6 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #run analysis using subsample
         sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "euc")
         
-        
         #calculate RMSE if not null
         if(sub_result$env1_coeff == "NULL"){
           env1_rmse <- "NULL"
