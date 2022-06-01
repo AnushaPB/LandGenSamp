@@ -1,3 +1,4 @@
+
 set.seed(42)
 
 library(here) #paths
@@ -24,8 +25,10 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   #Run RDA
-  mod <- rda(gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=T)
-  
+  tryCatch({mod <- rda(gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=T)},
+    error = function(e){
+    return(data.frame(TPR = "Err", FDR = "Err", TP = "Err", FP = "Err", TN = "Err", FN = "Err))})
+    
   #Get RSQ
   RsquareAdj(mod)
   
@@ -159,8 +162,8 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
         
         #run analysis using subsample
-        sub_result <- run_rda(sitegen, sitegsd_df, loci_df)
-        
+        #sub_result <- run_rda(sitegen, sitegsd_df, loci_df)
+        sub_result <- run_rda(subgen, subgsd_df, loci_df)
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
