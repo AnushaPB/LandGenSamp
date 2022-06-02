@@ -61,7 +61,7 @@ for(n in nsites){
   
   message(paste(n, "finished"))
   
-}
+  }
 }
 
 #stop cluster
