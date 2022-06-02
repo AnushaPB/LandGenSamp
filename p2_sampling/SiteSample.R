@@ -1,5 +1,10 @@
 
-SiteSample <- function(sample_sites, coords, npts, buffer_size = 5){
+SiteSample <- function(sample_sites, coords, npts, buffer_size = NULL, method = "buffer"){
+  if(method == "near"){site_samples <- SiteSampleNear(sample_sites, coords, npts)}
+  if(method == "buffer"){site_samples <- SiteSampleBuffer(sample_sites, coords, npts, buffer_size = buffer_size)}
+}
+
+SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
   #sample_sites - coordinates of sampling sites
   #coords - coordinates of all individuals in data set
   #npts - number of points to sample from each site
@@ -39,8 +44,7 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 5){
   return(site_samples)
 }
 
-
-SiteSample <- function(sample_sites, coords, npts){
+SiteSampleNear <- function(sample_sites, coords, npts){
   #sample_sites - coordinates of sampling sites
   #coords - coordinates of all individuals in data set
   #npts - number of points to sample from each site
@@ -65,7 +69,7 @@ SiteSample <- function(sample_sites, coords, npts){
     sample_df <- data.frame(site = s, sample_idx)
     
     #bind samples
-    site_samples <- rbind(site_samples, near)
+    site_samples <- rbind(site_samples, sample_df)
   }
   return(site_samples)
 }
