@@ -36,3 +36,18 @@ for(i in sample(1:nrow(params),5)){
 dev.off()
 
 
+pdf("sampling_plots_pres.pdf")
+par(mfrow=c(length(npts), length(sampstrats)), pty="s", mar = rep(2, 4))
+for(i in sample(1:nrow(params), 10)){
+  gsd_df <- get_data(i, params = params, "gsd")
+  for(nsamp in npts){
+    for(sampstrat in sampstrats){
+      #subsample from data based on sampling strategy and number of samples
+      subIDs <- get_samples(params[i,], params = params, sampstrat, nsamp)
+      subgsd_df <- gsd_df[subIDs,]
+      plot(subgsd_df$x, subgsd_df$y, xlim = c(0,ldim), ylim = c(0,ldim), main = paste0(nsamp," / ", sampstrat),
+           xlab = "", ylab = "", pch = 19, col = rgb(0,0,0,0.5), axes = FALSE)
+    }
+  }
+}
+dev.off()
