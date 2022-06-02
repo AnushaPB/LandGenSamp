@@ -11,6 +11,7 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 for(n in nsites){
+  message(paste(n, "starting"))
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
@@ -34,6 +35,9 @@ for(n in nsites){
       #sample
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
 
+      
+    message(paste(i, "complete"))
+    
     #return vector of sample IDs
     return(samples)
     
@@ -57,6 +61,8 @@ for(n in nsites){
   for(i in 1:ncol(samples)){site_out <- cbind.data.frame(site_out, siteIDs[,i])}
   colnames(site_out) <- c(colnames(params), colnames(samples))
   write.csv(site_out, paste0("outputs/site_ids_rand",n,".csv"), row.names = FALSE)
+  
+  message(paste(n, "finished"))
   
 }
 }
