@@ -34,9 +34,6 @@ for(n in nsites){
       gsd_df <- get_gsd(gsd_filepath)
       #sample
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
-
-      
-    message(paste(i, "complete"))
     
     #return vector of sample IDs
     return(samples)
