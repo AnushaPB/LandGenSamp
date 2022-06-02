@@ -69,14 +69,22 @@ for(n in nsites){
  
       #grid sample sites
       #note - buffer 5 from ldim so sites aren't sampled close to the edge
-      sample_sites <- grid_samp(pts, nsite = n, ldim = ldim, buffer = 5)
+      sample_sites <- grid_samp(pts, nsite = n, ldim = 40, buffer = 5)
       #overwrite sample sites with coordinates for sample sites using indexes
       sample_sites <- gsd_df[sample_sites, c("x","y")]
       #convert to coordinates
       coordinates(sample_sites) <- ~x+y
       
       #sample from around sites based on a buffer
-      site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
+      #500000 chosen arbitrarily, 400000 was too small/not enough points in buffer for smaller sample sizes
+      site_samples <- SiteSample(sample_sites, coords, npts = 10, buffer_size = 500000)
+      
+      #plot (for debugging)
+      par(pty="s")
+      plot(gsd_df[,c("x","y")], xlim = c(0,40), ylim = c(0,40), col = "gray")
+      points(sample_sites, pch = 3)
+      points(site_samples[,c("x","y")], col = "red")
+      #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
       samples <- paste0(site_samples$idx, "_", site_samples$site)
     }
