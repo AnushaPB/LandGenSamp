@@ -22,7 +22,7 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 5){
     #subset df
     buffer_samples_df <- buffer_samples_df[randsamp,]
     #IMPORTANT: remove sample from coords so they are not sampled twice
-    coords <- coords[-c(coords$idx %in% buffer_samples_df$idx),]
+    coords <- coords[!coords$idx %in% buffer_samples_df$idx,]
     
     #THINK ABOUT THIS CODE
     #calculate the mean x coord (psuedo-site)
@@ -35,6 +35,37 @@ SiteSample <- function(sample_sites, coords, npts, buffer_size = 5){
     
     #bind samples
     site_samples <- rbind(site_samples, buffer_samples_df)
+  }
+  return(site_samples)
+}
+
+
+SiteSample <- function(sample_sites, coords, npts){
+  #sample_sites - coordinates of sampling sites
+  #coords - coordinates of all individuals in data set
+  #npts - number of points to sample from each site
+  site_samples <- data.frame()
+  
+  #sample sites can be provided as either sp or coords in vector format (nloop just counts how many sites)
+  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)} else {nloop <- nrow(sample_sites)}
+  
+  for(s in 1:nloop){
+    # get site coords
+    site_coords <- sample_sites[s,]
+    # creates a vector of distances between the site and all other points in the dataset
+    dist_vec <- sqrt((coords$x - site_coords$x)^2 + (coords$y - site_coords$y)^2)
+    # remove the distance of 0 (same site)
+    dist_vec <- dist_vec[dist_vec != 0]
+    dist_vec <- dist_vec[order(dist_vec)]
+    sample_idx <- names(dist_vec)[1:npts]
+    #IMPORTANT: remove sample from coords so they are not sampled twice
+    coords <- coords[!coords$idx %in% sample_idx,]
+    
+    #save site IDs
+    sample_df <- data.frame(site = s, sample_idx)
+    
+    #bind samples
+    site_samples <- rbind(site_samples, near)
   }
   return(site_samples)
 }
