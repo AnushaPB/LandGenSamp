@@ -32,29 +32,9 @@ for(n in nsites){
     if(skip_to_next == FALSE){
       #get data
       gsd_df <- get_gsd(gsd_filepath)
-      coords <- gsd_df[,c("idx", "x","y")]
-      coordinates(coords) <- ~x+y      
-      
-      #buffer away from edges
-      coords_buffer <- crop(coords, extent(global_edge_buffer,ldim-global_edge_buffer,global_edge_buffer,ldim-global_edge_buffer))
-      #plot(coords)
-      #points(coords_buffer, col="red")
-      #randomly select points to act as sites
-      sample_sites <- coords_buffer[sample(1:length(coords_buffer), n),]
+      #sample
+      samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
 
-      #sample from around sites based on a buffer
-      #600000 chosen arbitrarily, smaller was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
-      
-      #plot (for debugging)
-      #plot(sample_sites, xlim = c(0,ldim), ylim = c(0,ldim))
-      #points(gsd_df[,c("x","y")], col = "gray")
-      #points(site_samples[,c("x","y")], col = "red")
-      #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
-      
-      samples <- paste0(site_samples$idx, "_", site_samples$site)
-    }
-    
     #return vector of sample IDs
     return(samples)
     

@@ -49,18 +49,7 @@ for(n in nsites){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
-      pts <- gsd_df[,c("idx","x","y")]
-      coords <- pts
-      coordinates(coords) <- ~x+y
- 
-      #equidistant sample sites
-      sample_sites <- equi_samp(pts = pts, nsite = n, ldim = ldim)
-      
-      #sample from around sites based on a buffer
-      #chosen arbitrarily, lower was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
-      
-      samples <- paste0(site_samples$idx, "_", site_samples$site)
+      samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "equi", sample_method = "near", ldim = ldim)
     }
     
     #return vector of sample IDs

@@ -8,51 +8,6 @@ library("vegan")
 
 set.seed(42)
 
-envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer, ldim){
-  Nreps <- 1000
-  sample.sets <- matrix(nrow=Nreps, ncol=nsite)
-  results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
-                        Mantel.r=numeric(Nreps), Mantel.p=numeric(Nreps),
-                        mean.dist=numeric(Nreps))
-  #define buffer
-  buffmin <- edge_buffer
-  buffmax <- ldim - edge_buffer
-  #buffer coordinates away from edge
-  gsd_df <- gsd_df[gsd_df$x > buffmin & gsd_df$x < buffmax & gsd_df$y > buffmin & gsd_df$y < buffmax,]
-  
-  env.df <- gsd_df[,c("env1","env2")]
-  
-  e.dist <-  as.matrix(dist(gsd_df[,c("env1","env2")], diag = TRUE, upper = TRUE)) 
-  g.dist <- as.matrix(dist(gsd_df[,c("x","y")], diag = TRUE, upper = TRUE))
-  for(i in 1:Nreps){
-    NN <- sample(1:nrow(gsd_df), nsite, replace = FALSE)
-    sample.sets[i,] <- NN
-    
-    env.sub <- env.df[NN,]
-    g.dist.sub <- g.dist[NN, NN]
-    e.dist.sub <- e.dist[NN, NN]
-    
-    results$mean.dist[i] <- mean(g.dist.sub)
-    
-    results$env1.var[i] <- var(env.sub$env1)
-    results$env2.var[i] <- var(env.sub$env2)
-    
-    DxE <- mantel(g.dist.sub, e.dist.sub, permutations = 99)
-    results$Mantel.r[i] <- DxE$statistic
-    results$Mantel.p[i] <- DxE$signif
-  }
-  
-  score <- scale(1-results$Mantel.r) + scale(results$env1.var) + scale(results$env2.var)
-  best_sample <- sample.sets[which.max(score),]
-  sub_df <- gsd_df[best_sample,]
-  
-  
-  #save IDs to vector
-  samples <- as.character(sub_df$idx)
-  
-  return(samples)
-}
-
 #register cores
 #these calculations are RAM intensive so only run two at a time
 cores <- 2
@@ -78,30 +33,7 @@ for(n in nsites){
     
     #run sampling
     if(skip_to_next == FALSE){
-      gsd_df <- get_gsd(gsd_filepath)
-      pts <- gsd_df[,c("idx","x","y")]
-      coords <- pts
-      coordinates(coords) <- ~x+y
-      
-      #grid sample sites
-      #note - add an edge buffer from ldim so sites aren't sampled close to the edge
-      sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = 1000, edge_buffer = global_edge_buffer, ldim = ldim)
-      #overwrite sample sites with coordinates for sample sites using indexes
-      sample_sites <- gsd_df[sample_sites, c("x","y")]
-      #convert to coordinates
-      coordinates(sample_sites) <- ~x+y
-      
-      #sample from around sites based on a buffer
-      #buffer size chosen arbitrarily, other size was too small/not enough points in buffer for smaller sample sizes
-      site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
-      
-      #plot (for debugging)
-      plot(sample_sites, xlim = c(0,ldim), ylim = c(0,ldim))
-      points(gsd_df[,c("x","y")], col = "gray")
-      points(site_samples[,c("x","y")], col = "red")
-      #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
-      
-      samples <- paste0(site_samples$idx, "_", site_samples$site)
+      samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "envgeo", Nreps = 1000)
     }
     
     #return vector of sample IDs
