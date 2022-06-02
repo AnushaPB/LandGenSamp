@@ -8,7 +8,6 @@ set.seed(42)
 
 cores <- 10
 cl <- makeCluster(cores) 
-#not to overload your computer
 registerDoParallel(cl)
 
 for(n in nsites){
@@ -59,6 +58,7 @@ for(n in nsites){
   colnames(site_out) <- c(colnames(params), colnames(samples))
   write.csv(site_out, paste0("outputs/site_ids_rand",n,".csv"), row.names = FALSE)
   
+}
 }
 
 #stop cluster

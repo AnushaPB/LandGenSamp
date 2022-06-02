@@ -11,7 +11,7 @@ set.seed(42)
 #register cores
 #these calculations are RAM intensive so only run two at a time
 cores <- 2
-cl <- makeCluster(cores) #not to overload your computer
+cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
 for(n in nsites){

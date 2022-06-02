@@ -24,7 +24,6 @@ equi_samp <- function(nsite, ldim){
 #register cores
 cores <- 10
 cl <- makeCluster(cores) 
-#not to overload your computer
 registerDoParallel(cl)
 
 #confirm correct ldim
