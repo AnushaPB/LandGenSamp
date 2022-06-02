@@ -1,0 +1,88 @@
+---
+title: "SSE_pres"
+output: html_document
+---
+```{r}
+colpal = c("#8C2668", "#4A0E73", "#387CA6", "#37A6A6", "#F2780C")
+```
+
+```{r}
+par(pty = "s")
+plot(sample(1:10000, 10000), ylim = c(1,90000), pch = 19, cex = 0.1, col = rgb(0.5,0.5,0.5,0.1))
+```
+
+```{r}
+library(lfmm)
+
+## a GWAS example with Y = SNPs and X = phenotype
+data(example.data)
+Y <- example.data$genotype
+X <- example.data$phenotype
+
+## Fit an LFMM with K = 6 factors
+mod.lfmm <- lfmm_ridge(Y = Y,
+                       X = X,
+                       K = 6)
+
+## Perform association testing using the fitted model:
+pv <- lfmm_test(Y = Y,
+                X = X,
+                lfmm = mod.lfmm,
+                calibrate = "gif")
+
+## Manhattan plot with causal loci shown
+
+pvalues <- pv$calibrated.pvalue
+```
+
+```{r, fig.width = 10, fig.height=10}
+par(pty = "s", mar = rep(0,4), oma = rep(0,4))
+plot(-log10(pvalues)[1:10000], pch = 19,
+     cex = 1, col = "grey",
+     axes = FALSE, xlab = "", ylab = "")
+box()
+points(example.data$causal.set,
+      -log10(pvalues)[example.data$causal.set],
+       type = "h", col = colpal, lwd = 10)
+```
+
+```{r, fig.width = 5, fig.height = 5}
+m <- matrix(sample(1:100, 100, replace = TRUE), nrow = 10, ncol = 10)
+diag(m) <- 0
+
+
+m %>%
+    as_tibble() %>%
+    rownames_to_column("x1") %>%
+    gather(x2, value, 2:10) %>%
+    mutate(x2 = gsub("V", "", x2)) %>%
+    ggplot(aes(x1, x2)) + 
+      geom_tile(aes(fill = value)) + 
+      ggthemes::theme_solid() + 
+      theme(legend.position = "none") +
+      scale_fill_gradient2(low = colpal[1], mid = colpal[2], high = colpal[5], midpoint = 50)
+
+m %>%
+    as_tibble() %>%
+    rownames_to_column("x1") %>%
+    gather(x2, value, 2:10) %>%
+    mutate(x2 = gsub("V", "", x2)) %>%
+    ggplot(aes(x1, x2)) + 
+      geom_tile(aes(fill = value)) + 
+      ggthemes::theme_solid() + 
+      theme(legend.position = "none") +
+      scale_fill_gradient2(low = colpal[2], mid = colpal[3], high = colpal[4], midpoint = 50)
+
+m %>%
+    as_tibble() %>%
+    rownames_to_column("x1") %>%
+    gather(x2, value, 2:10) %>%
+    mutate(x2 = gsub("V", "", x2)) %>%
+    ggplot(aes(x1, x2)) + 
+      geom_tile(aes(fill = value)) + 
+      ggthemes::theme_solid() + 
+      theme(legend.position = "none") +
+      scale_fill_gradient2(low = colpal[5], mid = colpal[2], high = colpal[3], midpoint = 50)
+```
+
+
