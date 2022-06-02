@@ -51,8 +51,8 @@ SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",
   coordinates(coords) <- ~x+y
   
   # sample sites
-  if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, buffer_size = buffer_size, edge_buffer = edge_buffer, ldim = ldim)}
-  if(site_method == "envgeo"){sample_sites <- envgeo_samp(gsd_df, nsite = n, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)}
+  if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, nsite = nsite, buffer_size = buffer_size, edge_buffer = edge_buffer, ldim = ldim)}
+  if(site_method == "envgeo"){sample_sites <- envgeo_samp(gsd_df, nsite = nsite, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)}
   if(site_method == "equi"){sample_sites <- equi_samp(nsite = nsite, ldim = ldim)}
   
   # sample points around sites 
@@ -138,12 +138,12 @@ SiteSampleNear <- function(sample_sites, coords, npts){
 }
 
 
-rand_samp <- function(coords, buffer_size = 5, edge_buffer = NULL, ldim = NULL){
+rand_samp <- function(coords, nsite, buffer_size = 5, edge_buffer = NULL, ldim = NULL){
   #buffer away from edges if ldim and edge_buffer provided
   if(is.null(ldim) | is.null(edge_buffer)){coords_buffer <- coords} else {coords_buffer <- crop(coords, extent(edge_buffer, ldim-edge_buffer, edge_buffer, ldim-edge_buffer))}
   
   #randomly select points to act as sites
-  sample_sites <- coords_buffer[sample(1:length(coords_buffer), nsites),]
+  sample_sites <- coords_buffer[sample(1:length(coords_buffer), nsite),]
   
   return(sample_sites)
 }
