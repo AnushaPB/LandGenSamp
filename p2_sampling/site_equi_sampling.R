@@ -9,7 +9,6 @@ set.seed(42)
 
 #function to make equidistant sampling sites
 equi_samp <- function(nsite, ldim){
-  #pts - coords to sample from
   #nsite - number of points (or sites) to sample (should be a perfect square)
   #ldim - landscape dimension of one side (landscape should be a square)
   inc <- ldim/(sqrt(nsite)+1)
@@ -55,18 +54,11 @@ for(n in nsites){
       coordinates(coords) <- ~x+y
  
       #equidistant sample sites
-      sample_sites <- equi_samp(nsite = n, ldim = ldim)
+      sample_sites <- equi_samp(pts = pts, nsite = n, ldim = ldim)
       
       #sample from around sites based on a buffer
       #chosen arbitrarily, lower was too small/not enough points in buffer for smaller sample sizes
       site_samples <- SiteSample(sample_sites, coords, npts = global_npts, buffer_size = global_buffer_size)
-      
-      ##plot (for debugging)
-      par(pty="s")
-      plot(gsd_df[,c("x","y")], xlim = c(0,ldim), ylim = c(0,ldim), col = "gray")
-      points(sample_sites, pch = 3)
-      points(site_samples[,c("x","y")], col = "red")
-      #points(site_samples[,c("xsite","ysite")], col = "blue", pch = 19)
       
       samples <- paste0(site_samples$idx, "_", site_samples$site)
     }
