@@ -25,12 +25,10 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   #Run RDA
-  tryCatch({mod <- rda(gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale = TRUE)}, 
-    error = function(e){
-      return(data.frame(TPR = "Err", FDR = "Err", TP = "Err", FP = "Err", TN = "Err", FN = "Err"))
-      }
-    )
-    
+  mod <- tryCatch({rda(gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale = TRUE)}, error = function(e){"Err"})
+  
+  if(mod == "Err"){return(data.frame(TPR = "Err", FDR = "Err", TP = "Err", FP = "Err", TN = "Err", FN = "Err"))}
+  
   #Get RSQ
   RsquareAdj(mod)
   
