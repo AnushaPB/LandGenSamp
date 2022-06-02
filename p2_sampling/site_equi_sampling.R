@@ -7,20 +7,6 @@ library("raster")
 
 set.seed(42)
 
-#function to make equidistant sampling sites
-equi_samp <- function(nsite, ldim){
-  #nsite - number of points (or sites) to sample (should be a perfect square)
-  #ldim - landscape dimension of one side (landscape should be a square)
-  inc <- ldim/(sqrt(nsite)+1)
-  xgrid <- ygrid <- seq(0+inc, ldim-inc, inc) 
-  cgrid <- expand.grid(xgrid, ygrid)
-  colnames(cgrid) <- c("x","y")
-  coordinates(cgrid) <- ~x+y
-
-  plot(cgrid)
-  return(cgrid)
-}
-
 #register cores
 cores <- 10
 cl <- makeCluster(cores) 
@@ -43,7 +29,7 @@ for(n in nsites){
     if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
     if(skip_to_next) { print("File does not exist:")
       print(params[i,]) } 
-    if(skip_to_next) { result <- NA } 
+    if(skip_to_next) { samples <- NA } 
     
     #run sampling
     if(skip_to_next == FALSE){

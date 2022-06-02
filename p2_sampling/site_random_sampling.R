@@ -11,7 +11,6 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 for(n in nsites){
-  message(paste(n, "starting"))
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
@@ -26,7 +25,7 @@ for(n in nsites){
     if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
     if(skip_to_next) { print("File does not exist:")
       print(params[i,]) } 
-    if(skip_to_next) { result <- NA } 
+    if(skip_to_next) { samples <- NA } 
     
     #run sampling
     if(skip_to_next == FALSE){
@@ -34,10 +33,10 @@ for(n in nsites){
       gsd_df <- get_gsd(gsd_filepath)
       #sample
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
+    }
     
     #return vector of sample IDs
     return(samples)
-    
   }
   
   #bind sample IDs together and export (rows are parameter sets/columns are individual IDs)
@@ -59,9 +58,7 @@ for(n in nsites){
   colnames(site_out) <- c(colnames(params), colnames(samples))
   write.csv(site_out, paste0("outputs/site_ids_rand",n,".csv"), row.names = FALSE)
   
-  message(paste(n, "finished"))
-  
-  }
+  message(paste(n, "complete"))
 }
 
 #stop cluster

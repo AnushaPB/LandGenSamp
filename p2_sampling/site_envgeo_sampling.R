@@ -29,7 +29,7 @@ for(n in nsites){
     if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
     if(skip_to_next) { print("File does not exist:")
       print(params[i,]) } 
-    if(skip_to_next) { result <- NA } 
+    if(skip_to_next) { samples <- NA } 
     
     #run sampling
     if(skip_to_next == FALSE){
@@ -60,6 +60,7 @@ for(n in nsites){
   colnames(site_out) <- c(colnames(params), colnames(samples))
   write.csv(site_out, paste0("outputs/site_ids_envgeo",n,".csv"), row.names = FALSE)
   
+  message(paste(n, "complete"))
 }
 
 
