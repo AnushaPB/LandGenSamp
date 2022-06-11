@@ -60,7 +60,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   lfmm = lfmm_mod, 
                   calibrate = "gif")
   #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
+  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
+                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
 
   #env1 candidate loci
   #Identify LFMM cand loci (P)
@@ -141,7 +142,7 @@ get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals
   if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
   
   if(k_selection == "find.clusters"){
-    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 20)
+    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 30)
     K <- max(as.numeric(fc$grp))
   }
   
