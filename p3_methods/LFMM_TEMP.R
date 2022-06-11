@@ -263,10 +263,10 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
                                                                                   TOTALFP = NA, 
                                                                                   TOTALTN = NA,
                                                                                   TOTALFN = NA,
-                                                                                  emp1_TPR = emp1_TPR,
-                                                                                  emp2_TPR = emp2_TPR,
-                                                                                  emp1_mean = mean(emp1, na.rm = TRUE),
-                                                                                  emp2_mean = mean(emp2, na.rm = TRUE)))
+                                                                                  emp1_TPR = NA,
+                                                                                  emp2_TPR = NA,
+                                                                                  emp1_mean = NA,
+                                                                                  emp2_mean = NA))
     
     #write full datafile (temp)
     #csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,".csv")
