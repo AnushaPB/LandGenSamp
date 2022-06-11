@@ -60,8 +60,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   lfmm = lfmm_mod, 
                   calibrate = "gif")
   #adjust pvalues
-  pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
-                        env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
+  pvalues <- data.frame(env1=pv$calibrated.pvalue[,1],
+                        env2=pv$calibrated.pvalue[,2])
   
   
   #env1 candidate loci
