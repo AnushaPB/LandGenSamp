@@ -61,10 +61,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   calibrate = "gif")
   #adjust pvalues
   pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"))
-  
-  par(mfrow = c(1,2))
-  plot(-log10(pvalues$env1))
-  plot(-log10(pvalues$env2))
+
   #env1 candidate loci
   #Identify LFMM cand loci (P)
   lfmm_loci1 <- which(pvalues[,"env1"] < 0.05) 
