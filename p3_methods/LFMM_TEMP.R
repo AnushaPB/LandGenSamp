@@ -210,7 +210,7 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
-cores <- 20
+cores <- 25
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
