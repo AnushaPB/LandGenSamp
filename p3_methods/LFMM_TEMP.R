@@ -142,7 +142,7 @@ get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals
   if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
   
   if(k_selection == "find.clusters"){
-    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 30)
+    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = nrow(gen)-1)
     K <- max(as.numeric(fc$grp))
   }
   
@@ -269,9 +269,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
         
         #export data to csv (temp)
-        csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, sub_result)
-        write.csv(csv_df, csv_file, row.names = FALSE)
+        #csv_df <- read.csv(csv_file)
+        #csv_df <- rbind(csv_df, sub_result)
+        #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
         result <- rbind.data.frame(result, sub_result)
