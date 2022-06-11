@@ -155,7 +155,7 @@ get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals
   if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
   
   if(k_selection == "find.clusters"){
-    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = nrow(gen)-1)
+    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 10)
     K <- max(as.numeric(fc$grp))
   }
   
