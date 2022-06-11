@@ -144,7 +144,7 @@ get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals
   if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
   
   if(k_selection == "find.clusters"){
-    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, diffNgroup = TRUE, choose.n.clust = FALSE, max.n.clust = 20)
+    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 20)
     K <- max(as.numeric(fc$grp))
   }
   
@@ -199,7 +199,7 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
-cores <- 10
+cores <- 20
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
@@ -294,5 +294,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_results_fc.csv", row.names = FALSE)
 

@@ -184,8 +184,8 @@ get_K_tw <- function(gen, maxK = NULL){
 
 #register cores
 
-cores <- 5
-cl <- makeCluster(cores) #not to overload your computer
+cores <- 8
+cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
