@@ -62,7 +62,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #adjust pvalues
   pvalues <- data.frame(env1=p.adjust(pv$calibrated.pvalue[,1], method="fdr"),
                         env2=p.adjust(pv$calibrated.pvalue[,2], method="fdr"))
-
+  
+  
   #env1 candidate loci
   #Identify LFMM cand loci (P)
   lfmm_loci1 <- which(pvalues[,"env1"] < 0.05) 
@@ -120,6 +121,14 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   FDRCOMBO <- FP/(FP + TP)
   #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
+  
+  # Calculate empirical pvalues (I THINK - CHECK THIS)
+  null1 <- pvalues$env1[-loci_trait1]
+  emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
+  emp1_TPR <- sum(emp1 < 0.05, na.rm  = TRUE)
+  null2 <- pvalues$env2[-loci_trait2]
+  emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
+  emp2_TPR <- sum(emp2 < 0.05, na.rm  = TRUE)
  
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
@@ -130,7 +139,11 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                     TOTALTP = TP, 
                     TOTALFP = FP, 
                     TOTALTN = TN,
-                    TOTALFN = FN))
+                    TOTALFN = FN,
+                    emp1_TPR = emp1_TPR,
+                    emp2_TPR = emp2_TPR,
+                    emp1_mean = mean(emp1, na.rm = TRUE),
+                    emp2_mean = mean(emp2, na.rm = TRUE)))
 }
 
 
