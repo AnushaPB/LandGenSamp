@@ -126,9 +126,12 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   null1 <- pvalues$env1[-loci_trait1]
   emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
   emp1_TPR <- sum(emp1 < 0.05, na.rm  = TRUE)
+  emp1[is.na(emp1)] <- 1
+  
   null2 <- pvalues$env2[-loci_trait2]
   emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
   emp2_TPR <- sum(emp2 < 0.05, na.rm  = TRUE)
+  emp1[is.na(emp2)] <- 1
  
   return(data.frame(K = K,
                     TPRCOMBO = TPRCOMBO, 
