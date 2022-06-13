@@ -28,9 +28,6 @@ params <- expand.grid(K = c(1,2),
 
 run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
-  #for readibility, just negates the in function
-  `%notin%` <- Negate(`%in%`)
-  
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
@@ -69,6 +66,10 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
 }
 
 calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
+  
+  #for readibility, just negates the in function
+  `%notin%` <- Negate(`%in%`)
+  
   # adjust pvalues (or passs through if padj = "none")
   pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
                          env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
