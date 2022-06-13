@@ -59,18 +59,27 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   X = envmat, 
                   lfmm = lfmm_mod, 
                   calibrate = "gif")
-  #adjust pvalues
-  pvalues <- data.frame(env1=pv$calibrated.pvalue[,1],
-                        env2=pv$calibrated.pvalue[,2])
+
+  # correct pvals and get confusion matrix stats
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
+  df <- rbind.data.frame(p05, p10)
   
+  return(df)
+}
+
+calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
+  # adjust pvalues (or passs through if padj = "none")
+  pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
+                         env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
   
   #env1 candidate loci
   #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,"env1"] < 0.05) 
+  lfmm_loci1 <- which(pvalues[,"env1"] < alpha) 
   #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= 0.05 | is.na(pvalues[,"env1"]))
+  lfmm_neg1 <- which(pvalues[,"env1"] >= alpha | is.na(pvalues[,"env1"]))
   #check length makes sense
-  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == ncol(gen))
+  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
   
   #get confusion matrix values
   #True Positives
@@ -82,15 +91,15 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #False Negatives
   FN1 <- sum(lfmm_neg1 %in% loci_trait1)
   #check sum makes sense
-  stopifnot(sum(TP1, FP1, TN1, FN1) == ncol(gen))
+  stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
   
   #env2 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,"env2"] < 0.05) 
+  lfmm_loci2 <- which(pvalues[,"env2"] < alpha) 
   #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= 0.05 | is.na(pvalues[,"env2"]))
+  lfmm_neg2 <- which(pvalues[,"env2"] >= alpha | is.na(pvalues[,"env2"]))
   #check length makes sense
-  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == ncol(gen))
+  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
   
   #True Positives
   TP2 <- sum(lfmm_loci2 %in% loci_trait2)
@@ -101,7 +110,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #False Negatives
   FN2 <- sum(lfmm_neg2 %in% loci_trait2)
   #check length makes sense
-  stopifnot(sum(TP2, FP2, TN2, FN2) == ncol(gen))
+  stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
   
   #stats for all loci 
   lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
@@ -111,7 +120,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   TN <- TN1 + TN2
   FN <- FN1 + FN2
   #check sum makes sense
-  stopifnot(sum(TP, FP, TN, FN) == 2*ncol(gen))
+  stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
   
   #calc True Positive Rate (i.e. Sensitivity)
   TPRCOMBO <- TP/(TP + FN)
@@ -125,15 +134,13 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   # Calculate empirical pvalues (I THINK - CHECK THIS)
   null1 <- pvalues$env1[-loci_trait1]
   emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_TPR <- sum(emp1 < 0.05, na.rm  = TRUE)
-  emp1[is.na(emp1)] <- 1
-  
+  emp1_TPR <- sum(emp1 < alpha, na.rm  = TRUE)
   null2 <- pvalues$env2[-loci_trait2]
   emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_TPR <- sum(emp2 < 0.05, na.rm  = TRUE)
-  emp1[is.na(emp2)] <- 1
- 
-  return(data.frame(K = K,
+  emp2_TPR <- sum(emp2 < alpha, na.rm  = TRUE)
+  
+  return(data.frame(padj = padj,
+                    alpha = alpha,
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
@@ -219,7 +226,7 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
-res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet")) %dopar% {
+res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr")) %dopar% {
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -257,6 +264,8 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     #run model on full data set
     # full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
+                                                                                  padj = NA,
+                                                                                  alpha = NA,
                                                                                   TPRCOMBO = NA, 
                                                                                   TNRCOMBO = NA,
                                                                                   FDRCOMBO = NA, 
