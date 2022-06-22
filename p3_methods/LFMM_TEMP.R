@@ -172,7 +172,7 @@ get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
 }
 
 # Determine best K using find.clusters
-get_K_fc <- function(gen, max.n.clust = 30){
+get_K_fc <- function(gen, max.n.clust = nrow(gen) - 1){
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)
@@ -187,7 +187,7 @@ get_K_elbow <- function(gen){
   eig <- pc$sdev^2
   # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
   # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-  K <- quick.elbow(eig, low = 0.08, max.pc = 0.9)
+  K <- quick.elbow(eig, low = 0.08, max.pc = 0.7)
   
   par(pty = "s",mfrow = c(1,1))
   plot(eig, xlab = 'PC', ylab = "Variance explained")
@@ -290,7 +290,28 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     #csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,".csv")
     #write.csv(result, csv_file, row.names = FALSE)
     
-    c
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        #subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subgen <- gen[subIDs,]
+        subgsd_df <- gsd_df[subIDs,]
+        
+        #run analysis using subsample
+        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
+        
+        #save and format new result
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+        
+        #export data to csv (temp)
+        #csv_df <- read.csv(csv_file)
+        #csv_df <- rbind(csv_df, sub_result)
+        #write.csv(csv_df, csv_file, row.names = FALSE)
+        
+        #bind results
+        result <- rbind.data.frame(result, sub_result)
+      }
+    }
   }
   
   #end pdf()
