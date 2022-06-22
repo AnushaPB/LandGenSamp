@@ -167,7 +167,7 @@ get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals
   if(k_selection == "quick.elbow"){K <- get_K_elbow(gen)}
   
   if(k_selection == "find.clusters"){
-    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = nrow(gen)-1)
+    fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = 20)
     K <- max(as.numeric(fc$grp))
   }
   
@@ -222,7 +222,7 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
-cores <- 25
+cores <- 10
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
