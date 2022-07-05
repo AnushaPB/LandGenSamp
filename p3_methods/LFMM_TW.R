@@ -310,7 +310,17 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL)
+        tryCatch(sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL), 
+                 error = function(e) {
+                   err <<- conditionMessage(e)
+                   write.table(err, "error_msg.txt")
+                   write.table(K, "error_K.txt")
+                   write.csv(subgen, "error_subgwn.csv", row.names = FALSE)
+                   write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
+                   
+                   message(err)
+                   
+                   stop(err)})
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
