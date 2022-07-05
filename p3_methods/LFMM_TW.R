@@ -213,7 +213,15 @@ get_K_tw <- function(gen, maxK = NULL){
   # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
   # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
   # The default is 2.0234.
-  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 3.2724)
+  
+  
+  tryCatch(tw_result <- AssocTests::tw(eig1, eigenL = length(eig), criticalpoint = 2.0234), error = function(e) { tw_error <<- TRUE})
+  if(tw_error){
+    write.csv(eig, "eig_error.csv")
+    print(eig)
+    print(dim(gen))
+  }
+ 
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
