@@ -223,6 +223,8 @@ get_K_tw <- function(gen, maxK = NULL){
     print(err)
     print(eig)
     print(dim(gen))
+    
+    stop(err)
   }
  
   
