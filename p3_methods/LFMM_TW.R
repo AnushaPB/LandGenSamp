@@ -315,7 +315,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
                    err <<- conditionMessage(e)
                    write.table(err, "error_msg.txt")
                    write.table(K, "error_K.txt")
-                   write.csv(subgen, "error_subgwn.csv", row.names = FALSE)
+                   write.csv(subgen, "error_subgen.csv", row.names = FALSE)
                    write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
                    
                    message(err)
