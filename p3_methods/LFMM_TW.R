@@ -215,7 +215,7 @@ get_K_tw <- function(gen, maxK = NULL){
   # The default is 2.0234.
   
   
-  tryCatch(tw_result <- AssocTests::tw(eig1, eigenL = length(eig), criticalpoint = 2.0234), error = function(e) { tw_error <<- TRUE})
+  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), error = function(e) { tw_error <<- TRUE})
   if(tw_error){
     write.csv(eig, "eig_error.csv")
     print(eig)
