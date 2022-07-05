@@ -215,17 +215,17 @@ get_K_tw <- function(gen, maxK = NULL){
   # The default is 2.0234.
   
   
-  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), error = function(e) { tw_error <<- TRUE; err <<- conditionMessage(e)})
-  if(tw_error){
-    write.table(err, "error_msg.txt")
-    write.csv(eig, "eig_error.csv")
-    
-    print(err)
-    print(eig)
-    print(dim(gen))
-    
-    stop(err)
-  }
+  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), 
+           error = function(e) {
+             err <<- conditionMessage(e)
+             write.table(err, "error_msg.txt")
+             write.csv(eig, "eig_error.csv")
+             
+             print(err)
+             print(eig)
+             print(dim(gen))
+             
+             stop(err)})
  
   
   # get K based on number of significant eigenvalues
