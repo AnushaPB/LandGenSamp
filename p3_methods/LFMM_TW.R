@@ -50,7 +50,18 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #BOTH ENV
   #run model
-  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
+  
+  tryCatch(lfmm_mod <- lfmm_ridge(genmat, envmat, K = K), 
+           error = function(e) {
+             err <<- conditionMessage(e)
+             write.table(err, "error_msg.txt")
+             write.csv(genmat, "error_genmat.csv", row.names = FALSE)
+             write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
+             
+             message(err)
+             
+             stop(err)})
+  
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
                   X = envmat, 
@@ -314,7 +325,6 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
                  error = function(e) {
                    err <<- conditionMessage(e)
                    write.table(err, "error_msg.txt")
-                   write.table(K, "error_K.txt")
                    write.csv(subgen, "error_subgen.csv", row.names = FALSE)
                    write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
                    
