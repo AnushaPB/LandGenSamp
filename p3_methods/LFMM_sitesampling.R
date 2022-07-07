@@ -185,17 +185,12 @@ get_K_tw <- function(gen, maxK = NULL){
 
 #register cores
 
-cores <- 8
+cores <- 25
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
-res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  library("here")
-  library("vcfR")
-  library("lfmm")
-  library("stringr")
-  library("AssocTests")
+res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr", "dplyr")) %dopar% {
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -231,8 +226,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
+    #full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
+    #result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000)
     
     #write full datafile (temp)
     #csv_file <- paste0("outputs/LFMM_sitesampling/LFMM_sitesampling_results_",paramset,".csv")
@@ -250,9 +246,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
         #calculate allele frequency by site (average)
-        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
+        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN = mean)[,-1])
         #calculate env values by site
-        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[,-1]) 
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
@@ -266,7 +262,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
-        result <- rbind.data.frame(result, sub_result)
+        result <- bind_rows(result, sub_result)
       }
     }
   }
@@ -283,5 +279,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_results_tw.csv", row.names = FALSE)
 
