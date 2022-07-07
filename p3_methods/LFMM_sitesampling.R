@@ -32,7 +32,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K(gen, k_selection = "quick.elbow")
+    K <- get_K(gen, k_selection = "tracy.widom")
+    if(K == 0){ K <- 1 }
   }
   
   
@@ -126,7 +127,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
 
 
 # function to determine K
-get_K <- function(gen, coords = NULL, k_selection = "quick.elbow", Kvals = Kvals, ...){
+get_K <- function(gen, coords = NULL, k_selection = "tracy.widom", Kvals = Kvals, ...){
   
   if(k_selection == "tracy.widom"){K <- get_K_tw(gen)}
   
@@ -255,7 +256,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
-        sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = full_result$K)        
+        sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL)        
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
         
