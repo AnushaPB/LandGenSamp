@@ -6,16 +6,14 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
-source("sitesampling_functions.R")
 source("GDM_functions.R")
 
 #register cores
 cores <- 20
-cl <- makeCluster(cores) 
+cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "here")) %dopar% {
- 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -57,30 +55,18 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                          geo_err = NA)
     
     #write full datafile (temp)
-    #csv_file <- paste0("outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
+    #csv_file <- paste0("outputs/GDM/gdm_results_",paramset,".csv")
     #write.csv(result, csv_file, row.names = FALSE)
     
-    for(nsite in nsites){
+    for(nsamp in npts){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
+        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
-        #get sites
-        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
-        #confirm that number of sites matches number of sample IDs
-        stopifnot(length(subIDs) == length(siteIDs))
-        #calculate allele frequency by site (average)
-        sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
-        #calculate env values by site
-        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
-        #confirm that number of values matches number of sites
-        stopifnot(nsite == nrow(sitegsd_df) & nsite == nrow(sitegen))
-
         #run analysis using subsample
-        sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "euc")
-        subratio <- (sub_result$env1_coeff + sub_result$env2_coeff)/sub_result$geo_coeff
+        sub_result <- run_gdm(subgen, subgsd_df, distmeasure = "euc")
         
         #calculate err if not null
         if(sub_result$env1_coeff == "NULL" | sub_result$env2_coeff == "NULL" | sub_result$geo_coeff == "NULL"){
@@ -127,5 +113,5 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_gdm, "outputs/gdm_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_gdm, "outputs/gdm_indsampling_results.csv", row.names = FALSE)
 
