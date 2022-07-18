@@ -70,11 +70,13 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         
         #calculate err if not null
         if(sub_result$env1_coeff == "NULL" | sub_result$env2_coeff == "NULL" | sub_result$geo_coeff == "NULL"){
+          subratio <- "NULL"
           env1_err <- "NULL"
           env2_err <- "NULL"
           geo_err <- "NULL"
           ratio_err <- "NULL"
         } else {
+          subratio <- (sub_result$env1_coeff + sub_result$env2_coeff)/sub_result$geo_coeff
           env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)
           env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)
           geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)
