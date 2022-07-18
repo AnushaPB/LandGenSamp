@@ -133,7 +133,9 @@ summary_vplot <- function(df, allplots = TRUE, colpal = "plasma"){
 }
 
 
-summary_hplot <- function(df, colpal = "plasma", full=FALSE){
+summary_hplot <- function(df, stat, colpal = "plasma", full=FALSE){
+  
+  df$stat <- df[,stat]
   
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
   if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
