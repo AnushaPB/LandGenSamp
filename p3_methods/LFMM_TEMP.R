@@ -19,7 +19,7 @@ params <- expand.grid(K = c(1,2),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
+                      it = 0:9)
 
 ##########
 #  LFMM  #
@@ -31,8 +31,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
-  adaptive_loci <- c(loci_trait1, loci_trait2)
-  neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   
   #if K is not specified it is calculated based on a tracy widom test
@@ -231,7 +229,7 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
-res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr")) %dopar% {
+res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr", "LEA")) %dopar% {
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
