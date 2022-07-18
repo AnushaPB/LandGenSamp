@@ -7,17 +7,18 @@ get_samples <- function(param_set, params, sampstrat, nsamp, datadir =  here(dir
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(datadir, "/samples_", sampstrat, nsamp, ".csv"))
+  subIDs_all <- read.csv(paste0(datadir, "/samples_", sampstrat, nsamp, ".csv"))
     
-  subIDs <- subIDs[subIDs$K == param_set$K 
-                   & subIDs$phi == param_set$phi
-                   & subIDs$m == param_set$m 
-                   & subIDs$seed == param_set$seed
-                   & subIDs$H == param_set$H
-                   & subIDs$r == param_set$r
-                   & subIDs$it == param_set$it,]
+  subIDs <- subIDs_all[subIDs_all$K == param_set$K 
+                   & subIDs_all$phi == param_set$phi
+                   & subIDs_all$m == param_set$m 
+                   & subIDs_all$seed == param_set$seed
+                   & subIDs_all$H == param_set$H
+                   & subIDs_all$r == param_set$r
+                   & subIDs_all$it == param_set$it,]
   
   #confirm there is only one set of IDs being used
+  stopifnot(nrow(subIDs) != 0)
   stopifnot(nrow(subIDs) == 1)
   
   #remove parameter columns and convert to vector of IDs
