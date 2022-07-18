@@ -83,6 +83,8 @@ SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
     site_buffers <- gBuffer(sample_sites[s,], width = buffer_size)
     #subset out only coordinates falling within site buffers
     buffer_samples <- coords[site_buffers,]
+    #check if there are enough samples
+    if(length(buffer_samples) < npts){stop(paste0("Less than npts found in buffer around site, try choosing a different site or increasing the buffer size"))}
     #convert from SPDF to df
     buffer_samples_df <- data.frame(buffer_samples)
     #randomly sample samples from coordinates
