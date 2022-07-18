@@ -239,8 +239,8 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
     
     #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,".csv")
-    write.csv(result, csv_file, row.names = FALSE)
+    #csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,".csv")
+    #write.csv(result, csv_file, row.names = FALSE)
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
@@ -256,9 +256,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
         
         #export data to csv (temp)
-        csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, sub_result)
-        write.csv(csv_df, csv_file, row.names = FALSE)
+        #csv_df <- read.csv(csv_file)
+        #csv_df <- rbind(csv_df, sub_result)
+        #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
         result <- rbind.data.frame(result, sub_result)
