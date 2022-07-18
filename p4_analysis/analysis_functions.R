@@ -142,17 +142,17 @@ rain_plot <- function(var, df, stat, colpal = "plasma"){
       position = position_dodge(width = 0.9)
     ) +
     ## add justified jitter from the {gghalves} package
-    gghalves::geom_half_point(
-      aes(col = get(var)),
-      ## draw jitter on the left
-      side = "l", 
-      ## control range of jitter
-      range_scale = .2, 
-      ## add some transparency
-      alpha = .1,
-      ## size of points
-      position = position_dodge(width = 0.9)
-    )+
+    #gghalves::geom_half_point(
+    # aes(col = get(var)),
+    # ## draw jitter on the left
+    # side = "l", 
+    # ## control range of jitter
+    # range_scale = 0, 
+    # ## add some transparency
+    # alpha = .1,
+    # ## size of points
+    # position = position_dodge(width = 0.9)
+    #)+
     # color
     scale_fill_viridis(discrete=T, 
                        option=colpal, 
@@ -237,8 +237,8 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
   resdf$nsamp <- as.factor(resdf$nsamp)
   
   # define max and min for plotting
-  if(!is.null(maxv)){ maxv <- max(resdf$mean)}
-  if(!is.null(minv)){ minv <- min(resdf$mean)}
+  if(is.null(maxv)){ maxv <- max(resdf$mean, na.rm = TRUE)}
+  if(is.null(minv)){ minv <- min(resdf$mean, na.rm = TRUE)}
   
   ## plot data
   plts <- list()
@@ -263,7 +263,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     if(divergent){
       p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
     } else {
-      p <- p + scale_fill_viridis(limits=c(minv,maxv), option = colpal, direction = direction)
+      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal, direction = direction)
     }
     
     plts[[i]] <- p
@@ -273,13 +273,12 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
   plts2 <- list()
   o <- 1
   for(i in seq(1, length(plts), 2)){
-    plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
+    plts2[[o]] <- do.call(arrangeGrob, c(plts[c(i,i+1)], nrow=2))
     o <- o+1
   }
   
   # Make final plot
-  plt <- do.call(grid.arrange, c(plts2, nrow=1))
-  return(plt)
+  plt <- do.call(grid.arrange, c(plts2, nrow = 1))
 }
 
 
