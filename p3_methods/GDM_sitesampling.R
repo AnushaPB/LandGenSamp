@@ -54,7 +54,8 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                          ratio = fullratio,
                          env1_err = NA, 
                          env2_err = NA, 
-                         geo_err = NA)
+                         geo_err = NA,
+                         ratio_err = NULL)
     
     #write full datafile (temp)
     #csv_file <- paste0("outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
