@@ -1,0 +1,87 @@
+---
+title: "analysis_IBDIBE"
+output: html_document
+---
+```{r, warning=FALSE, message=FALSE}
+library("here")
+library("sjPlot")
+library("dplyr")
+library("lme4")
+library("viridis")
+library("lmerTest")
+library("ggplot2")
+library("gridExtra")
+library("gt")
+
+source("analysis_functions.R")
+```
+
+# 1. lfmm
+
+## 1.1 Site sampling 
+
+### 1.1.1 Summary plots
+
+```{r, fig.width=20, fig.height=7}
+lfmm_site <- format_lfmm(here(dirname(getwd()), "p3_methods", "outputs", "lfmm_sitesampling_results.csv"))
+
+lfmm_site$ratio_ae <- abs(lfmm_site$ratio_err)
+summary_hplot(lfmm_site, "ratio_ae", colpal = "viridis", direction = -1)
+summary_hplot(lfmm_site, "ratio_err", divergent = TRUE)
+summary_hplot(lfmm_site, "comboenv_err", divergent = TRUE)
+summary_hplot(lfmm_site, "geo_err", divergent = TRUE)
+```
+
+### 1.1.2 Model summaries
+
+```{r}
+run_lmer(lfmm_site, "ratio_ae", table_main = "Ratio Absolute Error")
+run_lmer(lfmm_site, "ratio_err", table_main = "Ratio Error")
+run_lmer(lfmm_site, "comboenv_err", table_main = "IBE Error")
+run_lmer(lfmm_site, "geo_err", table_main = "IBD Error")
+```
+
+### 1.1.3 Megaplots
+```{r, fig.width = 30, fig.height=15}
+MEGAPLOT(lfmm_site, "ratio_ae", colpal = "viridis", direction = -1)
+MEGAPLOT(lfmm_site, "ratio_err", divergent = TRUE)
+MEGAPLOT(lfmm_site, "comboenv_err", divergent = TRUE)
+MEGAPLOT(lfmm_site, "geo_err", divergent = TRUE)
+```
+
+## 1.2 Site sampling 
+
+### 1.2.1 Summary plots
+
+```{r, fig.width=20, fig.height=7}
+#number of sites to sample
+nsamp <- c(36, 81, 144)
+#sampling strategies
+sampstrat <- c("rand", "envgeo", "equi","full")
+
+lfmm_ind <- format_lfmm(here(dirname(getwd()), "p3_methods", "outputs", "lfmm_indsampling_results.csv"))
+
+summary_hplot(lfmm_ind, "ratio_ae", colpal = "viridis", direction = -1)
+summary_hplot(lfmm_ind, "ratio_err", colpal = "viridis", direction = -1)
+summary_hplot(lfmm_ind, "comboenv_err", divergent = TRUE)
+summary_hplot(lfmm_ind, "geo_err", divergent = TRUE)
+```
+
+### 1.2.2 Model summaries
+
+```{r}
+run_lmer(lfmm_ind, "ratio_ae", table_main = "Ratio Absolute Error")
+run_lmer(lfmm_ind, "ratio_err", table_main = "Ratio Error")
+run_lmer(lfmm_ind, "comboenv_err", table_main = "IBE Error")
+run_lmer(lfmm_ind, "geo_err", table_main = "IBD Error")
+```
+
+### 1.2.3 Megaplots
+
+```{r, fig.width = 30, fig.height=15}
+MEGAPLOT(lfmm_ind, "ratio_ae", colpal = "viridis", direction = -1)
+MEGAPLOT(lfmm_ind, "ratio_err", colpal = "viridis", direction = -1)
+MEGAPLOT(lfmm_ind, "comboenv_err", divergent = TRUE)
+MEGAPLOT(lfmm_ind, "geo_err", divergent = TRUE)
+```
+

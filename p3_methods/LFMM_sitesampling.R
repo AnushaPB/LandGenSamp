@@ -22,10 +22,13 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
+  adaptive_loci <- c(loci_trait1, loci_trait2)
+  neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #if K is not specified it is calculated
+  
+  #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K(gen, k_selection = "find.clusters")
+    K <- get_K(gen, k_selection = "tracy.widom")
   }
   
   
@@ -38,7 +41,18 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #BOTH ENV
   #run model
-  lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
+  
+  tryCatch(lfmm_mod <- lfmm_ridge(genmat, envmat, K = K), 
+           error = function(e) {
+             err <<- conditionMessage(e)
+             write.table(err, "error_msg.txt")
+             write.csv(genmat, "error_genmat.csv", row.names = FALSE)
+             write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
+             
+             message(err)
+             
+             stop(err)})
+  
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
                   X = envmat, 
@@ -160,7 +174,7 @@ get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
 }
 
 # Determine best K using find.clusters
-get_K_fc <- function(gen, max.n.clust = 9, perc.pca = 70){
+get_K_fc <- function(gen, max.n.clust = 10, perc.pca = 90){
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)
@@ -201,7 +215,20 @@ get_K_tw <- function(gen, maxK = NULL){
   # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
   # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
   # The default is 2.0234.
-  tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 3.2724)
+  
+  
+  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), 
+           error = function(e) {
+             err <<- conditionMessage(e)
+             write.table(err, "error_msg.txt")
+             write.csv(eig, "eig_error.csv")
+             
+             print(err)
+             print(eig)
+             print(dim(gen))
+             
+             stop(err)})
+  
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
@@ -211,7 +238,6 @@ get_K_tw <- function(gen, maxK = NULL){
   
   return(K)
 }
-
 
 #register cores
 
@@ -230,9 +256,6 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
                      "_H",params[i,"H"]*100,
                      "_r",params[i,"r"]*100,
                      "_it",params[i,"it"])
-  
-  #create pdf to store plots
-  #pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
   
   #skip iteration if files do not exist
   gen_filepath <- create_filepath(i, params = params, "gen")
@@ -258,11 +281,22 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     #run model on full data set
     #full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
     #result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000)
-    
-    #write full datafile (temp)
-    #csv_file <- paste0("outputs/LFMM_sitesampling/LFMM_sitesampling_results_",paramset,".csv")
-    #write.csv(result, csv_file, row.names = FALSE)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
+                                                                                  padj = NA,
+                                                                                  alpha = NA,
+                                                                                  TPRCOMBO = NA, 
+                                                                                  TNRCOMBO = NA,
+                                                                                  FDRCOMBO = NA, 
+                                                                                  FPRCOMBO = NA,
+                                                                                  TOTALN = NA, 
+                                                                                  TOTALTP = NA, 
+                                                                                  TOTALFP = NA, 
+                                                                                  TOTALTN = NA,
+                                                                                  TOTALFN = NA,
+                                                                                  emp1_TPR = NA,
+                                                                                  emp2_TPR = NA,
+                                                                                  emp1_mean = NA,
+                                                                                  emp2_mean = NA))
     
     for(nsite in nsites){
       for(sampstrat in sampstrats){
@@ -281,24 +315,27 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[,-1]) 
         
         #run analysis using subsample
-        #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K)
-        sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL)        
+        #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K) 
+        #run analysis using subsample
+        tryCatch(sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL) , 
+                 error = function(e) {
+                   err <<- conditionMessage(e)
+                   write.table(err, "error_msg.txt")
+                   write.csv(subgen, "error_subgen.csv", row.names = FALSE)
+                   write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
+                   
+                   message(err)
+                   
+                   stop(err)})
+        
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
-        
-        #export data to csv (temp)
-        #csv_df <- read.csv(csv_file)
-        #csv_df <- rbind(csv_df, sub_result)
-        #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
         result <- bind_rows(result, sub_result)
       }
     }
   }
-  
-  #end pdf()
-  #dev.off()
   
   return(result)
   
@@ -309,5 +346,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_results_fc.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
 
