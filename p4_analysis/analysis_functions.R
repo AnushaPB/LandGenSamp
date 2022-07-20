@@ -1,28 +1,26 @@
-
-library(dplyr)
-
-MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), option = "plasma", aggfunc = "mean", divergent = FALSE, na.rm=TRUE){
+MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = -1, divergent = FALSE, na.rm=TRUE){
   
+  moddf <- moddf[moddf$sampstrat != "full",]
   moddf$stat <- moddf[,stat_name]
-
+  
   
   if(aggfunc == "mean"){
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = mean(stat, na.rm=na.rm))
+      summarize(stat = mean(stat, na.rm = na.rm), .groups = "keep")
   }
   
   
   if(aggfunc == "count_na"){
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sum(is.na(stat)))
+      summarize(stat = sum(is.na(stat)), .groups = "keep")
   }
   
   if(aggfunc == "count_null"){
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sum(is.na(stat)))
+      summarize(stat = sum(is.na(stat)), .groups = "keep")
   }
   
   
@@ -30,13 +28,13 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
   if(aggfunc == "prop_na"){
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = mean(is.na(stat)))
+      summarize(stat = mean(is.na(stat)), .groups = "keep")
   }
   
   if(aggfunc == "var") {
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = var(stat, na.rm=na.rm))
+      summarize(stat = var(stat, na.rm=na.rm), .groups = "keep")
   }
   
   
@@ -44,12 +42,18 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
   colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
   
-  #SEED NOT INCLUDED
+  #SEED & IT NOT INCLUDED
   params <- expand.grid(K = c(1, 2), 
                         phi = c(0.1, 0.5),
                         m = c(0.25, 1.0),
                         H = c(0.05 , 0.5),
                         r = c(0.3, 0.6))
+  
+  
+  
+  # define max and min for plotting
+  if(is.null(maxv)){ maxv <- max(agg$mean, na.rm = TRUE)}
+  if(is.null(minv)){ minv <- min(agg$mean, na.rm = TRUE)}
   
   plts <- list()
   for(i in 1:nrow(params)){
@@ -79,7 +83,7 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
     if(divergent){
       p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
     } else {
-      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = option) 
+      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal) 
     }
     
     plts[[i]] <- p
@@ -87,8 +91,7 @@ MEGAPLOT <- function(moddf, stat_name, minv = 0, maxv = max(moddf[,stat]), optio
   
   
   bp <- do.call(grid.arrange, c(plts, nrow=4))
-  
-  return(bp)
+
 }
 
 
@@ -185,14 +188,16 @@ sd_na <- function(x){
 prop_na <- function(x){
   y <- mean(is.na(x))
 }
-#FIX TO INCLUDE sampstratsub/nsampsub and break this down into functions
+
 summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
   #create column with stat called "stat"
   df$stat <- df[,stat_name]
   
   #remove full data from data frame
+  sampstrat <- unique(df$sampstrat)
+  nsamp <- unique(df$nsamp)
   if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
-  if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
+  if(!full){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]}
   
   #create dataframe to store results from summaries
   resdf <- data.frame()
@@ -234,7 +239,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
   row.names(resdf) <- NULL
   
   # convert nsamp for plotting
-  resdf$nsamp <- as.factor(resdf$nsamp)
+  resdf$nsamp <- factor(resdf$nsamp, levels = nsampsub[order(nsampsub)])
   
   # define max and min for plotting
   if(is.null(maxv)){ maxv <- max(resdf$mean, na.rm = TRUE)}
@@ -559,4 +564,122 @@ sampstrat_nsamp_mods <- function(df, alpha = 0.05, padj = "fdr", sampstrat, nsam
   
   do.call(grid.arrange, c(plts, nrow=2))
   
+}
+
+var_to_fact <- function(df){
+  vars <- c("K", "phi", "m", "seed", "H", "r", "nsamp", "sampstrat", "it")
+  df[, vars] <- data.frame(lapply(df[, vars], as.factor))
+  return(df)
+}
+
+format_mmrr <- function(path){
+  df <- read.csv(path)
+  
+  df <- var_to_fact(df)
+  
+  df$comboenv_err <- (df$env1_err + df$env2_err)/2
+  df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
+  
+  df$tpIBE <- ((df$env1_p < 0.05) + (df$env2_p < 0.05))/2
+  df$tpIBD <- as.numeric(df$geo_p < 0.05)
+  
+  df$env_ae <- abs(df$comboenv_err)
+  df$geo_ae <- abs(df$geo_err)
+  df$ratio_ae <- abs(df$ratio)
+  
+  return(df)
+}
+
+run_lmer <- function(df, stat, table_main = ""){
+  # mixed effect model
+  moddf <- df[df$sampstrat != "full",]
+  moddf$stat <- moddf[, stat]
+  
+  # na.action needs to be set to na.fail for dredge to work
+  fullmod <- lmerTest::lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), 
+                            moddf, na.action = "na.fail", subset = NULL, weights = NULL, offset = NULL)
+  
+  # print anova result
+  aov <- anova(fullmod)
+  print(pretty_anova(aov))
+  
+  # make HTML table
+  #tab_model(fullmod, 
+            #p.val = "kr", 
+            #show.intercept = FALSE, 
+            #dv.labels = table_main,
+            #show.re.var = FALSE,
+            #show.icc = FALSE,
+            #show.r2 = FALSE,
+            #show.ngroups = FALSE,
+            #show.obs = FALSE,
+            #show.reflvl = TRUE,
+            #prefix.labels = "varname",
+            #digits = 3)
+  #
+}
+
+pretty_anova <- function(aov){
+  stopifnot(class(anova(fullmod))[1] == "anova")
+  
+  aov_df <- data.frame(Variable = rownames(aov), aov)
+  
+  aov_df$Pr..F. <- signif(aov_df$Pr..F., 2)
+  
+  aov_tb <- aov_df %>%
+    gt::gt() %>%
+    cols_label(
+      Variable = "Predictors",
+      Sum.Sq = "Sum Sq",
+      Mean.Sq = "Mean Sq",
+      NumDF = "NumDF",
+      DenDF = "DenDF",
+      F.value = "F value",
+      Pr..F. = "Pr(>F)"
+    ) %>%
+    fmt_number(
+      columns = c(2:4, 6),
+      decimals = 2,
+      suffixing = TRUE
+    ) %>%
+    tab_style(
+      style = list(
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(
+        columns = c(Pr..F., Variable),
+        rows = Pr..F. < 0.05
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.05",
+      placement = "right",
+      locations = cells_body(
+        columns = Pr..F.,
+        rows = Pr..F. < 0.05 & Pr..F. > 0.01
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.01",
+      placement = "right",
+      locations = cells_body(
+        columns = Pr..F.,
+        rows = Pr..F. < 0.01 & Pr..F. > 0.001
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.001",
+      placement = "right",
+      locations = cells_body(
+        columns = c(Pr..F.),
+        rows = Pr..F. < 0.001 
+      )
+    ) %>% fmt_scientific(
+      columns = Pr..F.,
+      rows = Pr..F. <= 0.009,
+      decimals = 1
+    ) %>%
+    opt_footnote_marks(marks = c("***", "**", "*"))
+  
+  return(aov_tb)
 }
