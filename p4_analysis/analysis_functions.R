@@ -602,21 +602,7 @@ run_lmer <- function(df, stat, table_main = ""){
   # print anova result
   aov <- anova(fullmod)
   print(pretty_anova(aov))
-  
-  # make HTML table
-  #tab_model(fullmod, 
-            #p.val = "kr", 
-            #show.intercept = FALSE, 
-            #dv.labels = table_main,
-            #show.re.var = FALSE,
-            #show.icc = FALSE,
-            #show.r2 = FALSE,
-            #show.ngroups = FALSE,
-            #show.obs = FALSE,
-            #show.reflvl = TRUE,
-            #prefix.labels = "varname",
-            #digits = 3)
-  #
+
 }
 
 pretty_anova <- function(aov){
