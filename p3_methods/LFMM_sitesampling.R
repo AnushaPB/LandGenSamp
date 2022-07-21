@@ -160,7 +160,7 @@ get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
 }
 
 # Determine best K using find.clusters
-get_K_fc <- function(gen, max.n.clust = 9, perc.pca = 70){
+get_K_fc <- function(gen, max.n.clust = nrow(gen)-1, perc.pca = 70){
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)
@@ -309,5 +309,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_results_fc.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_results_fcg.csv", row.names = FALSE)
 
