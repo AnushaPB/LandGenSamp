@@ -38,7 +38,6 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
     K <- get_K(gen, k_selection = "tracy.widom")
-    if(K == 0){K <- 1}
   }
   
   
@@ -58,7 +57,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
              write.table(err, "error_msg.txt")
              write.csv(genmat, "error_genmat.csv", row.names = FALSE)
              write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
-             write.table(K, "error_K.txt")
+             
              message(err)
              
              stop(err)})
@@ -68,7 +67,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   X = envmat, 
                   lfmm = lfmm_mod, 
                   calibrate = "gif")
-
+  
   # correct pvals and get confusion matrix stats
   p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
   p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
@@ -127,7 +126,7 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
   
   #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)	
+  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
   #calc confusion matrix
   TP <- TP1 + TP2
   FP <- FP1 + FP2
@@ -238,7 +237,7 @@ get_K_tw <- function(gen, maxK = NULL){
              print(dim(gen))
              
              stop(err)})
- 
+  
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
@@ -251,117 +250,100 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
-cores <- 25
+cores <- 20
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
-res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr")) %dopar% {
-
-  #set of parameter names in filepath form (for creating temp files)
-  paramset <- paste0("K",params[i,"K"],
-                     "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100,
-                     "_it",params[i,"it"])
-  
-  #create pdf to store plots
-  # pdf(paste0("outputs/LFMM/plots/lfmm_plots_",paramset,".pdf"))
-  
-  #skip iteration if files do not exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  loci_filepath <- create_filepath(i, params = params, "loci")
-  skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
-  if(skip_to_next) { print("File does not exist:")
-                      print(params[i,]) } 
-  if(skip_to_next) { result <- NA } 
-  
-  #run LFMM
-  if(skip_to_next == FALSE){
-    gen <- get_data(i, params = params, "gen")
-    gsd_df <- get_data(i, params = params, "gsd")
-    loci_df <- get_data(i, params = params, "loci")
+  res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr")) %dopar% {
     
-    #subsample full data randomly
-    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-    gen_2k <- gen[s,]
-    gsd_df_2k <- gsd_df[s,]
+    #set of parameter names in filepath form (for creating temp files)
+    paramset <- paste0("K",params[i,"K"],
+                       "_phi",params[i,"phi"]*100,
+                       "_m",params[i,"m"]*100,
+                       "_seed",params[i,"seed"],
+                       "_H",params[i,"H"]*100,
+                       "_r",params[i,"r"]*100,
+                       "_it",params[i,"it"])
     
-    #run model on full data set
-    # full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
-                                                                                  padj = NA,
-                                                                                  alpha = NA,
-                                                                                  TPRCOMBO = NA, 
-                                                                                  TNRCOMBO = NA,
-                                                                                  FDRCOMBO = NA, 
-                                                                                  FPRCOMBO = NA,
-                                                                                  TOTALN = NA, 
-                                                                                  TOTALTP = NA, 
-                                                                                  TOTALFP = NA, 
-                                                                                  TOTALTN = NA,
-                                                                                  TOTALFN = NA,
-                                                                                  emp1_TPR = NA,
-                                                                                  emp2_TPR = NA,
-                                                                                  emp1_mean = NA,
-                                                                                  emp2_mean = NA))
+    #skip iteration if files do not exist
+    gen_filepath <- create_filepath(i, params = params, "gen")
+    gsd_filepath <- create_filepath(i, params = params, "gsd")
+    loci_filepath <- create_filepath(i, params = params, "loci")
+    skip_to_next <- FALSE
+    if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+    if(skip_to_next) { print("File does not exist:")
+      print(params[i,]) } 
+    if(skip_to_next) { result <- NA } 
     
-    #write full datafile (temp)
-    csv_file <- paste0("outputs/LFMM/LFMM_results_",paramset,"_fc.csv")
-    write.csv(result, csv_file, row.names = FALSE)
-    
-    for(nsamp in npts){
-      for(sampstrat in sampstrats){
-        #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
-        subgen <- gen[subIDs,]
-        subgsd_df <- gsd_df[subIDs,]
-        
-        #run analysis using subsample
-        tryCatch(sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL), 
-                 error = function(e) {
-                   err <<- conditionMessage(e)
-                   write.table(err, "error_msg.txt")
-                   write.csv(subgen, "error_subgen.csv", row.names = FALSE)
-                   write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
-                   
-                   message(err)
-                   
-                   stop(err)})
-        
-        #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
-        
-        #export data to csv (temp)
-        csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, sub_result)
-        write.csv(csv_df, csv_file, row.names = FALSE)
-        
-        #bind results
-        result <- rbind.data.frame(result, sub_result)
-
-	#message temp
-	message(paste(i, nsamp, sampstrat))
+    #run LFMM
+    if(skip_to_next == FALSE){
+      gen <- get_data(i, params = params, "gen")
+      gsd_df <- get_data(i, params = params, "gsd")
+      loci_df <- get_data(i, params = params, "loci")
+      
+      #subsample full data randomly
+      s <- sample(nrow(gsd_df), 2000, replace = FALSE)
+      gen_2k <- gen[s,]
+      gsd_df_2k <- gsd_df[s,]
+      
+      #run model on full data set
+      # full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
+      result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
+                                                                                    padj = NA,
+                                                                                    alpha = NA,
+                                                                                    TPRCOMBO = NA, 
+                                                                                    TNRCOMBO = NA,
+                                                                                    FDRCOMBO = NA, 
+                                                                                    FPRCOMBO = NA,
+                                                                                    TOTALN = NA, 
+                                                                                    TOTALTP = NA, 
+                                                                                    TOTALFP = NA, 
+                                                                                    TOTALTN = NA,
+                                                                                    TOTALFN = NA,
+                                                                                    emp1_TPR = NA,
+                                                                                    emp2_TPR = NA,
+                                                                                    emp1_mean = NA,
+                                                                                    emp2_mean = NA))
+      
+      for(nsamp in npts){
+        for(sampstrat in sampstrats){
+          #subsample from data based on sampling strategy and number of samples
+          subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+          subgen <- gen[subIDs,]
+          subgsd_df <- gsd_df[subIDs,]
+          
+          #run analysis using subsample
+          tryCatch(sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL), 
+                   error = function(e) {
+                     err <<- conditionMessage(e)
+                     write.table(err, "error_msg.txt")
+                     write.csv(subgen, "error_subgen.csv", row.names = FALSE)
+                     write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
+                     
+                     message(err)
+                     
+                     stop(err)})
+          
+          #save and format new result
+          sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+          
+          #bind results
+          result <- rbind.data.frame(result, sub_result)
+          
+        }
       }
     }
+    
+    return(result)
+    
+    gc()
   }
-  
-  #end pdf()
-  # dev.off()
-  
-  return(result)
-  
-  gc()
-}
 )
 
 
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_results_tw.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_indsampling_results.csv", row.names = FALSE)
 
