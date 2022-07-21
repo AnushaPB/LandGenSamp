@@ -152,16 +152,20 @@ rand_samp <- function(coords, nsite, buffer_size = 5, edge_buffer = NULL, ldim =
 
 
 #function to make equidistant sampling sites
-equi_samp <- function(nsite, ldim){
+equi_samp <- function(nsite, ldim = 100, buffer = 10){
   #nsite - number of points (or sites) to sample (should be a perfect square)
   #ldim - landscape dimension of one side (landscape should be a square)
-  inc <- ldim/(sqrt(nsite)+1)
-  xgrid <- ygrid <- seq(0+inc, ldim-inc, inc) 
+  inc <- (ldim - buffer*2)/(sqrt(nsite)+1)
+  xgrid <- ygrid <- seq(0+buffer, ldim-buffer, inc) 
   cgrid <- expand.grid(xgrid, ygrid)
-  colnames(cgrid) <- c("x","y")
-  coordinates(cgrid) <- ~x+y
   
-  plot(cgrid)
+  par(pty = "s")
+  plot(cgrid, xlim = c(0,ldim), ylim = c(0,ldim))
+  
+  colnames(cgrid) <- c("x","y")
+  sp::coordinates(cgrid) <- ~x+y
+  
+  
   return(cgrid)
 }
 
