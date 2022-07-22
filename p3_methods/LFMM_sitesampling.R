@@ -78,46 +78,46 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
                          env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
   
   #env1 candidate loci
-  #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,"env1"] < alpha) 
+  #Identify  cand loci (P)
+  cand_loci1 <- which(pvalues[,"env1"] < alpha) 
   #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= alpha | is.na(pvalues[,"env1"]))
+  cand_neg1 <- which(pvalues[,"env1"] >= alpha | is.na(pvalues[,"env1"]))
   #check length makes sense
-  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
+  stopifnot(length(cand_loci1) + length(cand_neg1) == nrow(pvalues))
   
   #get confusion matrix values
   #True Positives
-  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
+  TP1 <- sum(cand_loci1 %in% loci_trait1)
   #False Positives
-  FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
+  FP1 <- sum(cand_loci1 %notin% loci_trait1)
   #True Negatives
-  TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
+  TN1 <- sum(cand_neg1 %notin% loci_trait1)
   #False Negatives
-  FN1 <- sum(lfmm_neg1 %in% loci_trait1)
+  FN1 <- sum(cand_neg1 %in% loci_trait1)
   #check sum makes sense
   stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
   
   #env2 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,"env2"] < alpha) 
+  #Identify cand cand loci
+  cand_loci2 <- which(pvalues[,"env2"] < alpha) 
   #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= alpha | is.na(pvalues[,"env2"]))
+  cand_neg2 <- which(pvalues[,"env2"] >= alpha | is.na(pvalues[,"env2"]))
   #check length makes sense
-  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
+  stopifnot(length(cand_loci2) + length(cand_neg2) == nrow(pvalues))
   
   #True Positives
-  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
+  TP2 <- sum(cand_loci2 %in% loci_trait2)
   #False Positives
-  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
+  FP2 <- sum(cand_loci2 %notin% loci_trait2)
   #True Negatives
-  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
+  TN2 <- sum(cand_neg2 %notin% loci_trait2)
   #False Negatives
-  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
+  FN2 <- sum(cand_neg2 %in% loci_trait2)
   #check length makes sense
   stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
   
   #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+  cand_loci <- c(cand_loci1, cand_loci2)
   #calc confusion matrix
   TP <- TP1 + TP2
   FP <- FP1 + FP2
@@ -135,7 +135,7 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
   
-  # Calculate empirical pvalues (I THINK - CHECK THIS)
+  # Calculate relative pvalues
   null1 <- pvalues$env1[-loci_trait1]
   emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
   emp1_TPR <- sum(emp1 < alpha, na.rm  = TRUE)
@@ -149,7 +149,7 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
                     FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(lfmm_loci), 
+                    TOTALN = length(cand_loci), 
                     TOTALTP = TP, 
                     TOTALFP = FP, 
                     TOTALTN = TN,
