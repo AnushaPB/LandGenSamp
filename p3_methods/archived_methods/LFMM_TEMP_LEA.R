@@ -37,7 +37,9 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #if K is not specified it is calculated based on a tracy widom test
   if(is.null(K)){
-    K <- get_K(gen, k_selection = "find.clusters")
+   K <- get_K(gen, k_selection = "tracy.widom")
+    if(K == 0){K <- 1
+   K <- get_K(gen, k_selection = "find.clusters")
   }
   
   
@@ -50,7 +52,19 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #BOTH ENV
   #run model
+  
+  tryCatch(lfmm_mod <- lfmm_ridge(genmat, envmat, K = K), 
+           error = function(e) {
+             err <<- conditionMessage(e)
+             write.table(err, "error_msg.txt")
+             write.csv(genmat, "error_genmat.csv", row.names = FALSE)
+             write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
+             write.table(K, "error_K.txt")
+             message(err)
+             
+             stop(err)})
   lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
+
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
                   X = envmat, 
@@ -115,7 +129,7 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
   
   #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)	
   #calc confusion matrix
   TP <- TP1 + TP2
   FP <- FP1 + FP2
@@ -234,7 +248,7 @@ get_K_tw <- function(gen, maxK = NULL){
 
 
 #register cores
-cores <- 20
+cores <- 25
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -334,5 +348,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_results_fc.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_results_tw.csv", row.names = FALSE)
 
