@@ -13,7 +13,7 @@ cores <- 20
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
-res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "here")) %dopar% {
+res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "dplyr", "here")) %dopar% {
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -102,7 +102,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
-        result <- rbind.data.frame(result, sub_result)
+        result <- bind_rows(result, sub_result)
       }
     }
   }
