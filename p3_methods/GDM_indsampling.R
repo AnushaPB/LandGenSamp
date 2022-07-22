@@ -102,6 +102,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
+        
         result <- rbind.data.frame(result, sub_result)
       }
     }
