@@ -33,7 +33,8 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
   if(skip_to_next) { result <- NA } 
   
   #run GDM
-  if(skip_to_next == FALSE){
+  tryCatch({
+    if(skip_to_next == FALSE){
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
     
@@ -108,6 +109,22 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
       }
     }
   }
+  },
+  error = function(e) {
+    err <<- conditionMessage(e)
+    write.table(err, "error_msg.txt")
+    write.csv(gen_2k, "error_gen_2k.csv", row.names = FALSE)
+    write.csv(gsd_2k_df, "error_gsd_df_2k.csv", row.names = FALSE)
+    write.csv(subgen, "error_subgen.csv", row.names = FALSE)
+    write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
+    write.csv(gen, "error_gen.csv", row.names = FALSE)
+    write.csv(gsd_df, "error_gsd_df.csv", row.names = FALSE)
+    
+    message(err)
+    
+    stop(err)
+    }
+  )
   
   return(result)
   
