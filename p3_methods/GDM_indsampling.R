@@ -55,7 +55,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                          env2_err = NA, 
                          geo_err = NA,
                          ratio_err = NA)
-    result <- apply(result, 2, as.character)
+    result <- sapply(result, as.character)
     
     #write full datafile (temp)
     #csv_file <- paste0("outputs/GDM/gdm_results_",paramset,".csv")
@@ -104,7 +104,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results 
-        sub_result <- apply(result, 2, as.character)
+        sub_result <- sapply(sub_result, as.character)
         result <- bind_rows(result, sub_result)
       }
     }
