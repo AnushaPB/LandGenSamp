@@ -14,7 +14,7 @@ cores <- 20
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
-res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "here")) %dopar% {
+res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "dplyr", "here")) %dopar% {
  
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -35,6 +35,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
   if(skip_to_next) { result <- NA } 
   
   #run GDM
+  tryCatch({
   if(skip_to_next == FALSE){
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
@@ -43,6 +44,8 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
     s <- sample(nrow(gsd_df), 2000, replace = FALSE)
     gen_2k <- gen[s,]
     gsd_df_2k <- gsd_df[s,]
+    
+    #run analysis using subsample
     
     #run model on full data set
     full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "euc")
@@ -55,7 +58,8 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                          env1_err = NA, 
                          env2_err = NA, 
                          geo_err = NA,
-                         ratio_err = NULL)
+                         ratio_err = NA)
+    result <- sapply(result, as.character)
     
     #write full datafile (temp)
     #csv_file <- paste0("outputs/GDM/gdm_sitesampling_results_",paramset,".csv")
@@ -82,7 +86,6 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #run analysis using subsample
         sub_result <- run_gdm(sitegen, sitegsd_df, distmeasure = "euc")
         
-        #calculate err if not null
         #calculate err if not null
         if(sub_result$env1_coeff == "NULL" | sub_result$env2_coeff == "NULL" | sub_result$geo_coeff == "NULL"){
           subratio <- "NULL"
@@ -115,17 +118,34 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #csv_df <- rbind(csv_df, sub_result)
         #write.csv(csv_df, csv_file, row.names = FALSE)
         
-        #bind results
-        result <- rbind.data.frame(result, sub_result)
+        #bind results 
+        sub_result <- sapply(sub_result, as.character)
+        result <- bind_rows(result, sub_result)
       }
     }
   }
+    # end trycatch
+  }, error = function(e) {
+    err <<- conditionMessage(e)
+    write.table(err, "error_msg.txt")
+    write.csv(gen_2k, "error_gen_2k.csv", row.names = FALSE)
+    write.csv(gsd_2k_df, "error_gsd_df_2k.csv", row.names = FALSE)
+    write.csv(subgen, "error_subgen.csv", row.names = FALSE)
+    write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
+    write.csv(gen, "error_gen.csv", row.names = FALSE)
+    write.csv(gsd_df, "error_gsd_df.csv", row.names = FALSE)
+    
+    message(err)
+    
+    stop(err)})
   
   return(result)
   
   gc()
   
 }
+  
+  
 
 #stop cluster
 stopCluster(cl)
