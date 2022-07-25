@@ -155,7 +155,7 @@ rand_samp <- function(coords, nsite, buffer_size = 5, edge_buffer = NULL, ldim =
 equi_samp <- function(nsite, ldim = 100, buffer = 10){
   #nsite - number of points (or sites) to sample (should be a perfect square)
   #ldim - landscape dimension of one side (landscape should be a square)
-  inc <- (ldim - buffer*2)/(sqrt(nsite)+1)
+  inc <- (ldim - buffer*2)/(sqrt(nsite) - 1)
   xgrid <- ygrid <- seq(0+buffer, ldim-buffer, inc) 
   cgrid <- expand.grid(xgrid, ygrid)
   
