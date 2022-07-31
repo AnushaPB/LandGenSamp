@@ -10,7 +10,7 @@ source("sitesampling_functions.R")
 source("GDM_functions.R")
 
 #register cores
-cores <- 20
+cores <- 25
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
