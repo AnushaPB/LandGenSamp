@@ -95,13 +95,13 @@ calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
                     FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(cand_loci), 
+                    TOTALN = length(rda_loci), 
                     TOTALTP = TP, 
                     TOTALFP = FP, 
                     TOTALTN = TN,
                     TOTALFN = FN,
                     emp_TPR = emp_TPR,
-                    emp_mean = mean(emp1, na.rm = TRUE)))
+                    emp_mean = mean(emp, na.rm = TRUE)))
 }
 
 # Function to conduct a RDA based genome scan from Capblancq & Forester 2021
