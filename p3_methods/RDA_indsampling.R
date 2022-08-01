@@ -3,6 +3,8 @@ set.seed(42)
 library(here) #paths
 library(vegan) #RDA
 library(vcfR)  #read VCF files
+library(robust)
+library(qvalue)
 #parallel
 library(foreach)
 library(doParallel)
@@ -23,7 +25,11 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   #Run RDA
-  mod <- rda(gen[, 1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=T)
+  mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=T)
+  
+  #plot(mod, type="n", scaling=3)
+  #points(mod, display="species", pch=20, cex=2, col="gray32", scaling=3) 
+  #text(mod, scaling=3, display="bp", col="#0868ac", cex=1)     
   
   #Get RSQ
   RsquareAdj(mod)
@@ -35,26 +41,33 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   naxes <- ncol(mod$CCA$v)
   rdadapt_env <- rdadapt(mod, naxes)
   
-  # P-values threshold after FDR correction (different from Capblancq & Forester 2021)
-  pvalues <- p.adjust(rdadapt_env$p.values, method = "fdr")
- 
-  ## Identifying the loci that are below the p-value threshold
-  # NEED TO ADD STEP TO FIGURE OUT SIGNIFICANCE OF ENV VARS
-  #Identify rda cand loci (P)
-  rda_loci <- which(pvalues < sig) 
+  # P-values
+  pv <- rdadapt_env$p.values
   
-  #Calc True Positive Rate
-  TP <- sum(rda_loci %in% adaptive_loci)
-  TPR <- TP/length(adaptive_loci)
+  # correct pvals and get confusion matrix stats
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.10)
+  df <- rbind.data.frame(p05, p10)
   
-  #Calc False Discovery Rate
-  FD <- sum(neutral_loci %in% rda_loci)
-  FDR <- FD/length(rda_loci)
-  
-  #get confusion matrix values
+  return(df)
+}
+
+
+calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
+  
+  # adjust pvalues (or passs through if padj = "none")
+  pvalues <- data.frame(env = p.adjust(pv, method = padj))
+  
+  #env candidate loci
+  rda_loci <- which(pvalues[,env] < alpha)
+  
+  #get confusion matrix values
+  #for readibility, just negates the in function
+  `%notin%` <- Negate(`%in%`)
+  
   #True Positives
   TP <- sum(adaptive_loci %in% rda_loci)
   #False Positives
@@ -64,15 +77,34 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   #False Negatives
   FN <- sum(adaptive_loci %notin% rda_loci)
   
+  #calc True Positive Rate (i.e. Sensitivity)
+  TPRCOMBO <- TP/(TP + FN)
+  #calc True Negative Rate (i.e. Specificity)
+  TNRCOMBO <- TN/(TN + FP)
+  #calc False Discovery Rate 
+  FDRCOMBO <- FP/(FP + TP)
+  #calc False Positive Rate 
+  FPRCOMBO <- FP/(FP + TN)
   
-  return(data.frame(TPR = TPR, 
-                    FDR = FDR,
-                    TP = TP,
-                    FP = FP,
-                    TN = TN,
-                    FN = FN))
+  # Calculate relative pvalues
+  null <- pvalues$env[-adaptive_loci]
+  emp <- sapply(pvalues$env[adaptive_loci], function(x){mean(x > null, na.rm = TRUE)})
+  emp_TPR <- sum(emp < alpha, na.rm  = TRUE)
+  
+  return(data.frame(padj = padj,
+                    alpha = alpha,
+                    TPRCOMBO = TPRCOMBO, 
+                    TNRCOMBO = TNRCOMBO,
+                    FDRCOMBO = FDRCOMBO, 
+                    FPRCOMBO = FPRCOMBO,
+                    TOTALN = length(rda_loci), 
+                    TOTALTP = TP, 
+                    TOTALFP = FP, 
+                    TOTALTN = TN,
+                    TOTALFN = FN,
+                    emp_TPR = emp_TPR,
+                    emp_mean = mean(emp, na.rm = TRUE)))
 }
-
 
 # Function to conduct a RDA based genome scan from Capblancq & Forester 2021
 # https://github.com/Capblancq/RDA-landscape-genomics/blob/main/RDA_landscape_genomics.Rmd
@@ -94,14 +126,7 @@ cores <- 20
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
-res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
-  library("vcfR")
-  library("vegan")
-  library("here")
-  library("stringr")
-  library("tidyverse")
-  library("qvalue")
-  library("robust")
+res_rda <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "vegan", "here", "stringr", "tidyverse", "qvalue", "robust")) %dopar% {
 
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
@@ -137,10 +162,6 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
     
-    #write full datafile (temp)
-    csv_file <- paste0("outputs/RDA/RDA_results_",paramset,".csv")
-    write.csv(result, csv_file, row.names = FALSE)
-    
     for(nsamp in npts){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
@@ -154,13 +175,8 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
         
-        #export data to csv (temp)
-        csv_df <- read.csv(csv_file)
-        csv_df <- rbind(csv_df, sub_result)
-        write.csv(csv_df, csv_file, row.names = FALSE)
-        
         #bind results
-        result <- rbind.data.frame(result, sub_result)
+        result <- bind_rows(result, sub_result)
       }
     }
   }
@@ -174,4 +190,4 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_rda, "outputs/rda_results.csv", row.names = FALSE)
+write.csv(res_rda, "outputs/rda_indsampling_results.csv", row.names = FALSE)
