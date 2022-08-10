@@ -159,8 +159,9 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "vega
     gsd_df_2k <- gsd_df[s,]
     
     #run model on full data set
-    full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
+    #full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
+    #result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
+    result <- data.frame()
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
