@@ -19,7 +19,7 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 system.time(
-  res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr")) %dopar% {
+  res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr", "dplyr")) %dopar% {
     
     #set of parameter names in filepath form (for creating temp files)
     paramset <- paste0("K",params[i,"K"],
@@ -46,29 +46,8 @@ system.time(
       gsd_df <- get_data(i, params = params, "gsd")
       loci_df <- get_data(i, params = params, "loci")
       
-      #subsample full data randomly
-      s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-      gen_2k <- gen[s,]
-      gsd_df_2k <- gsd_df[s,]
-      
-      #run model on full data set
-      # full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df, K = NULL)
-      result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
-                                                                                    padj = NA,
-                                                                                    alpha = NA,
-                                                                                    TPRCOMBO = NA, 
-                                                                                    TNRCOMBO = NA,
-                                                                                    FDRCOMBO = NA, 
-                                                                                    FPRCOMBO = NA,
-                                                                                    TOTALN = NA, 
-                                                                                    TOTALTP = NA, 
-                                                                                    TOTALFP = NA, 
-                                                                                    TOTALTN = NA,
-                                                                                    TOTALFN = NA,
-                                                                                    emp1_TPR = NA,
-                                                                                    emp2_TPR = NA,
-                                                                                    emp1_mean = NA,
-                                                                                    emp2_mean = NA))
+      # make data.frame
+      result <- data.frame()
       
       for(nsamp in npts){
         for(sampstrat in sampstrats){
@@ -93,7 +72,7 @@ system.time(
           sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
           
           #bind results
-          result <- rbind.data.frame(result, sub_result)
+          result <- bind_rows(result, sub_result)
           
         }
       }

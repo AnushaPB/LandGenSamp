@@ -13,234 +13,7 @@ library("AssocTests")
 source("general_functions.R")
 source("sitesampling_functions.R")
 
-##########
-#  LFMM  #
-##########S
-
-run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
-  
-  #get adaptive loci
-  loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
-  loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
-  adaptive_loci <- c(loci_trait1, loci_trait2)
-  neutral_loci <- c(1:nloci)[-adaptive_loci]
-  
-  
-  #if K is not specified it is calculated based on a tracy widom test
-  if(is.null(K)){
-    K <- get_K(gen, k_selection = "tracy.widom")
-  }
-  
-  
-  #gen matrix
-  genmat = as.matrix(gen)
-  #env matrix
-  env1mat = as.matrix(gsd_df$env1)
-  env2mat = as.matrix(gsd_df$env2)
-  envmat = cbind(env1mat, env2mat)
-  
-  #BOTH ENV
-  #run model
-  
-  tryCatch(lfmm_mod <- lfmm_ridge(genmat, envmat, K = K), 
-           error = function(e) {
-             err <<- conditionMessage(e)
-             write.table(err, "error_msg.txt")
-             write.csv(genmat, "error_genmat.csv", row.names = FALSE)
-             write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
-             
-             message(err)
-             
-             stop(err)})
-  
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  
-  # correct pvals and get confusion matrix stats
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
-  pdf <- rbind.data.frame(p05, p10)
-  df <- data.frame(K = K, pdf)
-  
-  return(df)
-}
-
-calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
-  
-  #for readibility, just negates the in function
-  `%notin%` <- Negate(`%in%`)
-  
-  # adjust pvalues (or passs through if padj = "none")
-  pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
-                         env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
-  
-  #env1 candidate loci
-  #Identify  cand loci (P)
-  cand_loci1 <- which(pvalues[,"env1"] < alpha) 
-  #Identify negatives
-  cand_neg1 <- which(pvalues[,"env1"] >= alpha | is.na(pvalues[,"env1"]))
-  #check length makes sense
-  stopifnot(length(cand_loci1) + length(cand_neg1) == nrow(pvalues))
-  
-  #get confusion matrix values
-  #True Positives
-  TP1 <- sum(cand_loci1 %in% loci_trait1)
-  #False Positives
-  FP1 <- sum(cand_loci1 %notin% loci_trait1)
-  #True Negatives
-  TN1 <- sum(cand_neg1 %notin% loci_trait1)
-  #False Negatives
-  FN1 <- sum(cand_neg1 %in% loci_trait1)
-  #check sum makes sense
-  stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
-  
-  #env2 candidate loci
-  #Identify cand cand loci
-  cand_loci2 <- which(pvalues[,"env2"] < alpha) 
-  #Identify negatives
-  cand_neg2 <- which(pvalues[,"env2"] >= alpha | is.na(pvalues[,"env2"]))
-  #check length makes sense
-  stopifnot(length(cand_loci2) + length(cand_neg2) == nrow(pvalues))
-  
-  #True Positives
-  TP2 <- sum(cand_loci2 %in% loci_trait2)
-  #False Positives
-  FP2 <- sum(cand_loci2 %notin% loci_trait2)
-  #True Negatives
-  TN2 <- sum(cand_neg2 %notin% loci_trait2)
-  #False Negatives
-  FN2 <- sum(cand_neg2 %in% loci_trait2)
-  #check length makes sense
-  stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
-  
-  #stats for all loci 
-  cand_loci <- c(cand_loci1, cand_loci2)
-  #calc confusion matrix
-  TP <- TP1 + TP2
-  FP <- FP1 + FP2
-  TN <- TN1 + TN2
-  FN <- FN1 + FN2
-  #check sum makes sense
-  stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
-  
-  #calc True Positive Rate (i.e. Sensitivity)
-  TPRCOMBO <- TP/(TP + FN)
-  #calc True Negative Rate (i.e. Specificity)
-  TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate 
-  FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate 
-  FPRCOMBO <- FP/(FP + TN)
-  
-  # Calculate relative pvalues
-  null1 <- pvalues$env1[-loci_trait1]
-  emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_TPR <- sum(emp1 < alpha, na.rm  = TRUE)
-  null2 <- pvalues$env2[-loci_trait2]
-  emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_TPR <- sum(emp2 < alpha, na.rm  = TRUE)
-  
-  return(data.frame(padj = padj,
-                    alpha = alpha,
-                    TPRCOMBO = TPRCOMBO, 
-                    TNRCOMBO = TNRCOMBO,
-                    FDRCOMBO = FDRCOMBO, 
-                    FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(cand_loci), 
-                    TOTALTP = TP, 
-                    TOTALFP = FP, 
-                    TOTALTN = TN,
-                    TOTALFN = FN,
-                    emp1_TPR = emp1_TPR,
-                    emp2_TPR = emp2_TPR,
-                    emp1_mean = mean(emp1, na.rm = TRUE),
-                    emp2_mean = mean(emp2, na.rm = TRUE)))
-}
-
-
-# function to determine K
-get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
-  
-  if(k_selection == "tracy.widom") K <- get_K_tw(gen)
-  
-  if(k_selection == "quick.elbow") K <- get_K_elbow(gen)
-  
-  if(k_selection == "find.clusters") K <- get_K_fc(gen)
-  
-  return(K)
-}
-
-# Determine best K using find.clusters
-get_K_fc <- function(gen, max.n.clust = 10, perc.pca = 90){
-  fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
-  K <- max(as.numeric(fc$grp))
-  return(K)
-}
-
-# Function to determine best K based on elbow
-get_K_elbow <- function(gen){
-  # run pca
-  pc <- prcomp(gen)
-  
-  # get eig
-  eig <- pc$sdev^2
-  # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
-  # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-  K <- quick.elbow(eig, low = 0.08, max.pc = 0.7)
-  
-  par(pty = "s",mfrow = c(1,1))
-  plot(eig, xlab = 'PC', ylab = "Variance explained")
-  abline(v = K, col = "red", lty = "dashed")
-  
-  return(K)
-}
-
-# Function to determine best K using tracy widom test
-get_K_tw <- function(gen, maxK = NULL){
-  # run pca
-  pc <- prcomp(gen)
-  
-  # get eig
-  eig <- pc$sdev^2
-  
-  # reduce K values if max is provided
-  if(!is.null(maxK)){eig <- eig[1:maxK]}
-  
-  # run tracy widom test
-  # NOTE: 	
-  # the critical point is a numeric value corresponding to the significance level. 
-  # If the significance level is 0.05, 0.01, 0.005, or 0.001, 
-  # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
-  # The default is 2.0234.
-  
-  
-  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), 
-           error = function(e) {
-             err <<- conditionMessage(e)
-             write.table(err, "error_msg.txt")
-             write.csv(eig, "eig_error.csv")
-             
-             print(err)
-             print(eig)
-             print(dim(gen))
-             
-             stop(err)})
-  
-  
-  # get K based on number of significant eigenvalues
-  K <- tw_result$SigntEigenL
-  
-  plot(eig)
-  abline(v = K)
-  
-  return(K)
-}
-
 #register cores
-
 cores <- 25
 cl <- makeCluster(cores)
 registerDoParallel(cl)
@@ -272,31 +45,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
-    
-    #subsample full data randomly
-    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-    gen_2k <- gen[s,]
-    gsd_df_2k <- gsd_df[s,]
-    
-    #run model on full data set
-    #full_result <- run_lfmm(gen_2k, gsd_df_2k, loci_df,  K = NULL)
-    #result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, full_result)
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = 2000, data.frame(K = NA,
-                                                                                  padj = NA,
-                                                                                  alpha = NA,
-                                                                                  TPRCOMBO = NA, 
-                                                                                  TNRCOMBO = NA,
-                                                                                  FDRCOMBO = NA, 
-                                                                                  FPRCOMBO = NA,
-                                                                                  TOTALN = NA, 
-                                                                                  TOTALTP = NA, 
-                                                                                  TOTALFP = NA, 
-                                                                                  TOTALTN = NA,
-                                                                                  TOTALFN = NA,
-                                                                                  emp1_TPR = NA,
-                                                                                  emp2_TPR = NA,
-                                                                                  emp1_mean = NA,
-                                                                                  emp2_mean = NA))
+
+    # make data.frame
+    result <- data.frame()
     
     for(nsite in nsites){
       for(sampstrat in sampstrats){
@@ -316,7 +67,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K) 
-        #run analysis using subsample
+        #run analysis using siteample
         tryCatch(sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL) , 
                  error = function(e) {
                    err <<- conditionMessage(e)
@@ -346,9 +97,6 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 #stop cluster
 stopCluster(cl)
 
-<<<<<<< HEAD
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_results_fcg.csv", row.names = FALSE)
-=======
+
 write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
->>>>>>> ffe02720b8febae5cf2cc381d9c3b69290dc31fc
 

@@ -45,14 +45,7 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "vega
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
     
-    #subsample full data randomly
-    s <- sample(nrow(gsd_df), 2000, replace = FALSE)
-    gen_2k <- gen[s,]
-    gsd_df_2k <- gsd_df[s,]
-    
-    #run model on full data set
-    # full_result <- run_rda(gen_2k, gsd_df_2k, loci_df)
-    # result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result)
+    # make data.frame
     result <- data.frame()
     
     for(nsite in nsites){
