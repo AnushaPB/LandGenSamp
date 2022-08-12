@@ -3,8 +3,8 @@ title: "MNLM"
 output: html_document
 ---
 ```{r}
-install.packages("devtools")
-devtools::install_github("ropensci/NLMR")
+#install.packages("devtools")
+#devtools::install_github("ropensci/NLMR")
 ```
 
 ```{r}
@@ -72,7 +72,7 @@ mnlm <- function(ncol, nrow, H, sd = 1, r){
 }
 ```
 
-```{r CHUNK TO READ FILES fig.width=8, fig.height=10, warning=FALSE}
+```{r CHUNK TO READ FILES, fig.width=8, fig.height=20, warning=FALSE}
 f <- matrix(c(0,1,0,1,0,1,0,1,0), nrow=3)
 
 n <- 3
@@ -83,14 +83,14 @@ par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
 for(seed in c(1,2,3)){
   for(H in c(0.05,0.5)){
     for(r in c(0.3, 0.6)){
-      env1 <- read.csv(here("data", paste0("seed",seed,
+      env1 <- read.csv(here("layers", paste0("seed",seed,
                                           "_env1",
                                           "_H", gsub("\\.", "", as.character(H*100)),
                                           "_r", gsub("\\.", "", as.character(r*100)),
                                           ".csv"
                                           )), header=FALSE)
       
-      env2 <- read.csv(here("data", paste0("seed",seed,
+      env2 <- read.csv(here("layers", paste0("seed",seed,
                                           "_env2",
                                           "_H", gsub("\\.", "", as.character(H*100)),
                                           "_r", gsub("\\.", "", as.character(r*100)),
@@ -179,4 +179,67 @@ for(seed in c(1, 2, 3)){
 }
 
 ```
+
+```{r CHUNK TO READ FILES, fig.width=14, fig.height=20, warning=FALSE}
+
+par(mfrow=c(6,4), mar=rep(0,4), oma=rep(0,4))
+for(seed in c(1,2,3)){
+  for(H in c(0.05,0.5)){
+    for(r in c(0.3, 0.6)){
+      env1 <- read.csv(here("layers", paste0("seed",seed,
+                                          "_env1",
+                                          "_H", gsub("\\.", "", as.character(H*100)),
+                                          "_r", gsub("\\.", "", as.character(r*100)),
+                                          ".csv"
+                                          )), header=FALSE)
+      
+      env2 <- read.csv(here("layers", paste0("seed",seed,
+                                          "_env2",
+                                          "_H", gsub("\\.", "", as.character(H*100)),
+                                          "_r", gsub("\\.", "", as.character(r*100)),
+                                          ".csv"
+                                          )), header=FALSE)
+      env1 <- raster(as.matrix(env1))
+      env2 <- raster(as.matrix(env2))
+    
+      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, main = "", legend = FALSE)
+      plot(env2, box=FALSE, axes=FALSE, col=mako(100), legend.width=2, main = "", legend = FALSE)
+      
+    }
+  }
+}
+
+```
+
+```{r CHUNK TO READ FILES, fig.width=14, fig.height=20, warning=FALSE}
+
+par(mfrow=c(6,4), mar=rep(3,4), oma=rep(0,4))
+for(seed in c(1,2,3)){
+  for(H in c(0.05,0.5)){
+    for(r in c(0.3, 0.6)){
+      env1 <- read.csv(here("layers", paste0("seed",seed,
+                                          "_env1",
+                                          "_H", gsub("\\.", "", as.character(H*100)),
+                                          "_r", gsub("\\.", "", as.character(r*100)),
+                                          ".csv"
+                                          )), header=FALSE)
+      
+      env2 <- read.csv(here("layers", paste0("seed",seed,
+                                          "_env2",
+                                          "_H", gsub("\\.", "", as.character(H*100)),
+                                          "_r", gsub("\\.", "", as.character(r*100)),
+                                          ".csv"
+                                          )), header=FALSE)
+      env1 <- raster(as.matrix(env1))
+      env2 <- raster(as.matrix(env2))
+    
+      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)
+      plot(env2, box=FALSE, axes=FALSE, col=mako(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)
+      
+    }
+  }
+}
+
+```
+
 
