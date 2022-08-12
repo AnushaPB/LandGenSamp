@@ -18,7 +18,7 @@ cores <- 20
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
-res_rda <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "vegan", "here", "stringr", "tidyverse", "qvalue", "robust")) %dopar% {
+res_rda <- foreach(i = 1:nrow(params), .combine=rbind, .packages = c("vcfR", "vegan", "here", "stringr", "tidyverse", "qvalue", "robust", "dplyr")) %dopar% {
 
   #skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
