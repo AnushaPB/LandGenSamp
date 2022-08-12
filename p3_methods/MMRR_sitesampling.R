@@ -15,23 +15,9 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 res_mmrr <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "adegenet", "stringr")) %dopar% {
-
-  #set of parameter names in filepath form (for creating temp files)
-  paramset <- paste0("K",params[i,"K"],
-                     "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100,
-                     "_it",params[i,"it"])
   
   #skip iteration if files do not exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  skip_to_next <- FALSE
-  if(file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
-  if(skip_to_next) { print("File does not exist:")
-    print(params[i,]) } 
+  skip_to_next <- skip_check(i, params)
   if(skip_to_next) { result <- NA } 
   
   #run MMRR
@@ -50,10 +36,6 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df_2k), full_result, 
                          ratio = fullratio, 
                          env1_err = NA, env2_err = NA, geo_err = NA, ratio_err = NA)
-    
-    #write full datafile (temp)
-    #csv_file <- paste0("outputs/MMRR/MMRR_sitesampling_results_",paramset,".csv")
-    #write.csv(result, csv_file, row.names = FALSE)
     
     for(nsite in nsites){
       for(sampstrat in sampstrats){
@@ -89,11 +71,6 @@ res_mmrr <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
                                  ratio = subratio,
                                  env1_err = env1_err, env2_err = env2_err, geo_err = geo_err,
                                  ratio_err = ratio_err)
-        
-        #export data to csv (temp)
-        #csv_df <- read.csv(csv_file)
-        #csv_df <- rbind(csv_df, sub_result)
-        #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results
         result <- rbind.data.frame(result, sub_result)

@@ -14,22 +14,9 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "dplyr", "here")) %dopar% {
-  #set of parameter names in filepath form (for creating temp files)
-  paramset <- paste0("K",params[i,"K"],
-                     "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100,
-                     "_it",params[i,"it"])
   
   #skip iteration if files do not exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  skip_to_next <- FALSE
-  if(file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
-  if(skip_to_next) { print("File does not exist:")
-    print(params[i,]) } 
+  skip_to_next <- skip_check(i, params)
   if(skip_to_next) { result <- NA } 
   
   #run GDM
@@ -56,10 +43,6 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                          geo_err = NA,
                          ratio_err = NA)
     result <- sapply(result, as.character)
-    
-    #write full datafile (temp)
-    #csv_file <- paste0("outputs/GDM/gdm_results_",paramset,".csv")
-    #write.csv(result, csv_file, row.names = FALSE)
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
@@ -97,11 +80,6 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
                                  env2_err = env2_err, 
                                  geo_err = geo_err, 
                                  ratio_err = ratio_err)
-        
-        #export data to csv (temp)
-        #csv_df <- read.csv(csv_file)
-        #csv_df <- rbind(csv_df, sub_result)
-        #write.csv(csv_df, csv_file, row.names = FALSE)
         
         #bind results 
         sub_result <- sapply(sub_result, as.character)

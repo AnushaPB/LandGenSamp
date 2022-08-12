@@ -20,24 +20,9 @@ registerDoParallel(cl)
 
 system.time(
 res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "lfmm", "stringr", "AssocTests", "adegenet", "purrr", "dplyr")) %dopar% {
-
-  #set of parameter names in filepath form (for creating temp files)
-  paramset <- paste0("K",params[i,"K"],
-                     "_phi",params[i,"phi"]*100,
-                     "_m",params[i,"m"]*100,
-                     "_seed",params[i,"seed"],
-                     "_H",params[i,"H"]*100,
-                     "_r",params[i,"r"]*100,
-                     "_it",params[i,"it"])
   
   #skip iteration if files do not exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  loci_filepath <- create_filepath(i, params = params, "loci")
-  skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
-  if(skip_to_next) { print("File does not exist:")
-                      print(params[i,]) } 
+  skip_to_next <- skip_check(i, params)
   if(skip_to_next) { result <- NA } 
   
   #run LFMM
