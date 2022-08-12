@@ -42,9 +42,8 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/LFMM_sitesampling_results.csv")
-
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/", full.names = TRUE, pattern="*.csv"), read.csv))
+#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM_sitesampling_results_NOAGGREGATION.csv")
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM_sitesampling_results_tw.csv")
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
@@ -62,16 +61,51 @@ df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 moddf <- df[df$sampstrat != "full",]
 
 
-
+# FIG OUT NA LATER
+#df <- df[!is.na(df$alpha), ]
 ```
-```{r}
+
+```{r, fig.width=20, fig.height=7}
+
+summary_hplot(df, "TPRCOMBO")
+
 range(df$FDRCOMBO)
 range(df$TPRCOMBO)
 
 ```
+```{r fig.width=20, fig.height=7}
+for(i in unique(df$padj)[-1]){
+  for(a in unique(df$alpha)[-1]){
+    summary_hplot(df[df$alpha == a & df$padj == i, ], "TPRCOMBO")
+  }
+}
 
-```{r}
-summary(df)
+for(i in unique(df$padj)[-1]){
+  for(a in unique(df$alpha)[-1]){
+    summary_hplot(df[df$alpha == a & df$padj == i, ], "FDRCOMBO")
+  }
+}
+
+summary_hplot(df[df$alpha == 0.05 & df$padj == "none", ], "TPRCOMBO")
+summary_hplot(df[df$alpha == 0.05 & df$padj == "none", ], "FDRCOMBO", sigdig = 3)
+
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "TPRCOMBO")
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "FDRCOMBO", sigdig = 3)
+
+df$emp_combo_mean <- (df$emp1_mean+df$emp2_mean)/2
+
+df$emp_combo <- (df$emp1_TPR/4+df$emp2_TPR/4)/2
+summary_hplot(df, "emp_combo")
+summary_hplot(df, "emp_combo_mean")
+summary_hplot(df, "K.1", sigdig = 3)
+
+df$K0 <- df$K.1 == 1
+summary_hplot(df, "K0", sigdig = 3)
+mean(df$K0, na.rm = TRUE)*100
+
+unique(df$K.1)
+df$bacc <- (df$TPRCOMBO + df$TNRCOMBO)/2
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "bacc", sigdig = 3)
 ```
 
 ```{r fig.width = 30, fig.height=15}
@@ -83,33 +117,24 @@ MEGAPLOT(moddf, "FDRCOMBO")
 
 #EXPLORATORY
 
-```{r fig.width=20, fig.height=8}
-df$stat <- df$TPRCOMBO
-summary_vplot(df)
-summary_hplot(df)
+#EXPLORATORY
+```{r, fig.width=20, fig.height=7}
+df$diff <- 1-df$TPRCOMBO/1-df$FDRCOMBO
 
-
-df$stat <- (df$FDRCOMBO)
-summary_vplot(df)
-summary_hplot(df)
-
-
-df$stat <- (df$TOTALN)
-summary_hplot(df, sigdig = 4)
-
-df$stat <- (df$TOTALT)
-summary_hplot(df)
-
-df$stat <- (df$TOTALF)
-summary_hplot(df, sigdig = 4)
-
-
-df$stat <- (df$TOTALTN)
-summary_hplot(df, sigdig = 4)
-
-df$stat <- ((df$TPRCOMBO+1)/(df$FDRCOMBO+1))
-summary_hplot(df, sigdig = 4)
+summary_hplot(df, "diff")
 ```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "TNRCOMBO")
+summary_hplot(df, "FDRCOMBO")
+
+summary_hplot(df, "TPRCOMBO", aggfunc = "var")
+
+summary_vplot(df, "TPRCOMBO")
+summary_hplot(df, "K.1")
+
+```
+
 ```{r fig.width=10, fig.height=10}
 site_hist <- function(df, stat, breaks = seq(0,1,0.10), xlim, ylim){
     colv <- list(c(0,1,1),c(1,0,1),c(0,1,0))

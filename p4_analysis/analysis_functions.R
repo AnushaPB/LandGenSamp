@@ -1,4 +1,4 @@
-MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = -1, divergent = FALSE, na.rm=TRUE){
+MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE){
   
   moddf <- moddf[moddf$sampstrat != "full",]
   moddf$stat <- moddf[,stat_name]
@@ -24,7 +24,6 @@ MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean
   }
   
   
-  
   if(aggfunc == "prop_na"){
     agg <- moddf %>%
       group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
@@ -37,7 +36,12 @@ MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean
       summarize(stat = var(stat, na.rm=na.rm), .groups = "keep")
   }
   
-  
+  if(aggfunc == "rmse") {
+    agg <- moddf %>%
+      mutate(stat = stat^2) %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = sqrt(mean(stat, na.rm=na.rm)), .groups = "keep")
+  }
   
   colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
   
@@ -83,7 +87,7 @@ MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean
     if(divergent){
       p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
     } else {
-      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal) 
+      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal, direction = direction) 
     }
     
     plts[[i]] <- p
@@ -187,17 +191,18 @@ sd_na <- function(x){
 
 prop_na <- function(x){
   y <- mean(is.na(x))
+  return(y)
 }
 
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full=FALSE, sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full = FALSE, sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
   #create column with stat called "stat"
-  df$stat <- df[,stat_name]
+  df$stat <- df[, stat_name]
   
   #remove full data from data frame
   sampstrat <- unique(df$sampstrat)
   nsamp <- unique(df$nsamp)
-  if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
-  if(!full){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]}
+  if(!full & any(sampstrat == "full")){sampstratsub <- sampstrat[-which(sampstrat=="full")]} else {sampstratsub <- sampstrat}
+  if(!full & any(nsamp == 1000 | nsamp == 2000)){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]} else {nsampsub <- nsamp}
   
   #create dataframe to store results from summaries
   resdf <- data.frame()
@@ -218,6 +223,11 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
         if(aggfunc == "max"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), max)}
         if(aggfunc == "min"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), min)}
         if(aggfunc == "var"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), var)}
+        if(aggfunc == "rmse") {
+          subdf$stat <- as.numeric(subdf$stat)^2
+          aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean, na.rm = TRUE)
+          aggdf$x <- sqrt(aggdf$x)
+        }
         
         #create new column for each parameter named p (will be overwritten, probably a cleaner way to do this)
         aggdf[,1] <- paste(p,"=", aggdf[,1])
@@ -580,12 +590,86 @@ format_mmrr <- function(path){
   df$comboenv_err <- (df$env1_err + df$env2_err)/2
   df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
   
+  df$env_ae <- abs(df$comboenv_err)
+  df$geo_ae <- abs(df$geo_err)
+  df$ratio_ae <- abs(df$ratio_err)
+  
   df$tpIBE <- ((df$env1_p < 0.05) + (df$env2_p < 0.05))/2
   df$tpIBD <- as.numeric(df$geo_p < 0.05)
   
+  return(df)
+}
+
+format_gdm <- function(path){
+  df <- read.csv(path)
+  
+  df <- var_to_fact(df)
+  
+  df$null <- df$geo_coeff == "NULL" & df$env1_coeff == "NULL" & df$env2_coeff == "NULL"
+  df[df$null, c("env1_err", 
+                "env2_err", 
+                "geo_err", 
+                "env1_coeff", 
+                "env2_coeff", 
+                "geo_coeff", 
+                "ratio_err", 
+                "ratio")] <- NA
+  
+  df <- var_to_fact(df)
+  
+  df[, c("env1_err", 
+         "env2_err", 
+         "geo_err", 
+         "env1_coeff", 
+         "env2_coeff", 
+         "geo_coeff", 
+         "ratio_err", 
+         "ratio")] <- apply(df[, c("env1_err", 
+                             "env2_err", 
+                             "geo_err", 
+                             "env1_coeff", 
+                             "env2_coeff", 
+                             "geo_coeff", 
+                             "ratio_err", 
+                             "ratio")], 2, as.numeric)
+  
+  df$comboenv_err <- (df$env1_err + df$env2_err)/2
+  df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
+  
   df$env_ae <- abs(df$comboenv_err)
   df$geo_ae <- abs(df$geo_err)
-  df$ratio_ae <- abs(df$ratio)
+  df$ratio_ae <- abs(df$ratio_err)
+  
+  return(df)
+}
+
+format_lfmm <- function(path){
+  df <- read.csv(path)
+  
+  df <- var_to_fact(df)
+  
+  #IMPORTANT NOTE ABOUT LFMM DATA:
+  #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+  #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+  #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+  df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
+  df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
+  df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
+  
+  return(df)
+}
+
+format_rda <- function(path){
+  df <- read.csv(path)
+  
+  df <- var_to_fact(df)
+  
+  #IMPORTANT NOTE ABOUT RDA DATA:
+  #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+  #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+  #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+  df$TPR[is.na(df$TPR)] <- 0
+  df$FDR[df$TPR == 0 & is.na(df$FDR)] <- 0
   
   return(df)
 }
@@ -597,16 +681,15 @@ run_lmer <- function(df, stat, table_main = ""){
   
   # na.action needs to be set to na.fail for dredge to work
   fullmod <- lmerTest::lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), 
-                            moddf, na.action = "na.fail", subset = NULL, weights = NULL, offset = NULL)
+                            moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
   
   # print anova result
   aov <- anova(fullmod)
-  print(pretty_anova(aov))
-
+  pretty_anova(aov)
 }
 
 pretty_anova <- function(aov){
-  stopifnot(class(anova(fullmod))[1] == "anova")
+  stopifnot(class(aov)[1] == "anova")
   
   aov_df <- data.frame(Variable = rownames(aov), aov)
   
