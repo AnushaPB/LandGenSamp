@@ -1,7 +1,5 @@
 #code to create some plots of example subsamples
 source("general_functions.R")
-
-
 pdf("sampling_plots.pdf")
 par(mfrow=c(length(npts), length(sampstrats)), pty="s", mar = rep(2, 4))
 for(i in sample(1:nrow(params), 10)){
@@ -18,10 +16,11 @@ for(i in sample(1:nrow(params), 10)){
 }
 dev.off()
 
+source("general_functions.R")
 source("site_functions.R")
-pdf("site_sampling_plots.pdf")
+pdf("site_sampling_plots2.pdf")
 par(mfrow=c(length(nsites), length(sampstrats)), pty="s", mar = rep(2, 4))
-for(i in sample(1:nrow(params),5)){
+for(i in sample(1:nrow(params),1)){
     gsd_df <- get_data(i, params = params, "gsd")
     for(nsite in nsites){
       for(sampstrat in sampstrats){
@@ -36,17 +35,19 @@ for(i in sample(1:nrow(params),5)){
 dev.off()
 
 
+source("general_functions.R")
 pdf("sampling_plots_pres.pdf")
 par(mfrow=c(length(npts), length(sampstrats)), pty="s", mar = rep(2, 4))
-for(i in sample(1:nrow(params), 10)){
+for(i in sample(1:nrow(params), 1)){
   gsd_df <- get_data(i, params = params, "gsd")
   for(nsamp in npts){
-    for(sampstrat in sampstrats){
+    for(sampstrat in c("trans", "rand", "grid", "envgeo")){
       #subsample from data based on sampling strategy and number of samples
       subIDs <- get_samples(params[i,], params = params, sampstrat, nsamp)
       subgsd_df <- gsd_df[subIDs,]
-      plot(subgsd_df$x, subgsd_df$y, xlim = c(0,ldim), ylim = c(0,ldim), main = paste0(nsamp," / ", sampstrat),
+      plot(subgsd_df$x, subgsd_df$y, xlim = c(0,ldim), ylim = c(0,ldim), main = paste0(sampstrat),
            xlab = "", ylab = "", pch = 19, col = rgb(0,0,0,0.5), axes = FALSE)
+      box()
     }
   }
 }
