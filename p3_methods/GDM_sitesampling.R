@@ -10,7 +10,7 @@ source("sitesampling_functions.R")
 source("GDM_functions.R")
 
 #register cores
-cores <- 25
+cores <- 20
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
@@ -105,7 +105,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
         #save and format new result
         sub_result <- data.frame(params[i,], 
                                  sampstrat = sampstrat, 
-                                 nsamp = nsamp, 
+                                 nsamp = nsite, 
                                  sub_result, 
                                  ratio = subratio,
                                  env1_err = env1_err, 
