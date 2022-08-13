@@ -42,13 +42,13 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0:8)
 
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mmrr_results.csv")
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mmrr_indsampling_results.csv")
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
+df$comboenv_err <- (df$env1_err + df$env2_err)/2
 df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)
-
+df$ratio_mae <- abs(df$ratio_err)
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
@@ -56,46 +56,33 @@ moddf[!complete.cases(moddf),]
 
 ```
 #CALCULATE NEW STATS
-```{r}
-#Create dataframe with all variable combos
-params <- expand.grid(K = c(1, 2), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.3, 0.6),
-                      it = 0:9)
+```{r,  fig.width=20, fig.height=7}
+cdf$ratio_ae <- abs(cdf$ratio_err)
 
-cdf <- data.frame()
-for(i in 1:nrow(params)){
-  p <- params[i,]
-  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
-  full <- subdf[subdf$sampstrat == "full",]
-  sub <- subdf[subdf$sampstrat != "full",]
-  fullratio <- (full$geo_coeff - (full$env1_coeff + full$env2_coeff))/full$geo_coeff
-  subratio <- (sub$geo_coeff - (sub$env1_coeff + sub$env2_coeff))/sub$geo_coeff
-  sub$ratio2_ae <- abs(fullratio - subratio)
-  cdf <- rbind(cdf, sub)
-}
+summary_hplot(cdf, "ratio_ae", colpal = "viridis", direction = -1)
 
+summary_hplot(cdf, "ratio_err", colpal = "viridis", direction = -1)
 
-summary_hplot(cdf, "ratio2_ae")
+summary_hplot(cdf, "ratio", colpal = "viridis", direction = -1)
+
+summary_hplot(cdf, "comboenv_err", divergent = TRUE, direction = -1)
+
+summary_hplot(cdf, "geo_err", divergent = TRUE, direction = -1)
+
+summary_vplot(cdf, "ratio")
+
 ```
 
 #EXPLORATORY
 
 ```{r fig.width = 30, fig.height=15}
-
-MEGAPLOT(moddf, "geo_coeff", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "ratio_mae", option = "turbo", na.rm = TRUE)
 ```
 
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", na.rm = TRUE)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "geo_err", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_err", option = "turbo", na.rm = TRUE)
 ```
-
-
-
 
 ```{r fig.width=20, fig.height=7}
 summary_vplot(df, "geo_coeff")
@@ -103,14 +90,19 @@ summary_vplot(df, "comboenv_coeff")
 ```
 
 ```{r fig.width=20, fig.height=7}
-summary_hplot(df, "geo_rmse")
-summary_hplot(df, "comboenv_rmse")
+summary_hplot(df, "geo_err")
+summary_hplot(df, "comboenv_err")
 ```
 
-
-# GEO RMSE
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$geo_rmse
+summary_hplot(df, "ratio_mae")
+summary_hplot(df, "ratio_err")
+summary_hplot(df, "comboenv_err")
+```
+
+# GEO err
+```{r fig.width=20, fig.height=7}
+df$stat <- df$geo_err
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
@@ -346,9 +338,9 @@ sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.1
 ```
 
 
-# ENV COMBO RMSE
+# ENV COMBO err
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$comboenv_rmse
+df$stat <- df$comboenv_err
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)

@@ -47,9 +47,20 @@ points(example.data$causal.set,
 ```
 
 ```{r, fig.width = 5, fig.height = 5}
-m <- matrix(sample(1:100, 100, replace = TRUE), nrow = 10, ncol = 10)
+set.seed(42)
+m <- as.matrix(dist(sample(1:10, 10, replace = TRUE), diag = TRUE, upper = TRUE))
 diag(m) <- 0
 
+m %>%
+    as_tibble() %>%
+    rownames_to_column("x1") %>%
+    gather(x2, value, 2:10) %>%
+    mutate(x2 = gsub("V", "", x2)) %>%
+    ggplot(aes(x1, x2)) + 
+      geom_tile(aes(fill = value)) + 
+      ggthemes::theme_solid() + 
+      theme(legend.position = "none") +
+      scale_fill_gradient2(low = colpal[2], mid = colpal[1], high = colpal[5], midpoint = 5)
 
 m %>%
     as_tibble() %>%
@@ -60,7 +71,7 @@ m %>%
       geom_tile(aes(fill = value)) + 
       ggthemes::theme_solid() + 
       theme(legend.position = "none") +
-      scale_fill_gradient2(low = colpal[1], mid = colpal[2], high = colpal[5], midpoint = 50)
+      scale_fill_gradient2(low = colpal[2], mid = colpal[3], high = colpal[4], midpoint = 5)
 
 m %>%
     as_tibble() %>%
@@ -71,18 +82,7 @@ m %>%
       geom_tile(aes(fill = value)) + 
       ggthemes::theme_solid() + 
       theme(legend.position = "none") +
-      scale_fill_gradient2(low = colpal[2], mid = colpal[3], high = colpal[4], midpoint = 50)
-
-m %>%
-    as_tibble() %>%
-    rownames_to_column("x1") %>%
-    gather(x2, value, 2:10) %>%
-    mutate(x2 = gsub("V", "", x2)) %>%
-    ggplot(aes(x1, x2)) + 
-      geom_tile(aes(fill = value)) + 
-      ggthemes::theme_solid() + 
-      theme(legend.position = "none") +
-      scale_fill_gradient2(low = colpal[5], mid = colpal[2], high = colpal[3], midpoint = 50)
+      scale_fill_gradient2(low = colpal[5], mid = colpal[2], high = colpal[3], midpoint = 5)
 ```
 
 

@@ -17,11 +17,11 @@ library("MuMIn")
 library("emmeans")
 library("effects")
 library("here")
+source("analysis_functions.R")
 
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 
-install.packages("ggplot2")
 ```
 
 
@@ -58,10 +58,10 @@ params_full <- rbind(params_full_samp, params_full_full)
 dim(params_full)
 
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/LFMM/LFMM_results.csv")
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/lfmm_results_tw.csv")
 
-path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
-df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
+#path <- here(dirname(getwd()),"p3_methods","outputs","LFMM")
+#df <- do.call(rbind, lapply(list.files(path = path, full.names = TRUE, pattern="*.csv"), read.csv))
 nrow(df) == nrow(params_full)
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
@@ -77,6 +77,42 @@ df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
+# FIG OUT NA LATER
+df <- df[!is.na(df$alpha), ]
+```
+
+```{r fig.width=20, fig.height=7}
+for(i in unique(df$padj)[-1]){
+  for(a in unique(df$alpha)[-1]){
+    summary_hplot(df[df$alpha == a & df$padj == i, ], "TPRCOMBO")
+  }
+}
+
+for(i in unique(df$padj)[-1]){
+  for(a in unique(df$alpha)[-1]){
+    summary_hplot(df[df$alpha == a & df$padj == i, ], "FDRCOMBO")
+  }
+}
+
+summary_hplot(df[df$alpha == 0.05 & df$padj == "none", ], "TPRCOMBO")
+summary_hplot(df[df$alpha == 0.05 & df$padj == "none", ], "FDRCOMBO", sigdig = 3)
+
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "TPRCOMBO")
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "FDRCOMBO", sigdig = 3)
+
+df$emp_combo_mean <- (df$emp1_mean+df$emp2_mean)/2
+
+df$emp_combo <- (df$emp1_TPR/4+df$emp2_TPR/4)/2
+summary_hplot(df, "emp_combo")
+summary_hplot(df, "emp_combo_mean")
+summary_hplot(df, "K.1", sigdig = 3)
+
+df$K0 <- df$K.1 == 1
+summary_hplot(df, "K0", sigdig = 3)
+mean(df$K0, na.rm = TRUE)*100
+
+df$bacc <- (df$TPRCOMBO + df$TNRCOMBO)/2
+summary_hplot(df[df$alpha == 0.05 & df$padj == "fdr", ], "bacc", sigdig = 3)
 ```
 
 ```{r}
@@ -161,31 +197,15 @@ range(df$TPRCOMBO)
 ```{r fig.width = 30, fig.height=15}
 MEGAPLOT(moddf, "TPRCOMBO", max = 0.8, option = "turbo")
 #MEGAPLOT(cdf, "TPRCOMBO_corrected", max = 0.05, min = -0.5, option = "turbo")
-MEGAPLOT(moddf, "FDRCOMBO")
-```
+MEGAPLOT(df, "K.1")
 
-#FOR COMPARISON WITH YOSEMITE
-```{r fig.width=15, fig.height=7}
-ydf <- df[df$H == 0.5 & df$r == 0.3,]
-
-summary_hplot(ydf, maxv = 0.6)
-
+plot(bp)
 ```
 
 
 #EXPLORATORY
-```{r fig.width=20, fig.height=7}
-df$stat <- df$TPRCOMBO
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df, maxv=0.30)
 
 
-df$stat <- df$FDRCOMBO
-moddf <- df[df$sampstrat != "full",]
-summary_vplot(df)
-summary_hplot(df)
-```
 
 
 ```{r fig.width=20, fig.height=8}

@@ -133,6 +133,17 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = h
   return(as.character(subIDs))
 }
 
+# check if files for params exist and skip otherwise
+skip_check <- function(i, params){
+  gen_filepath <- create_filepath(i, params = params, "gen")
+  gsd_filepath <- create_filepath(i, params = params, "gsd")
+  loci_filepath <- create_filepath(i, params = params, "loci")
+  skip_to_next <- FALSE
+  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(skip_to_next) { print("File does not exist:")
+    print(params[i,]) } 
+  return(skip_to_next)
+}
 
 #function to calculate RMSE
 err_coeff <- function(full_coeff, sub_coeff){

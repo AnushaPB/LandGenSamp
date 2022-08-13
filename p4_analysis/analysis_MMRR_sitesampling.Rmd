@@ -43,17 +43,19 @@ params_full <- expand.grid(K = c(1, 2),
                       sampstrat = sampstrat,
                       it = 0)
 
-#df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/LFMM/LFMM_sitesampling_results.csv")
-
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/sitesampling/outputs/MMRR/", full.names = TRUE, pattern="*.csv"), read.csv))
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mmrr_sitesampling_results.csv")
 
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-df$comboenv_rmse <- (df$env1_rmse + df$env2_rmse)/2
+df$comboenv_err <- (df$env1_err + df$env2_err)/2
+df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
 
+df$tpIBE <- ((df$env1_p < 0.05) + (df$env2_p < 0.05))/2
+df$tpIBD <- as.numeric(df$geo_p < 0.05)
 
-
-
+df$env_mae <- abs(df$comboenv_err)
+df$geo_mae <- abs(df$geo_err)
+df$ratio_mae <- abs(df$ratio)
 #REMOVE FULL DATA FOR MODELS
 moddf <- df[df$sampstrat != "full",]
 
@@ -61,90 +63,58 @@ moddf[!complete.cases(moddf),]
 
 ```
 #CALCULATE NEW STATS
-```{r,  fig.width=15, fig.height=7}
-#Create dataframe with all variable combos
-params <- expand.grid(K = c(1, 2), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.3, 0.6),
-                      it = 0:9)
+```{r,  fig.width=20, fig.height=7}
 
-cdf <- data.frame()
-for(i in 1:nrow(params)){
-  p <- params[i,]
-  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
-  full <- subdf[subdf$sampstrat == "full",]
-  sub <- subdf[subdf$sampstrat != "full",]
-  fullratio <- (full$geo_coeff - (full$env1_coeff + full$env2_coeff))/full$geo_coeff
-  subratio <- (sub$geo_coeff - (sub$env1_coeff + sub$env2_coeff))/sub$geo_coeff
-  sub$ratio2_ae <- abs(fullratio - subratio)
-  cdf <- rbind(cdf, sub)
-}
+summary_hplot(cdf, "ratio_mae", colpal = "viridis", direction = -1)
 
-summary_hplot(cdf, "ratio2_ae")
+summary_hplot(cdf, "ratio_err", colpal = "viridis", direction = -1)
+
+summary_hplot(cdf, "ratio", colpal = "viridis", direction = -1)
+
+summary_hplot(cdf, "comboenv_err", divergent = TRUE, direction = -1)
+
+summary_hplot(cdf, "geo_err", divergent = TRUE, direction = -1)
+
+summary_vplot(cdf, "ratio")
 ```
-
-```{r fig.width=20, fig.height=8}
-#Create dataframe with all variable combos
-params <- expand.grid(K = c(1, 2), 
-                      phi = c(0.1, 0.5),
-                      m = c(0.25, 1.0),
-                      seed = c(1, 2, 3),
-                      H = c(0.05, 0.5),
-                      r = c(0.3, 0.6),
-                      it = 0:9)
-
-cdf <- data.frame()
-for(i in 1:nrow(params)){
-  p <- params[i,]
-  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
-  full <- subdf[subdf$sampstrat == "full",]
-  sub <- subdf[subdf$sampstrat != "full",]
-  sub$err <-  abs(sub$geo_coeff - full$geo_coeff)
-  cdf <- rbind(cdf, sub)
-}
-
-summary_hplot(cdf, "err")
-```
-
 
 #EXPLORATORY
 
-```{r fig.width = 30, fig.height=40}
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", max = 0.3)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", max = 0.3)
-```
 ```{r fig.width = 30, fig.height=15}
-MEGAPLOT(moddf, "geo_coeff", option = "turbo", na.rm = TRUE)
-
-MEGAPLOT(moddf, "geo_rmse", option = "turbo", na.rm = TRUE)
-MEGAPLOT(moddf, "comboenv_rmse", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "geo_err", na.rm = TRUE)
 ```
 
-```{r fig.width=20, fig.height=8}
-#should be close to 1 since env1 and env2 should have equal impact (not sure if this is true though because it could vary based on overlap between env1 and 2)
-df$stat <- abs(1 - abs(df$env1_coeff/df$env2_coeff))
-summary_hplot(df)
-
-
-cdf$stat <- cdf$ratio_rmse
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-
-cdf$stat <- cdf$ratio2_ae
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
-
-cdf$stat <- log(cdf$ratio2_ae)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3)
-summary_hplot(cdf, colpal = "viridis", sigdig = 3, aggfunc = "var")
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_err", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_err", option = "turbo", na.rm = TRUE)
 ```
 
 
-# GEO RMSE
+
+
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$geo_rmse
+summary_vplot(df, "geo_coeff")
+summary_vplot(df, "comboenv_coeff")
+```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "geo_err")
+summary_hplot(df, "comboenv_err")
+summary_hplot(df, "ratio_err")
+
+summary_hplot(df, "geo_mae")
+summary_hplot(df, "env_mae")
+summary_hplot(df, "ratio_mae")
+```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "tpIBE")
+summary_hplot(df, "tpIBD")
+```
+
+# GEO err
+```{r fig.width=20, fig.height=7}
+df$stat <- df$geo_err
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
@@ -287,8 +257,6 @@ combos <- dredge(fullmod, rank = "BIC")
 combos
 ```
 
-
-
 ```{r pairwise comparison of npts, fig.width=5, fig.height=5}
 
 model <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
@@ -380,9 +348,9 @@ sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.1
 ```
 
 
-# ENV COMBO RMSE
+# ENV COMBO err
 ```{r fig.width=20, fig.height=7}
-df$stat <- df$comboenv_rmse
+df$stat <- df$comboenv_err
 moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
