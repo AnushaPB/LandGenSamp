@@ -48,7 +48,7 @@ calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
   pvalues <- data.frame(env = p.adjust(pv, method = padj))
   
   #env candidate loci
-  rda_loci <- which(pvalues[,env] < alpha)
+  rda_loci <- which(pvalues[, "env"] < alpha)
   
   #get confusion matrix values
   #for readibility, just negates the in function
