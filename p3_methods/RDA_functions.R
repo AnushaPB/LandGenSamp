@@ -31,8 +31,9 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   pv <- rdadapt_env$p.values
   
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.10)
+  # NOTE: https://github.com/Capblancq/RDA-landscape-genomics used a bonferonni correction
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.10)
   df <- rbind.data.frame(p05, p10)
   
   return(df)

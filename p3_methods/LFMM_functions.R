@@ -38,8 +38,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
                   calibrate = "gif")
   
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
   pdf <- rbind.data.frame(p05, p10)
   df <- data.frame(K = K, pdf)
   
