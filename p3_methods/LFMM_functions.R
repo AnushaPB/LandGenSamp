@@ -194,7 +194,7 @@ get_K_tw <- function(gen, maxK = NULL){
   # the criticalpoint should be set to be 0.9793, 2.0234, 2.4224, or 3.2724, accordingly. 
   # The default is 2.0234.
   
-  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 2.0234), 
+  tryCatch(tw_result <- AssocTests::tw(eig, eigenL = length(eig), criticalpoint = 0.9793), 
            error = function(e) {
              err <<- conditionMessage(e)
              write.table(err, "error_msg.txt")
@@ -209,6 +209,9 @@ get_K_tw <- function(gen, maxK = NULL){
   
   # get K based on number of significant eigenvalues
   K <- tw_result$SigntEigenL
+  
+  # if none are significant, return 1
+  if(K == 0) K <- 1
   
   plot(eig)
   abline(v = K)
