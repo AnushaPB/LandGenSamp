@@ -4,18 +4,6 @@ library("here") #paths
 library("foreach")
 library("doParallel")
 
-library("dplyr")
-library("car")
-library("lsmeans")
-library("lme4")
-library("viridis")
-library("lmerTest")
-library("ggplot2")
-library("gridExtra")
-library("MuMIn")
-library("emmeans")
-library("effects")
-
 #read in general functions and objects
 source("general_functions.R")
 
@@ -43,7 +31,6 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_it",params[i,"it"])
   
   
-  
   #skip iteration if files do not exist
   gsd_filepath <- create_filepath(i, params = params, "gsd")
   skip_to_next <- FALSE
@@ -52,7 +39,6 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                       print(params[i,]) } 
   if(skip_to_next) { result <- NA } 
   
-  #run LFMM
   if(skip_to_next == FALSE){
     gsd_df <- get_data(i, params = params, "gsd")
     
@@ -93,6 +79,3 @@ stopCluster(cl)
 
 write.csv(res_mismatch, "outputs/mismatch_results.csv", row.names = FALSE)
 
-
-
-MEGAPLOT(res_mismatch, "mismatch")
