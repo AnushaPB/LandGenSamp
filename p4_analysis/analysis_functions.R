@@ -194,15 +194,15 @@ prop_na <- function(x){
   return(y)
 }
 
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", full = FALSE, sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
   #create column with stat called "stat"
   df$stat <- df[, stat_name]
   
   #remove full data from data frame
   sampstrat <- unique(df$sampstrat)
   nsamp <- unique(df$nsamp)
-  if(!full & any(sampstrat == "full")){sampstratsub <- sampstrat[-which(sampstrat=="full")]} else {sampstratsub <- sampstrat}
-  if(!full & any(nsamp == 1000 | nsamp == 2000)){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]} else {nsampsub <- nsamp}
+  if(any(sampstrat == "full", na.rm = TRUE)){sampstratsub <- sampstrat[-which(sampstrat == "full")]} else {sampstratsub <- sampstrat}
+  if(any(nsamp == 1000 | nsamp == 2000, na.rm = TRUE)){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]} else {nsampsub <- nsamp}
   
   #create dataframe to store results from summaries
   resdf <- data.frame()
@@ -643,9 +643,14 @@ format_gdm <- function(path){
   return(df)
 }
 
-format_lfmm <- function(path){
+format_lfmm <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
+  
   df <- read.csv(path)
   
+  # remove rows for full
+  if(!full) df <- df[df$sampstrat != "full", ]
+  
+  # convert to factors
   df <- var_to_fact(df)
   
   #IMPORTANT NOTE ABOUT LFMM DATA:
@@ -656,12 +661,20 @@ format_lfmm <- function(path){
   df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
   df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
   
+  # subset by padj method and alpha
+  df <- df[df$padj == padj & alpha == alpha,]
+  
   return(df)
 }
 
-format_rda <- function(path){
+format_rda <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
+  
   df <- read.csv(path)
   
+  # remove rows for full
+  if(!full) df <- df[df$sampstrat != "full", ]
+  
+  # convert to factors
   df <- var_to_fact(df)
   
   #IMPORTANT NOTE ABOUT RDA DATA:
@@ -670,6 +683,13 @@ format_rda <- function(path){
   #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
   df$TPR[is.na(df$TPR)] <- 0
   df$FDR[df$TPR == 0 & is.na(df$FDR)] <- 0
+  df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
+  df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
+  df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
+  
+  
+  # subset by padj method and alpha
+  df <- df[df$padj == padj & alpha == alpha,]
   
   return(df)
 }

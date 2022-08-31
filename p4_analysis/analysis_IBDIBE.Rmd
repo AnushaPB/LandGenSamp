@@ -1,6 +1,6 @@
 ---
 title: "analysis_IBDIBE"
-output: html_document
+output: github_document
 ---
 
 ```{r, warning=FALSE, message=FALSE, fig.width = 30, fig.height=15}
@@ -17,7 +17,7 @@ library("gt")
 source("analysis_functions.R")
 ```
 
-# 1. MMRR
+# 1. LFMM
 
 ## 1.1 Individual sampling 
 

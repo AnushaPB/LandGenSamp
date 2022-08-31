@@ -3,6 +3,7 @@ title: "analysis_tests"
 output: html_document
 ---
 
+
 ```{r}
 library("dplyr")
 library("car")
@@ -13,214 +14,111 @@ library("lmerTest")
 library("ggplot2")
 library("gridExtra")
 library("MuMIn")
+library("emmeans")
+library("effects")
 
+source("analysis_functions.R")
 BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 ```
-
 
 
 #Analysis
 
 ```{r}
 #number of points to sample
-npts <- c(36, 81, 144, 225, 324)
+nsamp <- c(36, 81, 144, 225, 2000)
 #sampling strategies
-sampstrat <- c("rand", "grid", "trans", "envgeo")
+sampstrat <- c("rand", "grid", "trans", "envgeo", "full")
 
 #Create dataframe with all variable combos
-params_full <- expand.grid(K = c(2, 4), 
+params_full <- expand.grid(K = c(1, 2), 
                       phi = c(0.1, 0.5),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      nsamp = npts,
+                      nsamp = nsamp,
                       sampstrat = sampstrat,
-                      it = 1)
+                      it = 0:8)
 
+df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mmrr_indsampling_results.csv")
 
-
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/MMRR/mmrr_results.csv")
 df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
 
-#TESTDATA
-df <- do.call(rbind, lapply(list.files(path = "/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/MMRR/", full.names = TRUE), read.csv))
+df$comboenv_err <- (df$env1_err + df$env2_err)/2
+df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)
+df$ratio_mae <- abs(df$ratio_err)
+#REMOVE FULL DATA FOR MODELS
+moddf <- df[df$sampstrat != "full",]
 
-#REMOVE FULL DATA
-df <- df[df$sampstrat != "full",]
+moddf[!complete.cases(moddf),]
+
 ```
+#CALCULATE NEW STATS
+```{r,  fig.width=20, fig.height=7}
+cdf$ratio_ae <- abs(cdf$ratio_err)
 
+summary_hplot(cdf, "ratio_ae", colpal = "viridis", direction = -1)
 
-#FUNCTION
-```{r}
-summary_vplot <- function(df){
-  (pK <- ggplot(df, aes(fill=K, y=stat, x=factor(nsamp))) + 
-    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-    scale_fill_viridis(discrete=T, option="plasma") +
-    xlab("nsamp") +
-    theme_bw()+
-    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-    #geom_point(aes(col=K),position = position_dodge(width = 0.9), alpha=0.1)+
-    scale_colour_viridis(discrete=T, option="plasma") +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  (pphi <- ggplot(df, aes(fill=phi, y=stat, x=factor(nsamp))) + 
-      geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option="plasma") +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=phi),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option="plasma") +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  (pH <- ggplot(df, aes(fill=H, y=stat, x=factor(nsamp))) + 
-      geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option="plasma") +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=H),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option="plasma") +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  (pr <- ggplot(df, aes(fill=r, y=stat, x=factor(nsamp))) + 
-      geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option="plasma") +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(col=r),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option="plasma") +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  (pm <- ggplot(df, aes(fill=m, y=stat, x=factor(nsamp))) + 
-      geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option="plasma") +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      scale_colour_viridis(discrete=T, option="plasma") +
-      #geom_point(aes(col=m),position = position_dodge(width = 0.9), alpha=0.1)+
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  (ps <- ggplot(df, aes(fill=sampstrat, y=stat, x=factor(nsamp))) + 
-      geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-      scale_fill_viridis(discrete=T, option="plasma") +
-      xlab("nsamp") +
-      theme_bw()+
-      geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-      #geom_point(aes(fill=sampstrat, col=sampstrat),position = position_dodge(width = 0.9), alpha=0.1)+
-      scale_colour_viridis(discrete=T, option="plasma") +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            panel.background = element_blank(), axis.line = element_line(colour = "black")))
-  
-  print(pK)
-  print(pphi)
-  print(pm)
-  print(pH)
-  print(pr)
-  print(ps)
-  grid.arrange(pK, pphi, pm, pH, pr, ps, nrow = 2)
-}
-```
+summary_hplot(cdf, "ratio_err", colpal = "viridis", direction = -1)
 
-```{r}
-summary_hplot <- function(df){
-  resdf <- data.frame()
+summary_hplot(cdf, "ratio", colpal = "viridis", direction = -1)
 
-  for(n in npts){
-    for(s in sampstrat){
-      subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-      
-      meandf <- data.frame()
-      for(p in c("K", "m", "phi", "H", "r")){
-        aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
-        aggdf[,1] <- paste(p,"=", aggdf[,1])
-        aggdf$param <- p
-        meandf <- rbind.data.frame(meandf, aggdf)
-      }
-      
-      colnames(meandf) <- c("group", "mean", "param")
-      
-      #save results
-      tempdf <- data.frame(meandf)
-      tempdf$nsamp <- n
-      tempdf$sampstrat <- s
-      resdf <- rbind.data.frame(resdf, tempdf)
-    }
-  }
-  
-  row.names(resdf) <- NULL
-  resdf$nsamp <- as.factor(resdf$nsamp)
-  
-  ## plot data
-  plts <- list()
-  for(i in 1:length(unique(resdf$group))){
-    tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-    p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-      ggtitle(unique(tempdf$group)) +
-      geom_tile(aes(fill = mean)) + 
-      geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-      scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "plasma") +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50", size = 14),
-            axis.text.y = element_text(color = "gray50", size = 14), 
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    plts[[i]] <- p
-  }
-  
-  
-  plts2 <- list()
-  o <- 1
-  for(i in seq(1, length(plts), 2)){
-    plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-    o <- o+1
-  }
-  
-  do.call(grid.arrange, c(plts2, nrow=1))
-}
+summary_hplot(cdf, "comboenv_err", divergent = TRUE, direction = -1)
+
+summary_hplot(cdf, "geo_err", divergent = TRUE, direction = -1)
+
+summary_vplot(cdf, "ratio")
 
 ```
 
 #EXPLORATORY
-```{r  fig.width=20, fig.height=6}
-df$stat <- df$geo_rmse
-summary_vplot(df)
-summary_hplot(df)
 
-df$stat <- log(df$geo_rmse)
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "ratio_mae", option = "turbo", na.rm = TRUE)
+```
+
+```{r fig.width = 30, fig.height=15}
+MEGAPLOT(moddf, "geo_err", option = "turbo", na.rm = TRUE)
+MEGAPLOT(moddf, "comboenv_err", option = "turbo", na.rm = TRUE)
+```
+
+```{r fig.width=20, fig.height=7}
+summary_vplot(df, "geo_coeff")
+summary_vplot(df, "comboenv_coeff")
+```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "geo_err")
+summary_hplot(df, "comboenv_err")
+```
+
+```{r fig.width=20, fig.height=7}
+summary_hplot(df, "ratio_mae")
+summary_hplot(df, "ratio_err")
+summary_hplot(df, "comboenv_err")
+```
+
+# GEO err
+```{r fig.width=20, fig.height=7}
+df$stat <- df$geo_err
+moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
 ```
 
-
-#GEO RMSE
-```{r fig.width=20, fig.height=6}
-df$stat <- df$geo_rmse
-summary_vplot(df)
-summary_hplot(df)
-```
-
-
-# full model
+# full model w/ interactions
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
 #na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), df, na.action = "na.fail")
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
 
 #anova
 aovmod <- anova(fullmod)
@@ -234,15 +132,124 @@ efmod
 ```
 
 ```{r}
+fullmod <-  lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + 
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
 combos <- dredge(fullmod)
 combos
 ```
 
-```{r pairwise comparison of npts}
-#TukeyHSD
-library(emmeans)
 
-model <- lmer(stat ~ nsamp + (1 | seed), df, na.action = "na.fail")
+```{r}
+finalmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + 
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+#anova
+aovmod <- anova(finalmod)
+aovmod
+
+```
+
+
+```{r}
+ints <- c("K*phi", "K*H", "K*m", 
+          "m*phi", "m*H", "m*r",
+          "phi*H", "phi*r", 
+          "H*r")
+
+effplts <- list()
+for(i in 1:length(ints)){
+    eff <- effect(ints[i], finalmod)
+    effplts[[i]] <- eff
+    print(plot(eff))
+}
+
+
+par(mfrow=c(2,4))
+for(i in 1:length(effplts)){
+   p <- plot(effplts[[i]])
+   print(p)
+}
+
+
+
+effplts2 <- list()
+
+for(i in 1:length(effplts)){
+    eff <- as.data.frame(effplts[[i]])
+    v1 <- eff[,1]
+    v2 <- eff[,2]
+    p <- ggplot_gtable(ggplot_build(ggplot(eff, aes(factor(v1), linetype=factor(v2),
+                                     color = factor(v2))) +
+        geom_line(aes(y = fit, group=factor(v2)), size=1) +
+        geom_ribbon(aes(ymin = lower, ymax = upper, group = factor(v2), fill = factor(v2), col = factor(v2)), 
+                  alpha=0.2, 
+                  linetype="dashed") + 
+        xlab(colnames(eff)[1]) +
+        ylab("") +
+        scale_colour_manual(values = c("#756fd6","#30D5C8")) +
+        scale_fill_manual(values = c("#756fd6", "#30D5C8")) +
+        scale_x_discrete(expand = c(0.05, 0.05)) +
+        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+              panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21),
+              plot.margin=unit(rep(0.4,4),"cm")) +
+        guides(col=guide_legend(title=colnames(eff)[2], labels = levels(factor(v2))), linetype = FALSE, fill = FALSE, size = FALSE)))
+    
+    effplts2[[i]] <- p
+    gc()
+
+}
+
+
+
+
+```
+
+
+```{r fig.width = 10, fig.height = 14}
+do.call(grid.arrange, c(effplts2, ncol=2))
+```
+
+
+# full model w/o interactions
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+```{r}
+combos <- dredge(fullmod)
+combos
+```
+
+```{r}
+combos <- dredge(fullmod, rank = "BIC")
+combos
+```
+
+
+
+```{r pairwise comparison of npts, fig.width=5, fig.height=5}
+
+model <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 pw <- emmeans(model, list(pairwise ~ nsamp), adjust = "tukey")
 
@@ -250,11 +257,43 @@ resdf <- data.frame(pw$`pairwise differences of nsamp`)
 resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
 resdf$p2 <- gsub(".*- ", "", resdf$X1)
 
+resdf$estimate[resdf$p.value > 0.05] <- NA
+
+resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(nsamp))
+resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(nsamp))
+
+ggplot(resdf, aes(p1,p2)) +
+    geom_tile(aes(fill = estimate)) + 
+    geom_text(aes(label = signif(estimate,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$estimate),max(resdf$estimate))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+
+```
+```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+#TukeyHSD
+
+model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+
+pw <- emmeans(model, list(pairwise ~ sampstrat), adjust = "tukey")
+
+resdf <- data.frame(pw$`pairwise differences of sampstrat`)
+resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
+resdf$p2 <- gsub(".*- ", "", resdf$X1)
+
 
 resdf$estimate[resdf$p.value > 0.05] <- NA
 
-resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(npts))
-resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(npts))
+resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(c("envgeo","grid","rand","trans")))
+resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(c("envgeo","grid","rand","trans")))
 
 ggplot(resdf, aes(p1,p2)) +
     geom_tile(aes(fill = estimate)) + 
@@ -273,238 +312,51 @@ ggplot(resdf, aes(p1,p2)) +
 
 ```
 
+#which is best when?
+```{r, fig.height=8, fig.width=5}
+nsamp_sampstrat_mods(df, sampstrat = sampstrat, nsamp = nsamp)
+```
+
+```{r fig.width=10, fig.height=10}
+sampstrat_nsamp_mods(df, sampstrat = sampstrat, nsamp = nsamp)
+```
+
 # model subset by sampling strategy
 Determine how sampling strategy affects the relationships between the sim vars/nsamp
 
-```{r fig.width=6, fig.height=4}
-resdf <- data.frame()
-
-for(s in sampstrat){
-  subdf <- df[df$sampstrat == s, ]
-  
-  #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-  #mixed effect model
-  fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-  #anova to get p-values
-  aovmod <- anova(fullmod)
-
-  #fixed effects (minus intercept)
-  efmod <- fixef(fullmod)[-1]
-  
-  #save results
-  tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
-  tempdf$param <- row.names(aovmod)
-  tempdf$sampstrat <- s
-  resdf <- rbind.data.frame(resdf, tempdf)
-}
-
-
-row.names(resdf) <- NULL
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-tempdf <- resdf
-tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-
-p <- ggplot(tempdf, aes(param, sampstrat)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-
-p
-
+```{r fig.width=5, fig.height=4}
+sampstrat_mod(df, sampstrat = sampstrat, full = TRUE)
 ```
-
-
+```{r fig.width=5, fig.height=4}
+nsamp_mod(df, nsamp = nsamp, full = TRUE)
+```
 # model subset by nsamp and sampling strategy
 Determine how sampling strategy/nsamp affects the affects of the sim vars
 
-
-```{r real code, fig.width=12, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-    #anova to get p-values
-    aovmod <- anova(fullmod)
-
-    #fixed effects (minus intercept)
-    efmod <- fixef(fullmod)[-1]
-    
-    #save results
-    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
-    tempdf$param <- row.names(aovmod)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$param))){
-  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
-  tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$param)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = round(fixef, digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-do.call(grid.arrange, c(plts, nrow=2))
-
-```
-
-#summary stat plots by sampling strategy
-```{r real code, fig.width=20, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    meandf <- data.frame()
-    for(p in c("K", "m", "phi", "H", "r")){
-      aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
-      aggdf[,1] <- paste(p,"=", aggdf[,1])
-      aggdf$param <- p
-      meandf <- rbind.data.frame(meandf, aggdf)
-    }
-    
-    colnames(meandf) <- c("group", "mean", "param")
-    
-    #save results
-    tempdf <- data.frame(meandf)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "plasma") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
-
-
-```
-
-```{r, fig.width = 20, fig.height = 6}
-#rainbow plot - not for use, but easier for my brain to interpret
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "turbo") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
+```{r real code, fig.width=20, fig.height=4}
+sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.10)
 ```
 
 
-
-#ENV1 RMSE
-```{r fig.width=20, fig.height=6}
-df$stat <- df$env1_rmse
+# ENV COMBO err
+```{r fig.width=20, fig.height=7}
+df$stat <- df$comboenv_err
+moddf <- df[df$sampstrat != "full",]
 summary_vplot(df)
 summary_hplot(df)
 ```
 
-
-# full model
+# full model w/ interactions
 ```{r}
 #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
 #mixed effect model
 #na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), df, na.action = "na.fail")
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + K*r +
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
 
 #anova
 aovmod <- anova(fullmod)
@@ -518,15 +370,124 @@ efmod
 ```
 
 ```{r}
+fullmod <-  lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + 
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
 combos <- dredge(fullmod)
 combos
 ```
 
-```{r pairwise comparison of npts}
-#TukeyHSD
-library(emmeans)
 
-model <- lmer(stat ~ nsamp + (1 | seed), df, na.action = "na.fail")
+```{r}
+finalmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    K*m + K*phi + K*H + 
+                    m*phi + m*H + m*r + 
+                    phi*H + phi*r + 
+                    H*r +
+                    (1 | seed), moddf, na.action = "na.fail")
+#anova
+aovmod <- anova(finalmod)
+aovmod
+
+```
+
+
+```{r}
+ints <- c("K*phi", "K*H", "K*m", 
+          "m*phi", "m*H", "m*r",
+          "phi*H", "phi*r", 
+          "H*r")
+
+effplts <- list()
+for(i in 1:length(ints)){
+    eff <- effect(ints[i], finalmod)
+    effplts[[i]] <- eff
+    print(plot(eff))
+}
+
+
+par(mfrow=c(2,4))
+for(i in 1:length(effplts)){
+   p <- plot(effplts[[i]])
+   print(p)
+}
+
+
+
+effplts2 <- list()
+
+for(i in 1:length(effplts)){
+    eff <- as.data.frame(effplts[[i]])
+    v1 <- eff[,1]
+    v2 <- eff[,2]
+    p <- ggplot_gtable(ggplot_build(ggplot(eff, aes(factor(v1), linetype=factor(v2),
+                                     color = factor(v2))) +
+        geom_line(aes(y = fit, group=factor(v2)), size=1) +
+        geom_ribbon(aes(ymin = lower, ymax = upper, group = factor(v2), fill = factor(v2), col = factor(v2)), 
+                  alpha=0.2, 
+                  linetype="dashed") + 
+        xlab(colnames(eff)[1]) +
+        ylab("") +
+        scale_colour_manual(values = c("#756fd6","#30D5C8")) +
+        scale_fill_manual(values = c("#756fd6", "#30D5C8")) +
+        scale_x_discrete(expand = c(0.05, 0.05)) +
+        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+              panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21),
+              plot.margin=unit(rep(0.4,4),"cm")) +
+        guides(col=guide_legend(title=colnames(eff)[2], labels = levels(factor(v2))), linetype = FALSE, fill = FALSE, size = FALSE)))
+    
+    effplts2[[i]] <- p
+    gc()
+
+}
+
+
+
+
+```
+
+
+```{r fig.width = 10, fig.height = 14}
+do.call(grid.arrange, c(effplts2, ncol=2))
+```
+
+
+# full model w/o interactions
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + 
+                    (1 | seed), moddf, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+```{r}
+combos <- dredge(fullmod)
+combos
+```
+
+```{r}
+combos <- dredge(fullmod, rank = "BIC")
+combos
+```
+
+
+
+```{r pairwise comparison of npts, fig.width=5, fig.height=5}
+
+model <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
 
 pw <- emmeans(model, list(pairwise ~ nsamp), adjust = "tukey")
 
@@ -534,11 +495,43 @@ resdf <- data.frame(pw$`pairwise differences of nsamp`)
 resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
 resdf$p2 <- gsub(".*- ", "", resdf$X1)
 
+resdf$estimate[resdf$p.value > 0.05] <- NA
+
+resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(nsamp))
+resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(nsamp))
+
+ggplot(resdf, aes(p1,p2)) +
+    geom_tile(aes(fill = estimate)) + 
+    geom_text(aes(label = signif(estimate,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$estimate),max(resdf$estimate))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+
+```
+```{r pairwise comparison of sampstrat, fig.width=5, fig.height=5}
+#TukeyHSD
+
+model <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), moddf, na.action = "na.fail")
+
+pw <- emmeans(model, list(pairwise ~ sampstrat), adjust = "tukey")
+
+resdf <- data.frame(pw$`pairwise differences of sampstrat`)
+resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
+resdf$p2 <- gsub(".*- ", "", resdf$X1)
+
 
 resdf$estimate[resdf$p.value > 0.05] <- NA
 
-resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(npts))
-resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(npts))
+resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(c("envgeo","grid","rand","trans")))
+resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(c("envgeo","grid","rand","trans")))
 
 ggplot(resdf, aes(p1,p2)) +
     geom_tile(aes(fill = estimate)) + 
@@ -557,502 +550,29 @@ ggplot(resdf, aes(p1,p2)) +
 
 ```
 
-# model subset by sampling strategy
-Determine how sampling strategy affects the relationships between the sim vars/nsamp
-
-```{r fig.width=6, fig.height=4}
-resdf <- data.frame()
-
-for(s in sampstrat){
-  subdf <- df[df$sampstrat == s, ]
-  
-  #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-  #mixed effect model
-  fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-  #anova to get p-values
-  aovmod <- anova(fullmod)
-
-  #fixed effects (minus intercept)
-  efmod <- fixef(fullmod)[-1]
-  
-  #save results
-  tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
-  tempdf$param <- row.names(aovmod)
-  tempdf$sampstrat <- s
-  resdf <- rbind.data.frame(resdf, tempdf)
-}
-
-
-row.names(resdf) <- NULL
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-tempdf <- resdf
-tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-
-p <- ggplot(tempdf, aes(param, sampstrat)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-
-p
-
+#which is best when?
+```{r, fig.height=8, fig.width=5}
+nsamp_sampstrat_mods(df, sampstrat = sampstrat, nsamp = nsamp)
 ```
 
-
-# model subset by nsamp and sampling strategy
-Determine how sampling strategy/nsamp affects the affects of the sim vars
-
-
-```{r real code, fig.width=12, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-    #anova to get p-values
-    aovmod <- anova(fullmod)
-
-    #fixed effects (minus intercept)
-    efmod <- fixef(fullmod)[-1]
-    
-    #save results
-    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
-    tempdf$param <- row.names(aovmod)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$param))){
-  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
-  tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$param)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = round(fixef, digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-do.call(grid.arrange, c(plts, nrow=2))
-
-```
-
-#summary stat plots by sampling strategy
-```{r real code, fig.width=20, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    meandf <- data.frame()
-    for(p in c("K", "m", "phi", "H", "r")){
-      aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
-      aggdf[,1] <- paste(p,"=", aggdf[,1])
-      aggdf$param <- p
-      meandf <- rbind.data.frame(meandf, aggdf)
-    }
-    
-    colnames(meandf) <- c("group", "mean", "param")
-    
-    #save results
-    tempdf <- data.frame(meandf)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "plasma") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
-
-
-```
-
-```{r, fig.width = 20, fig.height = 6}
-#rainbow plot - not for use, but easier for my brain to interpret
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "turbo") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
-```
-
-
-
-#ENV2 RMSE
-```{r fig.width=20, fig.height=6}
-df$stat <- df$env2_rmse
-summary_vplot(df)
-summary_hplot(df)
-```
-
-
-# full model
-```{r}
-#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-#mixed effect model
-#na.action needs to be set to na.fail for dredge to work
-fullmod <- lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), df, na.action = "na.fail")
-
-#anova
-aovmod <- anova(fullmod)
-
-#fixed effects (minus intercept)
-efmod <- fixef(fullmod)[-1]
-
-#print result
-aovmod
-efmod
-```
-
-```{r}
-combos <- dredge(fullmod)
-combos
-```
-
-```{r pairwise comparison of npts}
-#TukeyHSD
-library(emmeans)
-
-model <- lmer(stat ~ nsamp + (1 | seed), df, na.action = "na.fail")
-
-pw <- emmeans(model, list(pairwise ~ nsamp), adjust = "tukey")
-
-resdf <- data.frame(pw$`pairwise differences of nsamp`)
-resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
-resdf$p2 <- gsub(".*- ", "", resdf$X1)
-
-
-resdf$estimate[resdf$p.value > 0.05] <- NA
-
-resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(npts))
-resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(npts))
-
-ggplot(resdf, aes(p1,p2)) +
-    geom_tile(aes(fill = estimate)) + 
-    geom_text(aes(label = signif(estimate,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$estimate),max(resdf$estimate))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-
+```{r fig.width=10, fig.height=10}
+sampstrat_nsamp_mods(df, sampstrat = sampstrat, nsamp = nsamp)
 ```
 
 # model subset by sampling strategy
 Determine how sampling strategy affects the relationships between the sim vars/nsamp
 
-```{r fig.width=6, fig.height=4}
-resdf <- data.frame()
-
-for(s in sampstrat){
-  subdf <- df[df$sampstrat == s, ]
-  
-  #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-  #mixed effect model
-  fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-  #anova to get p-values
-  aovmod <- anova(fullmod)
-
-  #fixed effects (minus intercept)
-  efmod <- fixef(fullmod)[-1]
-  
-  #save results
-  tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
-  tempdf$param <- row.names(aovmod)
-  tempdf$sampstrat <- s
-  resdf <- rbind.data.frame(resdf, tempdf)
-}
-
-
-row.names(resdf) <- NULL
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-tempdf <- resdf
-tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-
-p <- ggplot(tempdf, aes(param, sampstrat)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-
-p
-
+```{r fig.width=5, fig.height=4}
+sampstrat_mod(df, sampstrat = sampstrat, full = TRUE)
 ```
 
-
+```{r fig.width=5, fig.height=4}
+nsamp_mod(df, nsamp = nsamp, full = TRUE)
+```
 # model subset by nsamp and sampling strategy
 Determine how sampling strategy/nsamp affects the affects of the sim vars
 
-
-```{r real code, fig.width=12, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-
-    #anova to get p-values
-    aovmod <- anova(fullmod)
-
-    #fixed effects (minus intercept)
-    efmod <- fixef(fullmod)[-1]
-    
-    #save results
-    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
-    tempdf$param <- row.names(aovmod)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-resdf$padj <- p.adjust(resdf$p, "fdr")
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$param))){
-  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
-  tempdf[tempdf$padj > 0.05, "fixef"] <- NA
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$param)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = round(fixef, digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-do.call(grid.arrange, c(plts, nrow=2))
-
+```{r real code, fig.width=20, fig.height=4}
+sampstrat_nsamp_mod_params(df, sampstrat = sampstrat, nsamp = nsamp, alpha = 0.10)
 ```
 
-#summary stat plots by sampling strategy
-```{r real code, fig.width=20, fig.height=6}
-
-resdf <- data.frame()
-
-for(n in npts){
-  for(s in sampstrat){
-    subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-    
-    meandf <- data.frame()
-    for(p in c("K", "m", "phi", "H", "r")){
-      aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
-      aggdf[,1] <- paste(p,"=", aggdf[,1])
-      aggdf$param <- p
-      meandf <- rbind.data.frame(meandf, aggdf)
-    }
-    
-    colnames(meandf) <- c("group", "mean", "param")
-    
-    #save results
-    tempdf <- data.frame(meandf)
-    tempdf$nsamp <- n
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-}
-
-row.names(resdf) <- NULL
-resdf$nsamp <- as.factor(resdf$nsamp)
-
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "plasma") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
-
-
-```
-
-```{r, fig.width = 20, fig.height = 6}
-#rainbow plot - not for use, but easier for my brain to interpret
-## plot data
-plts <- list()
-for(i in 1:length(unique(resdf$group))){
-  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-  p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-    ggtitle(unique(tempdf$group)) +
-    geom_tile(aes(fill = mean)) + 
-    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
-    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "turbo") +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 14),
-          axis.text.y = element_text(color = "gray50", size = 14), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  plts[[i]] <- p
-}
-
-
-plts2 <- list()
-o <- 1
-for(i in seq(1, length(plts), 2)){
-  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
-  o <- o+1
-}
-
-do.call(grid.arrange, c(plts2, nrow=1))
-```
