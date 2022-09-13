@@ -1,14 +1,12 @@
 
-run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
+run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom", method = "ridge"){
   
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
   
-  #if K is not specified it is calculated based on a tracy widom test
-  if(is.null(K)){
-    K <- get_K(gen, k_selection = "tracy.widom")
-  }
+  #if K is not specified, it is automatically calculated
+  if(is.null(K)) K <- get_K(gen, K_selection = K_selection) 
   
   #gen matrix
   genmat = as.matrix(gen)
@@ -19,17 +17,8 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   
   #BOTH ENV
   #run model
-  
-  tryCatch(lfmm_mod <- lfmm_ridge(genmat, envmat, K = K), 
-           error = function(e) {
-             err <<- conditionMessage(e)
-             write.table(err, "error_msg.txt")
-             write.csv(genmat, "error_genmat.csv", row.names = FALSE)
-             write.csv(envmat, "error_envmat_df.csv", row.names = FALSE)
-             
-             message(err)
-             
-             stop(err)})
+  if (method == "ridge") lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
+  if (method == "lasso") lfmm_mod <- lfmm_lasso(genmat, envmat, K = K)
   
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
@@ -41,7 +30,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL){
   p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
   p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
   pdf <- rbind.data.frame(p05, p10)
-  df <- data.frame(K = K, pdf)
+  df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, pdf)
   
   return(df)
 }
@@ -152,7 +141,8 @@ get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
 }
 
 # Determine best K using find.clusters
-get_K_fc <- function(gen, max.n.clust = 10, perc.pca = 90){
+get_K_fc <- function(gen, max.n.clust = NULL, perc.pca = 90){
+  if(is.null(max.n.clust)) max.n.clust <- nrow(gen) - 1
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)

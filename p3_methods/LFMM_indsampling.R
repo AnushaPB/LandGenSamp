@@ -3,18 +3,15 @@ set.seed(42)
 library("here") 
 #to install LFMM:
 #devtools::install_github("bcm-uga/lfmm")
-library("lfmm") #LFMM
-library("vcfR")
 library("foreach")
 library("doParallel")
-library("AssocTests")
 
 #read in general functions and objects
 source("general_functions.R")
 source("LFMM_functions.R")
 
 #register cores
-cores <- 20
+cores <- 30
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -42,16 +39,9 @@ system.time(
           subgsd_df <- gsd_df[subIDs,]
           
           #run analysis using subsample
-          tryCatch(sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL), 
-                   error = function(e) {
-                     err <<- conditionMessage(e)
-                     write.table(err, "error_msg.txt")
-                     write.csv(subgen, "error_subgen.csv", row.names = FALSE)
-                     write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
-                     
-                     message(err)
-                     
-                     stop(err)})
+          sub_result_tw <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL, K_selection = "tracy.widom")
+          sub_result_fc <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL, K_selection = "find.clusters")
+          sub_result <- bind_rows(sub_result_tw, sub_result_fc)
           
           #save and format new result
           sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
