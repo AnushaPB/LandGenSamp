@@ -1,4 +1,8 @@
 
+run_lfmm_helper <- function(x, gen, gsd_df, loci_df){
+  return(run_lfmm(gen, gsd_df, loci_df, K = NULL, K_selection = x["K_selection"], method = x["method"]))
+}
+
 run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom", method = "ridge"){
   
   #get adaptive loci
