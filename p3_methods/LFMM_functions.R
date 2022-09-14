@@ -147,6 +147,7 @@ get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
 # Determine best K using find.clusters
 get_K_fc <- function(gen, max.n.clust = 10, perc.pca = 90){
   if(is.null(max.n.clust)) max.n.clust <- nrow(gen) - 1
+  if(max.n.clust < (nrow(gen) - 1)) max.n.clust <- nrow(gen) - 1
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)
