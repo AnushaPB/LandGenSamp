@@ -52,17 +52,11 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         #run analysis using subsample
         #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K) 
-        #run analysis using siteample
-        tryCatch(sub_result <- run_lfmm(sitegen, sitegsd_df, loci_df, K = NULL) , 
-                 error = function(e) {
-                   err <<- conditionMessage(e)
-                   write.table(err, "error_msg.txt")
-                   write.csv(subgen, "error_subgen.csv", row.names = FALSE)
-                   write.csv(subgsd_df, "error_subgsd_df.csv", row.names = FALSE)
-                   
-                   message(err)
-                   
-                   stop(err)})
+        #run analysis using subsample
+        sub_result <- 
+          cross(list(K_selection = c("tracy.widom", "find.clusters"), method = c("lasso", "ridge"))) %>%
+          map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df)
+        
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
