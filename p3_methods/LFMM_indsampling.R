@@ -39,9 +39,9 @@ system.time(
           subgsd_df <- gsd_df[subIDs,]
           
           #run analysis using subsample
-          sub_result_tw <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL, K_selection = "tracy.widom")
-          sub_result_fc <- run_lfmm(subgen, subgsd_df, loci_df, K = NULL, K_selection = "find.clusters")
-          sub_result <- bind_rows(sub_result_tw, sub_result_fc)
+          sub_result <- 
+            cross(list(K_selection = c("tracy.widom", "find.clusters"), method = c("lasso", "ridge"))) %>%
+            map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df)
           
           #save and format new result
           sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
