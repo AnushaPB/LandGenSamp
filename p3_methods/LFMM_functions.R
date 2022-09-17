@@ -133,13 +133,13 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
 
 
 # function to determine K
-get_K <- function(gen, coords = NULL, k_selection = "find.clusters", ...){
+get_K <- function(gen, coords = NULL, K_selection = "find.clusters", ...){
   
-  if(k_selection == "tracy.widom") K <- get_K_tw(gen)
+  if(K_selection == "tracy.widom") K <- get_K_tw(gen)
   
-  if(k_selection == "quick.elbow") K <- get_K_elbow(gen)
+  if(K_selection == "quick.elbow") K <- get_K_elbow(gen)
   
-  if(k_selection == "find.clusters") K <- get_K_fc(gen)
+  if(K_selection == "find.clusters") K <- get_K_fc(gen)
   
   return(K)
 }
