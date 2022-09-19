@@ -95,21 +95,6 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = h
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  #Check if files for parameter exist
-  gen_filepath <- create_filepath(i, params = params, "gen")
-  print(gen_filepath)
-  gsd_filepath <- create_filepath(i, params = params, "gsd")
-  print(gsd_filepath)
-  loci_filepath <- create_filepath(i, params = params, "loci")
-  print(loci_filepath)
-  file_exists <- TRUE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){file_exists <- FALSE}
-  if(!file_exists) { 
-    print("File does not exist:")
-    print(params[i,]) 
-  } 
-  stopifnot(file_exists)
-  
   subIDs <- read.csv(paste0(outdir, "/samples_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
