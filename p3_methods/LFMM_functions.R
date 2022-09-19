@@ -21,8 +21,9 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom"
   
   #BOTH ENV
   #run model
-  if (method == "ridge") lfmm_mod <- lfmm_ridge(genmat, envmat, K = K)
-  if (method == "lasso") lfmm_mod <- lfmm_lasso(genmat, envmat, K = K)
+  if (method == "ridge") lfmm_mod <- tryCatch(lfmm_ridge(genmat, envmat, K = K), error = function(x) NA)
+  if (method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NA)
+  if(is.na(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = method))
   
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
