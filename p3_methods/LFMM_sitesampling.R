@@ -12,7 +12,11 @@ library("AssocTests")
 #read in general functions and objects
 source("general_functions.R")
 source("sitesampling_functions.R")
+<<<<<<< HEAD
 source("LFMM_functions.R")
+=======
+source("lfmm_functions.R")
+>>>>>>> 3b7f6d84c56778f8a04188a463b23f8f74568f26
 
 #register cores
 cores <- 25
