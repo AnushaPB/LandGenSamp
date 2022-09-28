@@ -1,5 +1,8 @@
 #run this script in LandGenSamp/p1_gnxsims/parallel
 
+#create genomic architecture file 
+Rscript create_genomic_architecture
+
 #create nnloci dir if it does not exist
 mkdir -p nnloci
 
