@@ -1,4 +1,3 @@
-from os.path import exists
 
 import geonomics as gnx
 import numpy as np
@@ -7,6 +6,7 @@ import multiprocessing as mp
 import sys
 import matplotlib.pyplot as plt
 from functools import partial
+from os.path import exists
 
 # Make uniform array
 def make_unif_array(n):
@@ -473,10 +473,9 @@ params = {
 }  # <END> params
 
 # define parameters to vary
-
 K_array = [1, 2]
 phi_array = [0.1, 0.5]
-m_array = [1]
+m_array = [0.25, 100]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
@@ -484,13 +483,13 @@ r_array = [0.3, 0.6]
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-# create a 2D array of seeds for simulations
-sim_seeds = [[i + 1] for i in np.array(range(sim_array.shape[0]))]
+# create a 2D array of seeds for simulations  (add 1000 to make it different from m100)
+sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
-#FIX THIS SO IT ISN'T  A HARD PATH
+#FIX THIS SO IT ISN'T A HARD PATH
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
 dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
@@ -505,23 +504,61 @@ def run_sims(sim_list, params):
     r = float(sim_list[5])
     simseed = float(sim_list[6])
 
-    # make our params dict into a proper Geonomics ParamsDict object
+    #create mod name
     mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
-
-    #check if file path already exists
+    
+    #check if file path to final iteration (it-9) already exists
     path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
     if exists(path_to_file):
-        potato = 1 + 1
+        print(mod_name + " exists, skipping")
     else:
-        print(mod_name + " does not exist")
+        print(mod_name + " starting")
+       
+        # get env layers
+        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+
+        # redefine params
+        params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
+        params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
+        params['comm']['species']['spp_0']['init']['K_factor'] = K
+        params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
+        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
+        
+        # creates a unique random seed for every parameter set
+        params['model']['num'] = int(simseed)
+
+        # print params to confirm proper params were used (in output)
+        print(params)
+
+        # make our params dict into a proper Geonomics ParamsDict object
+        params = gnx.make_params_dict(params, mod_name)
+        # then use it to make a model
+        mod = gnx.make_model(parameters=params, verbose=True)
+
+        # run the model
+        mod.run(verbose = True)
+
+        # save and print all of the non-neutral loci
+        loci_df = pd.DataFrame()
+        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
+        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
+        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
+        print("\nNON-NEUTRAL LOCI:")
+        print(mod.comm[0].gen_arch.nonneut_loci)
+
 
 
 #multiprocessing
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 8
+    ncpu = 10
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
