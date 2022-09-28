@@ -483,13 +483,13 @@ r_array = [0.3, 0.6]
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-# create a 2D array of seeds for simulations  (add 1000 to make it different from m100
+# create a 2D array of seeds for simulations  (add 1000 to make it different from m100)
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
-#FIX THIS SO IT ISN'T  A HARD PATH
+#FIX THIS SO IT ISN'T A HARD PATH
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
 dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
@@ -507,12 +507,14 @@ def run_sims(sim_list, params):
     #create mod name
     mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    
     #check if file path to final iteration (it-9) already exists
     path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
     if exists(path_to_file):
         print(mod_name + " exists, skipping")
     else:
         print(mod_name + " starting")
+       
         # get env layers
         env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
                 int(r * 100)) + ".csv", delimiter=',')
@@ -527,6 +529,7 @@ def run_sims(sim_list, params):
         params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
         params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
+        
         # creates a unique random seed for every parameter set
         params['model']['num'] = int(simseed)
 
