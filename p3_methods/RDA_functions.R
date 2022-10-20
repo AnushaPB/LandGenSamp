@@ -118,7 +118,7 @@ calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
   stopifnot(nrow(rv2) == nrow(pvalues))
   rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
   #Identify negatives
-  rda_neg1 <- which(!(pvalues$p < sig & rv2$p < sig))
+  rda_neg2 <- which(!(pvalues$p < sig & rv2$p < sig))
   #check length makes sense
   stopifnot(length(rda_loci2) + length(rda_neg2) == nrow(pvalues))
   
