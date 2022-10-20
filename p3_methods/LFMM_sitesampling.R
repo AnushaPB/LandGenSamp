@@ -24,7 +24,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
   
   #skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
-  if(skip_to_next) { result <- NA } 
+  if(skip_to_next) result <- NA 
   
   #run LFMM
   if(skip_to_next == FALSE){
@@ -52,12 +52,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[,-1]) 
         
         #run analysis using subsample
-        #sub_result <- run_lfmm(subgen, subgsd_df, loci_df, K = full_result$K) 
-        #run analysis using subsample
         sub_result <- 
           cross(list(K_selection = c("tracy.widom", "find.clusters"), method = c("lasso", "ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df)
-        
         
         #save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
