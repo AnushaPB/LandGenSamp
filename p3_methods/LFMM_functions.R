@@ -32,15 +32,16 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom"
                   calibrate = "gif")
   
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, alpha = 0.10)
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, sig = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, sig = 0.10)
   pdf <- rbind.data.frame(p05, p10)
   df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, pdf)
   
   return(df)
 }
 
-calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
+
+calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, sig = 0.05){
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
@@ -51,9 +52,9 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   
   #env1 candidate loci
   #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,"env1"] < alpha) 
+  lfmm_loci1 <- which(pvalues[,"env1"] < sig) 
   #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= alpha | is.na(pvalues[,"env1"]))
+  lfmm_neg1 <- which(pvalues[,"env1"] >= sig | is.na(pvalues[,"env1"]))
   #check length makes sense
   stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
   
@@ -71,9 +72,9 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   
   #env2 candidate loci
   #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,"env2"] < alpha) 
+  lfmm_loci2 <- which(pvalues[,"env2"] < sig) 
   #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= alpha | is.na(pvalues[,"env2"]))
+  lfmm_neg2 <- which(pvalues[,"env2"] >= sig | is.na(pvalues[,"env2"]))
   #check length makes sense
   stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
   
@@ -110,13 +111,13 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, alpha = 0.05){
   # Calculate empirical pvalues (I THINK - CHECK THIS)
   null1 <- pvalues$env1[-loci_trait1]
   emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_TPR <- sum(emp1 < alpha, na.rm  = TRUE)
+  emp1_TPR <- sum(emp1 < sig, na.rm  = TRUE)
   null2 <- pvalues$env2[-loci_trait2]
   emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_TPR <- sum(emp2 < alpha, na.rm  = TRUE)
+  emp2_TPR <- sum(emp2 < sig, na.rm  = TRUE)
   
   return(data.frame(padj = padj,
-                    alpha = alpha,
+                    sig = sig,
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
