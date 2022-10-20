@@ -30,39 +30,118 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   # P-values
   pv <- rdadapt_env$p.values
   
+  # r values
+  rv <- rda_cor(gen, gsd_df[,c("env1", "env2")])
+  
   # correct pvals and get confusion matrix stats
   # NOTE: https://github.com/Capblancq/RDA-landscape-genomics used a bonferonni correction
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, adaptive_loci, neutral_loci, alpha = 0.10)
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, rv, loci_trait1, loci_trait2, sig = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, rv, loci_trait1, loci_trait2, sig = 0.10)
   df <- rbind.data.frame(p05, p10)
   
   return(df)
 }
 
 
-calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
+#' Genotype-environment correlation test
+#'
+#' @param gen dosage matrix
+#' @param var dataframe with predictor variables
+#'
+#' @return dataframe with r and p-values from correlation test
+#' @export
+rda_cor <- function(gen, var){
+  cor_df <- purrr::map_dfr(colnames(gen), rda_cor_env_helper, gen, var)
+  rownames(cor_df) <- NULL
+  colnames(cor_df) <- c("r", "p", "snp", "var")
+  return(cor_df)
+}
+
+#' Helper function for rda_cor_test
+#'
+#' @export
+#' @noRd
+rda_cor_env_helper <- function(snp_name, snp_df, env){
+  cor_df <- data.frame(t(apply(env, 2, rda_cor_helper, snp_df[,snp_name])))
+  cor_df$snp <- snp_name
+  cor_df$env <- colnames(env)
+  return(cor_df)
+}
+
+#' Helper function for rda_cor_test
+#'
+#' @export
+#' @noRd
+rda_cor_helper <- function(envvar, snp){
+  if(sum(!is.na(envvar)) < 3 | sum(!is.na(snp)) < 3) return(c(r = NA, p = NA))
+  mod <- stats::cor.test(envvar, snp, alternative = "two.sided", method = "pearson", na.action = "na.omit")
+  pvalue <- mod$p.value
+  r <- mod$estimate
+  results <- c(r, pvalue)
+  names(results) <- c("r", "p")
+  return(results)
+}
+
+calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
   
-  # adjust pvalues (or passs through if padj = "none")
-  pvalues <- data.frame(env = p.adjust(pv, method = padj))
-  
-  #env candidate loci
-  rda_loci <- which(pvalues[, "env"] < alpha)
+  # adjust pvalues and bind with rv (or pass through if padj = "none")
+  pvalues <-  data.frame(p = p.adjust(pv, method = padj))
+
+  #env1 candidate loci
+  #Identify rda cand loci (P)
+  rv1 <- rv[rv$var == "env1", ]
+  stopifnot(nrow(rv1) == nrow(pvalues))
+  rda_loci1 <- which(pvalues$p < sig & rv1$p < sig) 
+  #Identify negatives
+  rda_neg1 <- which(!(pvalues$p < sig & rv1$p < sig))
+  #check length makes sense
+  stopifnot(length(rda_loci1) + length(rda_neg1) == nrow(pvalues))
   
   #get confusion matrix values
-  #for readibility, just negates the in function
-  `%notin%` <- Negate(`%in%`)
+  #True Positives
+  TP1 <- sum(rda_loci1 %in% loci_trait1)
+  #False Positives
+  FP1 <- sum(rda_loci1 %notin% loci_trait1)
+  #True Negatives
+  TN1 <- sum(rda_neg1 %notin% loci_trait1)
+  #False Negatives
+  FN1 <- sum(rda_neg1 %in% loci_trait1)
+  #check sum makes sense
+  stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
+  
+  #env2 candidate loci
+  #Identify rda cand loci
+  rv2 <- rv[rv$var == "env2", ]
+  stopifnot(nrow(rv2) == nrow(pvalues))
+  rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
+  #Identify negatives
+  rda_neg1 <- which(!(pvalues$p < sig & rv2$p < sig))
+  #check length makes sense
+  stopifnot(length(rda_loci2) + length(rda_neg2) == nrow(pvalues))
   
   #True Positives
-  TP <- sum(adaptive_loci %in% rda_loci)
+  TP2 <- sum(rda_loci2 %in% loci_trait2)
   #False Positives
-  FP <- sum(neutral_loci %in% rda_loci)
+  FP2 <- sum(rda_loci2 %notin% loci_trait2)
   #True Negatives
-  TN <- sum(neutral_loci %notin% rda_loci)
+  TN2 <- sum(rda_neg2 %notin% loci_trait2)
   #False Negatives
-  FN <- sum(adaptive_loci %notin% rda_loci)
+  FN2 <- sum(rda_neg2 %in% loci_trait2)
+  #check length makes sense
+  stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
+  
+  #stats for all loci 
+  rda_loci <- c(rda_loci1, rda_loci2)
+  #calc confusion matrix
+  TP <- TP1 + TP2
+  FP <- FP1 + FP2
+  TN <- TN1 + TN2
+  FN <- FN1 + FN2
+  #check sum makes sense
+  stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
   
   #calc True Positive Rate (i.e. Sensitivity)
   TPRCOMBO <- TP/(TP + FN)
@@ -72,14 +151,10 @@ calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
   FDRCOMBO <- FP/(FP + TP)
   #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
-  
-  # Calculate relative pvalues
-  null <- pvalues$env[-adaptive_loci]
-  emp <- sapply(pvalues$env[adaptive_loci], function(x){mean(x > null, na.rm = TRUE)})
-  emp_TPR <- sum(emp < alpha, na.rm  = TRUE)
+
   
   return(data.frame(padj = padj,
-                    alpha = alpha,
+                    sig = sig,
                     TPRCOMBO = TPRCOMBO, 
                     TNRCOMBO = TNRCOMBO,
                     FDRCOMBO = FDRCOMBO, 
@@ -88,9 +163,7 @@ calc_confusion <- function(padj, pv, adaptive_loci, neutral_loci, alpha = 0.05){
                     TOTALTP = TP, 
                     TOTALFP = FP, 
                     TOTALTN = TN,
-                    TOTALFN = FN,
-                    emp_TPR = emp_TPR,
-                    emp_mean = mean(emp, na.rm = TRUE)))
+                    TOTALFN = FN))
 }
 
 # Function to conduct a RDA based genome scan from Capblancq & Forester 2021
