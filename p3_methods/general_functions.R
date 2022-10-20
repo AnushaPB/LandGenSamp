@@ -56,7 +56,7 @@ get_gsd <- function(filepath){
   #remove brackets
   z <- gsub("\\[|\\]", "", gsd_df$z)
   #split on comma
-  z <- str_split_fixed(z, ", ", n=2)
+  z <- stringr::str_split_fixed(z, ", ", n=2)
   #change to numeric
   z <- apply(z, 2, as.numeric)
   #add back to df
