@@ -11,7 +11,7 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
   #Run RDA
-  mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=T)
+  mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=F)
   
   #plot(mod, type="n", scaling=3)
   #points(mod, display="species", pch=20, cex=2, col="gray32", scaling=3) 
