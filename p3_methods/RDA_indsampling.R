@@ -11,10 +11,10 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
-source("RAD_functions.R")
+source("RDA_functions.R")
 
 #register cores
-cores <- 20
+cores <- 30
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 
