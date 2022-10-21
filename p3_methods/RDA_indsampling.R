@@ -14,7 +14,7 @@ source("general_functions.R")
 source("RDA_functions.R")
 
 #register cores
-cores <- 20
+cores <- 30
 cl <- makeCluster(cores) #not to overload your computer
 registerDoParallel(cl)
 

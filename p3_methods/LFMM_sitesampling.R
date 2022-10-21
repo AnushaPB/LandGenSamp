@@ -15,7 +15,7 @@ source("sitesampling_functions.R")
 source("LFMM_functions.R")
 
 #register cores
-cores <- 25
+cores <- 10
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
