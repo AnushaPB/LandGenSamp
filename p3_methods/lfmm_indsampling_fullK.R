@@ -30,7 +30,7 @@ system.time(
       
       # subset and get K
       gen2k <- gen[sample(nrow(gen), 2000),]
-      K <- get_K(gen2k, K_selection = "tracy.widom") 
+      K <- get_K(gen2k, K_selection = "quick.elbow") 
       
       # make data.frame
       result <- data.frame()
@@ -44,7 +44,7 @@ system.time(
           
           #run analysis using subsample
           sub_result <- 
-            cross(list(K_selection = NULL, method = c("lasso", "ridge"))) %>%
+            cross(list(K_selection = "tracy.widom", method = c("lasso", "ridge"))) %>%
             map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df, K = K)
           
           #save and format new result
