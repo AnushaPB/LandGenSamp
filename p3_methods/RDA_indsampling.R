@@ -45,13 +45,17 @@ res_rda <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "vega
         subgsd_df <- gsd_df[subIDs,]
         
         #run analysis using subsample
-        sub_result <- run_rda(subgen, subgsd_df, loci_df)
-        
+        sub_result_pRDA <- run_rda(subgen, subgsd_df, loci_df, correctPC = TRUE)
         #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, sub_result)
+        sub_result_pRDA <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, correctPC = TRUE, sub_result_pRDA)
+        
+        #run analysis using subsample
+        sub_result_RDA <- run_rda(subgen, subgsd_df, loci_df, correctPC = FALSE)
+        #save and format new result
+        sub_result_RDA <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, correctPC = FALSE, sub_result_RDA)
         
         #bind results
-        result <- bind_rows(result, sub_result)
+        result <- bind_rows(result, sub_result_RDA, sub_result_pRDA)
       }
     }
   }

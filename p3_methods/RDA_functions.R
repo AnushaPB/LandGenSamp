@@ -2,28 +2,36 @@
 ############
 #   RDA    #
 ############
-run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05){
+run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05, correctPC = FALSE){
   
-  #get adaptive loci
+  # get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
   adaptive_loci <- c(loci_trait1, loci_trait2)
   neutral_loci <- c(1:nloci)[-adaptive_loci]
   
-  #Run RDA
+  # Run RDA
   mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=F)
+  
+  # correct PC
+  if(correctPC){
+    pcres <- prcomp(gen)
+    gsd_df$PC1 <-  pcres$x[,1]
+    gsd_df$PC2 <-  pcres$x[,2]
+    mod <- rda(gen[,1:nloci] ~ env1 + env2 +  Condition(PC1 + PC2), data = gsd_df, scale = F)
+  }
   
   #plot(mod, type="n", scaling=3)
   #points(mod, display="species", pch=20, cex=2, col="gray32", scaling=3) 
   #text(mod, scaling=3, display="bp", col="#0868ac", cex=1)     
   
-  #Get RSQ
+  # Get RSQ
   RsquareAdj(mod)
   
-  #Plot screeplot
+  # Plot screeplot
   screeplot(mod)
   
-  #load scores and get pvalues
+  # load scores and get pvalues
   naxes <- ncol(mod$CCA$v)
   rdadapt_env <- rdadapt(mod, naxes)
   
