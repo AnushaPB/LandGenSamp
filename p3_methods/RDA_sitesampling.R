@@ -47,17 +47,22 @@ res_rda <- foreach(i = 1:nrow(params), .combine=rbind, .packages = c("vcfR", "ve
         #calculate allele frequency by site (average)
         sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN=mean)[,-1])
         #calculate env values by site
-        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1]) 
+        sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN=mean)[,-1])
         
-        #run analysis using subsample
-        #sub_result <- run_rda(sitegen, sitegsd_df, loci_df)
-        sub_result <- run_rda(subgen, subgsd_df, loci_df)
+        # run pRDA
+        # run analysis using subsample
+        sub_result_pRDA <- run_rda(sitegen, sitegsd_df, loci_df, correctPC = TRUE)
+        # save and format new result
+        sub_result_pRDA <- data.frame(params[i, ], sampstrat = sampstrat, nsamp = nsite, correctPC = TRUE, sub_result_pRDA)
         
-        #save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
+        # run regular RDA
+        # run analysis using subsample
+        sub_result_RDA <- run_rda(sitegen, sitegsd_df, loci_df, correctPC = FALSE)
+        # save and format new result
+        sub_result_RDA <- data.frame(params[i, ], sampstrat = sampstrat, nsamp = nsite, correctPC = FALSE, sub_result_RDA)
         
-        #bind results
-        result <- bind_rows(result, sub_result)
+        # bind results
+        result <- bind_rows(result, sub_result_RDA, sub_result_pRDA)
       }
     }
   }
