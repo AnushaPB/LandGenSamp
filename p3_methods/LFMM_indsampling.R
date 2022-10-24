@@ -39,7 +39,7 @@ system.time(
           subgsd_df <- gsd_df[subIDs,]
           
           #run analysis using subsample
-          sub_result <- 
+          sub_result <-
             cross(list(K_selection = c("quick.elbow"), method = c("lasso", "ridge"))) %>%
             map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df)
           
