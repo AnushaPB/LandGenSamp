@@ -25,15 +25,9 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom"
   if (method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
   if(is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = method))
   
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, sig = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, loci_trait1, loci_trait2, sig = 0.10)
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.10)
   pdf <- rbind.data.frame(p05, p10)
   df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, pdf)
   
@@ -41,7 +35,13 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom"
 }
 
 
-calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, sig = 0.05){
+calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05){
+  
+  #performs association testing using the fitted model:
+  pv <- lfmm_test(Y = genmat, 
+                  X = envmat, 
+                  lfmm = lfmm_mod, 
+                  calibrate = "gif")
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)
@@ -49,6 +49,12 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, sig = 0.05){
   # adjust pvalues (or passs through if padj = "none")
   pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
                          env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
+  
+  # calculate roc and pr 
+  pr1 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc.integral
+  pr2 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc.integral
+  roc1 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc
+  roc2 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc
   
   #env1 candidate loci
   #Identify LFMM cand loci (P)
@@ -109,12 +115,15 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, sig = 0.05){
   FPRCOMBO <- FP/(FP + TN)
   
   # Calculate empirical pvalues (I THINK - CHECK THIS)
-  null1 <- pvalues$env1[-loci_trait1]
-  emp1 <- sapply(pvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_TPR <- sum(emp1 < sig, na.rm  = TRUE)
-  null2 <- pvalues$env2[-loci_trait2]
-  emp2 <- sapply(pvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_TPR <- sum(emp2 < sig, na.rm  = TRUE)
+  # Get B values (fixed effect)
+  Bvalues <-  data.frame(env1 = abs(lfmm_mod$B[,1]), env2 = abs(lfmm_mod$B[,2]))
+  null1 <- Bvalues$env1[-loci_trait1]
+  emp1 <- sapply(Bvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
+  emp1_mean <- mean(emp1, na.rm = TRUE)
+  null2 <- Bvalues$env2[-loci_trait2]
+  emp2 <- sapply(Bvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
+  emp2_mean <- mean(emp2, na.rm = TRUE)
+  EMPCOMBO <- mean(emp1_mean, emp2_mean, na.rm = TRUE)
   
   return(data.frame(padj = padj,
                     sig = sig,
@@ -127,10 +136,13 @@ calc_confusion <- function(padj, pv, loci_trait1, loci_trait2, sig = 0.05){
                     TOTALFP = FP, 
                     TOTALTN = TN,
                     TOTALFN = FN,
-                    emp1_TPR = emp1_TPR,
-                    emp2_TPR = emp2_TPR,
-                    emp1_mean = mean(emp1, na.rm = TRUE),
-                    emp2_mean = mean(emp2, na.rm = TRUE)))
+                    emp1_mean = emp1_mean,
+                    emp2_mean = emp2_mean,
+                    EMPCOMBO = EMPCOMBO,
+                    pr1 = pr1,
+                    pr2 = pr2,
+                    roc1 = roc1,
+                    roc2 = roc2))
 }
 
 
