@@ -1,6 +1,6 @@
 
 run_lfmm_helper <- function(x, gen, gsd_df, loci_df, K = NULL){
-  return(run_lfmm(gen, gsd_df, loci_df, K = K, K_selection = x["K_selection"], method = x["method"]))
+  return(run_lfmm(gen, gsd_df, loci_df, K_selection = x["K_selection"], method = x["method"]))
 }
 
 run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom", method = "ridge"){
@@ -164,7 +164,7 @@ get_K_elbow <- function(gen){
   eig <- pc$sdev^2
   # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
   # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-  K <- quick.elbow(eig, low = 0.08, max.pc = 0.7)
+  K <- bigpca::quick.elbow(eig, low = 0.08, max.pc = 0.9)
   
   par(pty = "s",mfrow = c(1,1))
   plot(eig, xlab = 'PC', ylab = "Variance explained")
