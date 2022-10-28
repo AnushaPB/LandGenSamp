@@ -44,7 +44,7 @@ system.time(
           
           #run analysis using subsample
           sub_result <- 
-            cross(list(K_selection = "quick.elbow", method = c("lasso", "ridge"))) %>%
+            cross(list(K_selection = "none", method = c("lasso", "ridge"))) %>%
             map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df, K = K)
           
           #save and format new result
