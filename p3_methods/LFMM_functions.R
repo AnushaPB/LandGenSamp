@@ -176,7 +176,7 @@ get_K_elbow <- function(gen){
   eig <- pc$sdev^2
   # estimate number of latent factors using quick.elbow (see general functions for description of how this function works)
   # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
-  K <- bigpca::quick.elbow(eig, low = 0.08, max.pc = 0.9)
+  K <- quick.elbow(eig, low = 0.08, max.pc = 0.7)
   
   par(pty = "s",mfrow = c(1,1))
   plot(eig, xlab = 'PC', ylab = "Variance explained")
