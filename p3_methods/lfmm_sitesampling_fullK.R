@@ -34,7 +34,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     
     # subset and get K
     gen2k <- gen[sample(nrow(gen), 2000),]
-    K <- get_K(gen2k, K_selection = "quick.elbow")
+    K <- get_K_tw(gen2k, maxK = (min(nsites) - 1)) 
 
     # make data.frame
     result <- data.frame()
@@ -57,7 +57,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         #run analysis using subsample
         sub_result <- 
-          cross(list(K_selection = "none", method = c("lasso", "ridge"))) %>%
+          cross(list(K_selection = "full", method = c("lasso", "ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df, K = K)
         
         #save and format new result
