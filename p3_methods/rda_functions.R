@@ -90,119 +90,6 @@ rda_cor_helper <- function(envvar, snp){
   return(results)
 }
 
-
-calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05){
-  
-  #performs association testing using the fitted model:
-  pv <- lfmm_test(Y = genmat, 
-                  X = envmat, 
-                  lfmm = lfmm_mod, 
-                  calibrate = "gif")
-  
-  #for readibility, just negates the in function
-  `%notin%` <- Negate(`%in%`)
-  
-  # adjust pvalues (or passs through if padj = "none")
-  pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
-                         env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
-  
-  # calculate roc and pr 
-  pr1 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc.integral
-  pr2 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc.integral
-  roc1 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc
-  roc2 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc
-  
-  #env1 candidate loci
-  #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,"env1"] < sig) 
-  #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= sig | is.na(pvalues[,"env1"]))
-  #check length makes sense
-  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
-  
-  #get confusion matrix values
-  #True Positives
-  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
-  #False Positives
-  FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
-  #True Negatives
-  TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
-  #False Negatives
-  FN1 <- sum(lfmm_neg1 %in% loci_trait1)
-  #check sum makes sense
-  stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
-  
-  #env2 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,"env2"] < sig) 
-  #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= sig | is.na(pvalues[,"env2"]))
-  #check length makes sense
-  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
-  
-  #True Positives
-  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
-  #False Positives
-  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
-  #True Negatives
-  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
-  #False Negatives
-  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
-  #check length makes sense
-  stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
-  
-  #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
-  #calc confusion matrix
-  TP <- TP1 + TP2
-  FP <- FP1 + FP2
-  TN <- TN1 + TN2
-  FN <- FN1 + FN2
-  #check sum makes sense
-  stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
-  
-  #calc True Positive Rate (i.e. Sensitivity)
-  TPRCOMBO <- TP/(TP + FN)
-  #calc True Negative Rate (i.e. Specificity)
-  TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate 
-  FDRCOMBO <- FP/(FP + TP)
-  #calc False Positive Rate 
-  FPRCOMBO <- FP/(FP + TN)
-  
-  # Calculate empirical pvalues (I THINK - CHECK THIS)
-  # Get B values (fixed effect)
-  Bvalues <-  data.frame(env1 = abs(lfmm_mod$B[,1]), env2 = abs(lfmm_mod$B[,2]))
-  null1 <- Bvalues$env1[-loci_trait1]
-  emp1 <- sapply(Bvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_mean <- mean(emp1, na.rm = TRUE)
-  null2 <- Bvalues$env2[-loci_trait2]
-  emp2 <- sapply(Bvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_mean <- mean(emp2, na.rm = TRUE)
-  EMPCOMBO <- mean(emp1_mean, emp2_mean, na.rm = TRUE)
-  
-  return(data.frame(padj = padj,
-                    sig = sig,
-                    TPRCOMBO = TPRCOMBO, 
-                    TNRCOMBO = TNRCOMBO,
-                    FDRCOMBO = FDRCOMBO, 
-                    FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(lfmm_loci), 
-                    TOTALTP = TP, 
-                    TOTALFP = FP, 
-                    TOTALTN = TN,
-                    TOTALFN = FN,
-                    emp1_mean = emp1_mean,
-                    emp2_mean = emp2_mean,
-                    EMPCOMBO = EMPCOMBO,
-                    pr1 = pr1,
-                    pr2 = pr2,
-                    roc1 = roc1,
-                    roc2 = roc2))
-}
-
-
-
 calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
   
   #for readibility, just negates the in function
@@ -294,7 +181,6 @@ calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
 
 # Function to conduct a RDA based genome scan from Capblancq & Forester 2021
 # https://github.com/Capblancq/RDA-landscape-genomics/blob/main/RDA_landscape_genomics.Rmd
-# NOTE: GO THROUGH THIS CODE
 rdadapt <- function(rda,K)
 {
   zscores<-rda$CCA$v[,1:as.numeric(K)]
