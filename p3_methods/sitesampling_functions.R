@@ -21,7 +21,7 @@ get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(di
   stopifnot(nrow(subIDs) == 1)
   
   #remove parameter columns and convert to vector of IDs
-  subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
+  subIDs <- subIDs[,!names(subIDs) %in% names(param_set)]
   subIDs <- unlist(subIDs)
   
   #confirm that final set of IDs is a vector
@@ -31,13 +31,13 @@ get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(di
 }
 
 #get list of site IDs that correspond with parameter set, sampling strategy, and number of samples (and sample IDs)
-get_sites <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
+get_sites <- function(param_set, params, sampstrat, nsamp,  dir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(datadir, "/site_ids_", sampstrat, nsamp, ".csv"))
+  subIDs <- read.csv(paste0(dir, "/site_ids_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -51,7 +51,7 @@ get_sites <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirn
   stopifnot(nrow(subIDs) == 1)
   
   #remove parameter columns and convert to vector of IDs
-  subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
+  subIDs <- subIDs[,!names(subIDs) %in% names(param_set)]
   subIDs <- unlist(subIDs)
   
   #confirm that final set of IDs is a vector
