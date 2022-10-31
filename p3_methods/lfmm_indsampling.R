@@ -8,7 +8,7 @@ library("doParallel")
 
 #read in general functions and objects
 source("general_functions.R")
-source("LFMM_functions.R")
+source("lfmm_functions.R")
 
 #register cores
 cores <- 30

@@ -11,7 +11,7 @@ library(doParallel)
 
 # read in general functions and objects
 source("general_functions.R")
-source("RDA_functions.R")
+source("rda_functions.R")
 
 # register cores
 cores <- 30
