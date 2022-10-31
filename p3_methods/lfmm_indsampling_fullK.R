@@ -30,7 +30,7 @@ system.time(
       
       # subset and get K
       gen2k <- gen[sample(nrow(gen), 2000),]
-      K <- get_K_tw(gen2k, maxK = (min(nsamp) - 1)) 
+      K <- get_K_tw(gen2k, maxK = (min(npts) - 1)) 
       
       # make data.frame
       result <- data.frame()
