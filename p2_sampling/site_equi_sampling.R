@@ -15,6 +15,9 @@ registerDoParallel(cl)
 #confirm correct ldim
 print(ldim)
 
+# confirm correct nsites
+print(nsites)
+
 for(n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
@@ -35,6 +38,8 @@ for(n in nsites){
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "equi", sample_method = "near", ldim = ldim)
+      # print("nsite", n)
+      # print("nsamp", length(samples))
     }
     
     #return vector of sample IDs
@@ -62,6 +67,7 @@ for(n in nsites){
   colnames(site_out) <- c(colnames(params), colnames(samples))
   write.csv(site_out, paste0("outputs/site_ids_equi",n,".csv"), row.names = FALSE)
   
+  message(n, "complete")
 }
 
 
