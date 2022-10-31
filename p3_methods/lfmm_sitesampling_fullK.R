@@ -34,36 +34,38 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     
     # subset and get K
     gen2k <- gen[sample(nrow(gen), 2000),]
-    K <- get_K_tw(gen2k, maxK = (min(nsites) - 1)) 
+    K <- get_K_tw(gen2k, maxK = 20) 
+    # K may be greater than the min number of sites, in which case K is set to that number
+    if(K > (min(nsites) - 1)) K <- (min(nsites) - 1)
 
     # make data.frame
     result <- data.frame()
     
     for(nsite in nsites){
       for(sampstrat in sampstrats){
-        #subsample from data based on sampling strategy and number of samples
+        # subsample from data based on sampling strategy and number of samples
         subIDs <- get_samples(params[i,], params, sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
-        #get sites
+        # get sites
         siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
-        #confirm that number of sites matches number of sample IDs
+        # confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
-        #calculate allele frequency by site (average)
+        # calculate allele frequency by site (average)
         sitegen <- data.frame(aggregate(subgen, list(siteIDs), FUN = mean)[,-1])
-        #calculate env values by site
+        # calculate env values by site
         sitegsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[,-1]) 
         
-        #run analysis using subsample
+        # run analysis using subsample
         sub_result <- 
           cross(list(K_selection = "full", method = c("lasso", "ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df, K = K)
         
-        #save and format new result
+        # save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsite, sub_result)
         
-        #bind results
+        # bind results
         result <- bind_rows(result, sub_result)
       }
     }
