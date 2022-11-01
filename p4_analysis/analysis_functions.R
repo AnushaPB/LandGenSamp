@@ -1,4 +1,4 @@
-MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE){
+MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE, dig = 3){
   
   agg <- 
     df %>%
@@ -13,15 +13,15 @@ MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", 
     # summarize
     custom_agg(aggfunc, na.rm) %>%
     # create new group for plotting
-    mutate(group = paste0("K=", agg$K,
-                       " phi=", agg$phi,
-                       " m=", agg$m,
-                       "\nH=", agg$H,
-                       " r=", agg$r))
+    mutate(group = paste0("K=", K,
+                       " phi=", phi,
+                       " m=", m,
+                       "\nH=", H,
+                       " r=", r))
   
   p <- ggplot(agg, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
-    geom_text(aes(label = signif(stat, digits = sigdig), hjust = 0.5)) +
+    geom_text(aes(label = round(stat, dig), hjust = 0.5)) +
     theme_bw() +
     coord_fixed() + 
     facet_wrap( ~ group, nrow = 4) +
@@ -375,10 +375,10 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22){
   
   
   # print anova result
-  print(pretty_anova(mod, filepath))
+  pretty_anova(mod, filepath)
   
   # print tukey test
-  print(pretty_tukey(mod, filepath))
+  pretty_tukey(mod, filepath)
   
 }
 

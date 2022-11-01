@@ -90,7 +90,7 @@ get_data <- function(i, params, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs")){
+get_samples <- function(param_set, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
@@ -109,7 +109,7 @@ get_samples <- function(param_set, params = params, sampstrat, nsamp, outdir = h
   stopifnot(nrow(subIDs) == 1)
   
   #remove parameter columnds and convert to vector of IDs
-  subIDs <- subIDs[,!names(subIDs) %in% colnames(params)]
+  subIDs <- subIDs[,!names(subIDs) %in% names(param_set)]
   subIDs <- unlist(subIDs)
   
   #confirm that final set of IDs is a vector

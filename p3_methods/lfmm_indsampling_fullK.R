@@ -38,7 +38,7 @@ system.time(
       for(nsamp in npts){
         for(sampstrat in sampstrats){
           #subsample from data based on sampling strategy and number of samples
-          subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+          subIDs <- get_samples(params[i,], sampstrat, nsamp)
           subgen <- gen[subIDs,]
           subgsd_df <- gsd_df[subIDs,]
           

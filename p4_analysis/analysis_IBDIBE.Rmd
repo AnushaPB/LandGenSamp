@@ -1,12 +1,14 @@
 ---
 title: "IBD/IBE Analysis"
-output: github_document
+output: 
+  html_document:
+    toc: true
 ---
 
 ```{r, warning=FALSE, message=FALSE, fig.width = 21, fig.height = 13}
 library("here")
 library("sjPlot")
-library("dplyr")
+library("tidyverse")
 library("lme4")
 library("viridis")
 library("lmerTest")
@@ -15,10 +17,10 @@ library("gridExtra")
 library("gt")
 library("ggthemes")
 
-source("analysis_functions.R")
+source(here("p4_analysis", "analysis_functions.R"))
 
-p4path <- here(dirname(getwd()), "p4_analysis", "outputs")
-p3path <- here(dirname(getwd()), "p3_methods", "outputs")
+p4path <- here("p4_analysis", "outputs")
+p3path <- here("p3_methods", "outputs")
 ```
 
 # 1. MMRR
@@ -43,7 +45,7 @@ summary_hplot(mmrr_ind, "geo_err", divergent = TRUE)
 
 ### 1.1.2 Model summaries
 
-```{r}
+```{r, message=FALSE}
 run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_ratioerr.csv"))
 run_lmer(mmrr_ind, "geo_ae", filepath = here(p4path, "MMRR_individual_geoerr.csv"))
 run_lmer(mmrr_ind, "env_ae", filepath = here(p4path, "MMRR_individual_enverr.csv"))
@@ -63,7 +65,7 @@ MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
 ### 1.2.1 Summary plots
 
 ```{r, fig.width=16, fig.height=7}
-mmrr_site <- format_mmrr(here(dirname(getwd()), "p3_methods", "outputs", "mmrr_sitesampling_results.csv"))
+mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
 
 # overall error
 summary_hplot(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
@@ -78,7 +80,7 @@ summary_hplot(mmrr_site, "geo_err", divergent = TRUE)
 
 ### 1.2.2 Model summaries
 
-```{r}
+```{r, message=FALSE}
 run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_ratioerr.csv"))
 run_lmer(mmrr_site, "geo_ae", filepath = here(p4path, "MMRR_site_geoerr.csv"))
 run_lmer(mmrr_site, "env_ae", filepath = here(p4path, "MMRR_site_enverr.csv"))
@@ -100,7 +102,7 @@ MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
 ### 2.1.1 Summary plots
 
 ```{r, fig.width=16, fig.height=7}
-gdm_ind <- format_gdm(here(dirname(getwd()), "p3_methods", "outputs", "gdm_indsampling_results.csv"))
+gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
 
 # overall error
 summary_hplot(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
@@ -115,7 +117,7 @@ summary_hplot(gdm_ind, "geo_err", divergent = TRUE)
 
 ### 2.1.2 Model summaries
 
-```{r}
+```{r, message=FALSE}
 run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_ratioerr.csv"))
 run_lmer(gdm_ind, "geo_ae", filepath = here(p4path, "GDM_individual_geoerr.csv"))
 run_lmer(gdm_ind, "env_ae", filepath = here(p4path, "GDM_individual_enverr.csv"))
@@ -143,7 +145,7 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ### 2.2.1 Summary plots
 
 ```{r, fig.width=16, fig.height=7}
-gdm_site <- format_gdm(here(dirname(getwd()), "p3_methods", "outputs", "gdm_sitesampling_results.csv"))
+gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
 
 # overall error
 summary_hplot(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
@@ -158,7 +160,7 @@ summary_hplot(gdm_site, "geo_err", divergent = TRUE)
 
 ### 2.2.2 Model summaries
 
-```{r}
+```{r, message=FALSE}
 run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_ratioerr.csv"))
 run_lmer(gdm_site, "geo_ae", filepath = here(p4path, "GDM_site_geoerr.csv"))
 run_lmer(gdm_site, "env_ae", filepath = here(p4path, "GDM_site_enverr.csv"))

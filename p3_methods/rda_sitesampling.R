@@ -36,12 +36,12 @@ res_rda <- foreach(i = 1:nrow(params), .combine=rbind, .packages = c("vcfR", "ve
     for(nsite in nsites){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsite)
+        subIDs <- get_samples(params[i,], sampstrat, nsite)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
         #get sites
-        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        siteIDs <- get_sites(params[i,], sampstrat, nsite)
         #confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
         #calculate allele frequency by site (average)
