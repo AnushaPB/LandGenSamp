@@ -6,7 +6,7 @@ library(doParallel)
 
 #read in general functions and objects
 source("general_functions.R")
-source("MMRR_functions.R")
+source("mmrr_functions.R")
 
 #register cores
 cores <- 20
