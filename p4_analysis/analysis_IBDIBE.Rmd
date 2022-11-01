@@ -1,9 +1,9 @@
 ---
-title: "analysis_IBDIBE"
+title: "IBD/IBE Analysis"
 output: github_document
 ---
 
-```{r, warning=FALSE, message=FALSE, fig.width = 30, fig.height=15}
+```{r, warning=FALSE, message=FALSE, fig.width = 21, fig.height = 13}
 library("here")
 library("sjPlot")
 library("dplyr")
@@ -13,21 +13,30 @@ library("lmerTest")
 library("ggplot2")
 library("gridExtra")
 library("gt")
+library("ggthemes")
 
 source("analysis_functions.R")
+
+p4path <- here(dirname(getwd()), "p4_analysis", "outputs")
+p3path <- here(dirname(getwd()), "p3_methods", "outputs")
 ```
 
-# 1. LFMM
+# 1. MMRR
 
-## 1.1 Individual sampling 
+## 1.1 Individual sampling
 
 ### 1.1.1 Summary plots
 
-```{r, fig.width=20, fig.height=7}
-mmrr_ind <- format_mmrr(here(dirname(getwd()), "p3_methods", "outputs", "mmrr_indsampling_results.csv"))
+```{r, fig.width=16, fig.height=7}
+mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
 
-summary_hplot(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1, aggfunc = "var")
-summary_hplot(mmrr_ind, "ratio_err", colpal = "viridis")
+# overall error
+summary_hplot(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
+summary_hplot(mmrr_ind, "env_ae", colpal = "viridis", direction = -1)
+summary_hplot(mmrr_ind, "geo_ae", colpal = "viridis", direction = -1)
+
+# bias
+summary_hplot(mmrr_ind, "ratio_err", divergent = TRUE)
 summary_hplot(mmrr_ind, "comboenv_err", divergent = TRUE)
 summary_hplot(mmrr_ind, "geo_err", divergent = TRUE)
 ```
@@ -35,30 +44,33 @@ summary_hplot(mmrr_ind, "geo_err", divergent = TRUE)
 ### 1.1.2 Model summaries
 
 ```{r}
-run_lmer(mmrr_ind, "ratio_ae", table_main = "Ratio Absolute Error")
-run_lmer(mmrr_ind, "ratio_err", table_main = "Ratio Error")
-run_lmer(mmrr_ind, "comboenv_err", table_main = "IBE Error")
-run_lmer(mmrr_ind, "geo_err", table_main = "IBD Error")
+run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_ratioerr.csv"))
+run_lmer(mmrr_ind, "geo_ae", filepath = here(p4path, "MMRR_individual_geoerr.csv"))
+run_lmer(mmrr_ind, "env_ae", filepath = here(p4path, "MMRR_individual_enverr.csv"))
 ```
 
 ### 1.1.3 Megaplots
 
-```{r, fig.width = 30, fig.height=15}
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
-MEGAPLOT(mmrr_ind, "ratio_err", divergent = TRUE)
+MEGAPLOT(mmrr_ind, "ratio_err", colpal = "viridis", divergent = TRUE)
 MEGAPLOT(mmrr_ind, "comboenv_err", divergent = TRUE)
 MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
 ```
 
-## 1.2 Site sampling 
+## 1.2 Site sampling
 
 ### 1.2.1 Summary plots
 
-```{r, fig.width=20, fig.height=7}
+```{r, fig.width=16, fig.height=7}
 mmrr_site <- format_mmrr(here(dirname(getwd()), "p3_methods", "outputs", "mmrr_sitesampling_results.csv"))
 
-mmrr_site$ratio_ae <- abs(mmrr_site$ratio_err)
+# overall error
 summary_hplot(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
+summary_hplot(mmrr_site, "env_ae", colpal = "viridis", direction = -1)
+summary_hplot(mmrr_site, "geo_ae", colpal = "viridis", direction = -1)
+
+# bias
 summary_hplot(mmrr_site, "ratio_err", divergent = TRUE)
 summary_hplot(mmrr_site, "comboenv_err", divergent = TRUE)
 summary_hplot(mmrr_site, "geo_err", divergent = TRUE)
@@ -67,14 +79,14 @@ summary_hplot(mmrr_site, "geo_err", divergent = TRUE)
 ### 1.2.2 Model summaries
 
 ```{r}
-run_lmer(mmrr_site, "ratio_ae", table_main = "Ratio Absolute Error")
-run_lmer(mmrr_site, "ratio_err", table_main = "Ratio Error")
-run_lmer(mmrr_site, "comboenv_err", table_main = "IBE Error")
-run_lmer(mmrr_site, "geo_err", table_main = "IBD Error")
+run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_ratioerr.csv"))
+run_lmer(mmrr_site, "geo_ae", filepath = here(p4path, "MMRR_site_geoerr.csv"))
+run_lmer(mmrr_site, "env_ae", filepath = here(p4path, "MMRR_site_enverr.csv"))
 ```
 
 ### 1.2.3 Megaplots
-```{r, fig.width = 30, fig.height=15}
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
 MEGAPLOT(mmrr_site, "ratio_err", divergent = TRUE)
 MEGAPLOT(mmrr_site, "comboenv_err", divergent = TRUE)
@@ -83,34 +95,37 @@ MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
 
 # 2. GDM
 
-## 2.1 Individual sampling 
+## 2.1 Individual sampling
 
 ### 2.1.1 Summary plots
 
-```{r, fig.width=20, fig.height=7}
+```{r, fig.width=16, fig.height=7}
 gdm_ind <- format_gdm(here(dirname(getwd()), "p3_methods", "outputs", "gdm_indsampling_results.csv"))
 
+# overall error
 summary_hplot(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
-summary_hplot(gdm_ind, "ratio_err", colpal = "viridis", direction = -1)
+summary_hplot(gdm_ind, "env_ae", colpal = "viridis", direction = -1)
+summary_hplot(gdm_ind, "geo_ae", colpal = "viridis", direction = -1)
+
+# bias
+summary_hplot(gdm_ind, "ratio_err", divergent = TRUE)
 summary_hplot(gdm_ind, "comboenv_err", divergent = TRUE)
 summary_hplot(gdm_ind, "geo_err", divergent = TRUE)
-
 ```
 
 ### 2.1.2 Model summaries
 
 ```{r}
-run_lmer(gdm_ind, "ratio_ae", table_main = "Ratio Absolute Error")
-run_lmer(gdm_ind, "ratio_err", table_main = "Ratio Error")
-run_lmer(gdm_ind, "comboenv_err", table_main = "IBE Error")
-run_lmer(gdm_ind, "geo_err", table_main = "IBD Error")
+run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_ratioerr.csv"))
+run_lmer(gdm_ind, "geo_ae", filepath = here(p4path, "GDM_individual_geoerr.csv"))
+run_lmer(gdm_ind, "env_ae", filepath = here(p4path, "GDM_individual_enverr.csv"))
 ```
 
 ### 2.1.3 Megaplots
 
-```{r, fig.width = 30, fig.height=15}
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
-MEGAPLOT(gdm_ind, "ratio_err", colpal = "viridis", direction = -1)
+MEGAPLOT(gdm_ind, "ratio_err", divergent = TRUE)
 MEGAPLOT(gdm_ind, "comboenv_err", divergent = TRUE)
 MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
 ```
@@ -119,19 +134,23 @@ MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
 
 Confirm that the distribution of NAs is as expected and the proportions are small
 
-```{r,  fig.width = 30, fig.height=15}
+```{r,  fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
 
-## 2.2 Site sampling 
+## 2.2 Site sampling
 
 ### 2.2.1 Summary plots
 
-```{r, fig.width=20, fig.height=7}
+```{r, fig.width=16, fig.height=7}
 gdm_site <- format_gdm(here(dirname(getwd()), "p3_methods", "outputs", "gdm_sitesampling_results.csv"))
 
-gdm_site$ratio_ae <- abs(gdm_site$ratio_err)
+# overall error
 summary_hplot(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
+summary_hplot(gdm_site, "env_ae", colpal = "viridis", direction = -1)
+summary_hplot(gdm_site, "geo_ae", colpal = "viridis", direction = -1)
+
+# bias
 summary_hplot(gdm_site, "ratio_err", divergent = TRUE)
 summary_hplot(gdm_site, "comboenv_err", divergent = TRUE)
 summary_hplot(gdm_site, "geo_err", divergent = TRUE)
@@ -140,16 +159,18 @@ summary_hplot(gdm_site, "geo_err", divergent = TRUE)
 ### 2.2.2 Model summaries
 
 ```{r}
-run_lmer(gdm_site, "ratio_ae", table_main = "Ratio Absolute Error")
-run_lmer(gdm_site, "ratio_err", table_main = "Ratio Error")
-run_lmer(gdm_site, "comboenv_err", table_main = "IBE Error")
-run_lmer(gdm_site, "geo_err", table_main = "IBD Error")
+run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_ratioerr.csv"))
+run_lmer(gdm_site, "geo_ae", filepath = here(p4path, "GDM_site_geoerr.csv"))
+run_lmer(gdm_site, "env_ae", filepath = here(p4path, "GDM_site_enverr.csv"))
 ```
 
 ### 2.2.3 Megaplots
 
-```{r, fig.width = 30, fig.height=15}
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
+MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
+MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
+
 MEGAPLOT(gdm_site, "ratio_err", divergent = TRUE)
 MEGAPLOT(gdm_site, "comboenv_err", divergent = TRUE)
 MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
@@ -159,11 +180,33 @@ MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
 
 Confirm that the distribution of NAs is as expected and the proportions are small
 
-```{r,  fig.width = 30, fig.height=15}
+```{r,  fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
 
-# 3. Compare results of MMRR and GDM
+# 3. Comparison of error distirbutions for MMRR and GDM
+
+
+```{r, fig.width = 5, fig.height = 5}
+mmrr_ind %>%
+  filter(sampstrat != "full") %>%
+  ggplot(aes(x = ratio_ae, fill = m, colour = m)) +
+  geom_density(alpha = 0.5) +
+  theme_few() +
+  scale_fill_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako") +
+  scale_color_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako")
+
+
+gdm_ind %>%
+  filter(sampstrat != "full") %>%
+  ggplot(aes(x = ratio_ae, fill = m, colour = m)) +
+  geom_density(alpha = 0.5) +
+  theme_few() +
+  scale_fill_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako") +
+  scale_color_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako")
+```
+
+# 4. Compare results of MMRR and GDM
 
 ```{r}
 plot(mmrr_ind$geo_coeff, gdm_ind$geo_coeff, col = gdm_ind$m)
@@ -176,18 +219,17 @@ df <- data.frame(mmrr_ind,
                  ratio_mg = gdm_ind$ratio/mmrr_ind$ratio )
 ```
 
-```{r, fig.width=20, fig.height=7}
+```{r, fig.width=16, fig.height=7}
 summary_hplot(df, "geo_mg")
 summary_hplot(df, "env_mg")
 summary_hplot(df, "ratio_mg")
 ```
 
-```{r, fig.width = 30, fig.height=15}
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(df, "geo_mg")
 MEGAPLOT(df, "env_mg")
 MEGAPLOT(df, "ratio_mg")
 ```
-
 
 ```{r}
 plot(mmrr_site$geo_coeff, gdm_site$geo_coeff, col = gdm_site$m)
@@ -200,7 +242,7 @@ df <- data.frame(mmrr_site,
                  ratio_mg = gdm_site$ratio/mmrr_site$ratio )
 ```
 
-```{r, fig.width=20, fig.height=7}
+```{r, fig.width=16, fig.height=7}
 summary_hplot(df, "geo_mg")
 summary_hplot(df, "env_mg")
 summary_hplot(df, "ratio_mg")
