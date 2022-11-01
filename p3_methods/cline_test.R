@@ -13,17 +13,11 @@ source("general_functions.R")
 ################
 
 prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
-  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dfr(~ cline_test(., env = gsd_df$env1))
-  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dfr(~ cline_test(., env = gsd_df$env2))
-  res <- rbind(res1, res2)
+  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall")$p.value)
+  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall")$p.value)
+  res <- c(res1, res2)
   # note: use sum/length instead of mean because you want NAs to count as the cline not being detected
-  return(sum(res$p < sig, na.rm = TRUE)/length(res$p))
-}
-
-cline_test <- function(allele, env){
-  res <- cor.test(allele, env, method = "kendall")
-  df <- data.frame(r = res$statistic, p = res$p.value)
-  return(df)
+  return(sum(res < sig, na.rm = TRUE)/length(res))
 }
 
 #register cores
