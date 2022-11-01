@@ -8,7 +8,7 @@ library("doParallel")
 source("general_functions.R")
 
 #register cores
-cores <- 4
+cores <- 1
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
@@ -55,10 +55,8 @@ stopCluster(cl)
 
 write.csv(res_popsize, "outputs/popsize_results.csv", row.names = FALSE)
 
-
-#Code for analysis (seperate out later)
-library(apa)
-df <- read.csv("popsize_results.csv")
+# code for analysis
+df <- read.csv("outputs/popsize_results.csv")
 
 #remove empty rows (there shouldn't be any, but just in case I do a partial run)
 df <- df[complete.cases(df),]
