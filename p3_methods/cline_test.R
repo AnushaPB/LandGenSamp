@@ -1,9 +1,6 @@
-
-
-
 set.seed(42)
 
-library("here") #paths
+library("here")
 library("foreach")
 library("doParallel")
 library("dplyr")
@@ -35,7 +32,7 @@ cl <- makeCluster(cores[1]-3)
 registerDoParallel(cl)
 
 system.time(
-  res_cline <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  res_cline <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "dplyr", "purrr")) %dopar% {
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
