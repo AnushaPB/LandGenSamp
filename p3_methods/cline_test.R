@@ -34,10 +34,29 @@ system.time(
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
     
-    #calculate prop of clines
+    # calculate prop of clines for full dataset
     pc <- prop_cline(gen, loci_df, gsd_df)
     
-    result <- data.frame(params[i,], prop_cline = pc)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), prop_cline = pc)
+    
+    for(nsamp in npts){
+      for(sampstrat in sampstrats){
+        # subsample from data based on sampling strategy and number of samples
+        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subgen <- gen[subIDs,]
+        subgsd_df <- gsd_df[subIDs,]
+        
+        # calculate prop of clines for sub dataset
+        pc <- prop_cline(gen = subgen, loci_df = loci_df, gsd_df = subgsd_df)
+        
+        # save and format new result
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, prop_cline = pc)
+        
+        #bbind results
+        result <- bind_rows(result, sub_result)
+        
+      }
+    }
     
     return(result)
     
