@@ -1,102 +1,129 @@
-MEGAPLOT <- function(moddf, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE){
+MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE){
   
-  moddf <- moddf[moddf$sampstrat != "full",]
-  moddf$stat <- moddf[,stat_name]
+  agg <- 
+    df %>%
+    # convert to data.frame
+    data.frame() %>%
+    # remove full data
+    filter(sampstrat != "full") %>%
+    # rename stat_name column as stat for simplified use
+    rename("stat" = all_of(stat_name)) %>%
+    # group by all params
+    group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+    # summarize
+    custom_agg(aggfunc, na.rm) %>%
+    # create new group for plotting
+    mutate(group = paste0("K=", agg$K,
+                       " phi=", agg$phi,
+                       " m=", agg$m,
+                       "\nH=", agg$H,
+                       " r=", agg$r))
   
+  p <- ggplot(agg, aes(nsamp, sampstrat)) +
+    geom_tile(aes(fill = stat)) + 
+    geom_text(aes(label = signif(stat, digits = sigdig), hjust = 0.5)) +
+    theme_bw() +
+    coord_fixed() + 
+    facet_wrap( ~ group, nrow = 4) +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm"),
+          strip.text.x = element_text(size = 18),
+          strip.text.y = element_text(size = 18),
+          strip.background =element_blank(),
+          strip.text = element_text(color = "black")) 
   
-  if(aggfunc == "mean"){
-    agg <- moddf %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = mean(stat, na.rm = na.rm), .groups = "keep")
+  if(divergent){
+    p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
+  } else {
+    p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal, direction = direction)
   }
+
+  return(p)
   
-  
-  if(aggfunc == "count_na"){
-    agg <- moddf %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sum(is.na(stat)), .groups = "keep")
-  }
-  
-  if(aggfunc == "count_null"){
-    agg <- moddf %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sum(is.na(stat)), .groups = "keep")
-  }
-  
-  
-  if(aggfunc == "prop_na"){
-    agg <- moddf %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = mean(is.na(stat)), .groups = "keep")
-  }
-  
-  if(aggfunc == "var") {
-    agg <- moddf %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = var(stat, na.rm=na.rm), .groups = "keep")
-  }
-  
-  if(aggfunc == "rmse") {
-    agg <- moddf %>%
-      mutate(stat = stat^2) %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sqrt(mean(stat, na.rm=na.rm)), .groups = "keep")
-  }
-  
-  colnames(agg) <- c("K", "phi", "m", "H", "r", "nsamp", "sampstrat", "mean")
-  
-  
-  #SEED & IT NOT INCLUDED
-  params <- expand.grid(K = c(1, 2), 
-                        phi = c(0.1, 0.5),
-                        m = c(0.25, 1.0),
-                        H = c(0.05 , 0.5),
-                        r = c(0.3, 0.6))
-  
-  
+}
+
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
+ 
+  # Summarize dataframe
+  agg <- df %>% 
+    # convert to data.frame
+    data.frame() %>%
+    # remove full data
+    filter(sampstrat != "full") %>%
+    # rename stat_name column as stat for simplified use
+    rename("stat" = all_of(stat_name)) %>%
+    # select columns
+    select(K, phi, m, H, r, nsamp, sampstrat, stat) %>%
+    # convert from wide to long format
+    pivot_longer(c(K, phi, m, H, r)) %>%
+    # turn value into numeric from factor
+    mutate(value = as.numeric(as.character(value))) %>%
+    # group by the parameter (name)
+    group_by(name) %>% 
+    # create new low/high variable (the group_by name makes sure this is done for each parameter seperately)
+    mutate(low_high = case_when(
+        value == min(value) ~ "low",
+        value == max(value) ~ "high",
+        TRUE ~ "NA")) %>% 
+    # group again by the new group (low_high), the param (name), and nsamp/sampstrat
+    group_by(name, low_high, nsamp, sampstrat) %>%
+    # summarize by group
+    custom_agg(aggfunc, na.rm) %>%
+    # order nsamp for plotting
+    mutate(nsamp = factor(nsamp, levels = unique(nsamp)[order(unique(nsamp))])) %>%
+    # order low_high for plotting
+    mutate(low_high = factor(low_high, ordered = TRUE, levels = c("low", "high"))) %>%
+    # create friendly names
+    mutate(param = case_when(name == 'K' ~ 'population size',
+                             name == 'm' ~ 'migration',
+                             name == 'phi' ~ "selection strength",
+                             name == "H" ~ "spatial autocorrelation",
+                             name == "r" ~ "correlation", 
+                             TRUE ~ "NA")) %>%
+    # order param for plotting
+    mutate(param = factor(param, ordered = TRUE, levels = c("population size", 
+                                                   "migration", 
+                                                   "selection strength", 
+                                                   "spatial autocorrelation", 
+                                                   "correlation")))
   
   # define max and min for plotting
-  if(is.null(maxv)){ maxv <- max(agg$mean, na.rm = TRUE)}
-  if(is.null(minv)){ minv <- min(agg$mean, na.rm = TRUE)}
+  if(is.null(maxv)){ maxv <- max(agg$stat, na.rm = TRUE)}
+  if(is.null(minv)){ minv <- min(agg$stat, na.rm = TRUE)}
   
-  plts <- list()
-  for(i in 1:nrow(params)){
-    tempdf <- merge(params[i,], agg)
-    
-    ptitle <- paramset <- paste0("K=",params[i,"K"],
-                                 " phi=",params[i,"phi"],
-                                 " m=",params[i,"m"],
-                                 "\nH=",params[i,"H"],
-                                 " r=",params[i,"r"])
-    
-    p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-      ggtitle(ptitle) +
-      geom_tile(aes(fill = mean)) + 
-      geom_text(aes(label = round(mean, digits = 2), hjust = 0.5), size = 5) +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50", size = 18),
-            axis.text.y = element_text(color = "gray50", size = 18),
-            plot.title = element_text(size=20),
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    if(divergent){
-      p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
-    } else {
-      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal, direction = direction) 
-    }
-    
-    plts[[i]] <- p
+  # plot results
+  p <- ggplot(agg, aes(nsamp, sampstrat)) +
+    geom_tile(aes(fill = stat)) + 
+    geom_text(aes(label = signif(stat, digits = sigdig), hjust = 0.5)) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm"),
+          strip.text.x = element_text(size = 18),
+          strip.text.y = element_text(size = 18),
+          strip.background =element_blank(),
+          strip.text = element_text(color = "black")) +
+    coord_fixed() + 
+    facet_grid(low_high ~ param)
+  
+  if(divergent){
+    p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
+  } else {
+    p <- p + scale_fill_viridis(limits = c(minv, maxv), option = colpal, direction = direction)
   }
   
-  
-  bp <- do.call(grid.arrange, c(plts, nrow=4))
-
+  return(p)
 }
+
 
 
 summary_vplot <- function(df, stat = "stat", plot.type = "rain_plot", varlist = c("K", "phi", "H", "r", "m", "sampstrat"), colpal = "plasma", nrow = 2){
@@ -148,19 +175,6 @@ rain_plot <- function(var, df, stat, colpal = "plasma"){
       outlier.color = NA, ## `outlier.shape = NA` works as well
       position = position_dodge(width = 0.9)
     ) +
-    ## add justified jitter from the {gghalves} package
-    #gghalves::geom_half_point(
-    # aes(col = get(var)),
-    # ## draw jitter on the left
-    # side = "l", 
-    # ## control range of jitter
-    # range_scale = 0, 
-    # ## add some transparency
-    # alpha = .1,
-    # ## size of points
-    # position = position_dodge(width = 0.9)
-    #)+
-    # color
     scale_fill_viridis(discrete=T, 
                        option=colpal, 
                        name = var) +
@@ -178,402 +192,25 @@ rain_plot <- function(var, df, stat, colpal = "plasma"){
   return(p)
 }
 
-#rewrite in tidy
-mean_na <- function(x){
-  y <- mean(x, na.rm = TRUE) 
-  return(y)
-}
-
-sd_na <- function(x){
-  y <- sd(x, na.rm = TRUE) 
-  return(y)
-}
-
-prop_na <- function(x){
-  y <- mean(is.na(x))
-  return(y)
-}
-
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
-  #create column with stat called "stat"
-  df$stat <- df[, stat_name]
+custom_agg <- function(agg, aggfunc = "mean", na.rm = TRUE){
+  if(aggfunc == "mean") agg <- agg %>% summarize(stat = mean(stat, na.rm = na.rm), .groups = "keep")
   
-  #remove full data from data frame
-  sampstrat <- unique(df$sampstrat)
-  nsamp <- unique(df$nsamp)
-  if(any(sampstrat == "full", na.rm = TRUE)){sampstratsub <- sampstrat[-which(sampstrat == "full")]} else {sampstratsub <- sampstrat}
-  if(any(nsamp == 1000 | nsamp == 2000, na.rm = TRUE)){nsampsub <- nsamp[-which(nsamp == 1000 | nsamp == 2000)]} else {nsampsub <- nsamp}
+  if(aggfunc == "count_na") agg <- agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep")
   
-  #create dataframe to store results from summaries
-  resdf <- data.frame()
+  if(aggfunc == "count_null") agg <- agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep")
   
-  #loop through each number of samples and sampling strategy and summarize the stat
-  for(n in nsampsub){
-    for(s in sampstratsub){
-      #subset the sampling number and strategy
-      subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-      #create empty dataframe to store results
-      meandf <- data.frame()
-      #loop through each parameter
-      for(p in c("K", "m", "phi", "H", "r")){
-        #calculate summary stat for each level of parameter given a function 
-        if(aggfunc == "mean"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean_na)}
-        if(aggfunc == "sd"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), sd_na)}
-        if(aggfunc == "prop_na"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), prop_na)}
-        if(aggfunc == "max"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), max)}
-        if(aggfunc == "min"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), min)}
-        if(aggfunc == "var"){aggdf <- aggregate(subdf$stat, list(subdf[,p]), var)}
-        if(aggfunc == "rmse") {
-          subdf$stat <- as.numeric(subdf$stat)^2
-          aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean, na.rm = TRUE)
-          aggdf$x <- sqrt(aggdf$x)
-        }
-        
-        #create new column for each parameter named p (will be overwritten, probably a cleaner way to do this)
-        aggdf[,1] <- paste(p,"=", aggdf[,1])
-        aggdf$param <- p
-        meandf <- rbind.data.frame(meandf, aggdf)
-      }
-      
-      colnames(meandf) <- c("group", "mean", "param")
-      
-      #save results
-      tempdf <- data.frame(meandf)
-      tempdf$nsamp <- n
-      tempdf$sampstrat <- s
-      resdf <- rbind.data.frame(resdf, tempdf)
-    }
+  if(aggfunc == "prop_na") agg <- agg %>% summarize(stat = mean(is.na(stat)), .groups = "keep")
+  
+  if(aggfunc == "var") agg <- agg %>% summarize(stat = var(stat, na.rm = na.rm), .groups = "keep")
+  
+  if(aggfunc == "rmse") {
+    agg <- moddf %>%
+      mutate(stat = stat^2) %>%
+      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+      summarize(stat = sqrt(mean(stat, na.rm=na.rm)), .groups = "keep")
   }
   
-  # remove row names
-  row.names(resdf) <- NULL
-  
-  # convert nsamp for plotting
-  resdf$nsamp <- factor(resdf$nsamp, levels = nsampsub[order(nsampsub)])
-  
-  # define max and min for plotting
-  if(is.null(maxv)){ maxv <- max(resdf$mean, na.rm = TRUE)}
-  if(is.null(minv)){ minv <- min(resdf$mean, na.rm = TRUE)}
-  
-  ## plot data
-  plts <- list()
-  # For each param value make a plot
-  for(i in 1:length(unique(resdf$group))){
-    tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
-    
-    p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-      ggtitle(unique(tempdf$group)) +
-      geom_tile(aes(fill = mean)) + 
-      geom_text(aes(label = signif(mean, digits = sigdig), hjust = 0.5)) +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50", size = 14),
-            axis.text.y = element_text(color = "gray50", size = 14), 
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    if(divergent){
-      p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
-    } else {
-      p <- p + scale_fill_viridis(limits=c(minv, maxv), option = colpal, direction = direction)
-    }
-    
-    plts[[i]] <- p
-  }
-  
-  # This part just plots the pairs of parameters together
-  plts2 <- list()
-  o <- 1
-  for(i in seq(1, length(plts), 2)){
-    plts2[[o]] <- do.call(arrangeGrob, c(plts[c(i,i+1)], nrow=2))
-    o <- o+1
-  }
-  
-  # Make final plot
-  plt <- do.call(grid.arrange, c(plts2, nrow = 1))
-}
-
-
-#Function to determine how sampling strategy affects the relationships between the sim vars/sampstrat
-sampstrat_mod <- function(df, alpha = 0.05, padj = "fdr", sampstrat, full = FALSE){
-  resdf <- data.frame()
-  
-  if(!full){sampstrat <- sampstrat[-which(sampstrat=="full")]}
-  
-  for(s in unique(sampstrat)){
-    subdf <- df[df$sampstrat == s, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-    
-    #anova to get p-values
-    aovmod <- anova(fullmod)
-    
-    #fixed effects (minus intercept)
-    efmod <- fixef(fullmod)[-1]
-    
-    #save results
-    tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
-    tempdf$param <- row.names(aovmod)
-    tempdf$sampstrat <- s
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-  
-  
-  row.names(resdf) <- NULL
-  resdf$padj <- p.adjust(resdf$p, padj)
-  
-  tempdf <- resdf
-  tempdf[tempdf$padj > alpha, "fixef"] <- NA
-  
-  #change sampstrat and npts to ordered factor
-  tempdf$sampstrat <- factor(tempdf$sampstrat, ordered=TRUE, levels = unique(sampstrat))
-  
-  p <- ggplot(tempdf, aes(param, sampstrat)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  print(p)
-}
-
-
-#Function to determine how nsamp affects the relationships between the sim vars/nsamp
-nsamp_mod <- function(df, alpha = 0.05, padj = "fdr", nsamp, full = FALSE){
-  resdf <- data.frame()
-  
-  if(!full){nsamp <- nsamp[-which(nsamp==2000)]}
-  
-  for(n in unique(nsamp)){
-    subdf <- df[df$nsamp == n, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-    
-    #anova to get p-values
-    aovmod <- anova(fullmod)
-    
-    #fixed effects (minus intercept)
-    efmod <- fixef(fullmod)[-1]
-    
-    #save results
-    tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
-    tempdf$param <- row.names(aovmod)
-    tempdf$nsamp <- n
-    resdf <- rbind.data.frame(resdf, tempdf)
-  }
-  
-  
-  row.names(resdf) <- NULL
-  resdf$padj <- p.adjust(resdf$p, padj)
-  
-  tempdf <- resdf
-  tempdf[tempdf$padj > alpha, "fixef"] <- NA
-  
-  #change sampstrat and npts to ordered factor
-  tempdf$nsamp <- factor(tempdf$nsamp, ordered=TRUE, levels = nsamp)
-  
-  p <- ggplot(tempdf, aes(param, nsamp)) +
-    geom_tile(aes(fill = fixef)) + 
-    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
-    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          #legend.position = "none",
-          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-          axis.text.x = element_text(color = "grey50", size = 12),
-          axis.text.y = element_text(color = "gray50", size = 12), 
-          plot.margin=unit(rep(0.4,4),"cm")) +
-    coord_fixed()
-  
-  print(p)
-}
-
-#Function to determine how sampling strategy affects the relationships between the sim vars/nsamp
-sampstrat_nsamp_mod_params <- function(df, alpha = 0.05, padj = "fdr", sampstrat, nsamp, full = FALSE){
-  
-  if(!full){sampstratsub <- sampstrat[-which(sampstrat=="full")]}
-  if(!full){nsampsub <- nsamp[-which(nsamp==2000)]}
-  
-  resdf <- data.frame()
-  
-  for(n in nsampsub){
-    for(s in sampstratsub){
-      subdf <- df[df$sampstrat == s & df$nsamp == n, ]
-      
-      #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-      #mixed effect model
-      fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
-      
-      #anova to get p-values
-      aovmod <- anova(fullmod)
-      
-      #fixed effects (minus intercept)
-      efmod <- fixef(fullmod)[-1]
-      
-      #save results
-      tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
-      tempdf$param <- row.names(aovmod)
-      tempdf$nsamp <- n
-      tempdf$sampstrat <- s
-      resdf <- rbind.data.frame(resdf, tempdf)
-    }
-  }
-  
-  row.names(resdf) <- NULL
-  resdf$nsamp <- as.factor(resdf$nsamp)
-  resdf$padj <- p.adjust(resdf$p, padj)
-  
-  ## plot data
-  plts <- list()
-  for(i in 1:length(unique(resdf$param))){
-    tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
-    tempdf[tempdf$padj > alpha, "fixef"] <- NA
-    tempdf$lab <- NA
-    tempdf$lab[tempdf$padj < 0.10] <- "plain"
-    tempdf$lab[tempdf$padj <= 0.05] <-"bold"
-    
-    p <- ggplot(tempdf, aes(nsamp, sampstrat)) +
-      ggtitle(unique(tempdf$param)) +
-      geom_tile(aes(fill = fixef)) + 
-      geom_text(aes(label = signif(fixef, digits = 1), hjust = 0.5, fontface = lab, size = 10)) +
-      scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50", size = 12),
-            axis.text.y = element_text(color = "gray50", size = 12), 
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    plts[[i]] <- p
-  }
-  
-  
-  do.call(grid.arrange, c(plts, nrow=1))
-}
-
-#Function to determine which sampling strategy performs best given a number of points
-nsamp_sampstrat_mods <- function(df, alpha = 0.05, padj = "fdr", sampstrat, nsamp){
-  
-  sampstratsub <- sampstrat[-which(sampstrat=="full")]
-  nsampsub <- nsamp[-which(nsamp==2000)]
-  
-  plts <- list()
-  for(i in 1:length(nsampsub)){
-    n <- nsampsub[i]
-    subdf <- df[df$nsamp == n, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ sampstrat + K + m + phi + H + r + (1 | seed), subdf)
-    
-    pw <- emmeans(fullmod, list(pairwise ~ sampstrat), adjust = "tukey")
-    
-    resdf <- data.frame(pw$`pairwise differences of sampstrat`)
-    resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
-    resdf$p2 <- gsub(".*- ", "", resdf$X1)
-    
-    resdf$estimate[resdf$p.value > 0.05] <- NA
-    
-    resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(c("trans","rand","grid","envgeo")))
-    resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(c("trans","rand","grid","envgeo")))
-    
-    plt <- ggplot(resdf, aes(p1,p2)) +
-      ggtitle(n) +
-      geom_tile(aes(fill = estimate)) + 
-      geom_text(aes(label = signif(estimate,  digits = 2), hjust = 0.5)) +
-      scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$estimate),max(resdf$estimate))) +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), 
-            #legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50", size = 12),
-            axis.text.y = element_text(color = "gray50", size = 12), 
-            legend.position = "none",
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    print(plt)
-    
-    plts[[i]] <- plt
-  }
-  
-  do.call(grid.arrange, c(plts, nrow=3))
-  
-}
-
-#Function to determine which sampling strategy performs best given a number of points
-sampstrat_nsamp_mods <- function(df, alpha = 0.05, padj = "fdr", sampstrat, nsamp){
-  
-  sampstratsub <- sampstrat[-which(sampstrat=="full")]
-  nsampsub <- nsamp[-which(nsamp==2000)]
-  
-  plts <- list()
-  for(i in 1:length(sampstratsub)){
-    s <- sampstratsub[i]
-    subdf <- df[df$sampstrat == s, ]
-    
-    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
-    #mixed effect model
-    fullmod <- lmer(stat ~ nsamp + K + m + phi + H + r + (1 | seed), subdf)
-    
-    pw <- emmeans(fullmod, list(pairwise ~ nsamp), adjust = "tukey")
-    
-    resdf <- data.frame(pw$`pairwise differences of nsamp`)
-    resdf$p1 <- gsub("\\ -.*", "", resdf$X1)
-    resdf$p2 <- gsub(".*- ", "", resdf$X1)
-    
-    resdf$estimate[resdf$p.value > 0.05] <- NA
-    
-    resdf$p1 <- factor(resdf$p1, ordered=TRUE, levels = as.character(c(36, 81, 144, 225, 324)))
-    resdf$p2 <- factor(resdf$p2, ordered=TRUE, levels = as.character(c(36, 81, 144, 225, 324)))
-    
-    plt <- ggplot(resdf, aes(p1,p2)) +
-      ggtitle(s) +
-      geom_tile(aes(fill = estimate)) + 
-      geom_text(aes(label = signif(estimate,  digits = 2), hjust = 0.5)) +
-      scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$estimate),max(resdf$estimate))) +
-      theme_bw() +
-      theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(), 
-            #legend.position = "none",
-            axis.title.x=element_blank(), axis.ticks.x=element_blank(),
-            axis.title.y=element_blank(), axis.ticks.y=element_blank(),
-            axis.text.x = element_text(color = "grey50"),
-            axis.text.y = element_text(color = "gray50"), 
-            text=element_text(size=18),
-            plot.margin=unit(rep(0.4,4),"cm")) +
-      coord_fixed()
-    
-    print(plt)
-    
-    plts[[i]] <- plt
-  }
-  
-  do.call(grid.arrange, c(plts, nrow=2))
-  
+  return(agg)
 }
 
 var_to_fact <- function(df){
@@ -582,8 +219,11 @@ var_to_fact <- function(df){
   return(df)
 }
 
-format_mmrr <- function(path){
+format_mmrr <- function(path, full = FALSE){
   df <- read.csv(path)
+  
+  # remove rows for full
+  if(!full) df <- df[df$sampstrat != "full", ]
   
   df <- var_to_fact(df)
   
@@ -600,8 +240,11 @@ format_mmrr <- function(path){
   return(df)
 }
 
-format_gdm <- function(path){
+format_gdm <- function(path, full = FALSE){
   df <- read.csv(path)
+  
+  # remove rows for full
+  if(!full) df <- df[df$sampstrat != "full", ]
   
   df <- var_to_fact(df)
   
@@ -643,7 +286,7 @@ format_gdm <- function(path){
   return(df)
 }
 
-format_lfmm <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
+format_lfmm <- function(path, full = FALSE){
   
   df <- read.csv(path)
   
@@ -661,10 +304,29 @@ format_lfmm <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
   df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
   df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
   
-  # subset by padj method and alpha
-  df <- df[df$padj == padj & alpha == alpha,]
-  
+  df$roc <- (df$roc1 + df$roc2)/2
+  df$pr <- (df$pr1 + df$pr2)/2
+  # CHECK THIS: remove rows with all NA
+  all_na <- apply(df, 1, function(x) all(is.na(x)))
+  df <- df[!all_na,]
   return(df)
+}
+
+lfmm_plotter <- function(x, ...) {
+  capture.output(grob <- summary_hplot(x, ...))
+  method <- unique(x$method)
+  K_selection <- unique(x$K_selection)
+  title <- paste0("K selection: ", K_selection, " | ", "LFMM method: ", method)
+  grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
+  return(grob2)
+}
+
+rda_plotter <- function(x, ...) {
+  capture.output(grob <- summary_hplot(x, ...))
+  correctPC <- as.logical(unique(x$correctPC))
+  if(correctPC) title <- "pRDA" else title <- "RDA"
+  grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
+  return(grob2)
 }
 
 format_rda <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
@@ -694,30 +356,121 @@ format_rda <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
   return(df)
 }
 
-run_lmer <- function(df, stat, table_main = ""){
+run_lmer <- function(df, stat, filepath = NULL, seed = 22){
+  
+  if(!is.null(seed)) set.seed(22)
+  
   # mixed effect model
   moddf <- df[df$sampstrat != "full",]
   moddf$stat <- moddf[, stat]
   
-  # na.action needs to be set to na.fail for dredge to work
-  fullmod <- lmerTest::lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), 
-                            moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
+  # make nsamp into continuous variable
+  moddf$nsamp <- as.numeric(as.character(moddf$nsamp))
+  
+  # mixed model
+  mod <- lmerTest::lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), 
+                          moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
+  
+  
+  
   
   # print anova result
-  aov <- anova(fullmod)
-  pretty_anova(aov)
+  print(pretty_anova(mod, filepath))
+  
+  # print tukey test
+  print(pretty_tukey(mod, filepath))
+  
 }
 
-pretty_anova <- function(aov){
-  stopifnot(class(aov)[1] == "anova")
+pretty_tukey <- function(mod, filepath = NULL){
+  em <- emmeans::emmeans(mod, pairwise ~ sampstrat, adjust = "tukey")
+  em_df <- data.frame(em$contrasts)
   
-  aov_df <- data.frame(Variable = rownames(aov), aov)
+  d <- max(abs(c(min(em_df$estimate), max(em_df$estimate))))
+  
+  em_tb <- em_df %>%
+    dplyr::select(-df) %>%
+    gt::gt() %>%
+    cols_label(
+      contrast = "Contrast",
+      estimate = "Estimate",
+      SE = "SE",
+      z.ratio = "Z ratio",
+      p.value = "p"
+    ) %>%
+    fmt_number(
+      columns = c(estimate, SE, z.ratio),
+      decimals = 4,
+      suffixing = TRUE
+    ) %>%
+    tab_style(
+      style = list(
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(
+        rows = p.value < 0.05,
+        columns = c(p.value, contrast)
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.05",
+      placement = "right",
+      locations = cells_body(
+        columns = c(p.value, contrast),
+        rows = p.value < 0.05 & p.value > 0.01
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.01",
+      placement = "right",
+      locations = cells_body(
+        columns = c(p.value, contrast),
+        rows = p.value < 0.01 & p.value > 0.001
+      )
+    ) %>%
+    tab_footnote(
+      footnote = "p < 0.001",
+      placement = "right",
+      locations = cells_body(
+        columns = c(p.value, contrast),
+        rows = p.value < 0.001 
+      )
+    ) %>% fmt_scientific(
+      columns = p.value,
+      rows = p.value <= 0.009,
+      decimals = 1
+    ) %>%
+    opt_footnote_marks(
+      marks = c("***", "**", "*")
+      ) %>%
+    gtExtras::gt_hulk_col_numeric(
+      estimate, 
+      trim = TRUE, 
+      na.color = "white",
+      domain = c(-d, d)
+    ) 
+  
+  if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
+  return(em_tb)
+}
+
+pretty_anova <- function(mod, filepath = NULL){
+  
+  aov <- anova(mod)
+  
+  effects <- fixef(mod)
+  effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "nsamp", "K2", "m1", "phi0.5", "H0.5", "r0.6"))]))
+  effects <- c(effects["nsamp"], sampstrat = effects_sampstrat, effects[c("K2", "m1", "phi0.5", "H0.5", "r0.6")])
+  aov_df <- data.frame(Variable = rownames(aov), FixedEffects = effects, aov)
   
   aov_df$Pr..F. <- signif(aov_df$Pr..F., 2)
+  
+  d <- max(abs(c(min(aov_df$FixedEffects), max(aov_df$FixedEffects))))
   
   aov_tb <- aov_df %>%
     gt::gt() %>%
     cols_label(
+      FixedEffects = "Fixed Effects",
       Variable = "Predictors",
       Sum.Sq = "Sum Sq",
       Mean.Sq = "Mean Sq",
@@ -728,7 +481,7 @@ pretty_anova <- function(aov){
     ) %>%
     fmt_number(
       columns = c(2:4, 6),
-      decimals = 2,
+      decimals = 4,
       suffixing = TRUE
     ) %>%
     tab_style(
@@ -768,7 +521,16 @@ pretty_anova <- function(aov){
       rows = Pr..F. <= 0.009,
       decimals = 1
     ) %>%
-    opt_footnote_marks(marks = c("***", "**", "*"))
+    opt_footnote_marks(
+      marks = c("***", "**", "*")
+    ) %>%
+    gtExtras::gt_hulk_col_numeric(
+      FixedEffects, 
+      trim = TRUE, 
+      na.color = "white",
+      domain = c(-d, d)
+    ) 
   
+  if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
   return(aov_tb)
 }
