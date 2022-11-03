@@ -45,7 +45,7 @@ df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mism
 # Causal Clines 
 
 ```{r,fig.width=16, fig.height=7}
-df <- read.csv(here("p3_methods", "outputs", "cline_results.csv"))
+df <- read.csv(here("p3_methods", "outputs", "cline_results.csv")
 
 summary_df_full <- df %>% 
   filter(sampstrat == "full") %>% 

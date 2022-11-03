@@ -5,7 +5,7 @@ output:
     toc: true
 ---
 
-```{r, warning=FALSE, message=FALSE, fig.width = 21, fig.height = 13}
+```{r, warning=FALSE, , message = FALSE, results = 'asis', fig.width = 21, fig.height = 13}
 library("here")
 library("sjPlot")
 library("tidyverse")
@@ -29,7 +29,7 @@ p3path <- here("p3_methods", "outputs")
 
 ### 1.1.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
 
 # overall error
@@ -45,8 +45,8 @@ summary_hplot(mmrr_ind, "geo_err", divergent = TRUE)
 
 ### 1.1.2 Model summaries
 
-```{r, message=FALSE}
-run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_ratioerr.csv"))
+```{r, , message = FALSE, results = 'asis'}
+run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_RAE.csv"))
 run_lmer(mmrr_ind, "geo_ae", filepath = here(p4path, "MMRR_individual_geoerr.csv"))
 run_lmer(mmrr_ind, "env_ae", filepath = here(p4path, "MMRR_individual_enverr.csv"))
 ```
@@ -64,7 +64,7 @@ MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
 
 ### 1.2.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
 
 # overall error
@@ -80,8 +80,8 @@ summary_hplot(mmrr_site, "geo_err", divergent = TRUE)
 
 ### 1.2.2 Model summaries
 
-```{r, message=FALSE}
-run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_ratioerr.csv"))
+```{r, , message = FALSE, results = 'asis'}
+run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_RAE.csv"))
 run_lmer(mmrr_site, "geo_ae", filepath = here(p4path, "MMRR_site_geoerr.csv"))
 run_lmer(mmrr_site, "env_ae", filepath = here(p4path, "MMRR_site_enverr.csv"))
 ```
@@ -101,7 +101,7 @@ MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
 
 ### 2.1.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
 
 # overall error
@@ -117,8 +117,8 @@ summary_hplot(gdm_ind, "geo_err", divergent = TRUE)
 
 ### 2.1.2 Model summaries
 
-```{r, message=FALSE}
-run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_ratioerr.csv"))
+```{r, , message = FALSE, results = 'asis'}
+run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_RAE.csv"))
 run_lmer(gdm_ind, "geo_ae", filepath = here(p4path, "GDM_individual_geoerr.csv"))
 run_lmer(gdm_ind, "env_ae", filepath = here(p4path, "GDM_individual_enverr.csv"))
 ```
@@ -144,7 +144,7 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 
 ### 2.2.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
 
 # overall error
@@ -160,8 +160,8 @@ summary_hplot(gdm_site, "geo_err", divergent = TRUE)
 
 ### 2.2.2 Model summaries
 
-```{r, message=FALSE}
-run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_ratioerr.csv"))
+```{r, , message = FALSE, results = 'asis'}
+run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_RAE.csv"))
 run_lmer(gdm_site, "geo_ae", filepath = here(p4path, "GDM_site_geoerr.csv"))
 run_lmer(gdm_site, "env_ae", filepath = here(p4path, "GDM_site_enverr.csv"))
 ```
@@ -221,7 +221,7 @@ df <- data.frame(mmrr_ind,
                  ratio_mg = gdm_ind$ratio/mmrr_ind$ratio )
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 summary_hplot(df, "geo_mg")
 summary_hplot(df, "env_mg")
 summary_hplot(df, "ratio_mg")
@@ -244,8 +244,27 @@ df <- data.frame(mmrr_site,
                  ratio_mg = gdm_site$ratio/mmrr_site$ratio )
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 summary_hplot(df, "geo_mg")
 summary_hplot(df, "env_mg")
 summary_hplot(df, "ratio_mg")
+```
+```{r, fig.width=14, fig.height=7}
+summary_hplot(mmrr_ind, "comboenv_coeff")
+summary_hplot(gdm_ind, "comboenv_coeff")
+summary_hplot(mmrr_ind, "geo_coeff")
+summary_hplot(gdm_ind, "geo_coeff")
+```
+
+# Figures
+
+```{r, eval = FALSE, fig.width=12, fig.height=11}
+arrange_figures(gdm_ind, mmrr_ind, "RAE",
+                "A. GDM", "B. MMRR",
+                colpal = "viridis", direction = -1, dig = 2, maxv = 0.21, minv = 0.03)
+
+arrange_figures(gdm_site, mmrr_site, "RAE", 
+                "A. GDM", "B. MMRR",
+                colpal = "viridis", direction = -1, dig = 2, maxv = 0.3, minv = 0.07)
+
 ```

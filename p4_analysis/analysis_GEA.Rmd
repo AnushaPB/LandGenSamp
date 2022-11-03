@@ -30,7 +30,7 @@ p3path <- here("p3_methods", "outputs")
 
 ### 1.1.1 Summary plots
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 lfmm_ind <- format_lfmm(here(p3path, "lfmm_indsampling_results.csv")) 
 
 lfmm_ind_tidy <- lfmm_ind %>% 
@@ -39,7 +39,6 @@ lfmm_ind_tidy <- lfmm_ind %>%
   group_by(method, K_selection) %>%
   group_split()
 
-# GO BACK AND FIX K 
 K_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
 TPR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.17)
 FDR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.96)
@@ -48,21 +47,21 @@ TOTALN_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viri
 ```
 
 ### K
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(K_plots, grid.arrange)
 ```
 
 ### TPRCOMBO
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TPR_plots, grid.arrange)
 ```
 
 ### FDRCOMBO
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(FDR_plots, grid.arrange)
 ```
 ### TOTALN
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TOTALN_plots, grid.arrange)
 ```
 
@@ -76,10 +75,9 @@ lfmm_ind <-
   filter(K_selection == "tracy.widom")
 ```
 
-```{r, message=FALSE}
+```{r, message = FALSE, results = 'asis', results='asis'}
 run_lmer(lfmm_ind, "TPRCOMBO", filepath = here(p4path, "LFMM_individual_TPR.csv"))
 run_lmer(lfmm_ind, "FDRCOMBO", filepath = here(p4path, "LFMM_individual_FDR.csv"))
-run_lmer(lfmm_ind, "TOTALN", filepath = here(p4path, "LFMM_individual_TOTALN.csv"))
 ```
 
 ### 1.1.3 Megaplots
@@ -90,35 +88,46 @@ MEGAPLOT(lfmm_ind, "TPRCOMBO", colpal = "plasma")
 MEGAPLOT(lfmm_ind, "FDRCOMBO", colpal = "viridis", direction = -1)
 MEGAPLOT(lfmm_ind, "TOTALN", colpal = "viridis")
 ```
+
 ### 1.1.4 Latent factor versus sample number test
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
-lfmm_ind <- format_lfmm(here(p3path, "lfmm_indsampling_fullK_results.csv")) 
+```{r, fig.width=14, fig.height=7, include = FALSE}
+lfmm_ind_fullK <- format_lfmm(here(p3path, "lfmm_indsampling_fullK_results.csv")) 
 
-lfmm_ind_tidy <- lfmm_ind %>% 
+lfmm_ind_tidy_fullK <- lfmm_ind_fullK %>% 
   filter(padj == "fdr") %>% 
   filter(sig == 0.05) %>% 
   group_by(method, K_selection) %>%
   group_split()
 
-K_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
-TPR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
-FDR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
+K_plots <- map(lfmm_ind_tidy_fullK, lfmm_plotter, stat = "K.1", colpal = "turbo")
+TPR_plots <- map(lfmm_ind_tidy_fullK, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
+FDR_plots <- map(lfmm_ind_tidy_fullK, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
+TOTALN_plots <- map(lfmm_ind_tidy_fullK, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(K_plots, grid.arrange)
 walk(TPR_plots, grid.arrange)
 walk(FDR_plots, grid.arrange)
 walk(TOTALN_plots, grid.arrange)
+```
+```{r, results = 'asis'}
+lfmm_ind_fullK <- 
+  lfmm_ind_fullK %>%
+  filter(padj == "fdr") %>%
+  filter(sig == 0.05) %>%
+  filter(method == "ridge")
+  
+run_lmer(lfmm_ind_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_indfullK_TPR.csv"))
+run_lmer(lfmm_ind_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_indfullK_FDR.csv"))
 ```
 
 ## 1.2 Site sampling
 
 ### 1.2.1 Summary plots
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 lfmm_site <- format_lfmm(here(p3path, "lfmm_sitesampling_results.csv")) 
 
 lfmm_site_tidy <- lfmm_site %>% 
@@ -128,8 +137,7 @@ lfmm_site_tidy <- lfmm_site %>%
   group_split()
 ```
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
-# GO BACK AND FIX K 
+```{r, fig.width=14, fig.height=7, include = FALSE}
 K_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
 TPR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
 FDR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
@@ -137,22 +145,22 @@ TOTALN_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TOTALN", colpal = "vir
 ```
 
 ### K
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(K_plots, grid.arrange)
 ```
 
 ### TPRCOMBO
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TPR_plots, grid.arrange)
 ```
 
 ### FDRCOMBO
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(FDR_plots, grid.arrange)
 ```
 
 ### TOTALN
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TOTALN_plots, grid.arrange)
 ```
 
@@ -166,10 +174,9 @@ lfmm_site <-
   filter(K_selection == "tracy.widom")
 ```
 
-```{r, message=FALSE}
+```{r, message = FALSE, results = 'asis'}
 run_lmer(lfmm_site, "TPRCOMBO", filepath = here(p4path, "LFMM_site_TPR.csv"))
 run_lmer(lfmm_site, "FDRCOMBO", filepath = here(p4path, "LFMM_site_FDR.csv"))
-run_lmer(lfmm_site, "TOTALN", filepath = here(p4path, "LFMM_site_TOTALN.csv"))
 ```
 
 ### 1.2.3 Megaplots
@@ -180,29 +187,39 @@ MEGAPLOT(lfmm_site, "TPRCOMBO", colpal = "plasma")
 MEGAPLOT(lfmm_site, "FDRCOMBO", colpal = "viridis", direction = -1)
 MEGAPLOT(lfmm_site, "TOTALN", colpal = "viridis")
 ```
+
 ### 1.2.4 Latent factor versus sample number test
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
-lfmm_site <- format_lfmm(here(p3path, "lfmm_sitesampling_fullK_results.csv")) 
+```{r, fig.width=14, fig.height=7, include = FALSE}
+lfmm_site_fullK <- format_lfmm(here(p3path, "lfmm_sitesampling_fullK_results.csv")) 
 
-lfmm_site_tidy <- lfmm_site %>% 
+lfmm_site_tidy_fullK <- lfmm_site_fullK %>% 
   filter(padj == "fdr") %>% 
   filter(sig == 0.05) %>% 
   group_by(method, K_selection) %>%
   group_split()
 
-K_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
-TPR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
-FDR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis", direction = -1)
+K_plots <- map(lfmm_site_tidy_fullK, lfmm_plotter, stat = "K.1", colpal = "turbo")
+TPR_plots <- map(lfmm_site_tidy_fullK, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
+FDR_plots <- map(lfmm_site_tidy_fullK, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
+TOTALN_plots <- map(lfmm_site_tidy_fullK, lfmm_plotter, stat = "TOTALN", colpal = "viridis", direction = -1)
 ```
 
-```{r, fig.width=16, fig.height=7}
-
+```{r, fig.width=14, fig.height=7}
 walk(K_plots, grid.arrange)
 walk(TPR_plots, grid.arrange)
 walk(FDR_plots, grid.arrange)
 walk(TOTALN_plots, grid.arrange) 
+```
+```{r, results = 'asis'}
+lfmm_site_fullK <- 
+  lfmm_site_fullK %>%
+  filter(padj == "fdr") %>%
+  filter(sig == 0.05) %>%
+  filter(method == "ridge")
+  
+run_lmer(lfmm_site_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_sitefullK_TPR.csv"))
+run_lmer(lfmm_site_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_sitefullK_FDR.csv"))
 ```
 
 # 2. RDA
@@ -211,7 +228,7 @@ walk(TOTALN_plots, grid.arrange)
 
 ### 2.1.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 rda_ind <- format_rda(here(p3path, "rda_indsampling_results.csv"))
 rda_ind_tidy <- 
   rda_ind %>%
@@ -221,17 +238,17 @@ rda_ind_tidy <-
   group_split()
 ```
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 TPR_plots <- map(rda_ind_tidy, rda_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.088)
 FDR_plots <- map(rda_ind_tidy, rda_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.14)
 TOTALN_plots <- map(rda_ind_tidy, rda_plotter, stat = "TOTALN", colpal = "viridis")
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TPR_plots, grid.arrange)
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(FDR_plots, grid.arrange)
 ```
 
@@ -244,10 +261,9 @@ rda_ind <-
   filter(correctPC == "FALSE") 
 ```
 
-```{r, message=FALSE}
+```{r, message = FALSE, results = 'asis'}
 run_lmer(rda_ind, "TPRCOMBO", filepath = here(p4path, "RDA_individual_TPR.csv"))
 run_lmer(rda_ind, "FDRCOMBO", filepath = here(p4path, "RDA_individual_FDR.csv"))
-run_lmer(rda_ind, "TOTALN", filepath = here(p4path, "RDA_individual_TOTALN.csv"))
 ```
 
 ### 1.1.3 Megaplots
@@ -262,7 +278,7 @@ MEGAPLOT(rda_ind, "TOTALN", colpal = "viridis")
 
 ### 2.2.1 Summary plots
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 rda_site <- format_rda(here(p3path, "rda_sitesampling_results.csv")) 
 rda_site_tidy <- 
   rda_site %>%
@@ -272,21 +288,21 @@ rda_site_tidy <-
   group_split()
 ```
 
-```{r, fig.width=16, fig.height=7, include = FALSE}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 TPR_plots <- map(rda_site_tidy, rda_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.066)
 FDR_plots <- map(rda_site_tidy, rda_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.092)
 TOTALN_plots <- map(rda_site_tidy, rda_plotter, stat = "TOTALN", colpal = "viridis")
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TPR_plots, grid.arrange)
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(FDR_plots, grid.arrange)
 ```
 
-```{r, fig.width=16, fig.height=7}
+```{r, fig.width=14, fig.height=7}
 walk(TOTALN_plots, grid.arrange)
 ```
 
@@ -299,10 +315,9 @@ rda_site <-
   filter(correctPC == "FALSE") 
 ```
 
-```{r, message=FALSE}
+```{r, message = FALSE, results = 'asis'}
 run_lmer(rda_site, "TPRCOMBO", filepath = here(p4path, "RDA_site_TPR.csv"))
 run_lmer(rda_site, "FDRCOMBO", filepath = here(p4path, "RDA_site_FDR.csv"))
-run_lmer(rda_site, "TOTALN", filepath = here(p4path, "RDA_site_TOTALN.csv"))
 ```
 
 ### 2.2.3 Megaplots
@@ -312,3 +327,27 @@ MEGAPLOT(rda_site, "TPRCOMBO", colpal = "plasma")
 MEGAPLOT(rda_site, "FDRCOMBO", colpal = "viridis", direction = -1)
 MEGAPLOT(rda_site, "TOTALN", colpal = "viridis")
 ```
+
+# Figures
+
+```{r, eval = FALSE, fig.width=12, fig.height=11}
+arrange_figures(lfmm_ind, rda_ind, "FDR", 
+                "A. LFMM", "B. RDA",
+                colpal = "viridis", direction = -1, dig = 2, maxv = 0.86, minv = 0)
+
+arrange_figures(lfmm_ind, rda_ind, "TPR", 
+                "A. LFMM", "B. RDA",
+                colpal = "plasma", direction = 1, dig = 2, minv = 0, maxv = 0.17)
+
+arrange_figures(lfmm_site, rda_site, "TPR", 
+                "A. LFMM", "B. RDA",
+                colpal = "plasma", direction = 1, dig = 2, minv = 0, maxv = 0.11)
+
+arrange_figures(lfmm_site, rda_site, "FDR", 
+                "A. LFMM", "B. RDA",
+                colpal = "viridis", direction = -1, dig = 2, maxv = 1, minv = 0)
+
+```
+
+
+

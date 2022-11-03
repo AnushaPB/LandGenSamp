@@ -45,7 +45,7 @@ write.csv(table_df, here(dirname(getwd()), "p4_analysis", "megatable.csv"), row.
 ```{r}
 
 table_df %>%
-  filter(stat != "TOTALN") %>%
+  filter(sampling == "individual" | sampling == "site") %>% 
   gt(
     rowname_col = "stat",
     groupname_col = "method"
@@ -98,14 +98,12 @@ table_df %>%
   
 ```
 ```{r}
+
 table_df %>%
-  filter(stat == "TOTALN") %>%
+  filter(method == "LFMM") %>% 
   gt(
     rowname_col = "stat",
     groupname_col = "method"
-    ) %>%
-  row_group_order(
-    groups = c("LFMM", "RDA")
     ) %>%
   cols_label(
       method = "Method",
@@ -118,15 +116,17 @@ table_df %>%
     ) %>% 
   fmt_number(
     columns = c(4:9),
-    decimals = 3,
+    decimals = 4,
     suffixing = TRUE
     ) %>%
-  gtExtras::gt_hulk_col_numeric(
-    c(nsamp, H, K, m, phi, r), 
-    trim = TRUE, 
-    domain = c(-21,21),
-    na.color = "white"
-    ) %>%
+  data_color(
+    columns = c(nsamp, H, K, m, phi, r),
+    colors = scales::col_numeric(
+      palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
+      domain = c(-0.12,0.12),
+      na.color = "white",
+    )
+  ) %>%
   sub_missing(
     columns = everything(),
     rows = everything(),
@@ -149,6 +149,7 @@ table_df %>%
   )
   
 ```
+
 
 ```{r}
 
