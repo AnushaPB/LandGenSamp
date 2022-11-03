@@ -34,7 +34,7 @@ MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", 
           plot.margin=unit(rep(0.4,4),"cm"),
           strip.text.x = element_text(size = 18),
           strip.text.y = element_text(size = 18),
-          strip.background =element_blank(),
+          strip.background = element_blank(),
           strip.text = element_text(color = "black")) 
   
   if(divergent){
@@ -47,7 +47,7 @@ MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", 
   
 }
 
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", sigdig=2, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", dig=3, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE, title = NULL){
  
   # Summarize dataframe
   agg <- df %>% 
@@ -81,16 +81,18 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     # create friendly names
     mutate(param = case_when(name == 'K' ~ 'population size',
                              name == 'm' ~ 'migration',
-                             name == 'phi' ~ "selection strength",
-                             name == "H" ~ "spatial autocorrelation",
+                             name == 'phi' ~ "selection\nstrength",
+                             name == "H" ~ "spatial\nautocorrelation",
                              name == "r" ~ "correlation", 
                              TRUE ~ "NA")) %>%
     # order param for plotting
     mutate(param = factor(param, ordered = TRUE, levels = c("population size", 
                                                    "migration", 
-                                                   "selection strength", 
-                                                   "spatial autocorrelation", 
-                                                   "correlation")))
+                                                   "selection\nstrength", 
+                                                   "spatial\nautocorrelation", 
+                                                   "correlation"))) %>%
+    # round
+    mutate(stat = round(stat, dig))
   
   # define max and min for plotting
   if(is.null(maxv)){ maxv <- max(agg$stat, na.rm = TRUE)}
@@ -99,7 +101,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
   # plot results
   p <- ggplot(agg, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
-    geom_text(aes(label = signif(stat, digits = sigdig), hjust = 0.5)) +
+    geom_text(aes(label = stat, hjust = 0.5)) +
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), legend.position = "none",
@@ -111,15 +113,21 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
           strip.text.x = element_text(size = 18),
           strip.text.y = element_text(size = 18),
           strip.background =element_blank(),
-          strip.text = element_text(color = "black")) +
+          strip.text = element_text(color = "#282828"),
+          plot.title = element_text(size=20),
+          legend.key.size = unit(1, 'cm'), 
+          legend.title = element_text(size=18), 
+          legend.text = element_text(size=16)) +
     coord_fixed() + 
     facet_grid(low_high ~ param)
   
   if(divergent){
-    p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
+    p <- p + scale_fill_gradient2(name = stat_name, low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
   } else {
-    p <- p + scale_fill_viridis(limits = c(minv, maxv), option = colpal, direction = direction)
+    p <- p + scale_fill_viridis(name = stat_name, limits = c(minv, maxv), option = colpal, direction = direction)
   }
+  
+  if(!is.null(title)) p <- p + ggtitle(title)
   
   return(p)
 }
@@ -221,21 +229,31 @@ var_to_fact <- function(df){
 
 format_mmrr <- function(path, full = FALSE){
   df <- read.csv(path)
-  
-  # remove rows for full
-  if(!full) df <- df[df$sampstrat != "full", ]
-  
-  df <- var_to_fact(df)
-  
-  df$comboenv_err <- (df$env1_err + df$env2_err)/2
-  df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
-  
-  df$env_ae <- abs(df$comboenv_err)
-  df$geo_ae <- abs(df$geo_err)
-  df$ratio_ae <- abs(df$ratio_err)
-  
-  df$tpIBE <- ((df$env1_p < 0.05) + (df$env2_p < 0.05))/2
-  df$tpIBD <- as.numeric(df$geo_p < 0.05)
+  #give sampling strategies simpler names
+  df <- df %>%
+    
+    # remove full rows
+    filter(sampstrat != "full") %>%
+    
+    # rename sampstrats
+    mutate(sampstrat = case_when(
+      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "rand" ~ "R",
+      sampstrat == "trans" ~ "T",
+      sampstrat == "grid" ~ "G",
+      sampstrat == "equi" ~ "EQ",
+      TRUE ~ "NA")) %>%
+    
+    # convert to factors
+    var_to_fact() %>%
+    
+    # make combo variables
+    mutate(comboenv_err = (env1_err + env2_err)/2,
+           comboenv_coeff = (env1_coeff + env2_coeff)/2,
+           env_ae = abs(comboenv_err),
+           geo_ae = abs(geo_err),
+           ratio_ae = abs(ratio_err),
+           RAE = ratio_ae) 
   
   return(df)
 }
@@ -243,72 +261,87 @@ format_mmrr <- function(path, full = FALSE){
 format_gdm <- function(path, full = FALSE){
   df <- read.csv(path)
   
-  # remove rows for full
-  if(!full) df <- df[df$sampstrat != "full", ]
-  
-  df <- var_to_fact(df)
-  
-  df$null <- df$geo_coeff == "NULL" & df$env1_coeff == "NULL" & df$env2_coeff == "NULL"
-  df[df$null, c("env1_err", 
-                "env2_err", 
-                "geo_err", 
-                "env1_coeff", 
-                "env2_coeff", 
-                "geo_coeff", 
-                "ratio_err", 
-                "ratio")] <- NA
-  
-  df <- var_to_fact(df)
-  
-  df[, c("env1_err", 
-         "env2_err", 
-         "geo_err", 
-         "env1_coeff", 
-         "env2_coeff", 
-         "geo_coeff", 
-         "ratio_err", 
-         "ratio")] <- apply(df[, c("env1_err", 
-                             "env2_err", 
-                             "geo_err", 
-                             "env1_coeff", 
-                             "env2_coeff", 
-                             "geo_coeff", 
-                             "ratio_err", 
-                             "ratio")], 2, as.numeric)
-  
-  df$comboenv_err <- (df$env1_err + df$env2_err)/2
-  df$comboenv_coeff <- (df$env1_coeff + df$env2_coeff)/2
-  
-  df$env_ae <- abs(df$comboenv_err)
-  df$geo_ae <- abs(df$geo_err)
-  df$ratio_ae <- abs(df$ratio_err)
+  #give sampling strategies simpler names
+  df <- df %>%
+    
+    # remove full rows
+    filter(sampstrat != "full") %>%
+    
+    # rename sampstrats
+    mutate(sampstrat = case_when(
+      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "rand" ~ "R",
+      sampstrat == "trans" ~ "T",
+      sampstrat == "grid" ~ "G",
+      sampstrat == "equi" ~ "EQ",
+      TRUE ~ "NA")) %>%
+    
+    # convert to factors
+    var_to_fact() %>%
+    
+    # create NULL column (using geo_coeff, but env_coeff cols will also be NULL)
+    mutate(null = case_when(geo_coeff == "NULL" ~ 1, TRUE ~ 0)) %>%
+
+    # convert NULLs to NAs
+    mutate_at(c("env1_err", "env2_err", "geo_err", 
+                "env1_coeff", "env2_coeff", "geo_coeff", 
+                "ratio_err", "ratio"), ~ na_if(., "NULL")) %>%
+    
+    # convert to numeric
+    mutate_at(c("env1_err", "env2_err", "geo_err", 
+                "env1_coeff", "env2_coeff", "geo_coeff", 
+                "ratio_err", "ratio"), as.numeric) %>%
+
+    # make combo variables
+    mutate(comboenv_err = (env1_err + env2_err)/2,
+           comboenv_coeff = (env1_coeff + env2_coeff)/2,
+           env_ae = abs(comboenv_err),
+           geo_ae = abs(geo_err),
+           ratio_ae = abs(ratio_err),
+           RAE = ratio_ae) 
   
   return(df)
 }
 
-format_lfmm <- function(path, full = FALSE){
+format_lfmm <- function(path){
   
   df <- read.csv(path)
   
-  # remove rows for full
-  if(!full) df <- df[df$sampstrat != "full", ]
+  #give sampling strategies simpler names
+  df <- df %>%
+    
+    # remove full rows
+    filter(sampstrat != "full") %>%
+    
+    # rename sampstrats
+    mutate(sampstrat = case_when(
+      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "rand" ~ "R",
+      sampstrat == "trans" ~ "T",
+      sampstrat == "grid" ~ "G",
+      sampstrat == "equi" ~ "EQ",
+      TRUE ~ "NA")) %>%
+    
+    # convert to factors
+    var_to_fact() %>%
+    
+    #IMPORTANT NOTE ABOUT LFMM DATA:
+    #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+    #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+    #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+    mutate(TPRCOMBO = case_when(is.na(TPRCOMBO) ~ 0, TRUE ~ TPRCOMBO)) %>%
+    mutate(FDRCOMBO = case_when(TPRCOMBO == 0 & is.na(FDRCOMBO) ~ 0, TRUE ~ FDRCOMBO)) %>%
+    mutate(FPRCOMBO = case_when(TPRCOMBO == 0 & is.na(FPRCOMBO) ~ 0, TRUE ~ FPRCOMBO)) %>%
+    
+    # make ROC and PR columns
+    mutate(roc = (roc1 + roc2)/2, pr = (pr1 + pr2)/2) %>%
+    
+    # make new columns for TPR and FDR with nice names
+    mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
+    
+    # remove all rows with all NA values
+    filter(if_all(everything(), ~ !is.na(.)))
   
-  # convert to factors
-  df <- var_to_fact(df)
-  
-  #IMPORTANT NOTE ABOUT LFMM DATA:
-  #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
-  #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
-  #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
-  df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
-  df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
-  df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
-  
-  df$roc <- (df$roc1 + df$roc2)/2
-  df$pr <- (df$pr1 + df$pr2)/2
-  # CHECK THIS: remove rows with all NA
-  all_na <- apply(df, 1, function(x) all(is.na(x)))
-  df <- df[!all_na,]
   return(df)
 }
 
@@ -329,29 +362,41 @@ rda_plotter <- function(x, ...) {
   return(grob2)
 }
 
-format_rda <- function(path, padj = "fdr", alpha = 0.05, full = FALSE){
+format_rda <- function(path, full = FALSE){
   
   df <- read.csv(path)
   
-  # remove rows for full
-  if(!full) df <- df[df$sampstrat != "full", ]
-  
-  # convert to factors
-  df <- var_to_fact(df)
-  
-  #IMPORTANT NOTE ABOUT RDA DATA:
-  #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
-  #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
-  #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
-  df$TPR[is.na(df$TPR)] <- 0
-  df$FDR[df$TPR == 0 & is.na(df$FDR)] <- 0
-  df$TPRCOMBO[is.na(df$TPRCOMBO)] <- 0
-  df$FDRCOMBO[df$TPRCOMBO == 0 & is.na(df$FDRCOMBO)] <- 0
-  df$FPRCOMBO[df$FPRCOMBO == 0 & is.na(df$FPRCOMBO)] <- 0
-  
-  
-  # subset by padj method and alpha
-  df <- df[df$padj == padj & alpha == alpha,]
+  #give sampling strategies simpler names
+  df <- df %>%
+    
+    # remove full rows
+    filter(sampstrat != "full") %>%
+    
+    # rename sampstrats
+    mutate(sampstrat = case_when(
+      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "rand" ~ "R",
+      sampstrat == "trans" ~ "T",
+      sampstrat == "grid" ~ "G",
+      sampstrat == "equi" ~ "EQ",
+      TRUE ~ "NA")) %>%
+    
+    # convert to factors
+    var_to_fact() %>%
+    
+    #IMPORTANT NOTE ABOUT RDA DATA:
+    #CURRENTLY IF THERE WERE NOT LOCI IDENTIFIED AS SIGNIFICANT TPR=0 AND FDR = NA (BECAUSE DIVIDE BY 0 = INF = NA). 
+    #NOT SURE HOW TO DEAL WITH THIS (I.E. LEAVE AS NA AND EXCLUDE FROM CALCULATIONS OR CONVERT NAS TO 0)
+    #I THINK CONVERTING FROM NA TO 0 IS THE MOST ACCURATE (SINCE THE FDR IS 0)
+    mutate(TPRCOMBO = case_when(is.na(TPRCOMBO) ~ 0, TRUE ~ TPRCOMBO)) %>%
+    mutate(FDRCOMBO = case_when(TPRCOMBO == 0 & is.na(FDRCOMBO) ~ 0, TRUE ~ FDRCOMBO)) %>%
+    mutate(FPRCOMBO = case_when(TPRCOMBO == 0 & is.na(FPRCOMBO) ~ 0, TRUE ~ FPRCOMBO)) %>%
+
+    # make new columns for TPR and FDR with nice names
+    mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
+    
+    # remove all rows with all NA values
+    filter(if_all(everything(), ~ !is.na(.)))
   
   return(df)
 }
@@ -374,12 +419,13 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22){
   
   
   
-  # print anova result
-  pretty_anova(mod, filepath)
+  # anova 
+  gt1 <- pretty_anova(mod, filepath)
   
-  # print tukey test
-  pretty_tukey(mod, filepath)
+  # tukey test
+  gt2 <- pretty_tukey(mod, filepath)
   
+  return(list(gt1, gt2))
 }
 
 pretty_tukey <- function(mod, filepath = NULL){
@@ -443,12 +489,18 @@ pretty_tukey <- function(mod, filepath = NULL){
     opt_footnote_marks(
       marks = c("***", "**", "*")
       ) %>%
-    gtExtras::gt_hulk_col_numeric(
-      estimate, 
-      trim = TRUE, 
-      na.color = "white",
-      domain = c(-d, d)
-    ) 
+    data_color(
+      columns = estimate,
+      colors = scales::col_numeric(
+        palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
+        domain = c(-d,d),
+        na.color = "white",
+      )
+    ) %>%
+    tab_header(
+      title = md("Tukey test"),
+      subtitle = md("*pairwise ~ sampstrat*")
+    )
   
   if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
   return(em_tb)
@@ -524,13 +576,27 @@ pretty_anova <- function(mod, filepath = NULL){
     opt_footnote_marks(
       marks = c("***", "**", "*")
     ) %>%
-    gtExtras::gt_hulk_col_numeric(
-      FixedEffects, 
-      trim = TRUE, 
-      na.color = "white",
-      domain = c(-d, d)
-    ) 
+    data_color(
+      columns = FixedEffects,
+      colors = scales::col_numeric(
+        palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
+        domain = c(-d,d),
+        na.color = "white",
+      )
+    ) %>%
+    tab_header(
+      title = md("Linear mixed effect model"),
+      subtitle = md("*statistic ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)*")
+    )
   
   if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
   return(aov_tb)
+}
+
+
+arrange_figures <- function(df1, df2, stat, title1 = NULL, title2 = NULL, ...){
+  p1 <- summary_hplot(df1, stat, title = title1, ...)
+  p2 <- summary_hplot(df2, stat, title = title2, ...)
+  plot <- ggarrange(p1, p2, common.legend = TRUE, nrow = 2, legend = "right")
+  return(plot)
 }
