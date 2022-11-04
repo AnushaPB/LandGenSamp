@@ -1,9 +1,8 @@
 
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
+get_samples <- function(param_set, sampstrat, nsamp,  datadir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
-  #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
@@ -31,7 +30,7 @@ get_samples <- function(param_set, params, sampstrat, nsamp,  datadir =  here(di
 }
 
 #get list of site IDs that correspond with parameter set, sampling strategy, and number of samples (and sample IDs)
-get_sites <- function(param_set, params, sampstrat, nsamp,  dir =  here(dirname(getwd()), "p2_sampling", "outputs")){
+get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd()), "p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")

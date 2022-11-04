@@ -22,10 +22,15 @@ BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4
 BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 ```
 
+# Pop size
+```{r}
+df <- read.csv(here("p3_methods", "outputs", "popsize_results.csv"))
+df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max = max(popsize))
+```
 
 # Mismatch
 ```{r fig.width=20, fig.height=7}
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/mismatch_results.csv")
+df <- read.csv(here("p3_methods", "outputs", "mismatch_results.csv"))
 
 df$eff_mismatch <- df$phi * df$mismatch
 
@@ -40,7 +45,7 @@ df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mism
 # Causal Clines 
 
 ```{r,fig.width=16, fig.height=7}
-df <- read.csv("/Users/Anusha/Documents/GitHub/LandGenSamp/p3_methods/outputs/cline_results.csv")
+df <- read.csv(here("p3_methods", "outputs", "cline_results.csv")
 
 summary_df_full <- df %>% 
   filter(sampstrat == "full") %>% 
