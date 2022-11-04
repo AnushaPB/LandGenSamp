@@ -16,11 +16,14 @@ source("general_functions.R")
 ################
 
 prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
-  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall")$p.value)
-  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall")$p.value)
-  res <- c(res1, res2)
+  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall"))
+  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall"))
+  p <- c(res1$p.value, res2$p.value)
+  est <- c(res1$estimate, res2$estimate)
   # note: use sum/length instead of mean because you want NAs to count as the cline not being detected
-  return(sum(res < sig, na.rm = TRUE)/length(res))
+  prop <- sum(p < sig, na.rm = TRUE)/length(p)
+  cor <- sum(est, na.rm = TRUE)/length(est)
+  return(data.frame(prop = prop, cor = cor))
 }
 
 #register cores
@@ -35,9 +38,9 @@ system.time(
     loci_df <- get_data(i, params = params, "loci")
     
     # calculate prop of clines for full dataset
-    pc <- prop_cline(gen, loci_df, gsd_df)
+    fulldf <- prop_cline(gen, loci_df, gsd_df)
     
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), prop_cline = pc)
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), fulldf)
     
     for(nsamp in npts){
       for(sampstrat in sampstrats){
@@ -47,12 +50,12 @@ system.time(
         subgsd_df <- gsd_df[subIDs,]
         
         # calculate prop of clines for sub dataset
-        pc <- prop_cline(gen = subgen, loci_df = loci_df, gsd_df = subgsd_df)
+        subdf <- prop_cline(gen = subgen, loci_df = loci_df, gsd_df = subgsd_df)
         
         # save and format new result
-        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, prop_cline = pc)
+        sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, subdf)
         
-        #bbind results
+        #bind results
         result <- bind_rows(result, sub_result)
         
       }
