@@ -13,8 +13,8 @@ source("general_functions.R")
 ################
 
 prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
-  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall"))
-  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dbl(~ cor.test(., gsd_df$env1, method = "kendall"))
+  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env1, method = "kendall")[c("p.value","estimate")])
+  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env2, method = "kendall")[c("p.value","estimate")])
   p <- c(res1$p.value, res2$p.value)
   est <- c(res1$estimate, res2$estimate)
   # note: use sum/length instead of mean because you want NAs to count as the cline not being detected
