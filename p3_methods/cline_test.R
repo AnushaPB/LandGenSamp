@@ -7,7 +7,7 @@ library("here") #paths
 library("foreach")
 library("doParallel")
 library("dplyr")
-
+library("vcfR")
 #read in general functions and objects
 source("general_functions.R")
 
@@ -22,7 +22,7 @@ prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
   est <- c(res1$estimate, res2$estimate)
   # note: use sum/length instead of mean because you want NAs to count as the cline not being detected
   prop <- sum(p < sig, na.rm = TRUE)/length(p)
-  cor <- sum(est, na.rm = TRUE)/length(est)
+  cor <- sum(abs(est), na.rm = TRUE)/length(est)
   return(data.frame(prop = prop, cor = cor))
 }
 
@@ -32,7 +32,7 @@ cl <- makeCluster(cores[1]-3)
 registerDoParallel(cl)
 
 system.time(
-  res_cline <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  res_cline <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "dplyr")) %dopar% {
     gen <- get_data(i, params = params, "gen")
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
@@ -45,7 +45,7 @@ system.time(
     for(nsamp in npts){
       for(sampstrat in sampstrats){
         # subsample from data based on sampling strategy and number of samples
-        subIDs <- get_samples(params[i,], params, sampstrat, nsamp)
+        subIDs <- get_samples(params[i,], sampstrat, nsamp)
         subgen <- gen[subIDs,]
         subgsd_df <- gsd_df[subIDs,]
         
