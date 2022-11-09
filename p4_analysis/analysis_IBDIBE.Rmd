@@ -1,11 +1,11 @@
 ---
-title: "IBD/IBE Analysis"
+title: "Supplementary File 3: IBD and IBE Results"
 output: 
   html_document:
     toc: true
 ---
 
-```{r, warning=FALSE, , message = FALSE, results = 'asis', fig.width = 21, fig.height = 13}
+```{r, warning=FALSE, include = FALSE, message = FALSE, results = 'asis', fig.width = 21, fig.height = 13}
 library("here")
 library("sjPlot")
 library("tidyverse")
@@ -14,14 +14,32 @@ library("viridis")
 library("lmerTest")
 library("ggplot2")
 library("gridExtra")
+library("grid")
 library("gt")
 library("ggthemes")
+library("ggpubr")
 
 source(here("p4_analysis", "analysis_functions.R"))
 
 p4path <- here("p4_analysis", "outputs")
 p3path <- here("p3_methods", "outputs")
+
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
+
+***
+
+<font size="5"> **Notes:** </font> 
+
+**Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Note that each average encompasses all of the other varying simulation parameters.
+
+**Full plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates.
+
+**RAE** - Ratio Absolute Error - is the absolute difference between the observed and expected estimate of the ratio of IBE to IBD (i.e. the coefficient of IBE divided by the coefficient of IBD)
+
+**Bias** - bias was calculated by taking the mean difference between the observed and expected coefficients or ratios
+
+***
 
 # 1. MMRR
 
@@ -33,32 +51,48 @@ p3path <- here("p3_methods", "outputs")
 mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
 
 # overall error
-summary_hplot(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
-summary_hplot(mmrr_ind, "env_ae", colpal = "viridis", direction = -1)
-summary_hplot(mmrr_ind, "geo_ae", colpal = "viridis", direction = -1)
+mmrr_gdm_plotter(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
 
 # bias
-summary_hplot(mmrr_ind, "ratio_err", divergent = TRUE)
-summary_hplot(mmrr_ind, "comboenv_err", divergent = TRUE)
-summary_hplot(mmrr_ind, "geo_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_ind, "ratio_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_ind, "comboenv_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_ind, "geo_err", divergent = TRUE)
 ```
 
-### 1.1.2 Model summaries
+### 1.1.2 Linear mixed effects models
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, , message = FALSE, results = 'asis'}
 run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_RAE.csv"))
-run_lmer(mmrr_ind, "geo_ae", filepath = here(p4path, "MMRR_individual_geoerr.csv"))
-run_lmer(mmrr_ind, "env_ae", filepath = here(p4path, "MMRR_individual_enverr.csv"))
 ```
 
-### 1.1.3 Megaplots
+### 1.1.3 Full plots
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
+```
+
+<font size="4.5"> **Ratio Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_ind, "ratio_err", colpal = "viridis", divergent = TRUE)
-MEGAPLOT(mmrr_ind, "comboenv_err", divergent = TRUE)
+```
+
+<font size="4.5"> **IBD Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
 ```
+
+<font size="4.5"> **IBE Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
+MEGAPLOT(mmrr_ind, "comboenv_err", divergent = TRUE)
+```
+
 
 ## 1.2 Site sampling
 
@@ -68,31 +102,46 @@ MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
 mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
 
 # overall error
-summary_hplot(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
-summary_hplot(mmrr_site, "env_ae", colpal = "viridis", direction = -1)
-summary_hplot(mmrr_site, "geo_ae", colpal = "viridis", direction = -1)
+mmrr_gdm_plotter(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
 
 # bias
-summary_hplot(mmrr_site, "ratio_err", divergent = TRUE)
-summary_hplot(mmrr_site, "comboenv_err", divergent = TRUE)
-summary_hplot(mmrr_site, "geo_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_site, "ratio_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_site, "comboenv_err", divergent = TRUE)
+mmrr_gdm_plotter(mmrr_site, "geo_err", divergent = TRUE)
 ```
 
-### 1.2.2 Model summaries
+### 1.2.2 Linear mixed effects models
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, , message = FALSE, results = 'asis'}
 run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_RAE.csv"))
-run_lmer(mmrr_site, "geo_ae", filepath = here(p4path, "MMRR_site_geoerr.csv"))
-run_lmer(mmrr_site, "env_ae", filepath = here(p4path, "MMRR_site_enverr.csv"))
 ```
 
-### 1.2.3 Megaplots
+### 1.2.3 Full plots
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
-MEGAPLOT(mmrr_site, "ratio_err", divergent = TRUE)
-MEGAPLOT(mmrr_site, "comboenv_err", divergent = TRUE)
+```
+
+<font size="4.5"> **Ratio Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
+MEGAPLOT(mmrr_site, "ratio_err", colpal = "viridis", divergent = TRUE)
+```
+
+<font size="4.5"> **IBD Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
+```
+
+<font size="4.5"> **IBE Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
+MEGAPLOT(mmrr_site, "comboenv_err", divergent = TRUE)
 ```
 
 # 2. GDM
@@ -105,37 +154,53 @@ MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
 gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
 
 # overall error
-summary_hplot(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
-summary_hplot(gdm_ind, "env_ae", colpal = "viridis", direction = -1)
-summary_hplot(gdm_ind, "geo_ae", colpal = "viridis", direction = -1)
+mmrr_gdm_plotter(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
 
 # bias
-summary_hplot(gdm_ind, "ratio_err", divergent = TRUE)
-summary_hplot(gdm_ind, "comboenv_err", divergent = TRUE)
-summary_hplot(gdm_ind, "geo_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_ind, "ratio_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_ind, "comboenv_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_ind, "geo_err", divergent = TRUE)
 ```
 
-### 2.1.2 Model summaries
+### 2.1.2 Linear mixed effects models
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, , message = FALSE, results = 'asis'}
 run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_RAE.csv"))
-run_lmer(gdm_ind, "geo_ae", filepath = here(p4path, "GDM_individual_geoerr.csv"))
-run_lmer(gdm_ind, "env_ae", filepath = here(p4path, "GDM_individual_enverr.csv"))
 ```
 
-### 2.1.3 Megaplots
+### 2.1.3 Full plots
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
+```
+
+<font size="4.5"> **Ratio Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "ratio_err", divergent = TRUE)
-MEGAPLOT(gdm_ind, "comboenv_err", divergent = TRUE)
+```
+
+<font size="4.5"> **IBD Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
 ```
 
-### 2.1.4 Prop NA
+<font size="4.5"> **IBE Bias** </font> 
 
-Confirm that the distribution of NAs is as expected and the proportions are small
+```{r, fig.width = 21, fig.height = 13}
+MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
+```
 
+### 2.1.4 Failed fits
+
+*Occasionally GDM fails to fit a model, in which case an NA value is assigned. Here we visualize the proportion of NAs (i.e., cases of failed fit) across the simulations:*
+
+<font size="4.5"> **Proportion of failed models:** </font> 
 ```{r,  fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
@@ -148,117 +213,60 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
 
 # overall error
-summary_hplot(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
-summary_hplot(gdm_site, "env_ae", colpal = "viridis", direction = -1)
-summary_hplot(gdm_site, "geo_ae", colpal = "viridis", direction = -1)
+mmrr_gdm_plotter(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
 
 # bias
-summary_hplot(gdm_site, "ratio_err", divergent = TRUE)
-summary_hplot(gdm_site, "comboenv_err", divergent = TRUE)
-summary_hplot(gdm_site, "geo_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_site, "ratio_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_site, "comboenv_err", divergent = TRUE)
+mmrr_gdm_plotter(gdm_site, "geo_err", divergent = TRUE)
 ```
 
-### 2.2.2 Model summaries
+### 2.2.2 Linear mixed effects models
 
+<font size="4.5"> **RAE** </font> 
 ```{r, , message = FALSE, results = 'asis'}
 run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_RAE.csv"))
-run_lmer(gdm_site, "geo_ae", filepath = here(p4path, "GDM_site_geoerr.csv"))
-run_lmer(gdm_site, "env_ae", filepath = here(p4path, "GDM_site_enverr.csv"))
 ```
 
-### 2.2.3 Megaplots
+### 2.2.3 Full plots
+
+<font size="4.5"> **RAE** </font> 
 
 ```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
-MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
-MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
+```
 
+<font size="4.5"> **Ratio Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "ratio_err", divergent = TRUE)
-MEGAPLOT(gdm_site, "comboenv_err", divergent = TRUE)
+```
+
+<font size="4.5"> **IBD Bias** </font> 
+
+```{r, fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
 ```
 
-### 2.2.4 Prop NA
+<font size="4.5"> **IBE Bias** </font> 
 
-Confirm that the distribution of NAs is as expected and the proportions are small
+```{r, fig.width = 21, fig.height = 13}
+MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
+```
+
+### 2.2.4 Failed fits
+
+*Occasionally GDM fails to fit a model, in which case an NA value is assigned. Here we visualize the proportion of NAs (i.e., cases of failed fit) across the simulations:*
+
+<font size="4.5"> **Proportion of failed models:** </font> 
 
 ```{r,  fig.width = 21, fig.height = 13}
 MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
 
-# 3. Comparison of error distirbutions for MMRR and GDM
-
-
-```{r, fig.width = 5, fig.height = 5}
-mmrr_ind %>%
-  filter(sampstrat != "full") %>%
-  ggplot(aes(x = ratio_ae, fill = m, colour = m)) +
-  geom_density(alpha = 0.5) +
-  theme_few() +
-  scale_fill_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako") +
-  scale_color_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako")
-
-
-gdm_ind %>%
-  filter(sampstrat != "full") %>%
-  ggplot(aes(x = ratio_ae, fill = m, colour = m)) +
-  geom_density(alpha = 0.5) +
-  theme_few() +
-  scale_fill_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako") +
-  scale_color_viridis_d(direction = -1, end = 0.7, begin = 0.3, option = "mako")
-```
-
-# 4. Compare results of MMRR and GDM
-
-```{r}
-plot(mmrr_ind$geo_coeff, gdm_ind$geo_coeff, col = gdm_ind$m)
-legend("topleft", c("0.25", "1"), col = c("black", "red"), pch = 1)
-plot(mmrr_ind$comboenv_coeff, gdm_ind$comboenv_coeff)
-
-df <- data.frame(mmrr_ind, 
-                 geo_mg = gdm_ind$geo_coeff/mmrr_ind$geo_coeff, 
-                 env_mg = gdm_ind$comboenv_coeff/mmrr_ind$comboenv_coeff,
-                 ratio_mg = gdm_ind$ratio/mmrr_ind$ratio )
-```
-
-```{r, fig.width=14, fig.height=7}
-summary_hplot(df, "geo_mg")
-summary_hplot(df, "env_mg")
-summary_hplot(df, "ratio_mg")
-```
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(df, "geo_mg")
-MEGAPLOT(df, "env_mg")
-MEGAPLOT(df, "ratio_mg")
-```
-
-```{r}
-plot(mmrr_site$geo_coeff, gdm_site$geo_coeff, col = gdm_site$m)
-legend("topleft", c("0.25", "1"), col = c("black", "red"), pch = 1)
-plot(mmrr_site$comboenv_coeff, gdm_site$comboenv_coeff)
-
-df <- data.frame(mmrr_site, 
-                 geo_mg = gdm_site$geo_coeff/mmrr_site$geo_coeff, 
-                 env_mg = gdm_site$comboenv_coeff/mmrr_site$comboenv_coeff,
-                 ratio_mg = gdm_site$ratio/mmrr_site$ratio )
-```
-
-```{r, fig.width=14, fig.height=7}
-summary_hplot(df, "geo_mg")
-summary_hplot(df, "env_mg")
-summary_hplot(df, "ratio_mg")
-```
-```{r, fig.width=14, fig.height=7}
-summary_hplot(mmrr_ind, "comboenv_coeff")
-summary_hplot(gdm_ind, "comboenv_coeff")
-summary_hplot(mmrr_ind, "geo_coeff")
-summary_hplot(gdm_ind, "geo_coeff")
-```
-
-# Figures
 
 ```{r, eval = FALSE, fig.width=12, fig.height=11}
+# Figures
 arrange_figures(gdm_ind, mmrr_ind, "RAE",
                 "A. GDM", "B. MMRR",
                 colpal = "viridis", direction = -1, dig = 2, maxv = 0.21, minv = 0.03)
