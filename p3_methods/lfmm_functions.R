@@ -10,7 +10,7 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tracy.widom"
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
   
   #if K is not specified, it is automatically calculated
-  if(is.null(K)) K <- get_K(gen, K_selection = K_selection) 
+  if(is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection) 
   
   #gen matrix
   genmat = as.matrix(gen)
@@ -155,6 +155,8 @@ get_K <- function(gen, coords = NULL, K_selection = "find.clusters", ...){
   
   if(K_selection == "find.clusters") K <- get_K_fc(gen)
   
+  if(K_selection == "tess") K <- get_K_tess(gen, coords)
+  
   return(K)
 }
 
@@ -227,3 +229,35 @@ get_K_tw <- function(gen, maxK = NULL){
   
   return(K)
 }
+
+get_K_tess <- function(gen, coords, Kvals = 1:10, tess_method = "projected.ls", ploidy = 2){
+  # coordinates must be a matrix
+  coords <- as.matrix(coords)
+  
+  # Run tess for all K values
+  tess3_obj <- tess3r::tess3(X = gen, coord = coords, K = Kvals, method = tess_method, ploidy = ploidy)
+  
+  # Plot CV results and mark the K-value that is automatically selected
+  plot(tess3_obj, pch = 19, col = "blue",
+       xlab = "Number of ancestral populations",
+       ylab = "Cross-validation score")
+  
+  # Get best K value
+  K <-  bestK(tess3_obj, Kvals)
+  
+  return(K)
+}
+
+#source: https://chazhyseni.github.io/NALgen/post/determining_bestk/)
+bestK <- function(tess3_obj, Kvals){
+  ce <- list()
+  for(k in Kvals) ce[[k]] <- tess3_obj[[k]]$crossentropy
+  ce.K <- c()
+  for(k in Kvals) ce.K[k] <- min(ce[[k]])
+  diff <- ce.K[-1] - ce.K[-max(Kvals)]
+  slope <- exp(-diff) - 1
+  # K is selected based on the smallest slope value in the upper quartile
+  K <- min(which(slope <= quantile(slope)[4]))
+  return(K)
+}
+
