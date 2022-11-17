@@ -29,8 +29,10 @@ system.time(
       loci_df <- get_data(i, params = params, "loci")
       
       # subset and get K
-      gen2k <- gen[sample(nrow(gen), 2000),]
-      K <- get_K_tw(gen2k, maxK = 20) 
+      s <- sample(nrow(gen), 1000)
+      gen2k <- gen[s,]
+      gsd2k <- gsd_df[s,]
+      K <- get_K(gen2k, coords = gsd2k[,c("x", "y")], method = "tess") 
       
       # make data.frame
       result <- data.frame()
@@ -44,7 +46,7 @@ system.time(
           
           #run analysis using subsample
           sub_result <- 
-            cross(list(K_selection = "full", method = c("lasso", "ridge"))) %>%
+            cross(list(K_selection = c("full"), method = c("ridge"))) %>%
             map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df, K = K)
           
           #save and format new result
