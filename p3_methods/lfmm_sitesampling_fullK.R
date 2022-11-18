@@ -59,7 +59,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         # run analysis using subsample
         sub_result <- 
-          cross(list(K_selection = "full", method = c("ridge"))) %>%
+          cross(list(K_selection = c("full"), method = c("ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df, K = K)
         
         # save and format new result
