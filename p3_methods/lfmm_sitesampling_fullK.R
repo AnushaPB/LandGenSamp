@@ -49,7 +49,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         subgsd_df <- gsd_df[subIDs,]
         
         # get sites
-        siteIDs <- get_sites(params[i,], params, sampstrat, nsite)
+        siteIDs <- get_sites(params[i,], sampstrat, nsite)
         # confirm that number of sites matches number of sample IDs
         stopifnot(length(subIDs) == length(siteIDs))
         # calculate allele frequency by site (average)
