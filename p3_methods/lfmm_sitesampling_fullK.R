@@ -33,10 +33,10 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     loci_df <- get_data(i, params = params, "loci")
     
     # subset and get K
-    gen2k <- gen[sample(nrow(gen), 2000),]
-    K <- get_K_tw(gen2k, maxK = 20) 
-    # K may be greater than the min number of sites, in which case K is set to that number
-    if(K > (min(nsites) - 1)) K <- (min(nsites) - 1)
+    s <- sample(nrow(gen), 1000)
+    gen2k <- gen[s,]
+    gsd2k <- gsd_df[s,]
+    K <- get_K(gen2k, coords = gsd2k[,c("x", "y")], method = "tess") 
 
     # make data.frame
     result <- data.frame()
@@ -59,7 +59,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         # run analysis using subsample
         sub_result <- 
-          cross(list(K_selection = "full", method = c("lasso", "ridge"))) %>%
+          cross(list(K_selection = "full", method = c("ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df, K = K)
         
         # save and format new result
