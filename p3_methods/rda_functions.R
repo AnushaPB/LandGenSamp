@@ -21,16 +21,6 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05, correctPC =
     mod <- rda(gen[,1:nloci] ~ env1 + env2 +  Condition(PC1 + PC2), data = gsd_df, scale = F)
   }
   
-  #plot(mod, type="n", scaling=3)
-  #points(mod, display="species", pch=20, cex=2, col="gray32", scaling=3) 
-  #text(mod, scaling=3, display="bp", col="#0868ac", cex=1)     
-  
-  # Get RSQ
-  RsquareAdj(mod)
-  
-  # Plot screeplot
-  screeplot(mod)
-  
   # load scores and get pvalues
   naxes <- ncol(mod$CCA$v)
   rdadapt_env <- rdadapt(mod, naxes)
