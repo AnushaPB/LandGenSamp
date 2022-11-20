@@ -23,13 +23,13 @@ run_lfmm <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", metho
   #run model
   if (method == "ridge") lfmm_mod <- tryCatch(lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
   if (method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
-  if(is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = method))
+  if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
   p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05)
   p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.10)
   pdf <- rbind.data.frame(p05, p10)
-  df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, pdf)
+  df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, NULL_mod = FALSE, pdf)
   
   return(df)
 }
@@ -230,7 +230,7 @@ get_K_tw <- function(gen, maxK = NULL){
   return(K)
 }
 
-get_K_tess <- function(gen, coords, Kvals = 1:10, tess_method = "projected.ls", ploidy = 2){
+get_K_tess <- function(gen, coords, Kvals = 1:9, tess_method = "projected.ls", ploidy = 2){
   # coordinates must be a matrix
   coords <- as.matrix(coords)
   
