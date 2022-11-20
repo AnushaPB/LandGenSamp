@@ -53,7 +53,7 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
         
         #run analysis using subsample
         sub_result <- 
-          cross(list(K_selection = c("quick.elbow", "find.clusters", "tracy.widom"), method = c("lasso", "ridge"))) %>%
+          cross(list(K_selection = c("tess"), method = c("ridge"))) %>%
           map_dfr(run_lfmm_helper, gen = sitegen, gsd_df = sitegsd_df, loci_df = loci_df)
         
         #save and format new result
@@ -75,5 +75,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 stopCluster(cl)
 
 
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_tess_results.csv", row.names = FALSE)
 
