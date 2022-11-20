@@ -63,5 +63,5 @@ system.time(
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_lfmm, "outputs/lfmm_indsampling_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_indsampling_tess_results.csv", row.names = FALSE)
 
