@@ -32,7 +32,7 @@ system.time(
       s <- sample(nrow(gen), 1000)
       gen2k <- gen[s,]
       gsd2k <- gsd_df[s,]
-      K <- get_K(gen2k, coords = gsd2k[,c("x", "y")], method = "tess") 
+      K <- get_K_tess(gen2k, coords = gsd2k[,c("x", "y")], Kvals = 1:9)
       
       # make data.frame
       result <- data.frame()

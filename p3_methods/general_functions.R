@@ -7,7 +7,7 @@ library("stringr")
 #####################
 
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
-#REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMMS
+#REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
 #FOR FILES NOT NESTED IN SUBFOLDERS
 create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
   
@@ -236,9 +236,9 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 nloci = 10000
 #landscape dimensions (square)
 ldim = 100
-#number of points to sample
+#number of points to sample (individual)
 npts <- c(36, 81, 144, 225)
-#sampling strategies
+#sampling strategies (individual)
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 

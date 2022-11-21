@@ -363,7 +363,7 @@ format_lfmm <- function(path){
     mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
   
     # filter tested parameters
-    # add is.na for NULL models
+    # Keep NA to retain NULL models
     filter(padj == "fdr" | is.na(padj)) %>% 
     filter(sig == 0.05 | is.na(sig)) %>%
     filter(K_selection == "tess" | K_selection == "full")
@@ -371,9 +371,6 @@ format_lfmm <- function(path){
   # check number of rows
   if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
   if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
-  
-  # remove null models
-  df <- df %>% filter(!is.na(padj))
   
   return(df)
 }
