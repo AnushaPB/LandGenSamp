@@ -1,4 +1,4 @@
-MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE, dig = 3){
+MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = mean, colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE, dig = 3){
   
   agg <- 
     df %>%
@@ -47,18 +47,18 @@ MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = "mean", 
   
 }
 
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", dig=3, aggfunc = "mean", minv = NULL, maxv = NULL, direction = 1, divergent = FALSE, title = NULL){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", dig=3, aggfunc = mean, minv = NULL, maxv = NULL, direction = 1, divergent = FALSE, title = NULL, full = FALSE){
  
   # Summarize dataframe
   agg <- df %>% 
     # convert to data.frame
     data.frame() %>%
-    # remove full data
+    # deal with full data
     filter(sampstrat != "full") %>%
     # rename stat_name column as stat for simplified use
     rename("stat" = all_of(stat_name)) %>%
     # select columns
-    select(K, phi, m, H, r, nsamp, sampstrat, stat) %>%
+    dplyr::select(K, phi, m, H, r, nsamp, sampstrat, stat) %>%
     # convert from wide to long format
     pivot_longer(c(K, phi, m, H, r)) %>%
     # turn value into numeric from factor
@@ -200,31 +200,28 @@ rain_plot <- function(var, df, stat, colpal = "plasma"){
   return(p)
 }
 
-custom_agg <- function(agg, aggfunc = "mean", na.rm = TRUE){
-  if(aggfunc == "mean") agg <- agg %>% summarize(stat = mean(stat, na.rm = na.rm), .groups = "keep")
+custom_agg <- function(agg, aggfunc = mean, na.rm = TRUE){
   
-  if(aggfunc == "count_na") agg <- agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep")
-  
-  if(aggfunc == "count_null") agg <- agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep")
-  
-  if(aggfunc == "prop_na") agg <- agg %>% summarize(stat = mean(is.na(stat)), .groups = "keep")
-  
-  if(aggfunc == "var") agg <- agg %>% summarize(stat = var(stat, na.rm = na.rm), .groups = "keep")
-  
-  if(aggfunc == "rmse") {
-    agg <- moddf %>%
-      mutate(stat = stat^2) %>%
-      group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-      summarize(stat = sqrt(mean(stat, na.rm=na.rm)), .groups = "keep")
+  if(is.character(aggfunc)){
+    if(aggfunc == "count_na") return(agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep"))
+    
+    if(aggfunc == "count_null") return(agg %>% summarize(stat = sum(is.na(stat)), .groups = "keep"))
+    
+    if(aggfunc == "prop_na") return(agg %>% summarize(stat = mean(is.na(stat)), .groups = "keep"))
+    
+    if(aggfunc == "rmse") {
+      return(agg %>%
+               mutate(stat = stat^2) %>%
+               group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+               summarize(stat = sqrt(mean(stat, na.rm=na.rm)), .groups = "keep"))
+    }
   }
-  
-  return(agg)
+
+  return(agg %>% summarize(stat = aggfunc(stat, na.rm = na.rm), .groups = "keep"))
 }
 
 var_to_fact <- function(df){
-  vars <- c("K", "phi", "m", "seed", "H", "r", "nsamp", "sampstrat", "it")
-  df[, vars] <- data.frame(lapply(df[, vars], as.factor))
-  return(df)
+  mutate_at(df, c("K", "phi", "m", "seed", "H", "r", "nsamp", "sampstrat", "it"), as.factor)
 }
 
 format_mmrr <- function(path, full = FALSE){
@@ -254,6 +251,11 @@ format_mmrr <- function(path, full = FALSE){
            geo_ae = abs(geo_err),
            ratio_ae = abs(ratio_err),
            RAE = ratio_ae) 
+  
+  # check number of rows
+  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
+  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
+  
   
   return(df)
 }
@@ -300,7 +302,28 @@ format_gdm <- function(path, full = FALSE){
            ratio_ae = abs(ratio_err),
            RAE = ratio_ae) 
   
+  # check number of rows
+  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
+  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
+  
   return(df)
+}
+
+
+mmrr_gdm_plotter <- function(x, stat, ...) {
+  capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
+  
+  if(stat == "ratio_ae") stat <- "Ratio Absolute Error"
+  if(stat == "env_ae") stat <- "IBE Absolute Error"
+  if(stat == "geo_ae") stat <- "IBD Absolute Error"
+  
+  if(stat == "ratio_err") stat <- "Ratio Bias"
+  if(stat == "comboenv_err") stat <- "IBE Bias"
+  if(stat == "geo_err") stat <- "IBD Bias"
+  
+  title <- paste0("Statistic: ", stat)
+  grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
+  return(grob2)
 }
 
 format_lfmm <- function(path){
@@ -312,7 +335,7 @@ format_lfmm <- function(path){
     
     # remove full rows
     filter(sampstrat != "full") %>%
-    
+
     # rename sampstrats
     mutate(sampstrat = case_when(
       sampstrat == "envgeo" ~ "EG",
@@ -338,29 +361,55 @@ format_lfmm <- function(path){
     
     # make new columns for TPR and FDR with nice names
     mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
-    
-    # remove all rows with all NA values
-    filter(if_all(everything(), ~ !is.na(.)))
+  
+    # filter tested parameters
+    # add is.na for NULL models
+    filter(padj == "fdr" | is.na(padj)) %>% 
+    filter(sig == 0.05 | is.na(sig)) %>%
+    filter(K_selection == "tess" | K_selection == "full")
+  
+  # check number of rows
+  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
+  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
+  
+  # remove null models
+  df <- df %>% filter(!is.na(padj))
   
   return(df)
 }
 
-lfmm_plotter <- function(x, ...) {
-  capture.output(grob <- summary_hplot(x, ...))
+lfmm_plotter <- function(x, stat, ...) {
+  capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
   method <- unique(x$method)
   K_selection <- unique(x$K_selection)
-  title <- paste0("K selection: ", K_selection, " | ", "LFMM method: ", method)
+  
+  if(stat == "K.1") stat <- "K"
+  if(stat == "TOTALN") stat <- "Total number of loci"
+  if(stat == "TPRCOMBO") stat <- "TPR"
+  if(stat == "FDRCOMBO") stat <- "FDR"
+  
+  if(K_selection == "full") K_selection <- "tracy.widom (full)"
+  subtitle <- paste0("K selection: ", K_selection, " | LFMM method: ", method)
+  title <- paste0("Statistic: ", stat)
+  grob2 <- grid.arrange(grob, top = grid::textGrob(subtitle, x = 0, hjust = 0, gp=gpar(fontsize=20)))
+  grob3 <- grid.arrange(grob2, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=24)))
+  return(grob3)
+}
+
+rda_plotter <- function(x, stat, ...) {
+  capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
+  correctPC <- as.logical(unique(x$correctPC))
+  if(correctPC) title <- "pRDA" else title <- "RDA"
+
+  if(stat == "TOTALN") stat <- "Total number of loci"
+  if(stat == "TPRCOMBO") stat <- "TPR"
+  if(stat == "FDRCOMBO") stat <- "FDR"
+  
+  title <- paste0("Statistic: ", stat, " | ", title)
   grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
   return(grob2)
 }
 
-rda_plotter <- function(x, ...) {
-  capture.output(grob <- summary_hplot(x, ...))
-  correctPC <- as.logical(unique(x$correctPC))
-  if(correctPC) title <- "pRDA" else title <- "RDA"
-  grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
-  return(grob2)
-}
 
 format_rda <- function(path, full = FALSE){
   
@@ -396,7 +445,15 @@ format_rda <- function(path, full = FALSE){
     mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
     
     # remove all rows with all NA values
-    filter(if_all(everything(), ~ !is.na(.)))
+    filter(if_all(everything(), ~ !is.na(.))) %>%
+  
+    # filter tested parameters
+    filter(padj == "fdr") %>%
+    filter(sig == 0.05) 
+  
+  # check number of rows
+  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
+  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
   
   return(df)
 }
@@ -425,7 +482,8 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22){
   # tukey test
   gt2 <- pretty_tukey(mod, filepath)
   
-  return(list(gt1, gt2))
+  print(gt1)
+  print(gt2)
 }
 
 pretty_tukey <- function(mod, filepath = NULL){
@@ -519,7 +577,18 @@ pretty_anova <- function(mod, filepath = NULL){
   
   d <- max(abs(c(min(aov_df$FixedEffects), max(aov_df$FixedEffects))))
   
+  aov_df <- 
+    aov_df %>%
+    mutate(Variable = case_when(Variable == "nsamp" ~ "Sample number",
+                                Variable == "K" ~ "Population size", 
+                                Variable == "phi" ~ "Selection strength",
+                                Variable == "m" ~ "Migration",
+                                Variable == "sampstrat" ~ "Sampling strategy",
+                                Variable == "H" ~ "Spatial autocorrelation",
+                                Variable == "r" ~ "Environmental correlation"))
+  
   aov_tb <- aov_df %>%
+    filter(Variable != "Sampling strategy") %>%
     gt::gt() %>%
     cols_label(
       FixedEffects = "Fixed Effects",
@@ -600,3 +669,4 @@ arrange_figures <- function(df1, df2, stat, title1 = NULL, title2 = NULL, ...){
   plot <- ggarrange(p1, p2, common.legend = TRUE, nrow = 2, legend = "right")
   return(plot)
 }
+
