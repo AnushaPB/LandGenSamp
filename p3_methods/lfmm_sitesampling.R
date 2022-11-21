@@ -75,5 +75,5 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
 stopCluster(cl)
 
 
-write.csv(res_lfmm, "outputs/lfmm_sitesampling_tess_results.csv", row.names = FALSE)
+write.csv(res_lfmm, "outputs/lfmm_sitesampling_results.csv", row.names = FALSE)
 
