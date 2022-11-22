@@ -32,7 +32,9 @@ res_lfmm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcf
     gsd_df <- get_data(i, params = params, "gsd")
     loci_df <- get_data(i, params = params, "loci")
     
-    # subset and get K
+    # subset and get K 
+    # set seed to use same sub-sample every time
+    set.seed(1)
     s <- sample(nrow(gen), 1000)
     gen2k <- gen[s,]
     gsd2k <- gsd_df[s,]
