@@ -29,9 +29,9 @@ system.time(
       loci_df <- get_data(i, params = params, "loci")
       
       # subset and get K
-      # set seed to use same sub-sample every time
+      # set seed to use same sub-sample every time between ind and site
       set.seed(1)
-      s <- sample(nrow(gen), 1000)
+      s <- sample(nrow(gen), 2000)
       gen2k <- gen[s,]
       gsd2k <- gsd_df[s,]
       K <- get_K_tess(gen2k, coords = gsd2k[,c("x", "y")], Kvals = 1:9)
