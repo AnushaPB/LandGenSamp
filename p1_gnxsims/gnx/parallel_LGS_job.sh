@@ -1,4 +1,4 @@
-#run this script in LandGenSamp/p1_gnxsims/parallel
+#run this script in LandGenSamp/p1_gnxsims/gnx
 
 #create genomic architecture file 
 Rscript create_genomic_architecture

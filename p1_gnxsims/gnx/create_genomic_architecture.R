@@ -32,6 +32,6 @@ df$alpha[1:8] <- rep(c(0.25, -0.25), 4)
 #I have accounted for this in the rest of the R code
 
 #write out file
-path <- here(dirname(getwd()), "p1_gnxsims", "parallel", "genomic_architecture.csv")
+path <- here(dirname(getwd()), "p1_gnxsims", "gnx", "genomic_architecture.csv")
 write.csv(df, path, row.names = FALSE)
 
