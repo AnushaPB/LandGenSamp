@@ -19,15 +19,6 @@ Code to test different landscape genomic analyses
 ### 1.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
 Code to analyze and visualize landscape genomic results 
 
-## 2. Other Scripts
-
-### 2.1 [yosemite](https://github.com/AnushaPB/LandGenSamp/tree/main/yosemite)
-Code to test out simulations on a real landscape (Yosemite) to compare with the NLMs
-
-### 2.2 [p0_tests](https://github.com/AnushaPB/LandGenSamp/tree/main/p0_tests) (IGNORE)
-Dumping ground for testing scripts 
-
-
 ## To run everything:
 
 ```bash
