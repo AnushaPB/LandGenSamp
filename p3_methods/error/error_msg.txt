@@ -1,3 +1,0 @@
-"x"
-"1" "'k' must satisfy 0 < k < min(nrow(A), ncol(A)).
-To calculate all singular values, try svd()"

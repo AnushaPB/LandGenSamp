@@ -41,9 +41,6 @@ res_popsize <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     result <- data.frame(params[i,], popsize = nrow(gsd_df))
   }
   
-  #end pdf()
-  # dev.off()
-  
   return(result)
   
   gc()
@@ -53,5 +50,5 @@ res_popsize <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_popsize, "outputs/popsize_results.csv", row.names = FALSE)
+write.csv(res_popsize, "p3_methods/outputs/popsize_results.csv", row.names = FALSE)
 
