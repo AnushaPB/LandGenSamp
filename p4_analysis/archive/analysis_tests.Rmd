@@ -1,0 +1,460 @@
+---
+title: "analysis_tests"
+output: html_document
+---
+
+```{r}
+library("dplyr")
+library("car")
+library("lsmeans")
+library("lme4")
+library("viridis")
+library("lmerTest")
+library("ggplot2")
+library("gridExtra")
+library("MuMIn")
+
+BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
+BlueRed <- colorRampPalette(BuRd, interpolate="linear")
+```
+
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+#sampling strategies
+sampstrats <- c("rand", "grid", "trans", "envgeo")
+#landscape dimensions (square)
+dim = 40
+
+#Create dataframe with all variable combos
+params_full <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
+                      r = c(0.3, 0.6),
+                      it = 1:2,
+                      npts = npts)
+
+df <- params_full
+df$stat <- df$K/10 + df$K*10 - df$m*10 + df$H*10 + df$r*10 + sample(df$it)/100 + sample(df$seed)/100 + npts
+
+```
+
+
+#Analysis
+
+```{r}
+#number of points to sample
+npts <- c(36, 81, 144, 225, 324)
+#sampling strategies
+sampstrats <- c("rand", "grid", "trans", "envgeo")
+
+#Create dataframe with all variable combos
+params_full <- expand.grid(K = c(2, 4), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05 , 0.5),
+                      r = c(0.3, 0.6),
+                      npts = npts,
+                      sampstrats = sampstrats,
+                      it = 1:10)
+
+
+
+df <- read.csv("LFMM_results.csv")
+df[,colnames(params_full)] <- data.frame(lapply(df[,colnames(params_full)], as.factor))
+df$stat <- df$TPR
+```
+
+
+```{r toy data}
+
+params_toy <- expand.grid(K = c(0, 1), 
+                      phi = c(0, 1),
+                      m = c(1, 0),
+                      seed = c(1, 1, 1),
+                      H = c(0, 1),
+                      r = c(0, 1),
+                      npts = c(0.2,0.4,0.6,0.8,1),
+                      sampstrats = c(0,0.75,0.25,1),
+                      it=1:10)
+
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+stat <-  0.4*params_toy$K + 0.1*params_toy$phi + 0.2*params_toy$m + 0.3*params_toy$H + 0.1*params_toy$r + 0.5*params_toy$npts + 0.1*params_toy$sampstrats + 0.5*sample(params_toy$it)/10
+stat <- range01(stat)
+?scale
+stat <- jitter(stat, factor = 2)
+
+df <- data.frame(lapply(params_full, as.factor))
+df$stat <- stat
+df$factornpts <- as.factor(params_full$npts)
+
+df$npts <- params_full$npts
+```
+
+
+#summary plot
+Continous summary plots (help visualize a plateau as npts increases) - this isn't done to compare the other variables because those are all categorical/it is easier to use the heatmaps rather than create a bajillion violin plots
+
+```{r}
+
+pK <- ggplot(df, aes(fill=K, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(col=K),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pphi <- ggplot(df, aes(fill=phi, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(col=phi),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pH <- ggplot(df, aes(fill=H, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(col=H),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pr <- ggplot(df, aes(fill=r, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(col=r),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pm <- ggplot(df, aes(fill=m, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    #geom_point(aes(col=m),position = position_dodge(width = 0.9), alpha=0.1)+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+ps <- ggplot(df, aes(fill=sampstrats, y=stat, x=factor(npts))) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_viridis(discrete=T, option="plasma") +
+    xlab("npts") +
+    theme_bw()+
+    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
+    #geom_point(aes(fill=sampstrats, col=sampstrats),position = position_dodge(width = 0.9), alpha=0.1)+
+    scale_colour_viridis(discrete=T, option="plasma") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  
+```
+```{r fig.height=7, fig.width=17}
+grid.arrange(pK, pphi, pm, pH, pr, ps, nrow = 2)
+```
+
+# full model
+```{r}
+#Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+#mixed effect model
+#na.action needs to be set to na.fail for dredge to work
+fullmod <- lmer(stat ~ npts + sampstrats + K + m + phi + H + r + (1 | seed), df, na.action = "na.fail")
+
+#anova
+aovmod <- anova(fullmod)
+
+#fixed effects (minus intercept)
+efmod <- fixef(fullmod)[-1]
+
+#print result
+aovmod
+efmod
+```
+```{r}
+combos <- dredge(fullmod)
+combos
+```
+
+# model subset by sampling strategy
+Determine how sampling strategy affects the relationships between the sim vars/npts
+
+```{r fig.width=6, fig.height=4}
+resdf <- data.frame()
+
+for(s in sampstrats){
+  subdf <- df[df$sampstrats == s, ]
+  
+  #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+  #mixed effect model
+  fullmod <- lmer(stat ~ npts + K + m + phi + H + r + (1 | seed), subdf)
+
+  #anova to get p-values
+  aovmod <- anova(fullmod)
+
+  #fixed effects (minus intercept)
+  efmod <- fixef(fullmod)[-1]
+  
+  #save results
+  tempdf <- data.frame(fixef = efmod, p = aovmod$`Pr(>F)`)
+  tempdf$param <- row.names(aovmod)
+  tempdf$sampstrats <- s
+  resdf <- rbind.data.frame(resdf, tempdf)
+}
+
+
+row.names(resdf) <- NULL
+resdf$padj <- p.adjust(resdf$p, "fdr")
+
+tempdf <- resdf
+tempdf[tempdf$padj > 0.05, "fixef"] <- NA
+
+p <- ggplot(tempdf, aes(param, sampstrats)) +
+    geom_tile(aes(fill = fixef)) + 
+    geom_text(aes(label = signif(fixef,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+
+p
+
+```
+
+
+# model subset by npts and sampling strategy
+Determine how sampling strategy/npts affects the affects of the sim vars
+
+
+```{r real code, fig.width=12, fig.height=6}
+
+resdf <- data.frame()
+
+for(n in npts){
+  for(s in sampstrats){
+    subdf <- df[df$sampstrats == s & df$npts == n, ]
+    
+    #Need to figure out if you need to subset this anova/remove n.s. variables at this stage or later
+    #mixed effect model
+    fullmod <- lmer(stat ~ K + m + phi + H + r + (1 | seed), subdf)
+
+    #anova to get p-values
+    aovmod <- anova(fullmod)
+
+    #fixed effects (minus intercept)
+    efmod <- fixef(fullmod)[-1]
+    
+    #save results
+    tempdf <- data.frame(fixef = fixef(fullmod)[-1], p = aovmod$`Pr(>F)`)
+    tempdf$param <- row.names(aovmod)
+    tempdf$npts <- n
+    tempdf$sampstrats <- s
+    resdf <- rbind.data.frame(resdf, tempdf)
+  }
+}
+
+row.names(resdf) <- NULL
+resdf$npts <- as.factor(resdf$npts)
+resdf$padj <- p.adjust(resdf$p, "fdr")
+
+## plot data
+plts <- list()
+for(i in 1:length(unique(resdf$param))){
+  tempdf <- resdf[resdf$param == unique(resdf$param)[i],]
+  tempdf[tempdf$padj > 0.05, "fixef"] <- NA
+  p <- ggplot(tempdf, aes(npts, sampstrats)) +
+    ggtitle(unique(tempdf$param)) +
+    geom_tile(aes(fill = fixef)) + 
+    geom_text(aes(label = round(fixef, digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(resdf$fixef),max(resdf$fixef))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+  
+  plts[[i]] <- p
+}
+
+
+do.call(grid.arrange, c(plts, nrow=2))
+
+```
+
+#summary stat plots by sampling strategy
+```{r real code, fig.width=20, fig.height=6}
+
+resdf <- data.frame()
+
+for(n in npts){
+  for(s in sampstrats){
+    subdf <- df[df$sampstrats == s & df$npts == n, ]
+    
+    meandf <- data.frame()
+    for(p in c("K", "m", "phi", "H", "r")){
+      aggdf <- aggregate(subdf$stat, list(subdf[,p]), mean)
+      aggdf[,1] <- paste(p,"=", aggdf[,1])
+      aggdf$param <- p
+      meandf <- rbind.data.frame(meandf, aggdf)
+    }
+    
+    colnames(meandf) <- c("group", "mean", "param")
+    
+    #save results
+    tempdf <- data.frame(meandf)
+    tempdf$npts <- n
+    tempdf$sampstrats <- s
+    resdf <- rbind.data.frame(resdf, tempdf)
+  }
+}
+
+row.names(resdf) <- NULL
+resdf$npts <- as.factor(resdf$npts)
+
+## plot data
+plts <- list()
+for(i in 1:length(unique(resdf$group))){
+  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
+  p <- ggplot(tempdf, aes(npts, sampstrats)) +
+    ggtitle(unique(tempdf$group)) +
+    geom_tile(aes(fill = mean)) + 
+    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
+    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "viridis") +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+  
+  plts[[i]] <- p
+}
+
+
+plts2 <- list()
+o <- 1
+for(i in seq(1, length(plts), 2)){
+  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
+  o <- o+1
+}
+
+do.call(grid.arrange, c(plts2, nrow=1))
+
+
+```
+
+```{r}
+#rainbow plot - not for use, but easier for my brain to interpret
+## plot data
+plts <- list()
+for(i in 1:length(unique(resdf$group))){
+  tempdf <- resdf[resdf$group == unique(resdf$group)[i],]
+  p <- ggplot(tempdf, aes(npts, sampstrats)) +
+    ggtitle(unique(tempdf$group)) +
+    geom_tile(aes(fill = mean)) + 
+    geom_text(aes(label = round(mean, digits = 2), hjust = 0.5)) +
+    scale_fill_viridis(limits=c(min(resdf$mean),max(resdf$mean)), option = "turbo") +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+  
+  plts[[i]] <- p
+}
+
+
+plts2 <- list()
+o <- 1
+for(i in seq(1, length(plts), 2)){
+  plts2[[o]] <- do.call(grid.arrange, c(plts[c(i,i+1)], nrow=2))
+  o <- o+1
+}
+
+do.call(grid.arrange, c(plts2, nrow=1))
+```
+```{r}
+
+ggplot(stats_out[-1,], aes(factor(nsamp), sampstrat)) +
+    geom_tile(aes(fill = env1_rmse)) + 
+    geom_text(aes(label = signif(env1_rmse,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(stats_out$env1_rmse),max(stats_out$env1_rmse))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+
+ggplot(stats_out[-1,], aes(factor(nsamp), sampstrat)) +
+    geom_tile(aes(fill = env2_rmse)) + 
+    geom_text(aes(label = signif(env2_rmse,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(stats_out$env2_rmse),max(stats_out$env2_rmse))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+
+ggplot(stats_out[-1,], aes(factor(nsamp), sampstrat)) +
+    geom_tile(aes(fill = geo_rmse)) + 
+    geom_text(aes(label = signif(geo_rmse,  digits = 2), hjust = 0.5)) +
+    scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#B2182B", midpoint = 0, limits=c(min(stats_out$geo_rmse),max(stats_out$geo_rmse))) +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          #legend.position = "none",
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 12),
+          axis.text.y = element_text(color = "gray50", size = 12), 
+          plot.margin=unit(rep(0.4,4),"cm")) +
+    coord_fixed()
+```
+

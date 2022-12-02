@@ -61,10 +61,10 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 lfmm_ind <- format_lfmm(here(p3path, "lfmm_indsampling_results.csv")) 
 
 lfmm_ind_tidy <- lfmm_ind %>% 
-  group_by(method) %>%
+  group_by(method, K_selection) %>%
   group_split()
 
-K_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
+K_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "K.1", colpal = "cividis")
 TPR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.17)
 FDR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.96)
 TOTALN_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
@@ -84,6 +84,7 @@ walk(TOTALN_plots, grid.arrange)
 ```{r, include = FALSE}
 lfmm_ind <- 
   lfmm_ind %>% 
+  filter(K_selection == "tess") %>%
   filter(method == "ridge")
 ```
 
@@ -103,7 +104,7 @@ run_lmer(lfmm_ind, "FDRCOMBO", filepath = here(p4path, "LFMM_individual_FDR.csv"
 
 <font size="4.5"> **K** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind, "K.1", colpal = "turbo")
+MEGAPLOT(lfmm_ind, "K.1", colpal = "cividis")
 ```
 
 <font size="4.5"> **TPR** </font> 
@@ -134,7 +135,7 @@ lfmm_site_tidy <- lfmm_site %>%
 ```
 
 ```{r, fig.width=14, fig.height=7, include = FALSE}
-K_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "K.1", colpal = "turbo")
+K_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "K.1", colpal = "cividis")
 TPR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
 FDR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
 TOTALN_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
@@ -182,7 +183,7 @@ run_lmer(lfmm_site, "FDRCOMBO", filepath = here(p4path, "LFMM_site_FDR.csv"))
 
 <font size="4.5"> **K** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site, "K.1", colpal = "turbo")
+MEGAPLOT(lfmm_site, "K.1", colpal = "cividis")
 ```
 
 <font size="4.5"> **TPR** </font> 
@@ -202,7 +203,7 @@ MEGAPLOT(lfmm_site, "TOTALN", colpal = "viridis")
 
 ## 1.3 Latent factor test
 
-To determine the effect of K-selection on performance we ran LFMM using a constant K for all of the subsampled datasets from the same simulation (i.e., all sample sizes and strategies had the same K) and compared that to K-selection based on each sub-sampled dataset (i.e., K was allowed to vary by sample size and strategy). The constant K for each simulation was selected using a dataset of 1000 randomly selected individuals. For this test, we only evaluated the "ridge" and not the "lasso" method. We compared the results using the same statistics (i.e., TPR and FDR) and linear mixed effects models. Overall, the final results did not vary substantially between constant and variable K and the effects of all the parameters tested remained the same. 
+To determine the effect of K-selection on performance we ran LFMM using a constant K for all of the subsampled datasets from the same simulation (i.e., all sample sizes and strategies had the same K) and compared that to K-selection based on each sub-sampled dataset (i.e., K was allowed to vary by sample size and strategy). The constant K for each simulation was selected using a dataset of 1000 randomly selected individuals. For this test, we only evaluated the "ridge" and not the "lasso" method as our earlier tests demonstrated that, in general, the "ridge" method performed better. We compared the results using the same statistics (i.e., TPR and FDR) and linear mixed effects models. Overall, the final results did not vary substantially between constant and variable K and the effects of all the parameters tested remained the same. 
 
 ### Individual sampling
 
@@ -211,7 +212,7 @@ lfmm_ind_fullK <-
   format_lfmm(here(p3path, "lfmm_indsampling_fullK_results.csv")) %>%
   filter(method == "ridge")
 
-K_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "K.1", colpal = "turbo")
+K_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "K.1", colpal = "cividis")
 TPR_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "TPRCOMBO", colpal = "plasma")
 FDR_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
 TOTALN_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "TOTALN", colpal = "plasma")
@@ -236,10 +237,6 @@ run_lmer(lfmm_ind_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_indfullK_TPR.
 run_lmer(lfmm_ind_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_indfullK_FDR.csv"))
 ```
 
-<font size="4.5"> **K full plot** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind_fullK, "K.1", colpal = "turbo")
-```
 
 ### Site sampling
 
@@ -248,10 +245,10 @@ lfmm_site_fullK <-
   format_lfmm(here(p3path, "lfmm_sitesampling_fullK_results.csv")) %>%
   filter(method == "ridge")
 
-K_plots <- lfmm_plotter(lfmm_site_fullK, stat = "K.1", colpal = "turbo")
+K_plots <- lfmm_plotter(lfmm_site_fullK, stat = "K.1", colpal = "cividis")
 TPR_plots <- lfmm_plotter(lfmm_site_fullK, stat = "TPRCOMBO", colpal = "plasma")
 FDR_plots <- lfmm_plotter(lfmm_site_fullK, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- lfmm_plotter(lfmm_site_fullK, stat = "TOTALN", colpal = "turbo")
+TOTALN_plots <- lfmm_plotter(lfmm_site_fullK, stat = "TOTALN", colpal = "cividis")
 ```
 
 ```{r, fig.width=14, fig.height=7}
@@ -273,12 +270,6 @@ run_lmer(lfmm_site_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_sitefullK_TP
 run_lmer(lfmm_site_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_sitefullK_FDR.csv"))
 ```
 
-
-<font size="4.5"> **K full plot** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site_fullK, "K.1", colpal = "turbo")
-```
-
 ### Comparison of effects
 
 ```{r, results = 'asis'}
@@ -289,7 +280,7 @@ format_csv <- function(path){
 }
 
 
-p4path <- here(dirname(getwd()), "p4_analysis", "outputs")
+p4path <- here("p4_analysis", "outputs")
 
 
 table_df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%

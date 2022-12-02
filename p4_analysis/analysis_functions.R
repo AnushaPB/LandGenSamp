@@ -79,18 +79,18 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     # order low_high for plotting
     mutate(low_high = factor(low_high, ordered = TRUE, levels = c("low", "high"))) %>%
     # create friendly names
-    mutate(param = case_when(name == 'K' ~ 'population size',
-                             name == 'm' ~ 'migration',
+    mutate(param = case_when(name == 'K' ~ 'population\nsize',
+                             name == 'm' ~ 'migration\nrate',
                              name == 'phi' ~ "selection\nstrength",
                              name == "H" ~ "spatial\nautocorrelation",
-                             name == "r" ~ "correlation", 
+                             name == "r" ~ "environmental\ncorrelation", 
                              TRUE ~ "NA")) %>%
     # order param for plotting
-    mutate(param = factor(param, ordered = TRUE, levels = c("population size", 
-                                                   "migration", 
+    mutate(param = factor(param, ordered = TRUE, levels = c("population\nsize", 
+                                                   "migration\nrate", 
                                                    "selection\nstrength", 
                                                    "spatial\nautocorrelation", 
-                                                   "correlation"))) %>%
+                                                   "environmental\ncorrelation"))) %>%
     # round
     mutate(stat = round(stat, dig))
   
@@ -365,12 +365,12 @@ format_lfmm <- function(path){
     # filter tested parameters
     # Keep NA to retain NULL models
     filter(padj == "fdr" | is.na(padj)) %>% 
-    filter(sig == 0.05 | is.na(sig)) %>%
-    filter(K_selection == "tess" | K_selection == "full")
+    filter(sig == 0.05 | is.na(sig)) 
+    #filter(K_selection == "tess" | K_selection == "full")
   
   # check number of rows
-  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
-  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
+  if ("T" %in% df$sampstrat) stopifnot((nrow(df) %% (960 * 4 * 4)) == 0)
+  if ("EQ" %in% df$sampstrat) stopifnot((nrow(df) %% (960 * 3 * 3)) == 0)
   
   return(df)
 }
@@ -456,6 +456,10 @@ format_rda <- function(path, full = FALSE){
 }
 
 run_lmer <- function(df, stat, filepath = NULL, seed = 22){
+  
+  # check number of rows
+  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) == (960 * 4 * 4))
+  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) == (960 * 3 * 3))
   
   if(!is.null(seed)) set.seed(22)
   

@@ -33,7 +33,7 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 
 **Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Note that each average encompasses all of the other varying simulation parameters.
 
-**Full plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates.
+**Full plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. For these plots: K = population size (not to be confused with the number of latent factors (K)), phi = selection strength, m = migration, H = spatial autocorrelation, r = correlation between environmental layers.
 
 **RAE** - Ratio Absolute Error - is the absolute difference between the observed and expected estimate of the ratio of IBE to IBD (i.e. the coefficient of IBE divided by the coefficient of IBD)
 

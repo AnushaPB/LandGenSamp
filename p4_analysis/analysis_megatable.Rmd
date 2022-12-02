@@ -16,16 +16,15 @@ format_csv <- function(path){
     tidyr::separate(path, c("method", "sampling", "stat", "type"))
 }
 
-
 p4path <- here(dirname(getwd()), "p4_analysis", "outputs")
 
-```
-
-```{r}
 
 df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%
   map(format_csv) %>%   
   reduce(rbind) 
+```
+
+```{r}
 
 table_df <- 
   df %>%
@@ -35,40 +34,49 @@ table_df <-
   dplyr::select(method, stat, sampling, FixedEffects, Variable) %>%
   #filter(Variable != "sampstrat") %>%
   spread(Variable, FixedEffects) %>%
-  dplyr::select(method, stat, sampling, nsamp, K, m, phi, H, r)
+  select(method,
+      stat,
+      sampling,
+      `Sample number`,
+      `Population size`, 
+      `Migration`,
+      `Selection strength`,
+      `Spatial autocorrelation`,
+      `Environmental correlation`)
   
-write.csv(table_df, here(dirname(getwd()), "p4_analysis", "megatable.csv"), row.names = FALSE)
+write.csv(table_df, here("p4_analysis", "megatable.csv"), row.names = FALSE)
 
 ```
 
 
 ```{r}
-
 table_df %>%
   filter(sampling == "individual" | sampling == "site") %>% 
   gt(
     rowname_col = "stat",
     groupname_col = "method"
     ) %>%
+  cols_label(
+      method = "Method",
+      stat = "Statistic",
+      sampling = "Sampling type",
+      `Sample number` = "Sample number",
+      `Population size` = "Population\nsize", 
+      `Selection strength` = "Selection\nstrength",
+      `Migration` = "Migration",
+      `Spatial autocorrelation` = "Spatial\nautocorrelation",
+      `Environmental correlation` = "Environmental\ncorrelation"
+    ) %>%
   row_group_order(
     groups = c("LFMM", "RDA", "GDM", "MMRR")
     ) %>%
-  cols_label(
-      method = "Method",
-      stat = "Statistic",
-      sampling = "Sampling Type",
-      nsamp = "Sample Number",
-      K = "Population\nSize", 
-      phi = "Selection\nStrength",
-      m = "Migration\nRate"
-    ) %>% 
   fmt_number(
     columns = c(4:9),
     decimals = 4,
     suffixing = TRUE
     ) %>%
   data_color(
-    columns = c(nsamp, H, K, m, phi, r),
+    columns = 4:9,
     colors = scales::col_numeric(
       palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
       domain = c(-0.12,0.12),
@@ -81,72 +89,22 @@ table_df %>%
     missing_text = "n.s."
     ) %>%
   cols_width(
-    c(K, m, phi, r, H, nsamp, sampling) ~ px(20)
+    4:9 ~ px(120)
   ) %>%
   tab_spanner(
     label = "Population Genetics",
-    columns = c(K, m, phi)
+    columns = 5:7
   ) %>%
   tab_spanner(
     label = "Landscape",
-    columns = c(r, H)
+    columns = 8:9
   ) %>%
   tab_spanner(
     label = "Sampling",
-    columns = c(sampling, nsamp)
+    columns = 3:4
   )
-  
-```
-```{r}
 
-table_df %>%
-  filter(method == "LFMM") %>% 
-  gt(
-    rowname_col = "stat",
-    groupname_col = "method"
-    ) %>%
-  cols_label(
-      method = "Method",
-      stat = "Statistic",
-      sampling = "Sampling Type",
-      nsamp = "Sample Number",
-      K = "Population\nSize", 
-      phi = "Selection\nStrength",
-      m = "Migration\nRate"
-    ) %>% 
-  fmt_number(
-    columns = c(4:9),
-    decimals = 4,
-    suffixing = TRUE
-    ) %>%
-  data_color(
-    columns = c(nsamp, H, K, m, phi, r),
-    colors = scales::col_numeric(
-      palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
-      domain = c(-0.12,0.12),
-      na.color = "white",
-    )
-  ) %>%
-  sub_missing(
-    columns = everything(),
-    rows = everything(),
-    missing_text = "n.s."
-    ) %>%
-  cols_width(
-    c(K, m, phi, r, H, nsamp, sampling) ~ px(20)
-  ) %>%
-  tab_spanner(
-    label = "Population Genetics",
-    columns = c(K, m, phi)
-  ) %>%
-  tab_spanner(
-    label = "Landscape",
-    columns = c(r, H)
-  ) %>%
-  tab_spanner(
-    label = "Sampling",
-    columns = c(sampling, nsamp)
-  )
+
   
 ```
 
@@ -160,13 +118,14 @@ df <- list.files(p4path, full.names = TRUE, pattern = "*_tukey.csv") %>%
 df$estimate[df$p.value < 0.05] <- NA
 table_df <- 
   df %>%
+  filter(sampling == "site" | sampling == "individual") %>%
   select(contrast, estimate, method, stat, sampling) %>%
   #filter(Variable != "sampstrat") %>%
   spread(contrast, estimate) %>%
   select(sampling, method, stat, 
-         "envgeo - grid", "envgeo - rand", "envgeo - trans", 
-         "grid - rand", "grid - trans", 
-         "rand - trans") %>%
+         "EG - G", "EG - R", "EG - T", 
+         "G - R", "G - T", 
+         "R - T") %>%
   group_by(sampling) %>%
   group_split()
 
@@ -202,7 +161,7 @@ table_df_ind %>%
   gtExtras::gt_hulk_col_numeric(
     c(3:8), 
     trim = TRUE, 
-    domain = c(-0.004,0.004),
+    domain = c(-0.0175,0.0175),
     na.color = "white"
     ) %>%
   sub_missing(

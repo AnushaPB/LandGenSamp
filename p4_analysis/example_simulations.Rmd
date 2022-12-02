@@ -141,7 +141,6 @@ df <- data.frame(df, dos)
 
 ```{r, fig.width = 16, fig.height = 8}
 
-
 gd <- 
   subdf %>%
   pivot_longer(paste0("locus_", 1:8), "locus") %>%
@@ -233,9 +232,10 @@ grid.arrange(p1,p2,p3,p4,nrow = 2)
 
 p1
 ```
+
 ```{r, include = false}
 
-plot_phenotype2 <- function(df1, df2, env, title1, title2){
+plot_phenotype2 <- function(df1, df2, env, title1){
   df1$y <- -df1$y
   df2$y <- -df2$y
   
@@ -245,8 +245,7 @@ plot_phenotype2 <- function(df1, df2, env, title1, title2){
     coord_equal() +
     theme_void() + 
     scale_color_viridis(option = "viridis", limits = c(0,1)) + 
-    theme(legend.position = "none") + 
-    ggtitle(title1)
+    theme(legend.position = "none")
   
   p2 <- ggplot() +
     geom_tile(data = env, aes(x = x, y = y), fill = "gray", alpha = 0.5) +
@@ -254,64 +253,81 @@ plot_phenotype2 <- function(df1, df2, env, title1, title2){
     coord_equal() +
     theme_void() + 
     scale_color_viridis(option = "viridis", limits = c(0,1)) + 
-    theme(legend.position = "none") + 
-    ggtitle(title2)
-  grid.arrange(p1, p2, nrow = 1)
+    theme(legend.position = "none")
+  
+  plt <- grid.arrange(p1, p2, nrow = 2)
+  plt <- grid.arrange(plt, top = grid::textGrob(title1, just = "center", gp=gpar(fontsize=20)))
+}
+
+new_cols <- function(x, level, param){
+  x$level <- level
+  x$param <- param
+  return(x)
 }
 
 dfs <- purrr::map(list.files("example_data/example_combos", full.names = TRUE), get_gsd)
 names(dfs) <- c("phi10", "H5", "r30", "D", "m25", "K2")
 
-K <- plot_phenotype2(dfs$D, dfs$K2, env1, title1 = "Small Population", title2 = "Large Population")
-phi <- plot_phenotype2(dfs$phi10, dfs$D, env1, title1 = "Weak Selection", title2 = "Strong Selection")
-m <- plot_phenotype2(dfs$m25, dfs$D, env1, title1 = "Low Migration", title2 = "High Migration")
-```
-```{r, fig.width = 6, fig.height= 9}
-grid.arrange(K, phi, m, nrow = 3)
-```
-
-```{r, fig.height=3, fig.width=6}
-
-raster_to_gg <- function(x){
-  x <- raster(as.matrix(read.csv(x, header = FALSE)))
-  extent(x) <- c(0,100,-100,0)
-  x <- data.frame(raster::rasterToPoints(x))
-  return(x)
-}
-
-plot_env <- function(x, title = ""){
-  ggplot(x) +
-    geom_tile(aes(x = x, y = y, fill = layer)) +
-    coord_equal() +
-    theme_void() + 
-    scale_fill_viridis(option = "viridis") + 
-    theme(legend.position = "none", strip.text.x = element_blank()) + 
-    ggtitle(title)
-}
-
-
-env1_H50_r60 <- raster_to_gg("example_data/seed1_env1_H50_r60.csv")
-env1_H50_r30 <- raster_to_gg("example_data/seed1_env1_H50_r30.csv")
-env1_H5_r60 <- raster_to_gg("example_data/seed1_env1_H5_r60.csv")
-env2_H50_r60 <- raster_to_gg("example_data/seed1_env2_H50_r60.csv")
-env2_H50_r30 <- raster_to_gg("example_data/seed1_env2_H50_r30.csv")
-
-env1_H50_r60p <- plot_env(env1_H50_r60, title = "Strong Autocorrelation")
-env1_H5_r60p <- plot_env(env1_H5_r60, title = "Weak Autocorrelation")
-
-env1_H50_r60pr <- plot_env(env1_H50_r60, title = "Strong Correlation")
-env2_H50_r60p <- plot_env(env2_H50_r60)
-env2_H50_r30p <- plot_env(env2_H50_r30)
-env1_H50_r30p <- plot_env(env1_H50_r30, title = "Weak Correlation")
-
-grid.arrange(env1_H50_r60p, env1_H5_r60p, nrow = 1)
+df <- bind_rows(new_cols(dfs[["phi10"]], "low", "selection\nstrength"),
+          new_cols(dfs[["D"]], "high", "selection\nstrength"),
+          new_cols(dfs[["H5"]], "low", "spatial\nautocorrelation"),
+          new_cols(dfs[["D"]], "high", "spatial\nautocorrelation"),
+          new_cols(dfs[["r30"]], "low", "environmental\ncorrelation"),
+          new_cols(dfs[["D"]], "high", "environmental\ncorrelation"),
+          new_cols(dfs[["D"]], "low", "population size"),
+          new_cols(dfs[["K2"]], "high", "population size"),
+          new_cols(dfs[["m25"]], "low", "migration"),
+          new_cols(dfs[["D"]], "high", "migration")) %>%
+  mutate(param = factor(param, 
+                        levels = c("population size", "migration", "selection\nstrength", 
+                        "spatial\nautocorrelation", "environmental\ncorrelation"))) %>%
+  mutate(level = factor(level, levels = c("low", "high")))
 
 ```
-```{r, fig.height = 6, fig.width = 6}
-g1 <- grid.arrange(env1_H50_r60pr, env2_H50_r60p, ncol = 1)
-g2 <- grid.arrange(env1_H50_r30p, env2_H50_r30p, ncol = 1)
-grid.arrange(g1,g2,ncol =2)
+
+```{r, fig.width = 18, fig.height= 9}
+df1 <- data.frame(df, zw = df$z1, 
+                  xw = scales::rescale(df$x, to=c(0,0.48)), yw = scales::rescale(df$y, to=c(0,0.48)))
+df2 <- data.frame(df, zw = df$z2, 
+                  xw = scales::rescale(df$x, to=c(0.52,1)), yw = scales::rescale(df$y, to=c(0,0.48)))
+dfw <- bind_rows(df1, df2)
+
 ```
+
+```{r, fig.height = 12, fig.width= 10}
+
+ggplot(dfw, aes(x = xw, y = yw, col = zw)) + 
+  geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
+  geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
+  geom_point(pch = 16, size = 0.9) +
+  geom_rect(xmin = 0, xmax = 0.10, ymin = 0.42, ymax = 0.48, 
+            fill = "white", col = "white", lwd = 2, alpha = 0.2) +
+  geom_rect(xmin = 0.52, xmax = 0.62, ymin = 0.42, ymax = 0.48,
+            fill = "white", col = "white", lwd = 2, alpha = 0.2) +
+  annotate("text", x = 0.05, y = 0.45, label = "T1", col = "darkgray", size = 6) +
+  annotate("text", x = 0.57, y = 0.45, label = "T2", col = "darkgray", size = 6) +
+  facet_grid(param ~ level, switch = "both") +
+  theme_bw() +
+  scale_color_viridis_c(option = "mako", alpha = 0.8)+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), legend.position = "none",
+        axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(), 
+        plot.margin=unit(rep(0.4,4),"cm"),
+        strip.text.x = element_text(size = 20),
+        strip.text.y = element_text(size = 20),
+        strip.background =element_blank(),
+        strip.text = element_text(color = "#282828"),
+        plot.title = element_text(size=20),
+        legend.key.size = unit(1, 'cm'), 
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)) +
+  coord_fixed() 
+
+```
+
+
 
 ```{r}
 get_samples <- function(param_set, sampstrat, nsamp, dir = "example_data/samples", site = FALSE){
@@ -359,12 +375,13 @@ plot_samples <- function(.x, .y, site = FALSE){
   
   p <- ggplot() +
     geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-    geom_point(data = subgsd_df, aes(x, -y, fill = z1), colour = rgb(0,0,0,0.5), pch = 21, size = 3) +
+    geom_point(data = subgsd_df, aes(x, -y, fill = z1), 
+               colour = rgb(0,0,0,0.5), pch = 21, size = 3) +
     coord_equal() +
     theme_void() + 
-    scale_color_viridis(option = "viridis") + 
-    scale_fill_viridis(option = "viridis") +
-    theme(legend.position = "none") +
+    scale_color_viridis(option = "mako") + 
+    scale_fill_viridis(option = "mako") +
+    theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20)) +
     ggtitle(.y)
   
   return(p)
@@ -375,24 +392,37 @@ df <- get_gsd("example_data/example_combos/mod-K1_phi50_m100_seed1_H50_r60_it-0_
 
 param_set <- data.frame(K = 1, phi = 0.50, m = 1, seed = 1, H = 0.50, r = 0.60, it = 0)
 
-grd_site <- map2(c("rand", "equi", "envgeo"), c("Random", "Equidistant", "EGS"), 
+grd_site <- map2(c("rand", "equi", "envgeo"), c("R", "E", "EG"), 
                  plot_samples, site = TRUE)
 
 grd_ind <- map2(c("rand", "grid", "envgeo", "trans"), 
-               c("Random", "Grid", "EGS", "Transect"), plot_samples, site = FALSE)
+               c("R", "G", "EG", "T"), plot_samples, site = FALSE)
+
+site0 <- do.call(grid.arrange, c(grd_site, nrow = 1, ncol = 4))
+site <- grid.arrange(site0, 
+                    left = grid::textGrob("site", 
+                                          x = 0, 
+                                          hjust = 0.9, 
+                                          vjust = 1,
+                                          rot = 90,
+                                          gp=gpar(fontsize=20)))
+
+ind0 <- do.call(grid.arrange, c(grd_ind, nrow = 1))
+ind <- grid.arrange(ind0, 
+                    left = grid::textGrob("individual", 
+                                          x = 0, 
+                                          hjust = 0.6, 
+                                          vjust = 1,
+                                          rot = 90,
+                                          gp=gpar(fontsize=20)))
+
 ```
-```{r, fig.height = 3, fig.width = 9}
-do.call(grid.arrange, c(grd_site, nrow = 1))
+```{r, fig.height = 7, fig.width = 11}
+grid.arrange(ind,site)
 ```
 
-```{r, fig.height = 3, fig.width = 12}
-do.call(grid.arrange, c(grd_ind, nrow = 1))
-```
-```{r, fig.width = 3, fig.height = 3}
 
-names(envpc) <- "layer"
-plot_env(envpc)
-```
+
 
 # IGNORE
 ```{r}
@@ -409,27 +439,76 @@ extent(env2) <- c(0,100,-100,0)
 envstk <- stack(env1, env2)
 
 gen <- vcf_to_dosage(vcf[,c(1, s + 1)])
-Ktw <- algatr::select_K_tw(gen, criticalpoint = 2.0234) 
 
-Kscree <- algatr::select_K_elbow(gen, low = 0.08, max.pc = 0.70) 
+Ktw <- select_K_tw(gen, criticalpoint = 2.0234) 
+
+Kscree <- select_K_elbow(gen, low = 0.08, max.pc = 0.70) 
 
 Kfc <- select_K_fc(gen, pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = NULL, max.n.clust = 10)
+
+Ktess <- select_K_tess(gen, df[s,c("x","y")], Kvals = 1:20, tess_method = "projected.ls") 
+
 
 pc <- prcomp(gen)
 pc <- pc$sdev^2
 plot(pc, xlim = c(0,30))
-abline(v = Ktw, col = "red")
-abline(v = Kscree, col = "blue")
-abline(v = Kfc, col = "green")
+abline(v = Ktw, col = "red", lwd = 4)
+abline(v = Kscree, col = "blue", lwd = 3)
+abline(v = Kfc, col = "green", lwd = 2)
+abline(v = Ktess, col = "purple", lwd = 1)
+
+tess_res <- tess_do_everything(gen,  df[s,c("x","y")], grid = envstk[[1]], Kvals = 1:20)
+tess_res <- tess_do_everything(gen,  df[s,c("x","y")], grid = envstk[[1]], Kvals = 8)
+
 
 lfmm_res <- lfmm_do_everything(vcf[,c(1, s + 1)], 
                                coords = df[s, c("x","y")], 
-                               env = envstk, K = 10)
+                               env = envstk, K = 2)
 
-rda_res <- rda_do_everything(vcf[,c(1, s + 1)], 
-                             coords = df[s, c("x","y")],
+rda_res <- rda_do_everything(vcf[,c(1, 1:200+ 1)], 
+                             coords = df[1:200, c("x","y")],
                              env = envstk,
                              model = "full")
 ```
 
+
+```{r}
+library(algatr)
+vcf <- vcfR::read.vcfR("example_data/mod-K1_phi50_m25_seed1_H50_r60_it-0_t-1000_spp-spp_0.vcf")
+df <- get_gsd("example_data/mod-K1_phi50_m25_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv")
+df$y <- -df$y
+s <- sample(nrow(df), 36)
+
+gen <- vcf_to_dosage(vcf[,c(1, s + 1)])
+
+Ktw <- select_K_tw(gen, criticalpoint = 2.0234) 
+
+Kscree <- select_K_elbow(gen, low = 0.08, max.pc = 0.70) 
+
+Kfc <- select_K_fc(gen, pca.select = "percVar", perc.pca = 90, choose.n.clust = FALSE, criterion = NULL, max.n.clust = 10)
+
+Ktess <- select_K_tess(gen, df[s,c("x","y")], Kvals = 1:20, tess_method = "projected.ls") 
+
+
+pc <- prcomp(gen)
+pc <- pc$sdev^2
+plot(pc, xlim = c(0,30))
+abline(v = Ktw, col = "red", lwd = 4)
+abline(v = Kscree, col = "blue", lwd = 3)
+abline(v = Kfc, col = "green", lwd = 2)
+abline(v = Ktess, col = "purple", lwd = 1)
+
+tess_res <- tess_do_everything(gen,  df[s,c("x","y")], grid = envstk[[1]], Kvals = 1:20)
+tess_res <- tess_do_everything(gen,  df[s,c("x","y")], grid = envstk[[1]], Kvals = 4)
+
+
+lfmm_res <- lfmm_do_everything(vcf[,c(1, s + 1)], 
+                               coords = df[s, c("x","y")], 
+                               env = envstk, K = 2)
+
+rda_res <- rda_do_everything(vcf[,c(1, 1:200+ 1)], 
+                             coords = df[1:200, c("x","y")],
+                             env = envstk,
+                             model = "full")
+```
 
