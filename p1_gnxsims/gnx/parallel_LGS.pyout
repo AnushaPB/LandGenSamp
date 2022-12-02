@@ -1,0 +1,38 @@
+
+
+NOTE: No display found. Using non-interactive Agg backend
+
+NOTE: Module 'nlmpy' not found. To simulate on Neutral Landscape Model rasters, this must be installed. To install, try using `pip install nlmpy`.
+NOTE: Module 'pykrige' not found. Yosemite demo 3d plots cannot be produced.
+K2_phi50_m25_seed1_H50_r30 starting
+K2_phi50_m10000_seed2_H50_r30 starting
+K2_phi10_m25_seed3_H5_r60 starting
+K2_phi50_m10000_seed2_H5_r30 starting
+K1_phi50_m10000_seed3_H50_r30 starting
+K1_phi50_m25_seed2_H5_r60 starting
+K1_phi50_m10000_seed3_H5_r60 starting
+K1_phi10_m10000_seed2_H5_r30 starting
+K2_phi10_m10000_seed1_H5_r60 starting
+K2_phi50_m25_seed1_H50_r60 starting
+K1_phi50_m10000_seed3_H5_r30 starting
+K1_phi10_m25_seed1_H50_r60 starting
+K2_phi50_m25_seed1_H5_r30 starting
+K2_phi10_m10000_seed1_H50_r30 starting
+K2_phi10_m25_seed3_H50_r30 starting
+K2_phi10_m10000_seed1_H50_r60 starting
+K1_phi10_m25_seed1_H5_r30 starting
+K2_phi50_m25_seed1_H5_r60 starting
+K1_phi50_m25_seed2_H50_r60 starting
+K2_phi10_m10000_seed1_H5_r30 starting
+K1_phi10_m10000_seed2_H50_r30 starting
+K2_phi50_m10000_seed2_H50_r60 starting
+K2_phi10_m25_seed3_H5_r30 starting
+K1_phi50_m25_seed2_H50_r30 starting
+K2_phi50_m10000_seed2_H5_r60 starting
+K2_phi10_m25_seed3_H50_r60 starting
+K1_phi50_m25_seed2_H5_r30 starting
+K1_phi10_m25_seed1_H5_r60 starting
+K1_phi10_m10000_seed2_H50_r60 starting
+K1_phi10_m25_seed1_H50_r30 starting
+K1_phi10_m10000_seed2_H5_r60 starting
+K1_phi50_m10000_seed3_H50_r60 starting
