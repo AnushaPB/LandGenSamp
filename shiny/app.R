@@ -5,12 +5,45 @@ library("viridis")
 source(here("p4_analysis", "analysis_functions.R"))
 source(here("shiny", "app_functions.R"))
 
-stat_options <- 
-  list(lfmm = c("TPR", "FDR", "TOTALN"),
-       rda = c("TPR", "FDR", "TOTALN"),
-       mmrr = c("RAE"),
-       gdm = c("RAE"))
+# Load data
+combos <- expand_grid(method = c("lfmm", "rda", "gdm", "mmrr"), sampling = c("individual", "site"))
+clean_data <- pmap(combos, get_app_data)
+names(clean_data) <- pmap_chr(combos, ~paste0(.x,"_", .y))
 
+# Make key for stats
+stat_options <- 
+  list(lfmm = c("TPR", "FDR", "nloci detected", "number of latent factors"),
+       rda = c("TPR", "FDR", "nloci detected"),
+       mmrr = c("Ratio Absolute Error", "Ratio Bias", 
+                "IBD Absolute Error", "IBD Bias",
+                "IBE Absolute Error", "IBE Bias",
+                "Ratio of IBE to IBD", 
+                "IBD Coefficient", 
+                "IBE Coefficient"),
+       gdm =  c("Ratio Absolute Error", "Ratio Bias", 
+                "IBD Absolute Error", "IBD Bias",
+                "IBE Absolute Error", "IBE Bias",
+                "Ratio of IBE to IBD", 
+                "IBD Coefficient", 
+                "IBE Coefficient",
+                "Proportion of Null Models"))
+
+
+stat_convert <- function(stat){
+  if (stat == "nloci detected") return("TOTALN")
+  if (stat == "number of latent factors") return("K.1")
+  if (stat == "Ratio Absolute Error") return("RAE")
+  if (stat == "Ratio Bias") return("ratio_err")
+  if (stat == "IBD Absolute Error") return("geo_ae")
+  if (stat == "IBD Bias") return("geo_err")
+  if (stat == "IBE Absolute Error") return("env_ae")
+  if (stat == "IBE Bias") return("comboenv_err")
+  if (stat == "Ratio of IBE to IBD") return("ratio")
+  if (stat == "IBD Coefficient") return("geo_coeff")
+  if (stat == "IBE Coefficient") return("comboenv_coeff")
+  if (stat == "Proportion of Null Models") return("ratio")
+  return(stat)
+}
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   
@@ -25,13 +58,13 @@ ui <- fluidPage(
       
       # Select method
       selectInput("method", 
-                  label = "Method",
+                  label = "method",
                   choices = c("lfmm", "rda", "mmrr", "gdm"),
                   selected = "lfmm"), 
       
       # Select input for sampling type
       selectInput("sampling",
-                  label = "Sampling Type",
+                  label = "sampling type",
                   choices = c("individual", "site"),
                   selected = "individual"),
       
@@ -52,26 +85,13 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     # Main panel for displaying outputs ----
     mainPanel(
+      tags$style(type="text/css",
+                 ".shiny-output-error { visibility: hidden; }",
+                 ".shiny-output-error:before { visibility: hidden; }"
+      ), 
       
-      # Output: Histogram ----
-      fluidRow(
-        column(width = 9,
-               plotOutput(outputId = "distPlot", width = "100%"))
-      ),
-      
-      # Static figure below the plot
-      fluidRow(
-        column(width = 12,
-               tags$div(
-                 style = "margin-top: 20px; text-align: center;",
-                 tags$figure(
-                   tags$img(
-                     src = "megaplot_explainer.png",
-                     width = "100%"
-                   )
-                 )
-               ))
-      )
+      plotOutput(outputId = "distPlot", width = "100%")
+    
     )
     
     
@@ -87,7 +107,7 @@ server <- function(input, output) {
     if (method == "lfmm") {
       tagList(
         selectInput("lfmmMethod",
-                    "LFMM Method",
+                    "lfmm method",
                     choices = c("ridge", "lasso"),
                     selected = "ridge"),
         selectInput("K_selection",
@@ -106,7 +126,7 @@ server <- function(input, output) {
     } else if (method == "rda") {
       tagList(
         selectInput("padj",
-                    "P Adjust Method",
+                    "P adjust Method",
                     choices = c("none", "fdr", "holm", "bonferroni"),
                     selected = "fdr"),
         selectInput("correctPC",
@@ -124,7 +144,7 @@ server <- function(input, output) {
     method <- input$method
     selectInput(
       "stat",
-      "Statistic",
+      "statistic",
       choices = stat_options[[method]],
       selected = stat_options[[method]][1]
     )
@@ -133,19 +153,19 @@ server <- function(input, output) {
   # Render additional variables selection based on the selected method
   output$additionalVariables <- renderUI({
     tagList(
-      checkboxGroupInput("K", "K", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("m", "m", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("phi", "phi", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("r", "r", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("H", "H", choices = c("low", "high"), selected = c("low", "high"))
+      checkboxGroupInput("K", "Population Size (K)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("m", "Migration (m)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("phi", "Selection Strength (phi)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("r", "Environmental Correlation (r)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("H", "Environmental Autocorrelation (H)", choices = c("low", "high"), selected = c("low", "high"))
     )
   })
   
   # Render the plot based on the selected method and statistic
   output$distPlot <- renderPlot({
-    x <- get_data(input$method, input$sampling)
+    x <- clean_data[[paste0(input$method, "_", input$sampling)]]
     x <- filter_additional_variables(x, input)
-    stat_name <- input$stat
+    stat_name <- stat_convert(input$stat)
     
     # Filter data based on selected method and additional variables
     if (input$method == "lfmm"){
@@ -168,24 +188,14 @@ server <- function(input, output) {
         filter(sig == input$sig)
     }
     
-    MEGAPLOT(x, stat_name = stat_name, dig = 2)
+    if (stat_name == "TPR") colpal <- "plasma"
+    if (stat_name %in% c("FDR", "RAE", "geo_ae", "env_ae")) {colpal <- "viridis"; direction <- -1} else direction <- 1
+    if (stat_name %in% c("TOTALN", "geo_coeff", "comboenv_coeff", "ratio", "K.1")) colpal <- "cividis"
+    if (stat_name %in% c("ratio_err", "geo_err", "comboenv_err")) divergent <- TRUE else divergent <- FALSE
+    
+    MEGAPLOT(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction)
+    
   }, height = 945*.95, width = 1525.5*.95)
-  
-  output$staticFigure <- renderUI({
-    insertUI(
-      selector = "#distPlot",
-      where = "afterEnd",
-      ui = tags$div(
-        style = "margin-top: 20px; text-align: center;",
-        tags$figure(
-          tags$img(
-            src = "megaplot_explainer.png",
-            width = "600px"
-          )
-        )
-      )
-    )
-  })
   
 }
 
