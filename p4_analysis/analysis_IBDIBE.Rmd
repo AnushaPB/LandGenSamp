@@ -274,5 +274,70 @@ arrange_figures(gdm_ind, mmrr_ind, "RAE",
 arrange_figures(gdm_site, mmrr_site, "RAE", 
                 "A. GDM", "B. MMRR",
                 colpal = "viridis", direction = -1, dig = 2, maxv = 0.3, minv = 0.07)
-
 ```
+
+
+```{r, fig.width = 6, fig.height = 6}
+results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
+
+filt_results <- map(results,  ~filter(.x, phi == 0.5, H == 0.5, m == 1.00, r == 0.3, K == 2))
+
+sub_results <- map(filt_results, \(x){
+   x <- 
+     x %>%
+     group_by(nsamp, sampstrat) %>%
+     summarize(RAE = mean(RAE, na.rm = TRUE), 
+               ratio_err = mean(ratio_err, na.rm = TRUE), 
+               env_err = mean(comboenv_err, na.rm = TRUE),
+               geo_err = mean(geo_err, na.rm = TRUE),
+               .groups = "keep") %>%
+     rename(Bias = ratio_err)
+   
+   stopifnot(nrow(x) == 16 | nrow(x) == 9)
+                    
+   return(x)
+})
+
+RAE_plots <- map(sub_results, heat_plot, stat_name = "RAE", maxv = 0.31, minv = 0.04, 
+                 colpal = "viridis", direction = -1)
+
+ratio_err_plots <- map(sub_results, heat_plot, stat_name = "Bias", divergent = TRUE,
+                       minv = -0.06, maxv = 0.30)
+
+RAE_ind <- ggarrange(RAE_plots[[1]], RAE_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
+ERR_ind <- ggarrange(ratio_err_plots[[1]], ratio_err_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
+
+RAE_site <- ggarrange(RAE_plots[[2]], RAE_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
+ERR_site <- ggarrange(ratio_err_plots[[2]], ratio_err_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
+
+pdf(here("plots", "IBDIBE_ind.pdf"))
+ggarrange(RAE_ind, ERR_ind, nrow = 2, align = "h")
+ggarrange(RAE_site, ERR_site, nrow = 2, align = "h")
+
+pdf(here("plots", "IBDIBE_ind.pdf"))
+ggarrange(RAE_ind, ERR_ind, nrow = 2, align = "h")
+dev.off()
+
+pdf(here("plots", "IBDIBE_site.pdf"))
+ggarrange(RAE_site, ERR_site, nrow = 2, align = "h")
+dev.off()
+
+pdf(here("plots", "IBDIBE_RAE_legend.pdf"))
+ggarrange(RAE_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+
+pdf(here("plots", "IBDIBE_RE_legend.pdf"))
+ggarrange(ratio_err_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+```
+
+NOTES: 
+- problem: inferences across all simulations are different from that of a single simulation
+- average across all simulation also don't make sense
+- but we care about what is true across them all in some sense because that is the info we can go off of, not the "best case scenario" - however the average of them all assumes that the simulations cover all of parameter space as a meaningful summary
+- fuck i don't care about any of this
+- what is significant varies based on sample size - sample size is treated as continuous
+- do I need to run more simulations to get more power?
+
+
+- NOTE: figure out how to describe bias patter (underestimation for grid only occurs under certain scenarios)
