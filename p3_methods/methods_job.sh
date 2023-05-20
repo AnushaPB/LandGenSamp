@@ -6,19 +6,19 @@ Rscript phenotype_mismatch.R
 # Run landscape genomic methods
 
 ## LFMM
-lfmm_indsampling.R
-lfmm_sitesampling.R
-lfmm_indsampling_fullK.R
-lfmm_sitesampling_fullK.R
+Rscript lfmm_indsampling.R
+Rscript lfmm_sitesampling.R
+Rscript lfmm_indsampling_fullK.R
+Rscript lfmm_sitesampling_fullK.R
 
 ## RDA
-rda_indsampling.R
-rda_sitesampling.R
+Rscript rda_indsampling.R
+Rscript rda_sitesampling.R
 
 ## MMRR
-mmrr_indsampling.R
-mmrr_sitesampling.R
+Rscript mmrr_indsampling.R
+Rscript mmrr_sitesampling.R
 
 ## GDM
-gdm_indsampling.R
-gdm_sitesampling.R
+Rscript gdm_indsampling.R
+Rscript gdm_sitesampling.R
