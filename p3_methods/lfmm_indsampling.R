@@ -40,7 +40,7 @@ system.time(
           
           #run analysis using subsample
           sub_result <-
-            cross(list(K_selection = c("tess", "tracy.widom", "find.clusters", "quick.elbow"), method = c("ridge"))) %>%
+            cross(list(K_selection = c("tess", "tracy.widom", "find.clusters", "quick.elbow"), method = c("ridge", "lasso"))) %>%
             map_dfr(run_lfmm_helper, gen = subgen, gsd_df = subgsd_df, loci_df = loci_df)
           
           #save and format new result
