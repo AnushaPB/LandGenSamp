@@ -164,6 +164,7 @@ walk(TOTALN_plots, grid.arrange)
 ```{r}
 lfmm_site <- 
   lfmm_site %>% 
+  filter(K_selection == "tess") %>%
   filter(method == "ridge") 
 ```
 
@@ -509,5 +510,55 @@ arrange_figures(lfmm_site, rda_site, "FDR",
 
 ```
 
+```{r, fig.width = 6, fig.height = 6}
+results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
+
+filt_results <- map(results,  ~filter(.x, phi == 0.5, H == 0.5, m == 1.00, r == 0.3, K == 2))
+
+sub_results <- map(filt_results, \(x){
+  
+  stopifnot(nrow(x)/16 == 30 | nrow(x)/9 == 30)
+  
+   x <- 
+     x %>%
+     group_by(nsamp, sampstrat) %>%
+     summarize(TPR = mean(TPRCOMBO, na.rm = TRUE), FDR = mean(FDRCOMBO, na.rm = TRUE), .groups = "keep") 
+   
+   stopifnot(nrow(x) == 16 | nrow(x) == 9)
+                    
+   return(x)
+})
+
+TPR_plots <- map(sub_results, heat_plot, stat_name = "TPR", maxv = 0.54, minv = 0)
+
+FDR_plots <- map(sub_results, heat_plot, stat_name = "FDR", maxv = 1.0, minv = 0, 
+                 colpal = "viridis", direction = -1)
+
+TPR_ind <- ggarrange(TPR_plots[[1]], TPR_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
+FDR_ind <- ggarrange(FDR_plots[[1]], FDR_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
+
+TPR_site <- ggarrange(TPR_plots[[2]], TPR_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
+FDR_site <- ggarrange(FDR_plots[[2]], FDR_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
 
 
+pdf(here("plots", "GEA_ind.pdf"))
+ggarrange(TPR_ind, FDR_ind, nrow = 2, align = "h")
+dev.off()
+
+pdf(here("plots", "GEA_site.pdf"))
+ggarrange(TPR_site, FDR_site, nrow = 2, align = "h")
+dev.off()
+
+pdf(here("plots", "GEA_TPR_legend.pdf"))
+ggarrange(TPR_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+
+pdf(here("plots", "GEA_FDR_legend.pdf"))
+ggarrange(FDR_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+
+map(filt_results, run_lmer,  stat = "TPRCOMBO", f = formula("stat ~ nsamp + sampstrat + (1 | seed)"))
+map(filt_results, run_lmer,  stat = "FDRCOMBO", f = formula("stat ~ nsamp + sampstrat + (1 | seed)"))
+```
+
+- NOTE: figure out how to describe FDR pattern with r (EG is best when r is high and worst when r is low...)
