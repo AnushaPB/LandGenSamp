@@ -16,7 +16,7 @@ format_csv <- function(path){
     tidyr::separate(path, c("method", "sampling", "stat", "type"))
 }
 
-p4path <- here(dirname(getwd()), "p4_analysis", "outputs")
+p4path <- here("p4_analysis", "outputs")
 
 
 df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%
@@ -115,7 +115,7 @@ df <- list.files(p4path, full.names = TRUE, pattern = "*_tukey.csv") %>%
   map(format_csv) %>%   
   reduce(rbind) 
 
-df$estimate[df$p.value < 0.05] <- NA
+df$estimate[df$p.value > 0.05] <- NA
 table_df <- 
   df %>%
   filter(sampling == "site" | sampling == "individual") %>%
@@ -125,16 +125,17 @@ table_df <-
   select(sampling, method, stat, 
          "EG - G", "EG - R", "EG - T", 
          "G - R", "G - T", 
+         "EG - EQ", "EQ - R",
          "R - T") %>%
   group_by(sampling) %>%
   group_split()
 
-table_df_ind <- table_df[[1]] %>% select(-sampling)
-table_df_site <- table_df[[2]] %>% select(-sampling)
+table_df_ind <- table_df[[1]] %>% select(-sampling, -"EG - EQ", -"EQ - R")
+table_df_site <- table_df[[2]] %>% select(-sampling, -"EG - G", -"G - R", -"G - T", -"R - T", -"EG - T")
   
-write.csv(table_df_ind, here(dirname(getwd()), "p4_analysis", "tukey_ind.csv"), row.names = FALSE)
+write.csv(table_df_ind, here("p4_analysis", "tukey_ind.csv"), row.names = FALSE)
 
-write.csv(table_df_site, here(dirname(getwd()), "p4_analysis", "tukey_site.csv"), row.names = FALSE)
+write.csv(table_df_site, here("p4_analysis", "tukey_site.csv"), row.names = FALSE)
 
 ```
 
@@ -161,7 +162,7 @@ table_df_ind %>%
   gtExtras::gt_hulk_col_numeric(
     c(3:8), 
     trim = TRUE, 
-    domain = c(-0.0175,0.0175),
+    domain = c(-0.06,0.06),
     na.color = "white"
     ) %>%
   sub_missing(
@@ -170,8 +171,9 @@ table_df_ind %>%
     missing_text = "n.s."
     ) %>%
   cols_width(
-    c(3:8) ~ px(60)
+    c(3:8) ~ px(70)
   ) 
+
 ```
 
 ```{r}
@@ -189,14 +191,14 @@ table_df_site %>%
       stat = "Statistic"
     ) %>% 
   fmt_number(
-    columns = c(3:8),
+    columns = c(3:5),
     decimals = 3,
     suffixing = TRUE
     ) %>%
   gtExtras::gt_hulk_col_numeric(
-    c(3:8), 
+    c(3:5), 
     trim = TRUE, 
-    domain = c(-0.004,0.004),
+    domain = c(-0.09,0.09),
     na.color = "white"
     ) %>%
   sub_missing(
@@ -205,6 +207,6 @@ table_df_site %>%
     missing_text = "n.s."
     ) %>%
   cols_width(
-    c(3:8) ~ px(60)
+    c(3:5) ~ px(70)
   ) 
 ```
