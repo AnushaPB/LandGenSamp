@@ -1,23 +1,6 @@
 MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = mean, colpal = "plasma", direction = 1, divergent = FALSE, na.rm=TRUE, dig = 3){
   
-  agg <- 
-    df %>%
-    # convert to data.frame
-    data.frame() %>%
-    # remove full data
-    filter(sampstrat != "full") %>%
-    # rename stat_name column as stat for simplified use
-    rename("stat" = all_of(stat_name)) %>%
-    # group by all params
-    group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
-    # summarize
-    custom_agg(aggfunc, na.rm) %>%
-    # create new group for plotting
-    mutate(group = paste0("K=", K,
-                       " phi=", phi,
-                       " m=", m,
-                       "\nH=", H,
-                       " r=", r))
+  agg <- make_ggdf(df, stat_name = stat_name, aggfunc = aggfunc, na.rm = na.rm)
   
   p <- ggplot(agg, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
@@ -47,6 +30,26 @@ MEGAPLOT <- function(df, stat_name, minv = NULL, maxv = NULL, aggfunc = mean, co
   
 }
 
+make_ggdf <- function(df, stat_name, aggfunc, na.rm = TRUE){
+  df %>%
+    # convert to data.frame
+    data.frame() %>%
+    # remove full data
+    filter(sampstrat != "full") %>%
+    # rename stat_name column as stat for simplified use
+    dplyr::rename("stat" = all_of(stat_name)) %>%
+    # group by all params
+    group_by(K, phi, m, H, r, nsamp, sampstrat) %>%
+    # summarize
+    custom_agg(aggfunc, na.rm) %>%
+    # create new group for plotting
+    mutate(group = paste0("K=", K,
+                          " phi=", phi,
+                          " m=", m,
+                          "\nH=", H,
+                          " r=", r))
+}
+
 summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma", dig=3, aggfunc = mean, minv = NULL, maxv = NULL, direction = 1, divergent = FALSE, title = NULL, full = FALSE){
  
   # Summarize dataframe
@@ -56,7 +59,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     # deal with full data
     filter(sampstrat != "full") %>%
     # rename stat_name column as stat for simplified use
-    rename("stat" = all_of(stat_name)) %>%
+    dplyr::rename("stat" = all_of(stat_name)) %>%
     # select columns
     dplyr::select(K, phi, m, H, r, nsamp, sampstrat, stat) %>%
     # convert from wide to long format
@@ -94,14 +97,25 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
     # round
     mutate(stat = round(stat, dig))
   
+  p <- heat_plot(agg, stat_name = NULL, minv = minv, maxv = maxv, title = title, facet = TRUE, dig = dig, 
+                 colpal = colpal, direction = direction, divergent = divergent)
+  
+  return(p)
+}
+
+heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NULL, facet = FALSE, dig = 2, 
+                      colpal = "plasma", direction = 1, divergent = FALSE){
+  
+  if (!is.null(stat_name)) df$stat <- df[[stat_name]]
+  
   # define max and min for plotting
-  if(is.null(maxv)){ maxv <- max(agg$stat, na.rm = TRUE)}
-  if(is.null(minv)){ minv <- min(agg$stat, na.rm = TRUE)}
+  if (is.null(maxv)) maxv <- max(df$stat, na.rm = TRUE)
+  if (is.null(minv)) minv <- min(df$stat, na.rm = TRUE)
   
   # plot results
-  p <- ggplot(agg, aes(nsamp, sampstrat)) +
+  p <- ggplot(df, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
-    geom_text(aes(label = stat, hjust = 0.5)) +
+    geom_text(aes(label = round(stat, dig), hjust = 0.5)) +
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), legend.position = "none",
@@ -118,21 +132,20 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = "plasma
           legend.key.size = unit(1, 'cm'), 
           legend.title = element_text(size=18), 
           legend.text = element_text(size=16)) +
-    coord_fixed() + 
-    facet_grid(low_high ~ param)
+    coord_fixed() 
   
-  if(divergent){
+  if (facet) p <- p + facet_grid(low_high ~ param)
+  
+  if (divergent){
     p <- p + scale_fill_gradient2(name = stat_name, low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
   } else {
     p <- p + scale_fill_viridis(name = stat_name, limits = c(minv, maxv), option = colpal, direction = direction)
   }
   
-  if(!is.null(title)) p <- p + ggtitle(title)
+  if (!is.null(title)) p <- p + ggtitle(title)
   
   return(p)
 }
-
-
 
 summary_vplot <- function(df, stat = "stat", plot.type = "rain_plot", varlist = c("K", "phi", "H", "r", "m", "sampstrat"), colpal = "plasma", nrow = 2){
   
@@ -326,7 +339,7 @@ mmrr_gdm_plotter <- function(x, stat, ...) {
   return(grob2)
 }
 
-format_lfmm <- function(path){
+format_lfmm <- function(path, p_filter = TRUE){
   
   df <- read.csv(path)
   
@@ -360,13 +373,21 @@ format_lfmm <- function(path){
     mutate(roc = (roc1 + roc2)/2, pr = (pr1 + pr2)/2) %>%
     
     # make new columns for TPR and FDR with nice names
-    mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
+    mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) 
   
     # filter tested parameters
-    # Keep NA to retain NULL models
-    filter(padj == "fdr" | is.na(padj)) %>% 
-    filter(sig == 0.05 | is.na(sig)) 
+    
+    #filter(padj == "fdr" | is.na(padj)) %>% 
+    #filter(sig == 0.05 | is.na(sig)) 
     #filter(K_selection == "tess" | K_selection == "full")
+  
+  if (p_filter) {
+    df <- 
+    df %>% 
+    # Keep NA to retain NULL models
+    filter(padj == "fdr" | is.na(padj)) %>%  
+    filter(sig == 0.05 | is.na(sig)) 
+  }
   
   # check number of rows
   if ("T" %in% df$sampstrat) stopifnot((nrow(df) %% (960 * 4 * 4)) == 0)
@@ -408,7 +429,7 @@ rda_plotter <- function(x, stat, ...) {
 }
 
 
-format_rda <- function(path, full = FALSE){
+format_rda <- function(path, p_filter = TRUE, full = FALSE){
   
   df <- read.csv(path)
   
@@ -442,11 +463,16 @@ format_rda <- function(path, full = FALSE){
     mutate(TPR = TPRCOMBO, FDR = FDRCOMBO) %>%
     
     # remove all rows with all NA values
-    filter(if_all(everything(), ~ !is.na(.))) %>%
+    filter(if_all(everything(), ~ !is.na(.))) 
   
-    # filter tested parameters
-    filter(padj == "fdr") %>%
-    filter(sig == 0.05) 
+  
+  if (p_filter) {
+    df <- 
+      df %>% 
+      filter(padj == "fdr" | is.na(padj)) %>%  
+      filter(sig == 0.05 | is.na(sig)) 
+  }
+    
   
   # check number of rows
   if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
@@ -455,7 +481,7 @@ format_rda <- function(path, full = FALSE){
   return(df)
 }
 
-run_lmer <- function(df, stat, filepath = NULL, seed = 22){
+run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
   
   # check number of rows
   if ("trans" %in% df$sampstrat) stopifnot(nrow(df) == (960 * 4 * 4))
@@ -471,11 +497,8 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22){
   moddf$nsamp <- as.numeric(as.character(moddf$nsamp))
   
   # mixed model
-  mod <- lmerTest::lmer(stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed), 
-                          moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
-  
-  
-  
+  if (is.null(f)) f <- formula("stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)")
+  mod <- lmerTest::lmer(f, moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
   
   # anova 
   gt1 <- pretty_anova(mod, filepath)
@@ -496,17 +519,16 @@ pretty_tukey <- function(mod, filepath = NULL){
   em_tb <- em_df %>%
     dplyr::select(-df) %>%
     gt::gt() %>%
+    fmt_number(
+      columns = c(2, 3, 4),
+      decimals = 4,
+      suffixing = TRUE
+    ) %>%
     cols_label(
       contrast = "Contrast",
       estimate = "Estimate",
       SE = "SE",
-      z.ratio = "Z ratio",
       p.value = "p"
-    ) %>%
-    fmt_number(
-      columns = c(estimate, SE, z.ratio),
-      decimals = 4,
-      suffixing = TRUE
     ) %>%
     tab_style(
       style = list(
@@ -516,52 +538,30 @@ pretty_tukey <- function(mod, filepath = NULL){
         rows = p.value < 0.05,
         columns = c(p.value, contrast)
       )
-    ) %>%
-    tab_footnote(
-      footnote = "p < 0.05",
-      placement = "right",
-      locations = cells_body(
-        columns = c(p.value, contrast),
-        rows = p.value < 0.05 & p.value > 0.01
-      )
-    ) %>%
-    tab_footnote(
-      footnote = "p < 0.01",
-      placement = "right",
-      locations = cells_body(
-        columns = c(p.value, contrast),
-        rows = p.value < 0.01 & p.value > 0.001
-      )
-    ) %>%
-    tab_footnote(
-      footnote = "p < 0.001",
-      placement = "right",
-      locations = cells_body(
-        columns = c(p.value, contrast),
-        rows = p.value < 0.001 
-      )
-    ) %>% fmt_scientific(
+    ) %>% 
+    fmt_scientific(
       columns = p.value,
       rows = p.value <= 0.009,
       decimals = 1
     ) %>%
-    opt_footnote_marks(
-      marks = c("***", "**", "*")
-      ) %>%
     data_color(
       columns = estimate,
-      colors = scales::col_numeric(
+      fn = scales::col_numeric(
         palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
         domain = c(-d,d),
         na.color = "white",
       )
-    ) %>%
-    tab_header(
-      title = md("Tukey test"),
-      subtitle = md("*pairwise ~ sampstrat*")
-    )
+    ) 
+  #%>%
+    #tab_header(
+    #  title = md("Tukey test"),
+    #  subtitle = md("*pairwise ~ sampstrat*")
+    #)
   
-  if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
+  if (any(colnames(em_df) %in% "z.ratio")) em_tb <- em_tb %>% cols_label(z.ratio = "Z ratio")
+  if (any(colnames(em_df) %in% "t.ratio")) em_tb <- em_tb %>% cols_label(t.ratio = "t ratio")
+  
+  if (!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
   return(em_tb)
 }
 
@@ -572,6 +572,7 @@ pretty_anova <- function(mod, filepath = NULL){
   effects <- fixef(mod)
   effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "nsamp", "K2", "m1", "phi0.5", "H0.5", "r0.6"))]))
   effects <- c(effects["nsamp"], sampstrat = effects_sampstrat, effects[c("K2", "m1", "phi0.5", "H0.5", "r0.6")])
+  effects <- na.omit(effects)
   aov_df <- data.frame(Variable = rownames(aov), FixedEffects = effects, aov)
   
   aov_df$Pr..F. <- signif(aov_df$Pr..F., 2)
@@ -638,7 +639,8 @@ pretty_anova <- function(mod, filepath = NULL){
         columns = c(Pr..F.),
         rows = Pr..F. < 0.001 
       )
-    ) %>% fmt_scientific(
+    ) %>% 
+    fmt_scientific(
       columns = Pr..F.,
       rows = Pr..F. <= 0.009,
       decimals = 1
@@ -648,16 +650,16 @@ pretty_anova <- function(mod, filepath = NULL){
     ) %>%
     data_color(
       columns = FixedEffects,
-      colors = scales::col_numeric(
+      fn = scales::col_numeric(
         palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
         domain = c(-d,d),
         na.color = "white",
       )
-    ) %>%
-    tab_header(
-      title = md("Linear mixed effect model"),
-      subtitle = md("*statistic ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)*")
-    )
+    ) #%>%
+    #tab_header(
+    #  title = md("Linear mixed effect model"),
+    #  subtitle = md("*statistic ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)*")
+    #)
   
   if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
   return(aov_tb)
@@ -669,5 +671,20 @@ arrange_figures <- function(df1, df2, stat, title1 = NULL, title2 = NULL, ...){
   p2 <- summary_hplot(df2, stat, title = title2, ...)
   plot <- ggarrange(p1, p2, common.legend = TRUE, nrow = 2, legend = "right")
   return(plot)
+}
+
+format_data <- function(method, sampling, p_filter = FALSE) {
+  if (sampling == "individual") sampling <- "indsampling"
+  if (sampling == "site") sampling <- "sitesampling"
+  
+  file_name <- paste0(method, "_", sampling, "_results.csv")
+  file_path <- here("p3_methods", "outputs", file_name)
+  
+  if (method == "lfmm") df <- format_lfmm(file_path, p_filter = p_filter)
+  if (method == "rda") df <- format_rda(file_path, p_filter = p_filter)
+  if (method == "mmrr") df <- format_mmrr(file_path)
+  if (method == "gdm") df <- format_gdm(file_path)
+  
+  return(df)
 }
 
