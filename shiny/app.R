@@ -1,4 +1,10 @@
-# Define UI for app that draws a histogram ----
+library(shiny)
+library(gridExtra)
+library(here)
+library(tidyverse)
+library(viridis)
+
+# Define UI for app that draws histograms ----
 ui <- fluidPage(
   
   # App title ----
@@ -10,11 +16,12 @@ ui <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       
-      # Select method
-      selectInput("method", 
-                  label = "Method",
+      # Select methods
+      selectInput("methods", 
+                  label = "Methods",
                   choices = c("lfmm", "rda", "mmrr", "gdm"),
-                  selected = "lfmm"), 
+                  selected = "lfmm",
+                  multiple = TRUE), 
       
       # Select input for sampling type
       selectInput("sampling",
@@ -25,7 +32,7 @@ ui <- fluidPage(
       # Select input for the statistic
       uiOutput("statSelector"),
       
-      # Additional selection boxes based on method
+      # Additional selection boxes based on methods
       uiOutput("additionalSelections"),
       
       # Additional selection boxes for K, m, phi, r, H
@@ -38,20 +45,21 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot", width = 9)
+      # Output: Plots side by side ----
+      plotOutput(outputId = "distPlots", width = "100%")
       
     )
   )
 )
-# Define server logic required to draw a histogram ----
+
+# Define server logic required to draw histograms ----
 server <- function(input, output) {
   
-  # Render additional selection boxes based on the selected method
+  # Render additional selection boxes based on the selected methods
   output$additionalSelections <- renderUI({
-    method <- input$method
+    methods <- input$methods
     
-    if (method == "lfmm") {
+    if ("lfmm" %in% methods) {
       tagList(
         selectInput("lfmmMethod",
                     "LFMM Method",
@@ -70,7 +78,7 @@ server <- function(input, output) {
                     choices = c("0.05", "0.1"),
                     selected = "0.05")
       )
-    } else if (method == "rda") {
+    } else if ("rda" %in% methods) {
       tagList(
         selectInput("padj",
                     "P Adjust Method",
@@ -86,18 +94,18 @@ server <- function(input, output) {
     }
   })
   
-  # Render the statistic selector based on the selected method
+  # Render the statistic selector based on the selected methods
   output$statSelector <- renderUI({
-    method <- input$method
+    methods <- input$methods
     selectInput(
       "stat",
       "Statistic",
-      choices = stat_options[[method]],
-      selected = stat_options[[method]][1]
+      choices = stat_options[[methods[1]]],  # Use the first selected method for choices
+      selected = stat_options[[methods[1]]][1]  # Use the first selected method for default
     )
   })
   
-  # Render additional variables selection based on the selected method
+  # Render additional variables selection based on the selected methods
   output$additionalVariables <- renderUI({
     tagList(
       checkboxGroupInput("K", "K", choices = c("low", "high"), selected = c("low", "high")),
@@ -108,40 +116,63 @@ server <- function(input, output) {
     )
   })
   
-  # Render the plot based on the selected method and statistic
-  output$distPlot <- renderPlot({
-    x <- get_data(input$method, input$sampling)
-    x <- filter_additional_variables(x, input)
+  # Render the plots based on the selected methods and statistic
+  # Render the plots based on the selected methods and statistic
+  output$distPlots <- renderPlot({
+    methods <- input$methods
     stat_name <- input$stat
     
-    # Filter data based on selected method and additional variables
-    if (input$method == "lfmm"){
-      x <- 
-        x %>%
-        filter(method == input$lfmmMethod) %>%
-        filter(K_selection == input$K_selection)
+    # Create an empty list to store the plots
+    plots <- list()
+    
+    # Loop through each selected method
+    for (method in methods) {
+      x <- get_data(method, input$sampling)
+      x <- filter_additional_variables(x, input, method)
+      
+      # Filter data based on selected method and additional variables
+      if (method == "lfmm") {
+        if (!is.null(input$lfmmMethod) && !is.null(input$K_selection)) {
+          x <- 
+            x %>%
+            filter(method == input$lfmmMethod) %>%
+            filter(K_selection == input$K_selection)
+        }
+      }
+      
+      if (method == "rda") {
+        if (!is.null(input$correctPC)) {
+          input_logic <- input$correctPC == "yes"
+          x <- 
+            x %>% filter(correctPC == input_logic) 
+        }
+      }
+      
+      if (method == "rda" || method == "lfmm") {
+        if (!is.null(input$padj) && !is.null(input$sig)) {
+          x <- 
+            x %>%
+            filter(padj == input$padj) %>%
+            filter(sig == input$sig)
+        }
+      }
+      
+      # Generate the plot for the current method
+      plot <- MEGAPLOT(x, stat_name = stat_name, dig = 2)
+      
+      # Add the plot to the list
+      plots[[method]] <- plot
     }
     
-    if (input$method == "rda"){
-      input_logic <- input$correctPC == "yes"
-      x <- 
-        x %>% filter(correctPC == input_logic) 
-    }
-    
-    if (input$method == "rda" | input$method == "lfmm"){
-      x <- 
-        x %>%
-        filter(padj == input$padj) %>%
-        filter(sig == input$sig)
-    }
-    
-    MEGAPLOT(x, stat_name = stat_name, dig = 2)
-  }, height = 945*.95, width = 1525.5*.95)
+    # Arrange the plots side by side
+    grid.arrange(grobs = plots, ncol = length(plots))
+  }, height = 945 * 0.95, width = 1525.5 * 0.95)
+  
   
 }
 
 # Function to filter data based on additional variables
-filter_additional_variables <- function(filtered_data, input) {
+filter_additional_variables <- function(filtered_data, input, method) {
   # Helper function to filter based on low/high selection
   filter_low_high <- function(df, var_name, low_val, high_val) {
     if ("low" %in% input[[var_name]] && "high" %in% input[[var_name]]) {
@@ -151,6 +182,8 @@ filter_additional_variables <- function(filtered_data, input) {
       return(df[df[[var_name]] == low_val, ])
     } else if ("high" %in% input[[var_name]]) {
       return(df[df[[var_name]] == high_val, ])
+    } else {
+      return(df)
     }
   }
   
@@ -158,7 +191,7 @@ filter_additional_variables <- function(filtered_data, input) {
   filter_ranges <- list(
     K = c(1, 2),
     m = c(0.25, 1.00),
-    phi = c(0.1, 0.5),
+    phi= c(0.1, 0.5),
     r = c(0.3, 0.6),
     H = c(0.05, 0.5)
   )
@@ -173,4 +206,3 @@ filter_additional_variables <- function(filtered_data, input) {
 
 shinyApp(ui = ui, server = server)
 
-    
