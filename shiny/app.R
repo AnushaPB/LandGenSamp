@@ -1,3 +1,16 @@
+library("tidyverse")
+library("here")
+library("shiny")
+library("viridis")
+source(here("p4_analysis", "analysis_functions.R"))
+source(here("shiny", "app_functions.R"))
+
+stat_options <- 
+  list(lfmm = c("TPR", "FDR", "TOTALN"),
+       rda = c("TPR", "FDR", "TOTALN"),
+       mmrr = c("RAE"),
+       gdm = c("RAE"))
+
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   
@@ -35,13 +48,33 @@ ui <- fluidPage(
       
     ),
     
+    
+    # Main panel for displaying outputs ----
     # Main panel for displaying outputs ----
     mainPanel(
       
       # Output: Histogram ----
-      plotOutput(outputId = "distPlot", width = 9)
+      fluidRow(
+        column(width = 9,
+               plotOutput(outputId = "distPlot", width = "100%"))
+      ),
       
+      # Static figure below the plot
+      fluidRow(
+        column(width = 12,
+               tags$div(
+                 style = "margin-top: 20px; text-align: center;",
+                 tags$figure(
+                   tags$img(
+                     src = "megaplot_explainer.png",
+                     width = "100%"
+                   )
+                 )
+               ))
+      )
     )
+    
+    
   )
 )
 # Define server logic required to draw a histogram ----
@@ -137,6 +170,22 @@ server <- function(input, output) {
     
     MEGAPLOT(x, stat_name = stat_name, dig = 2)
   }, height = 945*.95, width = 1525.5*.95)
+  
+  output$staticFigure <- renderUI({
+    insertUI(
+      selector = "#distPlot",
+      where = "afterEnd",
+      ui = tags$div(
+        style = "margin-top: 20px; text-align: center;",
+        tags$figure(
+          tags$img(
+            src = "megaplot_explainer.png",
+            width = "600px"
+          )
+        )
+      )
+    )
+  })
   
 }
 
