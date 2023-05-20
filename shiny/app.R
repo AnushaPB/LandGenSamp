@@ -153,11 +153,11 @@ server <- function(input, output) {
   # Render additional variables selection based on the selected method
   output$additionalVariables <- renderUI({
     tagList(
-      checkboxGroupInput("K", "Population Size (K)", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("m", "Migration (m)", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("phi", "Selection Strength (phi)", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("r", "Environmental Correlation (r)", choices = c("low", "high"), selected = c("low", "high")),
-      checkboxGroupInput("H", "Environmental Autocorrelation (H)", choices = c("low", "high"), selected = c("low", "high"))
+      checkboxGroupInput("K", "population size (K)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("m", "migration (m)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("phi", "selection strength (phi)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("r", "environmental correlation (r)", choices = c("low", "high"), selected = c("low", "high")),
+      checkboxGroupInput("H", "environmental autocorrelation (H)", choices = c("low", "high"), selected = c("low", "high"))
     )
   })
   
