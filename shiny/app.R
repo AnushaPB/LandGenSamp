@@ -68,6 +68,12 @@ ui <- fluidPage(
                   choices = c("individual", "site"),
                   selected = "individual"),
       
+      # Select whether to summarize
+      selectInput("plot_type",
+                   label = "plot",
+                   choices = c("megaplot", "summary"),
+                   selected = "megaplot"),
+      
       # Select input for the statistic
       uiOutput("statSelector"),
       
@@ -193,7 +199,8 @@ server <- function(input, output) {
     if (stat_name %in% c("TOTALN", "geo_coeff", "comboenv_coeff", "ratio", "K.1")) colpal <- "cividis"
     if (stat_name %in% c("ratio_err", "geo_err", "comboenv_err")) divergent <- TRUE else divergent <- FALSE
     
-    MEGAPLOT(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction)
+    if (input$plot_type == "megaplot") print(MEGAPLOT(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction))
+    if (input$plot_type == "summary") print(summary_hplot(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction))
     
   }, height = 945*.95, width = 1525.5*.95)
   
