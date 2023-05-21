@@ -62,6 +62,70 @@ moddf <- df[df$sampstrat != "full",]
 moddf[!complete.cases(moddf),]
 
 ```
+
+
+```{r fig.width=20, fig.height=7}
+#Create dataframe with all variable combos
+params <- expand.grid(K = c(1, 2), 
+                      phi = c(0.1, 0.5),
+                      m = c(0.25, 1.0),
+                      seed = c(1, 2, 3),
+                      H = c(0.05, 0.5),
+                      r = c(0.3, 0.6),
+                      it = 0:9)
+
+cdf <- data.frame()
+for(i in 1:nrow(params)){
+  p <- params[i,]
+  subdf <- df[df$K == p$K & df$phi == p$phi & df$m == p$m & df$seed == p$seed & df$H == p$H & df$r == p$r & df$it == p$it, ]
+  
+  full <- subdf[subdf$sampstrat == "full",]
+  sub <- subdf[subdf$sampstrat != "full",]
+  
+  full$ratio <- (abs(full$env1_coeff) + abs(full$env2_coeff))/abs(full$geo_coeff)
+  sub$ratio <- (abs(sub$env1_coeff) + abs(sub$env2_coeff))/abs(sub$geo_coeff)
+  
+  sub$env1_err <- sub$env1_coeff - full$env1_coeff
+  sub$env2_err <- sub$env2_coeff - full$env2_coeff
+  sub$comboenv_err <- (sub$env1_err + sub$env2_err)/2
+  sub$geo_err <- abs(sub$geo_coeff) - abs(full$geo_coeff)
+  sub$ratio_err <- sub$ratio - full$ratio
+  sub$ratio_ae <- abs(sub$ratio_err)
+  
+  sub$geo_e <- sub$geo_coeff - full$geo_coeff
+  sub$comboenv_e <- sub$comboenv_coeff - full$comboenv_coeff
+  
+  cdf <- rbind(cdf, sub)
+}
+ 
+df$prop_neg_sig <- (((df$env1_coeff < 0) & (df$env1_p < 0.05))  + ((df$env2_coeff < 0) & (df$env2_p < 0.05)) )/2
+df$prop_neg <- ((df$env1_coeff < 0) + (df$env2_coeff < 0))/2
+df$prop_sig <- ((df$env1_p < 0.05) +( df$env2_p < 0.05))/2
+df$prop_sig_geo <- (df$geo_p < 0.05)
+summary_hplot(df, "prop_neg", colpal = "cividis")
+summary_hplot(df, "prop_sig", colpal = "cividis")
+
+summary_hplot(df, "prop_sig_geo", colpal = "cividis")
+summary_hplot(df, "prop_neg_sig", colpal = "cividis")
+```
+
+```{r}
+
+new_df <-
+  cdf %>% 
+  select(K, phi, m, seed, H, r, it, sampstrat, nsamp, 
+         ratio,
+         env1_err, env2_err, comboenv_err, geo_err,
+         ratio_err, ratio_ae) %>%
+  right_join(select(df, K, phi, m, seed, H, r, it, sampstrat, nsamp, 
+                   env1_coeff, env2_coeff, geo_coeff, env1_p, env2_p, geo_p))
+
+# TEMP: removed
+#write_csv(new_df, here("p3_methods", "outputs", "mmrr_sitesampling_results.csv"))
+
+```
+
+
 #CALCULATE NEW STATS
 ```{r,  fig.width=20, fig.height=7}
 
