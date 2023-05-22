@@ -72,24 +72,41 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   #run GDM
   gdm.model <- gdm(gdmData, geo = TRUE)
   
-  #check var importance/significance (ASK IAN IF WE WANT TO DO THIS OR JUST COMPARE THE COEFFICIENTS FROM A FULL MODEL (PROS: FASTER/EASIER))
-  #system.time(vars <- gdm.varImp(gdmData, geo = TRUE, splines = NULL, nPerm=50))
-  
   if(is.null(gdm.model)){
     #turn results into dataframe
     results <- data.frame(env1_coeff = "NULL",
                           env2_coeff = "NULL",
-                          geo_coeff = "NULL"
-    )
+                          geo_coeff = "NULL",
+                          env1_p = NA,
+                          env2_p = NA,
+                          geo_p = NA)
   } else {
     predictors <- coeffs(gdm.model)
     predictors
     
-    #turn results into dataframe
+    # turn results into dataframe
     results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
                           env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
-                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"]
-    )
+                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
+    
+    # get pvalues
+    safe_gdm.varImp <- safely(gdm.varImp)
+    modTest <- safe_gdm.varImp(gdmData, geo=T, nPerm=50, parallel=F, predSelect=F)
+    if (is.null(modTest$error)) {
+      pvals <- modTest$result$`Predictor p-values`
+      pvals$var <- row.names(pvals)
+      pvals <- left_join(data.frame(var = c("Geographic", "env1", "env2")), pvals)
+      results <- data.frame(results,
+                 env1_p = pvals[pvals$var == "env1", 2],
+                 env2_p = pvals[pvals$var == "env2", 2],
+                 geo_p = pvals[pvals$var == "Geographic", 2])
+    } else {
+      results <- data.frame(results,
+                            env1_p = NA,
+                            env2_p = NA,
+                            geo_p = NA)
+    }
+    
   }
   
   

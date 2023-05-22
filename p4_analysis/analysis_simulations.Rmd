@@ -5,21 +5,9 @@ output: html_document
 
 
 ```{r}
-library("dplyr")
-library("car")
-library("lsmeans")
-library("lme4")
+library("tidyverse")
 library("viridis")
-library("lmerTest")
-library("ggplot2")
-library("gridExtra")
-library("MuMIn")
-library("emmeans")
-library("effects")
 library("here")
-
-BuRd <- c("#2066AC", "#4392C2", "#92C4DE", "#D1E5F0", "#F7F7F7", "#FDDBC6", "#F4A581", "#D5604C", "#B2182B")
-BlueRed <- colorRampPalette(BuRd, interpolate="linear")
 ```
 
 # Pop size
@@ -42,32 +30,4 @@ df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mism
 
 ```
 
-# Causal Clines 
-
-```{r,fig.width=16, fig.height=7}
-df <- read.csv(here("p3_methods", "outputs", "cline_results.csv")
-
-summary_df_full <- df %>% 
-  filter(sampstrat == "full") %>% 
-  select(K, phi, m, H, r, prop_cline) %>%
-  # convert from wide to long format
-  pivot_longer(c(K, phi, m, H, r)) %>%
-  # turn value into numeric from factor
-  mutate(value = as.numeric(as.character(value))) %>%
-  # group by the parameter (name)
-  group_by(name) %>% 
-  # create new low/high variable (the group_by name makes sure this is done for each parameter seperately)
-  mutate(low_high = case_when(
-      value == min(value) ~ "low",
-      value == max(value) ~ "high",
-      TRUE ~ "NA")) %>% 
-  # group again by the new group (low_high), the param (name), and nsamp/sampstrat
-  group_by(name, low_high) %>%
-  # summarize by group
-  summarise(mean = mean(prop_cline))
-
-summary_df_full
-
-summary_hplot(df, "prop_cline")
-```
 

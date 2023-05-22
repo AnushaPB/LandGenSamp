@@ -13,7 +13,7 @@ cores <- 20
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
-res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "dplyr", "here")) %dopar% {
+res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm", "adegenet", "stringr", "dplyr", "here", "purrr")) %dopar% {
   
   #skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
@@ -32,7 +32,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
     
     #run model on full data set
     full_result <- run_gdm(gen_2k, gsd_df_2k, distmeasure = "euc")
-    fullratio <- (full_result$env1_coeff + full_result$env2_coeff)/full_result$geo_coeff
+    fullratio <- (abs(full_result$env1_coeff) + abs(full_result$env2_coeff))/abs(full_result$geo_coeff)
     result <- data.frame(params[i,], 
                          sampstrat = "full", 
                          nsamp = 2000, 
@@ -62,7 +62,7 @@ res_gdm <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("vcfR", "gdm"
           geo_err <- "NULL"
           ratio_err <- "NULL"
         } else {
-          subratio <- (sub_result$env1_coeff + sub_result$env2_coeff)/sub_result$geo_coeff
+          subratio <- (abs(sub_result$env1_coeff) + abs(sub_result$env2_coeff))/abs(sub_result$geo_coeff)
           env1_err <- err_coeff(full_result$env1_coeff, sub_result$env1_coeff)
           env2_err <- err_coeff(full_result$env2_coeff, sub_result$env2_coeff)
           geo_err <- err_coeff(full_result$geo_coeff, sub_result$geo_coeff)
