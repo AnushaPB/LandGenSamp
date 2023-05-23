@@ -22,7 +22,7 @@ res_gdm <- furrr::future_map(1:nrow(params), \(i) {
       gsd_df <- get_data(i, params = params, "gsd")
       
       #subsample full data randomly
-      s <- sample(nrow(gsd_df), 200, replace = FALSE)
+      s <- sample(nrow(gsd_df), 1000, replace = FALSE)
       gen_2k <- gen[s,]
       gsd_df_2k <- gsd_df[s,]
       
