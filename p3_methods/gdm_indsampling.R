@@ -106,7 +106,7 @@ res_gdm <- furrr::future_map(1:nrow(params), \(i) {
 .progress = TRUE
 )
 
-res_gdm <- res_gdm %>% bind_rows()
+res_gdm <- res_gdm %>% dplyr::bind_rows()
 
 write.csv(res_gdm, "outputs/gdm_indsampling_results.csv", row.names = FALSE)
 
