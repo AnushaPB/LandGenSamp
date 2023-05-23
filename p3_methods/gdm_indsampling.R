@@ -8,7 +8,7 @@ source("general_functions.R")
 source("gdm_functions.R")
 
 #register cores
-future::plan(future::multisession, workers = 25)
+future::plan(future::multisession, workers = 15)
 
 res_gdm <- furrr::future_map(1:nrow(params), \(i) {
   #skip iteration if files do not exist
