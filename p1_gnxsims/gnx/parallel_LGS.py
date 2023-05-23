@@ -475,7 +475,7 @@ params = {
 # define parameters to vary
 K_array = [1, 2]
 phi_array = [0.1, 0.5]
-m_array = [0.25, 100]
+m_array = [0.25, 1]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
 r_array = [0.3, 0.6]
@@ -558,7 +558,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 10
+    ncpu = 20
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
