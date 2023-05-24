@@ -14,12 +14,7 @@ names(clean_data) <- pmap_chr(combos, ~paste0(.x,"_", .y))
 stat_options <- 
   list(lfmm = c("TPR", "FDR", "nloci detected", "number of latent factors"),
        rda = c("TPR", "FDR", "nloci detected"),
-       mmrr = c("Ratio Absolute Error", "Ratio Bias", 
-                "IBD Absolute Error", "IBD Bias",
-                "IBE Absolute Error", "IBE Bias",
-                "Ratio of IBE to IBD", 
-                "IBD Coefficient", 
-                "IBE Coefficient"),
+       mmrr = colnames(clean_data$mmrr_ind)[-c(1:9)],
        gdm =  c("Ratio Absolute Error", "Ratio Bias", 
                 "IBD Absolute Error", "IBD Bias",
                 "IBE Absolute Error", "IBE Bias",
@@ -194,8 +189,10 @@ server <- function(input, output) {
         filter(sig == input$sig)
     }
     
+    colpal <- "cividis"
+    error_stat <- grepl("*_ae*", stat_name) | grepl("*err*", stat_name)
     if (stat_name == "TPR") colpal <- "plasma"
-    if (stat_name %in% c("FDR", "RAE", "geo_ae", "env_ae")) {colpal <- "viridis"; direction <- -1} else direction <- 1
+    if ((stat_name %in% c("FDR", "RAE")) | error_stat) {colpal <- "viridis"; direction <- -1} else direction <- 1
     if (stat_name %in% c("TOTALN", "geo_coeff", "comboenv_coeff", "ratio", "K.1")) colpal <- "cividis"
     if (stat_name %in% c("ratio_err", "geo_err", "comboenv_err")) divergent <- TRUE else divergent <- FALSE
     
