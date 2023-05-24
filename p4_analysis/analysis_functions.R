@@ -239,6 +239,8 @@ var_to_fact <- function(df){
 
 format_mmrr <- function(path, full = FALSE){
   df <- read.csv(path)
+  df <- extra_mmrr_stats(df)
+  
   #give sampling strategies simpler names
   df <- df %>%
     
@@ -258,12 +260,7 @@ format_mmrr <- function(path, full = FALSE){
     var_to_fact() %>%
     
     # make combo variables
-    mutate(comboenv_err = (env1_err + env2_err)/2,
-           comboenv_coeff = (env1_coeff + env2_coeff)/2,
-           env_ae = abs(comboenv_err),
-           geo_ae = abs(geo_err),
-           ratio_ae = abs(ratio_err),
-           RAE = ratio_ae) 
+    mutate(RAE = ratio_ae) 
   
   # check number of rows
   if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
@@ -688,3 +685,94 @@ format_data <- function(method, sampling, p_filter = FALSE) {
   return(df)
 }
 
+
+extra_mmrr_stats <- function(df){
+  #Create dataframe with all variable combos
+  params <- expand.grid(K = c(1, 2), 
+                        phi = c(0.1, 0.5),
+                        m = c(0.25, 1.0),
+                        seed = c(1, 2, 3),
+                        H = c(0.05, 0.5),
+                        r = c(0.3, 0.6),
+                        it = 0:9)
+  
+  new_ls <- pmap(params, mmrr_stats, df)
+  new_df <- bind_rows(new_ls)
+  stopifnot(nrow(new_df) == nrow(df))
+  
+  return(new_df)
+}
+
+mmrr_stats <- function(K, phi, m, seed, H, r, it, df){
+  sig = 0.05
+  subdf <- df[df$K == K & df$phi == phi & df$m == m & df$seed == seed & df$H == H & df$r == r & df$it == it, ]
+  
+  full <- subdf[subdf$sampstrat == "full",]
+  sub <- subdf[subdf$sampstrat != "full",]
+  
+  # calculate ratio
+  full$ratio <- (abs(full$env1_coeff) + abs(full$env2_coeff))/abs(full$geo_coeff)
+  sub$ratio <- (abs(sub$env1_coeff) + abs(sub$env2_coeff))/abs(sub$geo_coeff)
+  sub$ratio_err <- sub$ratio - full$ratio
+  sub$ratio_ae <- abs(sub$ratio_err)
+  
+  # calculate ratio only including sig values
+  # multiply because if the condition is TRUE = 1, env1_coeff = env1_coeff and if FALSE = 0, env1_coeff = 0
+  full$env1_coeff_sig <- full$env1_coeff * as.numeric(full$env1_p < sig)
+  full$env2_coeff_sig <- full$env2_coeff * as.numeric(full$env2_p < sig)
+  full$geo_coeff_sig <- full$geo_coeff * as.numeric(full$geo_p < sig)
+  sub$env1_coeff_sig <- sub$env1_coeff * as.numeric(sub$env1_p < sig)
+  sub$env2_coeff_sig <- sub$env2_coeff * as.numeric(sub$env2_p < sig)
+  sub$geo_coeff_sig <- sub$geo_coeff * as.numeric(sub$geo_p < sig)
+  full$ratio_sig <- (abs(full$env1_coeff_sig) + abs(full$env2_coeff_sig))/abs(full$geo_coeff_sig)
+  sub$ratio_sig <- (abs(sub$env1_coeff_sig) + abs(sub$env2_coeff_sig))/abs(sub$geo_coeff_sig)
+  sub$ratio_sig_err <- sub$ratio_sig - full$ratio_sig
+  sub$ratio_sig_ae <- abs(sub$ratio_sig_err)
+  
+  # calculate IBE error
+  sub$env1_err1 <- sub$env1_coeff - full$env1_coeff
+  sub$env2_err1 <- sub$env2_coeff - full$env2_coeff
+  sub$env1_err2 <- abs(sub$env1_coeff) - abs(full$env1_coeff)
+  sub$env2_err2 <- abs(sub$env2_coeff) - abs(full$env2_coeff)
+  
+  sub$env1_sig_err1 <- sub$env1_coeff_sig - full$env1_coeff_sig
+  sub$env2_sig_err1 <- sub$env2_coeff_sig - full$env2_coeff_sig
+  sub$env1_sig_err2 <- abs(sub$env1_coeff_sig) - abs(full$env1_coeff_sig)
+  sub$env2_sig_err2 <- abs(sub$env2_coeff_sig) - abs(full$env2_coeff_sig)
+  
+  sub$comboenv_err1 <- (sub$env1_sig_err1 + sub$env2_sig_err1)/2
+  sub$comboenv_err2 <- (sub$env1_sig_err2 + sub$env2_sig_err2)/2
+  sub$comboenv_sig_err1 <- (sub$env1_sig_err1 + sub$env2_sig_err1)/2
+  sub$comboenv_sig_err2 <- (sub$env1_sig_err2 + sub$env2_sig_err2)/2
+  
+  sub$comboenv_ae1 <- (abs(sub$env1_sig_err1) + abs(sub$env2_sig_err1))/2
+  sub$comboenv_ae2 <- (abs(sub$env1_sig_err2) + abs(sub$env2_sig_err2))/2
+  sub$comboenv_sig_ae1 <- (abs(sub$env1_sig_err1) + abs(sub$env2_sig_err1))/2
+  sub$comboenv_sig_ae2 <- (abs(sub$env1_sig_err2) + abs(sub$env2_sig_err2))/2
+  
+  # no negative or insignificant values for IBD, so the abs()/sig doesn't matter
+  sub$geo_err <- sub$geo_coeff - full$geo_coeff
+  sub$geo_ae <- abs(sub$geo_err)
+  
+  #prop signif
+  sub$prop_comboenv_sig <- ((sub$env1_p < sig) + (sub$env2_p < sig))/2
+  sub$prop_geo_sig <- (sub$geo_p < sig)
+  full$prop_comboenv_sig <- ((full$env1_p < sig) + (full$env2_p < sig))/2
+  full$prop_geo_sig <- (full$geo_p < sig)
+  
+  sub$prop_comboenv_sigfull <- sub$prop_comboenv_sig == full$prop_comboenv_sig 
+  sub$prop_geo_sigfull <- sub$prop_geo_sig == full$prop_geo_sig
+  
+ # sub$prop_comboenv_sigfull1 <-(((sub$env1_p < sig) == (full$env1_p < sig)) + ((sub$env2_p < sig) == (full$env2_p < sig)))/2
+  #sub$prop_comboenv_sigfull2 <-(((sub$env1_p < sig) & (full$env1_p < sig)) + ((sub$env2_p < sig) & (full$env2_p < sig)))/2
+  #sub$prop_comboenv_sigfull3 <-(((sub$env1_p < sig) & (full$env1_p < sig)) + ((sub$env2_p < sig) & (full$env2_p < sig)))/(full$env1_p < sig + full$env2_p < sig)
+  sub$prop_comboenv_sigfull_env1 <-((sub$env1_p < sig) & (full$env1_p < sig))/(full$env1_p < sig)
+  sub$prop_comboenv_sigfull_env2 <-((sub$env2_p < sig) & (full$env2_p < sig))/(full$env2_p < sig)
+  sub$prop_comboenv_sigfull_combo <- (sub$prop_comboenv_sigfull_env1 + sub$prop_comboenv_sigfull_env2)/2
+  new_df <- bind_rows(sub, full)
+  stopifnot(nrow(new_df) == nrow(subdf))
+  
+  # negative value
+  
+  return(new_df)
+}
