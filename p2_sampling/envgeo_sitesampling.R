@@ -9,8 +9,8 @@ library("vegan")
 set.seed(42)
 
 #register cores
-#these calculations are RAM intensive so only run two at a time
-cores <- 2
+#these calculations are RAM intensive so only run few at a time
+cores <- 3
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
