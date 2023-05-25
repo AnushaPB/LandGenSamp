@@ -1,5 +1,5 @@
 
-run_method <- function(method, sampling = c("individual", "site")){
+run_method <- function(method, sampling = c("individual", "site"), ncores = NULL){
   # Parallel processing libraries
   library(furrr)
   
@@ -11,7 +11,8 @@ run_method <- function(method, sampling = c("individual", "site")){
   source(here("p3_methods", "gdm_functions.R"))
   
   # setup parallel session
-  future::plan(future::multisession, workers = 2)
+  if (is.null(ncores)) ncores <- 20
+  future::plan(future::multisession, workers = ncores)
   
   # Run common operations
   full <- run_full(params, method = method)
