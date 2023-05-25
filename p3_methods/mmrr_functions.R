@@ -69,28 +69,23 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   ##get env vars and coords
   env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
   env_dist2 <- as.matrix(dist(gsd_df$env2, diag = TRUE, upper = TRUE))
+  combo_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
   
   #format X matrices
-  Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist)
+  Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist, env = combo_dist)
   
   #Run  MMRR
-  mmrr_res <- MMRR(gendist, Xmats, nperm = 50)
-  
-  #create data frame of results
-  mmrr_df <- cbind.data.frame(mmrr_res$coefficients, mmrr_res$tpvalue)
+  # combined env dist
+  mmrr_res1 <- MMRR(gendist, Xmats[-4], nperm = 50)
+  # seperate env dist
+  mmrr_res2 <- MMRR(gendist, Xmats[-c(1,2)], nperm = 50)
   
   #turn results into dataframe
-  results <- data.frame(env1_coeff = mmrr_res$coefficients["env1"],
-                        env2_coeff = mmrr_res$coefficients["env2"],
-                        geo_coeff = mmrr_res$coefficients["geography"],
-                        env1_p = mmrr_res$tpvalue["env1(p)"],
-                        env2_p = mmrr_res$tpvalue["env2(p)"],
-                        geo_p = mmrr_res$tpvalue["geography(p)"]
-  )
-  #remove rownames
-  rownames(results) <- NULL
-  
+  results <- 
+    map2(list(mmrr_res1, mmrr_res2), list("mod1", "mod2"), mmrr_results_df) %>% 
+    bind_cols()
+
   return(results)
 }
 
@@ -136,4 +131,36 @@ calc_dist <- function(gen, distmeasure = "euc"){
   }
   
   return(gendist)
+}
+
+
+mmrr_results_df <- function(x, name = NULL){
+  #create data frame of results
+  df <- 
+    data.frame(coeff = x$coefficients, p = x$tpvalue, var = names(x$coefficients)) %>%
+    mutate(var = case_when(var == "geography" ~ "geo", .default = var)) %>%
+    filter(var != "Intercept") %>%
+    pivot_wider(names_from = var, values_from = c(coeff, p), names_glue = "{var}_{.value}")
+  
+  env_cols <- grepl("env", names(df)) & grepl("coeff", names(df))
+  geo_cols <- grepl("geo", names(df)) & grepl("coeff", names(df))
+  df$ratio <- sum(abs(df[,env_cols]))/abs(as.numeric(df[,geo_cols]))
+  
+  if (!is.null(name)) colnames(df) <- paste0(colnames(df), "_", name)
+  
+  return(df)
+}
+
+mmrr_stats <- function(sub, full, sig = 0.05){
+  err_cols <- colnames(sub)[grepl("coeff", colnames(sub)) | grepl("ratio", colnames(sub))]
+  err <- map(err_cols, ~err_coeff(full[.x], sub[.x])) %>% bind_cols()
+  ae <- abs(err)
+  colnames(err) <- paste0(colnames(err), "_", "err")
+  colnames(ae) <- paste0(colnames(err), "_", "ae")
+  
+  p_cols <- colnames(sub)[grepl("_p", colnames(sub))]
+  TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
+  colnames(TPR) <- paste0(colnames(TPR), "_", "TPR")
+  
+  return(data.frame(err, ae, TPR))
 }
