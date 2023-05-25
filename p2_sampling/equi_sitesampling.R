@@ -1,9 +1,10 @@
-source("general_functions.R")
-source("site_functions.R")
 library("here")
 library("foreach")
 library("doParallel")
 library("raster")
+
+source(here("p2_sampling", "site_functions.R"))
+source(here("general_functions.R"))
 
 set.seed(42)
 
