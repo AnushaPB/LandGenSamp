@@ -14,27 +14,29 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # setup parallel session
   if (is.null(ncores)) ncores <- 20
-  future::plan(future::multisession, workers = ncores)
   
   # Run common operations
-  full <- run_full(params, method = method)
+  full <- run_full(params, method = method, ncores = ncores)
   
   # run analysis for individual sampling
   if (any(sampling == "individual")){
-    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, full = full, method = method, site = FALSE)
+    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, full = full, method = method, site = FALSE, ncores = ncores)
     path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
     write.csv(ind_results, path, row.names = FALSE)
   }
   
   # run analysis for site sampling
   if (any(sampling == "site")){
-    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, full = full, method = method, site = TRUE)
+    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, full = full, method = method, site = TRUE, ncores = ncores)
     path <- here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
 }
 
-run_analysis <- function(params, ns, strats, full, method, site = FALSE) {
+run_analysis <- function(params, ns, strats, full, method, site = FALSE, ncores = 10) {
+  
+  future::plan(future::multisession, workers = ncores)
+  
   results <- future_map(1:nrow(params), \(i) {
     # Skip iteration if files do not exist
     skip_to_next <- skip_check(i, params)
@@ -67,10 +69,16 @@ run_analysis <- function(params, ns, strats, full, method, site = FALSE) {
 
   }, .options = furrr_options(seed = TRUE, packages = get_packages()))
   
+  ## Shut down parallel workers
+  future::plan("sequential")
+  
   return(bind_rows(results))
 }
 
-run_full <- function(params, method, n = 2000){
+run_full <- function(params, method, n = 2000, ncores = 10){
+  
+  future::plan(future::multisession, workers = ncores)
+  
   future_map(
     1:nrow(params),
     \(i) run_full_helper(
@@ -81,6 +89,10 @@ run_full <- function(params, method, n = 2000){
     ),
     .options = furrr_options(seed = TRUE, packages = get_packages())
   )
+  
+  
+  ## Shut down parallel workers
+  future::plan("sequential")
 }
 
 run_full_helper <- function(i, params, method, n = 2000) {
