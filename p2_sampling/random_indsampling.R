@@ -6,7 +6,7 @@ library("doParallel")
 set.seed(42)
 
 cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(cores[1]-10) #not to overload your computer
 registerDoParallel(cl)
 
 for(n in npts){
@@ -21,7 +21,7 @@ for(n in npts){
     if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
     if(skip_to_next) { print("File does not exist:")
       print(params[i,]) } 
-    if(skip_to_next) { result <- NA } 
+    if(skip_to_next) { return(NA) } 
     
     #run sampling
     if(skip_to_next == FALSE){
