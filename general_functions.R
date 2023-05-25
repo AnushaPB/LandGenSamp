@@ -24,7 +24,6 @@ create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx",
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "/nnloci_", paramset, ".csv")}
   
   print(filepath)
   return(filepath)
@@ -80,12 +79,6 @@ get_data <- function(i, params, type){
     df <- get_gsd(filepath)
   }
   
-  if(type == "loci"){
-    filepath <- create_filepath(i, params, type)
-    print(filepath)
-    df <- read.csv(filepath)
-  }
-  
   return(df)
 }
 
@@ -125,9 +118,8 @@ get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling"
 skip_check <- function(i, params){
   gen_filepath <- create_filepath(i, params = params, "gen")
   gsd_filepath <- create_filepath(i, params = params, "gsd")
-  loci_filepath <- create_filepath(i, params = params, "loci")
   skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   return(skip_to_next)
@@ -261,15 +253,16 @@ get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd())
   return(subIDs)
 }
 
+get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7)
 
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
 
 #nloci 
-nloci = 10000
+nloci <- 10000
 #landscape dimensions (square)
-ldim = 100
+ldim <- 100
 #sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
 sitestrats <-  c("rand", "equi", "envgeo")

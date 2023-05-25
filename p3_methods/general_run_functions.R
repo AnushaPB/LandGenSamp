@@ -91,7 +91,6 @@ run_full_helper <- function(i, params, method, n = 2000) {
 
   gen <- get_data(i, params = params, "gen")
   gsd_df <- get_data(i, params = params, "gsd")
-  loci_df <- get_data(i, params = params, "loci")
   
   if (method == "mmrr" | method == "gdm"){
     # Subsample full data randomly
@@ -110,14 +109,13 @@ run_full_helper <- function(i, params, method, n = 2000) {
                               result)
   } else full_result <- NULL
   
-  return(list(gen = gen, gsd_df = gsd_df, loci_df = loci_df, full_result = full_result))
+  return(list(gen = gen, gsd_df = gsd_df, full_result = full_result))
 }
 
 
 run_subsampled <- function(i, params, n, strat, full, site, ...) {
   gen <- full$gen
   gsd_df <- full$gsd_df
-  loci_df <- full$loci_df
   full_result <- full$full_result
   
   subIDs <- get_samples(params[i,], sampstrat = strat, nsamp = n, site = site)
@@ -146,14 +144,13 @@ run_subsampled <- function(i, params, n, strat, full, site, ...) {
     stats <- method_stat(sub_stats, full_stats)
     stats <- bind_cols(sub_stats, stats)
   } else {
-    stats <- run_method(subgen, subgsd_df, loci_df)
+    stats <- run_method(subgen, subgsd_df)
   }
     
   # Save and format new result
   sub_result <- data.frame(params[i,], 
                            sampstrat = strat, 
                            nsamp = n, 
-                           sub_stats, 
                            stats)
   
   return(sub_result)

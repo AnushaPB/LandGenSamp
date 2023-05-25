@@ -1,5 +1,6 @@
 
-run_lfmm <- function(gen, gsd_df, loci_df, K_selection = c("tess", "tracy.widom", "find.clusters", "quick.elbow"), method = c("ridge", "lasso")){
+run_lfmm <- function(gen, gsd_df, K_selection = c("tess", "tracy.widom", "find.clusters", "quick.elbow"), method = c("ridge", "lasso")){
+  loci_df <- get_loci()
   result <-
     expand_grid(K_selection = K_selection, method = method) %>%
     pmap(\(K_selection, method) run_lfmm_helper(K_selection = K_selection, method = method,
