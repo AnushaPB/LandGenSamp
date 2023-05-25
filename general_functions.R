@@ -2,9 +2,8 @@
 # GENERAL FUNCTIONS #
 #####################
 
-#create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
+#create filepath based on params index and data type (e.g. genetic data = gen/dos, geospatial data = gsd, and adaptive loci = loci)
 #REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
-#FOR FILES NOT NESTED IN SUBFOLDERS
 create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")){
   
   #set of parameter names in filepath form
@@ -21,7 +20,7 @@ create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx",
   if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
   if(type == "dos"){filepath <- paste0(datadir, "/dos-", paramset, 
-                                       "_it-", params[i,"it"], ".csv")}
+                                       "_it-", params[i,"it"], "_t-1000_spp-spp_0.csv")}
   
   print(filepath)
   return(filepath)
@@ -259,6 +258,19 @@ get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd())
 
 get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7)
 
+make_dosage <- function(params){
+  future::plan(future::multisession, workers = 20)
+  future_map(
+    1:nrow(params),
+    \(i) {
+      gen <- get_data(i, params = params, "gen")
+      file_path <- create_filepath(i, params, type = "gen")
+      new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
+      new_file_path <- gsub(".vcf", ".csv", new_file_path)
+      write.csv(gen, new_file_path, row.names = FALSE)
+    }, .options = furrr_options(seed = TRUE, packages = get_packages())
+  )
+}
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################

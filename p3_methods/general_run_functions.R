@@ -1,22 +1,9 @@
 
-make_dosage <- function(params){
-  future::plan(future::multisession, workers = 20)
-  future_map(
-    1:nrow(params),
-    \(i) {
-      gen <- get_data(i, params = params, "gen")
-      file_path <- create_filepath(i, params, type = "gen")
-      new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
-      new_file_path <- gsub(".vcf", ".csv", new_file_path)
-      write.csv(gen, new_file_path, row.names = FALSE)
-      }, .options = furrr_options(seed = TRUE, packages = get_packages())
-  )
-}
-
 run_method <- function(method, sampling = c("individual", "site"), ncores = NULL){
   # Parallel processing libraries
   library(furrr)
   library(dplyr)
+  library(here)
   
   # Read in general functions and objects
   source(here("general_functions.R"))
