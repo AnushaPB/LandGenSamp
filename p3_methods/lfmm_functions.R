@@ -10,12 +10,7 @@ run_lfmm <- function(gen, gsd_df, K_selection = c("tess", "tracy.widom", "find.c
   return(result)
 }
 
-
-run_lfmm_helper <- function(K_selection, method, gen, gsd_df, loci_df, K = NULL){
-  return(run_lfmm_general(gen, gsd_df, loci_df, K = K, K_selection = x["K_selection"], method = x["method"]))
-}
-
-run_lfmm_general <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", method = "ridge"){
+run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", method = "ridge"){
   
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
