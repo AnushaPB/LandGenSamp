@@ -1,8 +1,10 @@
-source("general_functions.R")
+
 library("here")
 library("foreach")
 library("doParallel")
 library("vegan")
+
+source(here("general_functions.R"))
 
 set.seed(42)
 
