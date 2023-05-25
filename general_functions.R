@@ -9,7 +9,7 @@ library("stringr")
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
+create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")){
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -90,7 +90,7 @@ get_data <- function(i, params, type){
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs"), site = FALSE){
+get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling", "outputs"), site = FALSE){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
@@ -277,10 +277,10 @@ nsites <- c(9, 16, 25)
 nsamps <- c(36, 81, 144, 225)
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 
-                      phi = c(0.1, 0.5),
+                      phi = c(0.5, 1.0),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0:9)
+                      it = 0)
 
