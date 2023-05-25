@@ -1,7 +1,22 @@
 
+make_dosage <- function(params){
+  future::plan(future::multisession, workers = 20)
+  future_map(
+    1:nrow(params),
+    \(i) {
+      gen <- get_data(i, params = params, "gen")
+      file_path <- create_filepath(i, params, type = "gen")
+      new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
+      new_file_path <- gsub(".vcf", ".csv", new_file_path)
+      write.csv(gen, new_file_path, row.names = FALSE)
+      }, .options = furrr_options(seed = TRUE, packages = get_packages())
+  )
+}
+
 run_method <- function(method, sampling = c("individual", "site"), ncores = NULL){
   # Parallel processing libraries
   library(furrr)
+  library(dplyr)
   
   # Read in general functions and objects
   source(here("general_functions.R"))
@@ -19,7 +34,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # run analysis for individual sampling
   if (any(sampling == "individual")){
-    ind_results <- run_analysis(params, ns = nsamp, strats = sampstrats, full = full, method = method, site = FALSE)
+    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, full = full, method = method, site = FALSE)
     path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
     write.csv(ind_results, path, row.names = FALSE)
   }
@@ -30,12 +45,9 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
     path <- here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
-  
-  #stop cluster
-  stopCluster(cl)
 }
 
-run_analysis <- function(params, ns, strats, full, method, site = FALSE, ...) {
+run_analysis <- function(params, ns, strats, full, method, site = FALSE) {
   results <- future_map(1:nrow(params), \(i) {
     # Skip iteration if files do not exist
     skip_to_next <- skip_check(i, params)
@@ -57,8 +69,7 @@ run_analysis <- function(params, ns, strats, full, method, site = FALSE, ...) {
           strat = strat,
           full = full_i,
           method = method,
-          site = site,
-          ...
+          site = site
         )
       ))
     
@@ -90,7 +101,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
 
-  gen <- get_data(i, params = params, "gen")
+  gen <- get_data(i, params = params, "dos")
   gsd_df <- get_data(i, params = params, "gsd")
   
   if (method == "mmrr" | method == "gdm"){
@@ -114,7 +125,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
 }
 
 
-run_subsampled <- function(i, params, n, strat, full, site, ...) {
+run_subsampled <- function(i, params, n, strat, full, method, site) {
   gen <- full$gen
   gsd_df <- full$gsd_df
   full_result <- full$full_result
@@ -135,7 +146,7 @@ run_subsampled <- function(i, params, n, strat, full, site, ...) {
   }
   
   # Run model on sub data set
-  run_method <- get_method(method, type = "run", ...)
+  run_method <- get_method(method, type = "run")
   
   if (method == "mmrr" | method == "gdm") {
     sub_stats <- run_method(subgen, subgsd_df)
@@ -157,19 +168,19 @@ run_subsampled <- function(i, params, n, strat, full, site, ...) {
   return(sub_result)
 }
 
-get_method <- function(x, type = "run"){
+get_method <- function(method, type = "run"){
   if (type == "run") {
-    if (x == "mmrr") return(run_mmrr)
-    if (x == "gdm") return(run_gdm)
-    if (x == "lfmm") return(run_lfmm)
-    if (x == "rda") return(run_rda)
+    if (method == "mmrr") return(run_mmrr)
+    if (method == "gdm") return(run_gdm)
+    if (method == "lfmm") return(run_lfmm)
+    if (method == "rda") return(run_rda)
   }
   
   if (type == "stat") {
-    if (x == "mmrr") return(stat_mmrr)
-    if (x == "gdm") return(stat_gdm)
-    if (x == "lfmm") return(stat_lfmm)
-    if (x == "rda") return(stat_rda)
+    if (method == "mmrr") return(stat_mmrr)
+    if (method == "gdm") return(stat_gdm)
+    if (method == "lfmm") return(stat_lfmm)
+    if (method == "rda") return(stat_rda)
   }
   
   stop("invalid input")
