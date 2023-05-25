@@ -274,10 +274,10 @@ nsites <- c(9, 16, 25)
 nsamps <- c(36, 81, 144, 225)
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 
-                      phi = c(0.1, 0.5),
+                      phi = c(0.5, 1.0),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0:9)
+                      it = 0)
 
