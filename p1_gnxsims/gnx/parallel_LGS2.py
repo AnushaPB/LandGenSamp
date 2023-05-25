@@ -474,7 +474,7 @@ params = {
 
 # define parameters to vary
 K_array = [1]
-phi_array = [0.5]
+phi_array = [1]
 m_array = [0.25]
 seed_array = [1]
 H_array = [0.5]
