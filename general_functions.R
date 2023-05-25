@@ -1,7 +1,3 @@
-#library to create paths
-library("here")
-library("stringr")
-
 #####################
 # GENERAL FUNCTIONS #
 #####################
@@ -9,7 +5,7 @@ library("stringr")
 #create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
 #REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
 #FOR FILES NOT NESTED IN SUBFOLDERS
-create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p1_gnxsims", "parallel", "LGS_data")){
+create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")){
   
   #set of parameter names in filepath form
   paramset <- paste0("K",params[i,"K"],
@@ -24,6 +20,8 @@ create_filepath <- function(i, params, type, datadir = here(dirname(getwd()), "p
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
+  if(type == "dos"){filepath <- paste0(datadir, "/dos-", paramset, 
+                                       "_it-", params[i,"it"], ".csv")}
   
   print(filepath)
   return(filepath)
@@ -79,11 +77,17 @@ get_data <- function(i, params, type){
     df <- get_gsd(filepath)
   }
   
+  if(type == "dos"){
+    filepath <- create_filepath(i, params, type)
+    print(filepath)
+    df <- read.csv(filepath)
+  }
+  
   return(df)
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, sampstrat, nsamp, outdir = here(dirname(getwd()), "p2_sampling", "outputs"), site = FALSE){
+get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling", "outputs"), site = FALSE){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
