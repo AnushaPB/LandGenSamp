@@ -7,6 +7,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # Read in general functions and objects
   source(here("general_functions.R"))
+  source(here("p3_methods", "general_run_functions.R"))
   source(here("p3_methods", "mmrr_functions.R"))
   source(here("p3_methods", "lfmm_functions.R"))
   source(here("p3_methods", "rda_functions.R"))
