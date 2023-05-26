@@ -16,24 +16,24 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   if (is.null(ncores)) ncores <- 20
   
   # Run common operations
-  full <- run_full(params, method = method, ncores = ncores)
+  if (method == "mmrr" | method == "gdm") full_result <- run_full(params, method = method, ncores = ncores) else full_result <- NULL
   
   # run analysis for individual sampling
   if (any(sampling == "individual")){
-    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, full = full, method = method, site = FALSE, ncores = ncores)
+    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, method = method, full_result = full_result, site = FALSE, ncores = ncores)
     path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
     write.csv(ind_results, path, row.names = FALSE)
   }
   
   # run analysis for site sampling
   if (any(sampling == "site")){
-    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, full = full, method = method, site = TRUE, ncores = ncores)
+    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, method = method, full_result = full_result, site = TRUE, ncores = ncores)
     path <- here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
 }
 
-run_analysis <- function(params, ns, strats, full, method, site = FALSE, ncores = 10) {
+run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 10) {
   
   future::plan(future::multisession, workers = ncores)
   
@@ -43,7 +43,7 @@ run_analysis <- function(params, ns, strats, full, method, site = FALSE, ncores 
     if (skip_to_next) return(NA)
 
     # Get full data for that set of params
-    full_i <- full[[i]]
+    if (!is.null(full_result)) full_result_i <- full_result[[i]] else full_result_i <- NULL
     
     # Create a data frame of all combinations of n and strats
     combinations <- expand.grid(n = ns, strat = strats)
@@ -56,14 +56,14 @@ run_analysis <- function(params, ns, strats, full, method, site = FALSE, ncores 
           params = params,
           n = n,
           strat = strat,
-          full = full_i,
+          full_result = full_result_i,
           method = method,
           site = site
         )
       ))
     
     # Combine with full result if mmrr/gdm
-    if (method == "mmrr" | method == "gdm") results <- bind_rows(results, full_i$full_result)
+    if (!is.null(full_result_i)) results <- bind_rows(results, full_result_i)
     
     return(results)
 
@@ -90,7 +90,6 @@ run_full <- function(params, method, n = 2000, ncores = 10){
     .options = furrr_options(seed = TRUE, packages = get_packages())
   )
   
-  
   ## Shut down parallel workers
   future::plan("sequential")
 }
@@ -103,31 +102,28 @@ run_full_helper <- function(i, params, method, n = 2000) {
   gen <- get_data(i, params = params, "dos")
   gsd_df <- get_data(i, params = params, "gsd")
   
-  if (method == "mmrr" | method == "gdm"){
-    # Subsample full data randomly
-    s <- sample(nrow(gsd_df), n, replace = FALSE)
-    gen_2k <- gen[s,]
-    gsd_df_2k <- gsd_df[s,]
-    
-    # Run model on full data set
-    run_method <- get_method(method, type = "run")
-    result <- run_method(gen_2k, gsd_df_2k)
-    
-    # save and format result
-    full_result <- data.frame(params[i, ],
-                              sampstrat = "full",
-                              nsamp = nrow(gsd_df_2k),
-                              result)
-  } else full_result <- NULL
+  # Subsample full data randomly
+  s <- sample(nrow(gsd_df), n, replace = FALSE)
+  gen_2k <- gen[s,]
+  gsd_df_2k <- gsd_df[s,]
   
-  return(list(gen = gen, gsd_df = gsd_df, full_result = full_result))
+  # Run model on full data set
+  run_method <- get_method(method, type = "run")
+  result <- run_method(gen_2k, gsd_df_2k)
+  
+  # save and format result
+  full_result <- data.frame(params[i, ],
+                            sampstrat = "full",
+                            nsamp = nrow(gsd_df_2k),
+                            result)
+  
+  return(full_result)
 }
 
 
-run_subsampled <- function(i, params, n, strat, full, method, site) {
-  gen <- full$gen
-  gsd_df <- full$gsd_df
-  full_result <- full$full_result
+run_subsampled <- function(i, params, n, strat, full_result, method, site) {
+  gen <- get_data(i, params = params, "dos")
+  gsd_df <- get_data(i, params = params, "gsd")
   
   subIDs <- get_samples(params[i,], sampstrat = strat, nsamp = n, site = site)
   subgen <- gen[subIDs,]
