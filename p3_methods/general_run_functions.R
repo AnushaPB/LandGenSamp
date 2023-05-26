@@ -14,9 +14,9 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   source(here("general_functions.R"))
   source(here("p3_methods", "general_run_functions.R"))
   source(here("p3_methods", "mmrr_functions.R"))
-  source(here("p3_methods", "lfmm_functions.R"))
   source(here("p3_methods", "rda_functions.R"))
   source(here("p3_methods", "gdm_functions.R"))
+  source(here("p3_methods", "lfmm_functions.R"))
   
   # setup parallel session
   if (is.null(ncores)) ncores <- 20

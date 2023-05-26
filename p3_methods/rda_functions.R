@@ -33,8 +33,8 @@ run_rda <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05, correctPC =
   
   # correct pvals and get confusion matrix stats
   # NOTE: https://github.com/Capblancq/RDA-landscape-genomics used a bonferonni correction
-  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, rv, loci_trait1, loci_trait2, sig = 0.05)
-  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, pv, rv, loci_trait1, loci_trait2, sig = 0.10)
+  p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion_rda, pv, rv, loci_trait1, loci_trait2, sig = 0.05)
+  p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion_rda, pv, rv, loci_trait1, loci_trait2, sig = 0.10)
   df <- rbind.data.frame(p05, p10)
   
   return(df)
@@ -81,7 +81,7 @@ rda_cor_helper <- function(envvar, snp){
   return(results)
 }
 
-calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
+calc_confusion_rda <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.05){
   
   #for readibility, just negates the in function
   `%notin%` <- Negate(`%in%`)

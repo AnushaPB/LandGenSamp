@@ -260,7 +260,7 @@ get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7)
 
 make_dosage <- function(params){
   future::plan(future::multisession, workers = 20)
-  future::future_walk(
+  furrr::future_walk(
     1:nrow(params),
     \(i) {
       gen <- get_data(i, params = params, "gen")
