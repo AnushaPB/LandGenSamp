@@ -33,8 +33,8 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~calc_confusion_lfmm(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
-  p10 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~calc_confusion_lfmm(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
+  p05 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
+  p10 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
   pdf <- bind_rows(p05, p10)
   df <- data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = FALSE, pdf)
   
@@ -158,7 +158,7 @@ bestK <- function(tess3_obj, Kvals){
 }
 
 
-calc_confusion_lfmm <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05){
+lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05){
   
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
