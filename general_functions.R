@@ -79,7 +79,7 @@ get_data <- function(i, params, type){
   if(type == "dos"){
     filepath <- create_filepath(i, params, type)
     print(filepath)
-    df <- read.csv(filepath)
+    df <- data.frame(data.table::fread(filepath))
   }
   
   return(df)
