@@ -17,7 +17,7 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   loci_trait2 <- loci_df$trait2 + 1 #add one to convert from python to R indexing
   
   #if K is not specified, it is automatically calculated
-  if(is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection) 
+  if (is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection) 
   
   #gen matrix
   genmat = as.matrix(gen)
