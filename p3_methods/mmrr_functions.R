@@ -79,7 +79,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   # combined env dist
   mmrr_res1 <- MMRR(gendist, Xmats[-4], nperm = 50)
   # seperate env dist
-  mmrr_res2 <- MMRR(gendist, Xmats[-c(1,2)], nperm = 50)
+  mmrr_res2 <- MMRR(gendist, Xmats[-c(1, 2)], nperm = 50)
   
   #turn results into dataframe
   results <- 
@@ -88,6 +88,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
 
   return(results)
 }
+
 
 calc_dist <- function(gen, distmeasure = "euc"){
   if(distmeasure == "bray"){

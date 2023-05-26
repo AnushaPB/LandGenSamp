@@ -20,44 +20,8 @@ coeffs <- function(gdm.model){
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
-  
-  if(distmeasure == "bray"){
-    K <- nrow(gen)
-    nloc <- ncol(gen)
-    ret <- matrix(0,K,K)
-    rownames(ret) <- colnames(ret) <- rownames(gen)
-    for( i in 1:K){
-      for( j in 1:i){
-        if( i != j){
-          ret[i,j] <- ret[j,i] <- sum(apply(gen[ c(i,j), ], 2, min)) / nloc
-        }
-      }
-    }
-    gendist <- ret
-  } else if(distmeasure == "dps"){
-    #DPS GENETIC DISTANCE
-    gen[gen == 0] <- "11"
-    gen[gen == 1] <- "12"
-    gen[gen == 2] <- "22"
-    
-    genindobj <- df2genind(gen, ploidy=2, ncode=1)
-    psh <- propShared(genindobj)
-    dps <- 1 - psh
-    gendist <- dps
-  } else if(distmeasure == "pca"){
-    #perform PCA
-    pc <- prcomp(gen)
-    #Calculate PC distance based on  PCs (MODIFY to make based on % var explained or tracy widom test)
-    #use npcs based on sample size
-    #npcs <- round(nrow(gen)*0.5,0)
-    pc_dist <- as.matrix(dist(pc$x[,1:npcs], diag = TRUE, upper = TRUE))
-    gendist <- range01(pc_dist)
-  } else if(distmeasure == "euc"){
-    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
-  } else {
-    print("appropriate gen dist measure not specified, defaulting to euclidean")
-    gendist <- as.matrix(dist(gen, diag = TRUE, upper = TRUE))
-  }
+  #Format data for GDM  
+  gendist <- calc_dist(gen, distmeasure)
   
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
