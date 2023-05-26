@@ -79,7 +79,7 @@ get_data <- function(i, params, type){
   if(type == "dos"){
     filepath <- create_filepath(i, params, type)
     print(filepath)
-    df <- data.frame(data.table::fread(filepath))
+    df <- read.csv(filepath, row.names = 1)
   }
   
   return(df)
@@ -267,10 +267,12 @@ make_dosage <- function(params){
       file_path <- create_filepath(i, params, type = "gen")
       new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
       new_file_path <- gsub(".vcf", ".csv", new_file_path)
-      write.csv(gen, new_file_path, row.names = FALSE)
+      write.csv(gen, new_file_path, row.names = TRUE)
     }, .options = furrr_options(seed = TRUE, packages = get_packages())
   )
+  future::plan("sequential")
 }
+
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
