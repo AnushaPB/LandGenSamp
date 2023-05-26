@@ -1,16 +1,16 @@
 
-run_lfmm <- function(gen, gsd_df, K_selection = c("tess", "tracy.widom", "find.clusters", "quick.elbow"), method = c("ridge", "lasso")){
+run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge")){
   loci_df <- get_loci()
   result <-
-    expand_grid(K_selection = K_selection, method = method) %>%
-    pmap(\(K_selection, method) run_lfmm_helper(K_selection = K_selection, method = method,
+    expand_grid(K_selection = K_selection, lfmm_method = lfmm_method) %>%
+    pmap(\(K_selection, lfmm_method) run_lfmm_helper(K_selection = K_selection, lfmm_method = lfmm_method,
                                                 gen = gen, gsd_df = gsd_df, loci_df = loci_df)) %>%
     bind_rows()
   
   return(result)
 }
 
-run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", method = "ridge"){
+run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", lfmm_method = "ridge"){
   
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 + 1 #add one to convert from python to R indexing
@@ -28,15 +28,15 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   
   #BOTH ENV
   #run model
-  if (method == "ridge") lfmm_mod <- tryCatch(lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
-  if (method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
-  if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = method, NULL_mod = TRUE))
+  if (lfmm_method == "ridge") lfmm_mod <- tryCatch(lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
+  if (lfmm_method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
+  if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
   p05 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05)
   p10 <- purrr::map_dfr(c("none", "fdr", "holm", "bonferroni"), calc_confusion, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.10)
   pdf <- rbind.data.frame(p05, p10)
-  df <- data.frame(K = K, K_method = K_selection, lfmm_method = method, NULL_mod = FALSE, pdf)
+  df <- data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = FALSE, pdf)
   
   return(df)
 }

@@ -3,7 +3,12 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   # Parallel processing libraries
   library(furrr)
   library(dplyr)
+  library(tidyr)
   library(here)
+  library(vcfR)
+  library(lfmm)
+  library(gdm)
+  library(vegan)
   
   # Read in general functions and objects
   source(here("general_functions.R"))
@@ -43,8 +48,12 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
     skip_to_next <- skip_check(i, params)
     if (skip_to_next) return(NA)
 
-    # Get full data for that set of params
+    # Get full result
     if (!is.null(full_result)) full_result_i <- full_result[[i]] else full_result_i <- NULL
+    
+    # Get full data
+    gen <- get_data(i, params = params, "dos")
+    gsd_df <- get_data(i, params = params, "gsd")
     
     # Create a data frame of all combinations of n and strats
     combinations <- expand.grid(n = ns, strat = strats)
@@ -57,6 +66,8 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
           params = params,
           n = n,
           strat = strat,
+          gen = gen, 
+          gsd_df = gsd_df,
           full_result = full_result_i,
           method = method,
           site = site
@@ -68,12 +79,15 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
     
     return(results)
 
-  }, .options = furrr_options(seed = TRUE, packages = get_packages()))
+  }, .options = furrr_options(seed = TRUE, packages = get_packages()), .progress = TRUE)
+  
+  results <- bind_rows(results)
+  print(results)
   
   ## Shut down parallel workers
   future::plan("sequential")
   
-  return(bind_rows(results))
+  return(results)
 }
 
 run_full <- function(params, method, n = 2000, ncores = 10){
@@ -122,9 +136,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
 }
 
 
-run_subsampled <- function(i, params, n, strat, full_result, method, site) {
-  gen <- get_data(i, params = params, "dos")
-  gsd_df <- get_data(i, params = params, "gsd")
+run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method, site) {
   
   subIDs <- get_samples(params[i,], sampstrat = strat, nsamp = n, site = site)
   subgen <- gen[subIDs,]
