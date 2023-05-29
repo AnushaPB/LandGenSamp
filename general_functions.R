@@ -256,7 +256,8 @@ get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd())
   return(subIDs)
 }
 
-get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7)
+# make loci_df and convert from python to R indexing by adding 1
+get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7) + 1
 
 make_dosage <- function(params){
   future::plan(future::multisession, workers = 20)

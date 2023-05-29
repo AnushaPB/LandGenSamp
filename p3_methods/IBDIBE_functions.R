@@ -1,3 +1,86 @@
+
+###########
+#   GDM   #
+###########
+
+# Sum coefficients for each predictor (each has 3 splines)
+coeffs <- function(gdm.model){
+  coefSums <- c()
+  for (i in 1:length(gdm.model$predictors)){
+    j <- (i * 3) - 2
+    coefSums[i] <- sum(gdm.model$coefficients[j:(j+2)])
+  }
+  
+  # Add those values to a simple data frame
+  coeffs <- data.frame(predictor = gdm.model$predictors, coefficient = coefSums)
+  return(coeffs)
+}
+
+#for scaling genetic distances from 0 to 1 for GDM
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
+  #Format data for GDM  
+  gendist <- calc_dist(gen, distmeasure)
+  
+  #Format gdm dataframe
+  site <- 1:nrow(gendist) #vector of sites
+  gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
+  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
+  gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "Longitude", YColumn = "Latitude", siteCol = "site")
+  
+  #scale distance from 01
+  gdmData$distance <- range01(gdmData$distance) 
+  
+  #run GDM
+  gdm.model <- gdm(gdmData, geo = TRUE)
+  
+  if(is.null(gdm.model)){
+    #turn results into dataframe
+    results <- data.frame(env1_coeff = NA,
+                          env2_coeff = NA,
+                          geo_coeff = NA,
+                          ratio = NA,
+                          env1_p = NA,
+                          env2_p = NA,
+                          geo_p = NA)
+  } else {
+    predictors <- coeffs(gdm.model)
+    predictors
+    
+    # turn results into dataframe
+    results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
+                          env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
+                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
+    results$ratio <- (abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
+    
+    # get pvalues
+    safe_gdm.varImp <- safely(gdm.varImp)
+    modTest <- safe_gdm.varImp(gdmData, geo = T, nPerm = 50, parallel = F, predSelect = F)
+    if (is.null(modTest$error)) {
+      pvals <- modTest$result$`Predictor p-values`
+      pvals$var <- row.names(pvals)
+      pvals <- left_join(data.frame(var = c("Geographic", "env1", "env2")), pvals)
+      results <- data.frame(results,
+                 env1_p = pvals[pvals$var == "env1", 2],
+                 env2_p = pvals[pvals$var == "env2", 2],
+                 geo_p = pvals[pvals$var == "Geographic", 2])
+    } else {
+      results <- data.frame(results,
+                            env1_p = NA,
+                            env2_p = NA,
+                            geo_p = NA)
+    }
+    
+  }
+  
+  
+  #remove rownames
+  rownames(results) <- NULL
+  
+  return(results)
+}
+
 ############
 #   MMRR   #
 ############
@@ -7,11 +90,12 @@
 # Y is a dependent distance matrix
 # X is a list of independent distance matrices (with optional names)
 
+# NOTE: adjusted for sims
 MMRR<-function(Y,X,nperm=50){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
   y<-unfold(Y)
-  if(is.null(names(X)))names(X)<-paste("X",1:length(X),sep="")
+  if(is.null(names(X))) names(X) <- paste("X",1:length(X),sep="")
   Xmats<-sapply(X,unfold)
   fit<-lm(y~Xmats)
   coeffs<-fit$coefficients
@@ -37,11 +121,19 @@ MMRR<-function(Y,X,nperm=50){
   tp<-tprob/(nperm+1)
   Fp<-Fprob/(nperm+1)
   names(r.squared)<-"r.squared"
-  names(coeffs)<-c("Intercept",names(X))
-  names(tstat)<-paste(c("Intercept",names(X)),"(t)",sep="")
-  names(tp)<-paste(c("Intercept",names(X)),"(p)",sep="")
+  
+  stat_df <- data.frame(coeffs, vars = names(coeffs))
+  stat_df <- merge(stat_df, data.frame(tstat, vars = names(tstat)), all = TRUE)
+  stat_df <- merge(stat_df, data.frame(tp, vars = names(tstat)), all = TRUE)
+  stat_df$vars <- c("Intercept",names(X))
+  tstat <- stat_df$tstat
+  tp <- stat_df$tp
+  coeffs <- stat_df$coeffs 
+  names(coeffs) <- names(tstat) <- names(tp) <- stat_df$vars
+  
   names(Fstat)<-"F-statistic"
   names(Fp)<-"F p-value"
+  
   return(list(r.squared=r.squared,
               coefficients=coeffs,
               tstatistic=tstat,
@@ -85,10 +177,31 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   results <- 
     map2(list(mmrr_res1, mmrr_res2), list("mod1", "mod2"), mmrr_results_df) %>% 
     bind_cols()
-
+  
   return(results)
 }
 
+
+mmrr_results_df <- function(x, name = NULL){
+  #create data frame of results
+  df <- 
+    data.frame(coeff = x$coefficients, p = x$tpvalue, var = names(x$coefficients)) %>%
+    mutate(var = case_when(var == "geography" ~ "geo", .default = var)) %>%
+    filter(var != "Intercept") %>%
+    pivot_wider(names_from = var, values_from = c(coeff, p), names_glue = "{var}_{.value}")
+  
+  env_cols <- grepl("env", names(df)) & grepl("coeff", names(df))
+  geo_cols <- grepl("geo", names(df)) & grepl("coeff", names(df))
+  df$ratio <- sum(abs(df[,env_cols]), na.rm = TRUE)/abs(as.numeric(df[,geo_cols]))
+  
+  if (!is.null(name)) colnames(df) <- paste0(colnames(df), "_", name)
+  
+  return(df)
+}
+
+###############
+#   GENERAL   #
+###############
 
 calc_dist <- function(gen, distmeasure = "euc"){
   if(distmeasure == "bray"){
@@ -135,24 +248,7 @@ calc_dist <- function(gen, distmeasure = "euc"){
 }
 
 
-mmrr_results_df <- function(x, name = NULL){
-  #create data frame of results
-  df <- 
-    data.frame(coeff = x$coefficients, p = x$tpvalue, var = names(x$coefficients)) %>%
-    mutate(var = case_when(var == "geography" ~ "geo", .default = var)) %>%
-    filter(var != "Intercept") %>%
-    pivot_wider(names_from = var, values_from = c(coeff, p), names_glue = "{var}_{.value}")
-  
-  env_cols <- grepl("env", names(df)) & grepl("coeff", names(df))
-  geo_cols <- grepl("geo", names(df)) & grepl("coeff", names(df))
-  df$ratio <- sum(abs(df[,env_cols]))/abs(as.numeric(df[,geo_cols]))
-  
-  if (!is.null(name)) colnames(df) <- paste0(colnames(df), "_", name)
-  
-  return(df)
-}
-
-mmrr_stats <- function(sub, full, sig = 0.05){
+stat_ibdibe <- function(sub, full, sig = 0.05){
   err_cols <- colnames(sub)[grepl("coeff", colnames(sub)) | grepl("ratio", colnames(sub))]
   err <- map(err_cols, ~err_coeff(full[.x], sub[.x])) %>% bind_cols()
   ae <- abs(err)

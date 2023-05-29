@@ -22,7 +22,10 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   if (is.null(ncores)) ncores <- 20
   
   # Run common operations
-  if (method == "mmrr" | method == "gdm") full_result <- run_full(params, method = method, ncores = ncores) else full_result <- NULL
+  if (method == "mmrr" | method == "gdm" | method == "lfmm_fullK") 
+    full_result <- run_full(params, method = method, ncores = ncores)
+  else
+    full_result <- NULL
   
   # run analysis for individual sampling
   if (any(sampling == "individual")){
@@ -82,7 +85,6 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
   }, .options = furrr_options(seed = TRUE, packages = get_packages()), .progress = TRUE)
   
   results <- bind_rows(results)
-  print(results)
   
   ## Shut down parallel workers
   future::plan("sequential")
@@ -94,7 +96,7 @@ run_full <- function(params, method, n = 2000, ncores = 10){
   
   future::plan(future::multisession, workers = ncores)
   
-  future_map(
+  results <- future_map(
     1:nrow(params),
     \(i) run_full_helper(
       i,
@@ -102,11 +104,14 @@ run_full <- function(params, method, n = 2000, ncores = 10){
       method = method,
       n = n
     ),
-    .options = furrr_options(seed = TRUE, packages = get_packages())
+    .options = furrr_options(seed = TRUE, packages = get_packages()),
+    .progress = TRUE
   )
   
   ## Shut down parallel workers
   future::plan("sequential")
+  
+  return(results)
 }
 
 run_full_helper <- function(i, params, method, n = 2000) {
@@ -123,8 +128,13 @@ run_full_helper <- function(i, params, method, n = 2000) {
   gsd_df_2k <- gsd_df[s,]
   
   # Run model on full data set
-  run_method <- get_method(method, type = "run")
-  result <- run_method(gen_2k, gsd_df_2k)
+  if (method == "lfmm_fullK") {
+    K <- get_K_tess(gen2k, coords = gsd2k[,c("x", "y")], Kvals = 1:9)
+    result <- data.frame(K_factor = K)
+  } else {
+    run_method <- get_method(method, type = "run")
+    result <- run_method(gen_2k, gsd_df_2k)
+  }
   
   # save and format result
   full_result <- data.frame(params[i, ],
@@ -136,7 +146,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
 }
 
 
-run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method, site) {
+run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method, site, full_K = FALSE) {
   
   subIDs <- get_samples(params[i,], sampstrat = strat, nsamp = n, site = site)
   subgen <- gen[subIDs,]
@@ -163,6 +173,10 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     method_stat <- get_method(method, type = "stat")
     stats <- method_stat(sub_stats, full_stats)
     stats <- bind_cols(sub_stats, stats)
+  } 
+  
+  if (method == "lfmm_fullK") {
+    stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor)
   } else {
     stats <- run_method(subgen, subgsd_df)
   }
@@ -185,15 +199,13 @@ get_method <- function(method, type = "run"){
   }
   
   if (type == "stat") {
-    if (method == "mmrr") return(stat_mmrr)
-    if (method == "gdm") return(stat_gdm)
-    if (method == "lfmm") return(stat_lfmm)
-    if (method == "rda") return(stat_rda)
+    if (method == "mmrr") return(stat_ibdibe)
+    if (method == "gdm") return(stat_ibdibe)
   }
   
   stop("invalid input")
 }
 
 get_packages <- function(){
-  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan")
+  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue")
 }
