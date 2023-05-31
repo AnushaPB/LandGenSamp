@@ -71,5 +71,6 @@ p1_gnxsims/parallel/test_parallel_LGS.pyout
 
 #keep genomic architecture file
 !genomic_architecture.csv
+!genomic_architecture2.csv
 plots/GEA_ind_figure.ai
 *.ai

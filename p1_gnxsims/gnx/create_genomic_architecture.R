@@ -32,6 +32,15 @@ df$alpha[1:8] <- rep(c(0.25, -0.25), 4)
 #I have accounted for this in the rest of the R code
 
 #write out file
-path <- here(dirname(getwd()), "p1_gnxsims", "gnx", "genomic_architecture.csv")
+path <- here("p1_gnxsims", "gnx", "genomic_architecture.csv")
 write.csv(df, path, row.names = FALSE)
 
+# genomic architecture 2
+df$trait <- NA
+df$alpha <- NA
+df$trait[1:2] <- "trait_1"
+df$trait[3:4] <- "trait_2"
+#set alpha for trait related loci to cover phenotype spectrum
+df$alpha[1:4] <- rep(c(0.5, -0.5), 2)
+path <- here("p1_gnxsims", "gnx", "genomic_architecture2.csv")
+write.csv(df, path, row.names = FALSE)
