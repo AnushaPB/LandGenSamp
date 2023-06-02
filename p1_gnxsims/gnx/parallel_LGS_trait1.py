@@ -264,7 +264,7 @@ params = {
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
-                    'gen_arch_file': "genomic_architecture2.csv",
+                    'gen_arch_file': "genomic_architecture3.csv",
                     # num of loci
                     'L': 10000,
                     # num of chromosomes (doesn't matter when there is no linkage)
@@ -314,11 +314,11 @@ params = {
                             # polygenic selection coefficient
                             'phi': phi,
                             # number of loci underlying trait
-                            'n_loci': 2,
+                            'n_loci': 4,
                             # mutation rate at loci underlying trait
                             'mu': 0,
                             # mean of distr of effect sizes
-                            'alpha_distr_mu': 0.5,
+                            'alpha_distr_mu': 0.25,
                             # variance of distr of effect size
                             'alpha_distr_sigma': 0,
                             # max allowed magnitude for an alpha value
@@ -328,32 +328,6 @@ params = {
                             # whether the trait is universally advantageous
                             'univ_adv': False
                         },  # <END> trait 0
-
-                        # --------------------------#
-                        # --- trait 2 parameters ---#
-                        # --------------------------#
-                        # trait name (TRAIT NAMES MUST BE UNIQUE!)
-                        'trait_2': {
-                            # trait-selection Layer name
-                            'layer': 'lyr_2',
-                            # polygenic selection coefficient
-                            'phi': phi,
-                            # number of loci underlying trait
-                            'n_loci': 2,
-                            # mutation rate at loci underlying trait
-                            'mu': 0,
-                            # mean of distr of effect sizes
-                            'alpha_distr_mu': 0.5,
-                            # variance of distr of effect size
-                            'alpha_distr_sigma': 0,
-                            # max allowed magnitude for an alpha value
-                            'max_alpha_mag': None,
-                            # curvature of fitness function
-                            'gamma': 1,
-                            # whether the trait is universally advantageous
-                            'univ_adv': False
-                        },  # <END> trait 0
-
                         #### NOTE: Individual Traits' sections can be copy-and-pasted (and
                         #### assigned distinct keys and names), to create additional Traits.
 
@@ -509,7 +483,7 @@ def run_sims(sim_list, params):
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
-    path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+    path_to_file = "trait_GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
     if exists(path_to_file):
         print(mod_name + " exists, skipping")
     else:
@@ -528,7 +502,7 @@ def run_sims(sim_list, params):
         params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
+        #params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
         
         # creates a unique random seed for every parameter set
         params['model']['num'] = int(simseed)
