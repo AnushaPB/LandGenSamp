@@ -161,17 +161,14 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   ##get env vars and coords
   env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
   env_dist2 <- as.matrix(dist(gsd_df$env2, diag = TRUE, upper = TRUE))
-  combo_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
+  env_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
-  
-  #format X matrices
-  Xmats <- list(env1 = env_dist1, env2 = env_dist2, geography = geo_dist, env = combo_dist)
-  
+
   #Run  MMRR
+  # separate env dist
+  mmrr_res1 <- MMRR(gendist, list(geo = geo_dist, env1 = env_dist1, env2 = env_dist2), nperm = 50)
   # combined env dist
-  mmrr_res1 <- MMRR(gendist, Xmats[-4], nperm = 50)
-  # seperate env dist
-  mmrr_res2 <- MMRR(gendist, Xmats[-c(1, 2)], nperm = 50)
+  mmrr_res2 <- MMRR(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
   
   #turn results into dataframe
   results <- 
@@ -186,7 +183,6 @@ mmrr_results_df <- function(x, name = NULL){
   #create data frame of results
   df <- 
     data.frame(coeff = x$coefficients, p = x$tpvalue, var = names(x$coefficients)) %>%
-    mutate(var = case_when(var == "geography" ~ "geo", .default = var)) %>%
     filter(var != "Intercept") %>%
     pivot_wider(names_from = var, values_from = c(coeff, p), names_glue = "{var}_{.value}")
   
