@@ -1,8 +1,8 @@
 
-run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge"), K = NULL){
+run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge"), K = NULL, loci_df = NULL, Kvals = 1:9){
   
   # get adaptive loci
-  loci_df <- get_loci()
+  if (is.null(loci_df)) loci_df <- get_loci()
   
   # if K is provided, run with that K
   if (!is.null(K)) return(run_lfmm_helper(gen = gen, gsd_df = gsd_df, loci_df = loci_df, K = K))
@@ -11,20 +11,20 @@ run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridg
   result <-
     expand_grid(K_selection = K_selection, lfmm_method = lfmm_method) %>%
     pmap(\(K_selection, lfmm_method) run_lfmm_helper(K_selection = K_selection, lfmm_method = lfmm_method,
-                                                gen = gen, gsd_df = gsd_df, loci_df = loci_df)) %>%
+                                                gen = gen, gsd_df = gsd_df, loci_df = loci_df, Kvals = Kvals)) %>%
     bind_rows()
   
   return(result)
 }
 
-run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", lfmm_method = "ridge"){
+run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", lfmm_method = "ridge", Kvals = 1:9){
   
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 
   loci_trait2 <- loci_df$trait2 
   
   #if K is not specified, it is automatically calculated
-  if (is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection) 
+  if (is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection, Kvals = Kvals) 
   
   #gen matrix
   genmat = as.matrix(gen)
@@ -35,13 +35,13 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   
   #BOTH ENV
   #run model
-  if (lfmm_method == "ridge") lfmm_mod <- tryCatch(lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
-  if (lfmm_method == "lasso") lfmm_mod <- tryCatch(lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
+  if (lfmm_method == "ridge") lfmm_mod <- tryCatch(lfmm::lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
+  if (lfmm_method == "lasso") lfmm_mod <- tryCatch(lfmm::lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
   if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
   p05 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
-  p10 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
+  p10 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.10))
   pdf <- bind_rows(p05, p10)
   df <- data.frame(K_factor = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = FALSE, pdf)
   
@@ -50,7 +50,7 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
 
 
 # function to determine K
-get_K <- function(gen, coords = NULL, K_selection = "find.clusters", ...){
+get_K <- function(gen, coords = NULL, K_selection = "find.clusters", Kvals = 1:9, ...){
   
   if(K_selection == "tracy.widom") K <- get_K_tw(gen)
   
@@ -58,7 +58,7 @@ get_K <- function(gen, coords = NULL, K_selection = "find.clusters", ...){
   
   if(K_selection == "find.clusters") K <- get_K_fc(gen)
   
-  if(K_selection == "tess") K <- get_K_tess(gen, coords)
+  if(K_selection == "tess") K <- get_K_tess(gen, coords, Kvals = Kvals)
   
   return(K)
 }
@@ -125,7 +125,7 @@ get_K_tw <- function(gen, maxK = NULL){
   K <- tw_result$SigntEigenL
   
   # if none are significant, return 1
-  if(K == 0) K <- 1
+  if (K == 0) K <- 1
   
   plot(eig)
   abline(v = K)
@@ -179,6 +179,7 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
   # adjust pvalues (or passs through if padj = "none")
   pvalues <-  data.frame(env1 = p.adjust(pv$calibrated.pvalue[,1], method = padj),
                          env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
+  rownames(pvalues) <- colnames(genmat)
   
   # calculate roc and pr 
   pr1 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc.integral
@@ -241,6 +242,8 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
   TNRCOMBO <- TN/(TN + FP)
   #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
+  # correct FDR if 0 is in the denom
+  if ((FP + TP == 0) & FP == 0) FDRCOMBO <- 0
   #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
   
@@ -280,9 +283,9 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
 #   RDA    #
 ############
 
-run_rda <- function(gen, gsd_df){
+run_rda <- function(gen, gsd_df, loci_df = NULL){
   # get loci
-  loci_df <- get_loci()
+  if (is.null(loci_df)) loci_df <- get_loci()
   
   # run pRDA
   # run analysis using sample
@@ -446,6 +449,7 @@ rda_calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.0
   TNRCOMBO <- TN/(TN + FP)
   #calc False Discovery Rate 
   FDRCOMBO <- FP/(FP + TP)
+  if ((FP + TP == 0) & FP == 0) FDRCOMBO <- 0
   #calc False Positive Rate 
   FPRCOMBO <- FP/(FP + TN)
   
@@ -481,3 +485,4 @@ rdadapt <- function(rda,K)
   q.values_rdadapt<-qval$qvalues
   return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
+
