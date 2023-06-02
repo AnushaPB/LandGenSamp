@@ -287,6 +287,7 @@ sampstrats <- c("rand", "grid", "trans", "envgeo")
 sitestrats <-  c("rand", "equi", "envgeo")
 nsites <- c(9, 16, 25)
 nsamps <- c(36, 81, 144, 225)
+npts <- nsamps
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 
                       phi = c(0.5, 1.0),
@@ -294,5 +295,5 @@ params <- expand.grid(K = c(1,2),
                       seed = c(1, 2, 3),
                       H = c(0.05 , 0.5),
                       r = c(0.3, 0.6),
-                      it = 0)
+                      it = 0:9)
 
