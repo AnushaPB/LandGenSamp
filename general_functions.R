@@ -45,19 +45,13 @@ get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   #assign IDs to rownames
   rownames(gsd_df) <- gsd_df$idx
-  #extract env values
-  gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-  #extract trait values (figure out the regex way to do this later)
-  #remove brackets
-  z <- gsub("\\[|\\]", "", gsd_df$z)
-  #split on comma
-  z <- stringr::str_split_fixed(z, ", ", n=2)
-  #change to numeric
-  z <- apply(z, 2, as.numeric)
-  #add back to df
-  gsd_df$z1 <- z[,1]
-  gsd_df$z2 <- z[,2]
+  #extract env and z values
+  gsd_df <- gsd_df %>%
+    tidyr::extract(z, into = c("z1", "z2"), regex = "\\[(.*), (.*)\\]", remove = FALSE) %>%
+    tidyr::extract(e, into = c("env0", "env1", "env2"), regex = "\\[(.*), (.*), (.*)\\]", remove = FALSE) %>%
+    dplyr::mutate(across(c(z1, z2, env0, env1, env2), as.numeric))
+  #correct coordinates
+  gsd_df$y <- -gsd_df$y
   return(gsd_df)
 }
 
@@ -272,6 +266,11 @@ make_dosage <- function(params){
     }, .options = furrr_options(seed = TRUE, packages = get_packages())
   )
   future::plan("sequential")
+}
+
+which0 <- function(x){
+  y <- which(x)
+  if (length(y) == 0) return(0) else return(y)
 }
 
 ######################################################
