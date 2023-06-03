@@ -491,7 +491,7 @@ sim_array = np.append(sim_array, sim_seeds, 1)
 # directory where input/output data will be stored
 #FIX THIS SO IT ISN'T A HARD PATH
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
-dir = "/home/wanglab/DataDrive/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
+dir = "/media/wanglab/DataDrive/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
 def run_sims(sim_list, params):

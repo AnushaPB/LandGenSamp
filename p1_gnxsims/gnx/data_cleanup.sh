@@ -21,9 +21,6 @@ find data -type f -print0 | xargs -0 mv -t LGS_data
 #remove the temp directory
 rm -r data
 
-#find all the files in nnloci and move them to the final dir
-find nnloci -type f -print0 | xargs -0 mv -t LGS_data
-
 #move into the final dir
 cd LGS_data
 
