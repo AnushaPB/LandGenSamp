@@ -276,6 +276,10 @@ which0 <- function(x){
   if (length(y) == 0) return(0) else return(y)
 }
 
+
+get_packages <- function(){
+  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
+}
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
