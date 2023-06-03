@@ -266,7 +266,7 @@ make_dosage <- function(params){
       new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
       new_file_path <- gsub(".vcf", ".csv", new_file_path)
       write.csv(gen, new_file_path, row.names = TRUE)
-    }, .options = furrr_options(seed = TRUE, packages = get_packages())
+    }, .options = furrr::furrr_options(seed = TRUE, packages = get_packages())
   )
   future::plan("sequential")
 }
