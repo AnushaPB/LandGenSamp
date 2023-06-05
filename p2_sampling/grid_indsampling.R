@@ -35,14 +35,13 @@ grid_samp <- function(pts, npts, ldim){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(5) 
 registerDoParallel(cl)
 
 for(n in npts){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
-    
+    library("tidyverse")
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
