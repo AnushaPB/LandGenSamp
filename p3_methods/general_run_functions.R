@@ -13,10 +13,8 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   # Read in general functions and objects
   source(here("general_functions.R"))
   source(here("p3_methods", "general_run_functions.R"))
-  source(here("p3_methods", "mmrr_functions.R"))
-  source(here("p3_methods", "rda_functions.R"))
-  source(here("p3_methods", "gdm_functions.R"))
-  source(here("p3_methods", "lfmm_functions.R"))
+  source(here("p3_methods", "GEA_functions.R"))
+  source(here("p3_methods", "IBDIBE_functions.R"))
   
   # setup parallel session
   if (is.null(ncores)) ncores <- 20
@@ -42,7 +40,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   }
 }
 
-run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 10) {
+run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 20) {
   
   future::plan(future::multisession, workers = ncores)
   
@@ -204,8 +202,4 @@ get_method <- function(method, type = "run"){
   }
   
   stop("invalid input")
-}
-
-get_packages <- function(){
-  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
 }
