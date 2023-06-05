@@ -7,6 +7,8 @@ source(here("general_functions.R"))
 set.seed(42)
 
 grid_samp <- function(pts, npts, ldim){
+  # switch coordinates back to positive y to sample grid
+  pts$y <- -pts$y
   inc <- ldim/sqrt(npts)
   xgrid <- ygrid <- seq(0, ldim, inc) 
   subs <- c()
@@ -35,14 +37,13 @@ grid_samp <- function(pts, npts, ldim){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(5) 
 registerDoParallel(cl)
 
 for(n in npts){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
-    
+    library("tidyverse")
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     

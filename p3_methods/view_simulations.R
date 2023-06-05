@@ -11,8 +11,14 @@ ggfacet <- function(df, cols, nrow = 1) {
     mutate(name = factor(name, levels = cols))
   gg <- 
     ggplot(data = df2, aes(x = x, y = y, col = value)) + 
-    geom_point() + 
-    facet_wrap(~name, nrow = nrow) 
+    geom_point(alpha = 1, cex = 0.5) + 
+    facet_wrap(~name, nrow = nrow) +
+    theme_bw() + 
+    coord_equal() +
+    scale_color_viridis_c(option = "viridis") + 
+    ggtitle(tc) + 
+    theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), 
+          panel.grid.major  = element_blank(), panel.grid.minor = element_blank())
   return(gg)
 }
 
@@ -27,19 +33,14 @@ plot_params <- function(i, params){
   tc <- paste(paste0(tp$name, ": ", tp$val), collapse = " | ")
 
   df <- bind_cols(gsd, gen/2)
-  df <- df[,c("env1", "z1", "0_0", "0_1", 
-              "env2", "z2", "0_2", "0_3",
-              "0_5", "0_6", "0_7", "0_8", 
+  df <- df[,c("env1", "z1", "X0_0", "X0_1", "X0_2", "X0_3",
+              "env2", "z2", "X0_4", "X0_5", "X0_6", "X0_7",
+              "X0_8", "X0_9", "X0_10", "X0_11", "X0_12", "X0_13", 
               "x", "y")]
   plt <- 
-    ggfacet(df, c("env1", "z1", "0_0", "0_1", 
-                "env2", "z2", "0_2", "0_3",
-                "0_5", "0_6", "0_7", "0_8"), nrow = 3) + 
-    theme_bw() + 
-    coord_equal() +
-    scale_color_viridis_c(option = "viridis") + 
-    ggtitle(tc) + 
-    theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank())
+    ggfacet(df, c("env1", "z1", "X0_0", "X0_1", "X0_2", "X0_3",
+                "env2", "z2", "X0_4", "X0_5", "X0_6", "X0_7",
+                "X0_8", "X0_9", "X0_10", "X0_11", "X0_12", "X0_13"), nrow = 3)
   
   print(plt)
   return(data.frame(params[i,], df))
@@ -51,3 +52,12 @@ dev.off()
 
 dfs <- dfs %>% bind_rows()
 write.csv(dfs, "example_df.csv", row.names = FALSE)
+
+df <- read.csv(here("p3_methods", "example_df.csv"))
+head(df)
+
+df %>%
+  filter(K == 1, phi == 0.5, m == 0.25, seed == 1, H == 0.05, r == 0.3) %>%
+  ggfacet(c("env1", "z1", "X0_0", "X0_1", "X0_2", "X0_3",
+            "env2", "z2", "X0_4", "X0_5", "X0_6", "X0_7",
+            "X0_8", "X0_9", "X0_10", "X0_11", "X0_12", "X0_13"), nrow = 3)
