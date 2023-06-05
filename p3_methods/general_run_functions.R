@@ -40,11 +40,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   }
 }
 
-<<<<<<< HEAD
 run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
-=======
-run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 20) {
->>>>>>> 570c0a0e7972798da8a04d45612b5658bf16968f
   
   future::plan(future::multisession, workers = ncores)
   
@@ -208,9 +204,12 @@ get_method <- function(method, type = "run"){
   stop("invalid input")
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 get_packages <- function(){
   c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
 }
+=======
+>>>>>>> 570c0a0e7972798da8a04d45612b5658bf16968f
 =======
 >>>>>>> 570c0a0e7972798da8a04d45612b5658bf16968f
