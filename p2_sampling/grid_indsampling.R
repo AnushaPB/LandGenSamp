@@ -7,6 +7,8 @@ source(here("general_functions.R"))
 set.seed(42)
 
 grid_samp <- function(pts, npts, ldim){
+  # switch coordinates back to positive y to sample grid
+  pts$y <- -pts$y
   inc <- ldim/sqrt(npts)
   xgrid <- ygrid <- seq(0, ldim, inc) 
   subs <- c()
