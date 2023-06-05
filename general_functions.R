@@ -256,21 +256,6 @@ get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd())
 # make loci_df and convert from python to R indexing by adding 1
 get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7) + 1
 
-make_dosage <- function(params){
-  future::plan(future::multisession, workers = 20)
-  furrr::future_walk(
-    1:nrow(params),
-    \(i) {
-      gen <- get_data(i, params = params, "gen")
-      file_path <- create_filepath(i, params, type = "gen")
-      new_file_path <- gsub("mod-(.*?)_", "dos-\\1_", file_path)
-      new_file_path <- gsub(".vcf", ".csv", new_file_path)
-      write.csv(gen, new_file_path, row.names = TRUE)
-    }, .options = furrr_options(seed = TRUE, packages = get_packages())
-  )
-  future::plan("sequential")
-}
-
 which0 <- function(x){
   y <- which(x)
   if (length(y) == 0) return(0) else return(y)
