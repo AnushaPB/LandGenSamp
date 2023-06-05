@@ -449,7 +449,7 @@ params = {
 # define parameters to vary
 K_array = [2]
 phi_array = [1]
-m_array = [1]
+m_array = [0.25]
 seed_array = [1]
 H_array = [0.5]
 r_array = [0.3]
@@ -479,7 +479,7 @@ def run_sims(sim_list, params):
     simseed = float(sim_list[6])
 
     #create mod name
-    mod_name = "loci4_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "trait_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists

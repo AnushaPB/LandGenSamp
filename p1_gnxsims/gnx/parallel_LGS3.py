@@ -388,7 +388,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 1,
+            'n_its': 10,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -473,12 +473,12 @@ params = {
 }  # <END> params
 
 # define parameters to vary
-K_array = [1, 2]
+K_array = [2]
 phi_array = [1]
-m_array = [0.25, 1.00]
-seed_array = [1, 2, 3]
-H_array = [0.05, 0.5]
-r_array = [0.3, 0.6]
+m_array = [1.00]
+seed_array = [3]
+H_array = [0.5]
+r_array = [0.6]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
@@ -505,7 +505,7 @@ def run_sims(sim_list, params):
     simseed = float(sim_list[6])
 
     #create mod name
-    mod_name = "test_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
         int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
@@ -558,7 +558,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 20
+    ncpu = 10
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
