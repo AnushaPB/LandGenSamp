@@ -173,11 +173,9 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     stats <- bind_cols(sub_stats, stats)
   } 
   
-  if (method == "lfmm_fullK") {
-    stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor)
-  } else {
-    stats <- run_method(subgen, subgsd_df)
-  }
+  if (method == "lfmm_fullK") stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor)
+  
+  if (method == "lfmm" | method == "rda")  stats <- run_method(subgen, subgsd_df)
     
   # Save and format new result
   sub_result <- data.frame(params[i,], 

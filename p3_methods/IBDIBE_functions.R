@@ -26,8 +26,24 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
-  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
-  gdmData <- formatsitepair(gdmGen, bioFormat = 3, predData = gdmPred, XColumn = "Longitude", YColumn = "Latitude", siteCol = "site")
+  
+  # model combo
+  distPreds <- cbind(site, as.matrix(dist(gsd_df[,c("env1", "env2")], method = "euclidean", diag = TRUE, upper = TRUE)))
+  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, REMOVE = rep(1, nrow(gsd_df)))
+   
+  gdmData <-
+    formatsitepair(
+      gdmGen,
+      bioFormat = 3,
+      predData = gdmPred,
+      XColumn = "Longitude",
+      YColumn = "Latitude",
+      siteColumn = "site",
+      distPreds = list(env = distPreds)
+    )
+  
+  #remove placeholder column
+  gdmData <- gdmData[,!grepl("*REMOVE*", colnames(gdmData))]
   
   #scale distance from 01
   gdmData$distance <- range01(gdmData$distance) 
@@ -37,22 +53,18 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   
   if(is.null(gdm.model)){
     #turn results into dataframe
-    results <- data.frame(env1_coeff = NA,
-                          env2_coeff = NA,
+    results <- data.frame(env_coeff = NA,
                           geo_coeff = NA,
                           ratio = NA,
-                          env1_p = NA,
-                          env2_p = NA,
+                          env_p = NA,
                           geo_p = NA)
   } else {
     predictors <- coeffs(gdm.model)
-    predictors
     
     # turn results into dataframe
-    results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
-                          env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
+    results <- data.frame(env_coeff = predictors[predictors$predictor == "matrix_1", "coefficient"],
                           geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
-    results$ratio <- (abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
+    results$ratio <- abs(results$env_coeff)/abs(results$geo_coeff)
     
     # get pvalues
     safe_gdm.varImp <- safely(gdm.varImp)
@@ -60,15 +72,13 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
     if (is.null(modTest$error)) {
       pvals <- modTest$result$`Predictor p-values`
       pvals$var <- row.names(pvals)
-      pvals <- left_join(data.frame(var = c("Geographic", "env1", "env2")), pvals)
+      pvals <- left_join(data.frame(var = c("Geographic", "matrix_1")), pvals)
       results <- data.frame(results,
-                 env1_p = pvals[pvals$var == "env1", 2],
-                 env2_p = pvals[pvals$var == "env2", 2],
+                 env_p = pvals[pvals$var == "matrix_1", 2],
                  geo_p = pvals[pvals$var == "Geographic", 2])
     } else {
       results <- data.frame(results,
-                            env1_p = NA,
-                            env2_p = NA,
+                            env_p = NA,
                             geo_p = NA)
     }
     
@@ -238,15 +248,16 @@ calc_dist <- function(gen, distmeasure = "euc"){
 
 
 stat_ibdibe <- function(sub, full, sig = 0.05){
-  err_cols <- colnames(sub)[grepl("coeff", colnames(sub)) | grepl("ratio", colnames(sub))]
+  err_cols <- colnames(sub)[grepl("coeff", colnames(full)) | grepl("ratio", colnames(full))]
   err <- map(err_cols, ~err_coeff(full[.x], sub[.x])) %>% bind_cols()
   ae <- abs(err)
   colnames(err) <- paste0(colnames(err), "_", "err")
   colnames(ae) <- paste0(colnames(err), "_", "ae")
   
-  p_cols <- colnames(sub)[grepl("_p", colnames(sub))]
+  p_cols <- colnames(full)[grepl("_p", colnames(full))]
   TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
   colnames(TPR) <- paste0(colnames(TPR), "_", "TPR")
   
-  return(data.frame(err, ae, TPR))
+  df <- data.frame(err, ae, TPR)
+  return(df)
 }
