@@ -159,14 +159,21 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   gendist <- calc_dist(gen, distmeasure)
   
   ##get env vars and coords
+  env_dist1 <- as.matrix(dist(gsd_df$env1, diag = TRUE, upper = TRUE))
+  env_dist2 <- as.matrix(dist(gsd_df$env2, diag = TRUE, upper = TRUE))
   env_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
 
   #Run  MMRR
-  mmrr_res <- MMRR(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
+  # separate env dist
+  mmrr_res1 <- MMRR(gendist, list(geo = geo_dist, env1 = env_dist1, env2 = env_dist2), nperm = 50)
+  # combined env dist
+  mmrr_res2 <- MMRR(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
   
   #turn results into dataframe
-  results <- mmrr_results_df(mmrr_res)
+  results <- 
+    map2(list(mmrr_res1, mmrr_res2), list("mod1", "mod2"), mmrr_results_df) %>% 
+    bind_cols()
   
   return(results)
 }

@@ -22,7 +22,7 @@ future::plan("sequential")
 result <- purrr::map(
   1:nrow(params),
   \(i) {
-    file_path <- create_filepath(i, params, type = "gen")
+    file_path <- create_filepath(i, params, type = "dos")
     return(data.frame(file_path = file_path, exists = file.exists(file_path)))
   }
 )
