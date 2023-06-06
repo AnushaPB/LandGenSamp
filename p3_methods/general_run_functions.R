@@ -201,13 +201,5 @@ get_method <- function(method, type = "run"){
   
   stop("invalid input")
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-get_packages <- function(){
-  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
-}
-=======
->>>>>>> 570c0a0e7972798da8a04d45612b5658bf16968f
-=======
->>>>>>> 570c0a0e7972798da8a04d45612b5658bf16968f
+
