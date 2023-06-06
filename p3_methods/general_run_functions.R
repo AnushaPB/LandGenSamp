@@ -167,7 +167,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
   if (method == "mmrr" | method == "gdm") {
     sub_stats <- run_method(subgen, subgsd_df)
     # Calculate stats
-    full_stats <- full_result %>% select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
+    full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
     method_stat <- get_method(method, type = "stat")
     stats <- method_stat(sub_stats, full_stats)
     stats <- bind_cols(sub_stats, stats)
