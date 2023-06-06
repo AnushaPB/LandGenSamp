@@ -22,6 +22,6 @@ site = FALSE
 safe_save <- safely(save)
 full_result <- run_full(params[1:2, ], method = method, ncores = 20, n = 100) 
 safe_save(full_result, file = "full_result.rda")
-ind_results <- run_analysis(params[1:2, ], ns = nsamps, strats = sampstrats, method = method, full_result = NULL, site = FALSE, ncores = 25)
+ind_results <- run_analysis(params[1:2, ], ns = nsamps, strats = sampstrats, method = method, full_result = full_result, site = FALSE, ncores = 25)
 path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
 write.csv(ind_results, path, row.names = FALSE)
