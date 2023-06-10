@@ -16,8 +16,8 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   source(here("p3_methods", "GEA_functions.R"))
   source(here("p3_methods", "IBDIBE_functions.R"))
   
-  # setup parallel session
-  if (is.null(ncores)) ncores <- 20
+  # set cores
+  if (is.null(ncores)) ncores <- 25
   
   # Run common operations
   if (method == "mmrr" | method == "gdm" | method == "lfmm_fullK") 
