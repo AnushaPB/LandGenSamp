@@ -1,9 +1,9 @@
-source("general_functions.R")
-source("site_functions.R")
-library("here")
+
+library(here)
+source(here("general_functions.R"))
 library("foreach")
 library("doParallel")
-
+library(dplyr)
 set.seed(42)
 
 cores <- 10
@@ -16,7 +16,7 @@ for(n in nsites){
     library("raster")
     library("sp")
     library("rgeos")
-    
+    library(dplyr)
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
