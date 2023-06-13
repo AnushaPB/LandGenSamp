@@ -11,6 +11,8 @@ transect_samp <- function(pts, npts, ytsct, buffer){
   #npts - total number of points to sample (evenly split across transects)
   #buffer - buffer around transects within which points are sampled 
   
+  #convert y coords back to positive for transect sampling
+  pts$y <- -pts$y
   #divide number of samples evenly among the transects
   npts_tsct <- npts/length(ytsct)
     
@@ -41,18 +43,18 @@ transect_samp <- function(pts, npts, ytsct, buffer){
 #horizontal transects (y-coords)
 ytsct <- c(ldim/2 - ldim/4, ldim/2, ldim/2 + ldim/4)
 #buffer around transects
-#NOTE: changed from 1 to 2 because a buffer of 2 did not include enough points
-buffer <- 2
+#NOTE: changed from 2 to 3 because a buffer of 2 did not include enough points
+buffer <- 3
 
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(5)
 registerDoParallel(cl)
 
 for(n in npts){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
+    library("tidyverse")
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")

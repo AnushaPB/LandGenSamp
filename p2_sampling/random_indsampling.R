@@ -13,6 +13,7 @@ for (n in npts){
   samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("tidyverse")
+    library("dplyr")
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
