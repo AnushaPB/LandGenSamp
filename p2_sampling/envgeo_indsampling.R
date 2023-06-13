@@ -49,10 +49,10 @@ envgeo_samp <- function(gsd_df, npts, Nreps = 1000){
 #register cores
 #THIS PROCESS USES A LOT OF RAM SO ONLY RUN A FEW AT A TIME
 cores <- 20
-cl <- makeCluster(cores) #not to overload your computer
+cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
-for(n in npts){
+for(n in nsamps){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("vegan")

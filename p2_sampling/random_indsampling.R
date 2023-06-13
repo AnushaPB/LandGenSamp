@@ -9,7 +9,7 @@ set.seed(42)
 cl <- makeCluster(5) 
 registerDoParallel(cl)
 
-for (n in npts){
+for (n in nsamps){
   samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("tidyverse")

@@ -1,3 +1,9 @@
+# INDIVIDUAL SAMPLING ----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# SITE SAMPLING ---------------------------------------------------------------------------------------------------------------------------------------------------
+
 SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",  buffer_size = NULL, edge_buffer = NULL, ldim = NULL, Nreps = 1000){
   # make coords
   coords <- gsd_df[,c("idx","x","y")]

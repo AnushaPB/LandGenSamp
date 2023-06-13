@@ -46,12 +46,11 @@ ytsct <- c(ldim/2 - ldim/4, ldim/2, ldim/2 + ldim/4)
 #NOTE: changed from 2 to 3 because a buffer of 2 did not include enough points
 buffer <- 3
 
-
 #register cores
 cl <- makeCluster(5)
 registerDoParallel(cl)
 
-for(n in npts){
+for(n in nsamps){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("tidyverse")
