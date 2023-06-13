@@ -24,6 +24,7 @@ for(n in nsites){
     library("here")
     library("raster")
     library("rgeos")
+    library("dplyr")
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")

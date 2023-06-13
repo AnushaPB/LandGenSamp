@@ -173,10 +173,6 @@ envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = 
   return(sample_sites)
 }
 
-#number of sites to use
-nsites <- c(9, 16, 25)
-#sampling strategy
-sampstrats <- c("rand", "equi", "envgeo")
 #method to use for site sampling (can be "near" or "buffer")
 site_method <- "near"
 #number of individuals to sample per site

@@ -19,6 +19,7 @@ for(n in nsites){
     library("here")
     library("vegan")
     library("raster")
+    library("dplyr")
     library("rgeos")
     
     #create file path
