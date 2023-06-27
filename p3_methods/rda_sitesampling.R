@@ -9,13 +9,13 @@ library(foreach)
 library(doParallel)
 
 #read in general functions and objects
-source("general_functions.R")
+source(here("general_functions.R"))
 source("sitesampling_functions.R")
 source("rda_functions.R")
 
 #register cores
-cores <- 30
-cl <- makeCluster(cores) #not to overload your computer
+cores <- 25
+cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
 res_rda <- foreach(i = 1:nrow(params), .combine=rbind, .packages = c("vcfR", "vegan", "here", "stringr", "tidyverse", "qvalue", "robust", "dplyr")) %dopar% {
