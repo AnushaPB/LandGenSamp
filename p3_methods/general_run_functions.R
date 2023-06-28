@@ -1,20 +1,10 @@
 
 run_method <- function(method, sampling = c("individual", "site"), ncores = NULL){
-  # Parallel processing libraries
-  library(furrr)
-  library(dplyr)
-  library(tidyr)
-  library(here)
-  library(vcfR)
-  library(lfmm)
-  library(gdm)
-  library(vegan)
-  
   # Read in general functions and objects
-  source(here("general_functions.R"))
-  source(here("p3_methods", "general_run_functions.R"))
-  source(here("p3_methods", "GEA_functions.R"))
-  source(here("p3_methods", "IBDIBE_functions.R"))
+  source(here::here("general_functions.R"))
+  source(here::here("p3_methods", "general_run_functions.R"))
+  source(here::here("p3_methods", "GEA_functions.R"))
+  source(here::here("p3_methods", "IBDIBE_functions.R"))
   
   # set cores
   if (is.null(ncores)) ncores <- 25
@@ -28,69 +18,120 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   # run analysis for individual sampling
   if (any(sampling == "individual")){
     ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, method = method, full_result = full_result, site = FALSE, ncores = ncores)
-    path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
+    path <- here::here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
     write.csv(ind_results, path, row.names = FALSE)
   }
   
   # run analysis for site sampling
   if (any(sampling == "site")){
     site_results <- run_analysis(params, ns = nsites, strats = sitestrats, method = method, full_result = full_result, site = TRUE, ncores = ncores)
-    path <- here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
+    path <- here::here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
 }
 
-run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
+
+run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
   
   future::plan(future::multisession, workers = ncores)
   
-  results <- future_map(1:nrow(params), \(i) {
-    # Skip iteration if files do not exist
-    skip_to_next <- skip_check(i, params)
-    if (skip_to_next) return(NA)
-
-    # Get full result
-    if (!is.null(full_result)) full_result_i <- full_result[[i]] else full_result_i <- NULL
-    
-    # Get full data
-    gen <- get_data(i, params = params, "dos")
-    gsd_df <- get_data(i, params = params, "gsd")
-    
-    # Create a data frame of all combinations of n and strats
-    combinations <- expand.grid(n = ns, strat = strats)
-    
-    # Iterate over each combination using pmap
-    results <-
-      pmap(combinations, \(n, strat) return(
-        run_subsampled(
-          i,
-          params = params,
-          n = n,
-          strat = strat,
-          gen = gen, 
-          gsd_df = gsd_df,
-          full_result = full_result_i,
-          method = method,
-          site = site
-        )
-      ))
-    
-    # Combine with full result if mmrr/gdm
-    if (!is.null(full_result_i)) results <- bind_rows(results, full_result_i)
-    
-    return(results)
-
-  }, .options = furrr_options(seed = TRUE, packages = get_packages()), .progress = TRUE)
+  results <-
+    furrr::future_map(
+      1:nrow(params),
+      ~ run_analysis_helper(
+        i = .x,
+        params = params,
+        ns = ns,
+        strats = strats,
+        method = method,
+        full_result = full_result,
+        site = site
+      ),
+      .options = furrr::furrr_options(seed = TRUE, packages = get_packages()),
+      .progress = TRUE
+    )
   
-  results <- bind_rows(results)
+  results <- dplyr::bind_rows(results)
   
-  ## Shut down parallel workers
   future::plan("sequential")
   
   return(results)
 }
 
-run_full <- function(params, method, n = 2000, ncores = 10){
+
+run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
+  
+  # Read in general functions and objects
+  source(here::here("general_functions.R"))
+  source(here::here("p3_methods", "general_run_functions.R"))
+  source(here::here("p3_methods", "GEA_functions.R"))
+  source(here::here("p3_methods", "IBDIBE_functions.R"))
+  
+  cl <- parallel::makeCluster(ncores) 
+  doParallel::registerDoParallel(cl)
+  
+  results <-
+    foreach::foreach(
+      i = 1:nrow(params),
+      .combine = dplyr::bind_rows,
+      .packages = get_packages()
+    ) %dopar% {
+      run_analysis_helper(
+        i = .x,
+        params = params,
+        ns = ns,
+        strats = strats,
+        method = method,
+        full_result = full_result,
+        site = site
+      )
+    }
+  
+  ## Shut down parallel workers
+  parallel::stopCluster(cl)
+  
+  return(results)
+}
+
+run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE){
+  # Skip iteration if files do not exist
+  skip_to_next <- skip_check(i, params)
+  if (skip_to_next) return(NA)
+  
+  # Get full result
+  if (!is.null(full_result)) full_result_i <- full_result[[i]] else full_result_i <- NULL
+  
+  # Get full data
+  gen <- get_data(i, params = params, "dos")
+  gsd_df <- get_data(i, params = params, "gsd")
+  
+  # Create a data frame of all combinations of n and strats
+  combinations <- expand.grid(n = ns, strat = strats)
+  
+  # Iterate over each combination using pmap
+  results <-
+    purrr::pmap(combinations, \(n, strat) return(
+      run_subsampled(
+        i,
+        params = params,
+        n = n,
+        strat = strat,
+        gen = gen, 
+        gsd_df = gsd_df,
+        full_result = full_result_i,
+        method = method,
+        site = site
+      )
+    ))
+  
+  # Combine with full result if mmrr/gdm
+  if (!is.null(full_result_i)) results <- dpylr::bind_rows(results, full_result_i)
+  
+  return(results)
+}
+
+
+run_full2 <- function(params, method, n = 2000, ncores = 10){
   
   future::plan(future::multisession, workers = ncores)
   
@@ -102,12 +143,33 @@ run_full <- function(params, method, n = 2000, ncores = 10){
       method = method,
       n = n
     ),
-    .options = furrr_options(seed = TRUE, packages = get_packages()),
+    .options = furrr::furrr_options(seed = TRUE, packages = get_packages()),
     .progress = TRUE
   )
   
   ## Shut down parallel workers
   future::plan("sequential")
+  
+  return(results)
+}
+
+
+run_full <- function(params, method, n = 2000, ncores = 10){
+
+  cl <- makeCluster(ncores) 
+  registerDoParallel(cl)
+  
+  results <- foreach(i = 1:nrow(params),
+                     .combine = dplyr::bind_rows,
+                     .packages = get_packages()) %dopar% {
+                       run_full_helper(i,
+                                       params = params,
+                                       method = method,
+                                       n = n)
+                     }
+  
+  ## Shut down parallel workers
+  stopCluster(cl)
   
   return(results)
 }
@@ -121,24 +183,31 @@ run_full_helper <- function(i, params, method, n = 2000) {
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Subsample full data randomly
+  set.seed(124)
   s <- sample(nrow(gsd_df), n, replace = FALSE)
-  gen_2k <- gen[s,]
-  gsd_df_2k <- gsd_df[s,]
+  gen <- gen[s,]
+  gsd_df <- gsd_df[s,]
   
   # Run model on full data set
   if (method == "lfmm_fullK") {
-    K <- get_K_tess(gen2k, coords = gsd2k[,c("x", "y")], Kvals = 1:9)
+    K <- get_K_tess(gen, coords = gsd[,c("x", "y")], Kvals = 1:9)
     result <- data.frame(K_factor = K)
   } else {
     run_method <- get_method(method, type = "run")
-    result <- run_method(gen_2k, gsd_df_2k)
+    result <- run_method(gen, gsd_df)
   }
   
   # save and format result
   full_result <- data.frame(params[i, ],
                             sampstrat = "full",
-                            nsamp = nrow(gsd_df_2k),
+                            nsamp = nrow(gsd_df),
                             result)
+  
+  
+  # remove large objects
+  rm("gen")
+  rm("gsd_df")
+  gc()
   
   return(full_result)
 }
@@ -170,7 +239,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
     method_stat <- get_method(method, type = "stat")
     stats <- method_stat(sub_stats, full_stats)
-    stats <- bind_cols(sub_stats, stats)
+    stats <- dplyr::bind_cols(sub_stats, stats)
   } 
   
   if (method == "lfmm_fullK") stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor)
@@ -182,6 +251,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
                            sampstrat = strat, 
                            nsamp = n, 
                            stats)
+  
   
   return(sub_result)
 }
