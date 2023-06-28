@@ -62,19 +62,20 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
   cl <- parallel::makeCluster(ncores) 
   doParallel::registerDoParallel(cl)
   
-  # get functions
-  source(here::here("general_functions.R"))
-  source(here::here("p3_methods", "general_run_functions.R"))
-  source(here::here("p3_methods", "GEA_functions.R"))
-  source(here::here("p3_methods", "IBDIBE_functions.R"))
-  
   results <-
     foreach::foreach(
       i = 1:nrow(params),
       .combine = dplyr::bind_rows,
       .packages = get_packages()
     ) %dopar% {
-      run_analysis_helper(
+      # Read in general functions and objects
+      source(here::here("general_functions.R"))
+      source(here::here("p3_methods", "general_run_functions.R"))
+      source(here::here("p3_methods", "GEA_functions.R"))
+      source(here::here("p3_methods", "IBDIBE_functions.R"))
+      
+      
+      return(run_analysis_helper(
         i = .x,
         params = params,
         ns = ns,
@@ -82,7 +83,7 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
         method = method,
         full_result = full_result,
         site = site
-      )
+      ))
     }
   
   ## Shut down parallel workers
@@ -92,12 +93,6 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
 }
 
 run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE){
-  # Read in general functions and objects
-  source(here::here("general_functions.R"))
-  source(here::here("p3_methods", "general_run_functions.R"))
-  source(here::here("p3_methods", "GEA_functions.R"))
-  source(here::here("p3_methods", "IBDIBE_functions.R"))
-  
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
