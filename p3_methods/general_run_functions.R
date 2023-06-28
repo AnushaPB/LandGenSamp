@@ -63,6 +63,9 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
   cl <- parallel::makeCluster(ncores) 
   doParallel::registerDoParallel(cl)
   
+  # get functions
+  source(here::here("p3_methods", "general_run_functions.R"))
+  
   results <-
     foreach::foreach(
       i = 1:nrow(params),
