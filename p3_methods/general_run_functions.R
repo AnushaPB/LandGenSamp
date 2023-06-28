@@ -74,9 +74,8 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
       source(here::here("p3_methods", "GEA_functions.R"))
       source(here::here("p3_methods", "IBDIBE_functions.R"))
       
-      
       return(run_analysis_helper(
-        i = .x,
+        i = i,
         params = params,
         ns = ns,
         strats = strats,
@@ -126,6 +125,11 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   # Combine with full result if mmrr/gdm
   if (!is.null(full_result_i)) results <- dpylr::bind_rows(results, full_result_i)
   
+  # remove large objects
+  rm("gen")
+  rm("gsd_df")
+  gc()
+  
   return(results)
 }
 
@@ -161,10 +165,16 @@ run_full <- function(params, method, n = 2000, ncores = 10){
   results <- foreach(i = 1:nrow(params),
                      .combine = dplyr::bind_rows,
                      .packages = get_packages()) %dopar% {
-                       run_full_helper(i,
+                       # Read in general functions and objects
+                       source(here::here("general_functions.R"))
+                       source(here::here("p3_methods", "general_run_functions.R"))
+                       source(here::here("p3_methods", "GEA_functions.R"))
+                       source(here::here("p3_methods", "IBDIBE_functions.R"))
+                       
+                       return(run_full_helper(i,
                                        params = params,
                                        method = method,
-                                       n = n)
+                                       n = n))
                      }
   
   ## Shut down parallel workers
