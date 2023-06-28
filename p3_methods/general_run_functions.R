@@ -60,13 +60,6 @@ run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site =
 
 
 run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
-  
-  # Read in general functions and objects
-  source(here::here("general_functions.R"))
-  source(here::here("p3_methods", "general_run_functions.R"))
-  source(here::here("p3_methods", "GEA_functions.R"))
-  source(here::here("p3_methods", "IBDIBE_functions.R"))
-  
   cl <- parallel::makeCluster(ncores) 
   doParallel::registerDoParallel(cl)
   
@@ -94,6 +87,12 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
 }
 
 run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE){
+  # Read in general functions and objects
+  source(here::here("general_functions.R"))
+  source(here::here("p3_methods", "general_run_functions.R"))
+  source(here::here("p3_methods", "GEA_functions.R"))
+  source(here::here("p3_methods", "IBDIBE_functions.R"))
+  
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
