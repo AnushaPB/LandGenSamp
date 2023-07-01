@@ -22,3 +22,10 @@ site = FALSE
 ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, method = method, full_result = NULL, site = site, ncores = 27)
 path <- here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
 write.csv(ind_results, path, row.names = FALSE)
+
+ns = nsites
+strats = sitestrats
+site = TRUE
+site_results <- run_analysis(params, ns = ns, strats = strats, method = method, full_result = NULL, site = site, ncores = 10)
+path <- here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
+write.csv(site_results, path, row.names = FALSE)
