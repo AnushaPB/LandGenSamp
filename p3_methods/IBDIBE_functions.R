@@ -28,7 +28,8 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
   
   # model combo
-  distPreds <- cbind(site, as.matrix(dist(gsd_df[,c("env1", "env2")], method = "euclidean", diag = TRUE, upper = TRUE)))
+  envDist <- cbind(site, as.matrix(dist(gsd_df[,c("env1", "env2")], method = "euclidean", diag = TRUE, upper = TRUE)))
+  geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
   gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, REMOVE = rep(1, nrow(gsd_df)))
    
   gdmData <-
@@ -39,7 +40,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
       XColumn = "Longitude",
       YColumn = "Latitude",
       siteColumn = "site",
-      distPreds = list(env = distPreds)
+      distPreds = list(env = envDist, geo = geoDist)
     )
   
   #remove placeholder column
@@ -49,7 +50,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   gdmData$distance <- range01(gdmData$distance) 
   
   #run GDM
-  gdm.model <- gdm(gdmData, geo = TRUE)
+  gdm.model <- gdm(gdmData, geo = FALSE)
   
   if(is.null(gdm.model)){
     #turn results into dataframe
@@ -63,19 +64,19 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
     
     # turn results into dataframe
     results <- data.frame(env_coeff = predictors[predictors$predictor == "matrix_1", "coefficient"],
-                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
+                          geo_coeff = predictors[predictors$predictor == "matrix_2", "coefficient"])
     results$ratio <- abs(results$env_coeff)/abs(results$geo_coeff)
     
     # get pvalues
     safe_gdm.varImp <- safely(gdm.varImp)
-    modTest <- safe_gdm.varImp(gdmData, geo = T, nPerm = 50, parallel = F, predSelect = F)
+    modTest <- safe_gdm.varImp(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
     if (is.null(modTest$error)) {
       pvals <- modTest$result$`Predictor p-values`
       pvals$var <- row.names(pvals)
-      pvals <- left_join(data.frame(var = c("Geographic", "matrix_1")), pvals)
+      pvals <- left_join(data.frame(var = c("matrix_1", "matrix_2")), pvals)
       results <- data.frame(results,
                  env_p = pvals[pvals$var == "matrix_1", 2],
-                 geo_p = pvals[pvals$var == "Geographic", 2])
+                 geo_p = pvals[pvals$var == "matrix_2", 2])
     } else {
       results <- data.frame(results,
                             env_p = NA,

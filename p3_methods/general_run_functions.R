@@ -58,15 +58,21 @@ run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site =
   return(results)
 }
 
+
 run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
   cl <- parallel::makeCluster(ncores) 
-  doParallel::registerDoParallel(cl)
+  # using doSNOW to get progress bar
+  doSNOW::registerDoSNOW(cl)
+  
+  pb <- txtProgressBar(max = nrow(params), style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
   
   results <-
     foreach::foreach(
       i = 1:nrow(params),
       .combine = dplyr::bind_rows,
-      .packages = get_packages()
+      .packages = get_packages(),
+      .options.snow = list(progress = progress)
     ) %dopar% {
       # Read in general functions and objects
       source(here::here("general_functions.R"))
@@ -85,6 +91,9 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
       ))
     }
   
+  # end progress
+  close(pb)
+  
   ## Shut down parallel workers
   parallel::stopCluster(cl)
   
@@ -97,7 +106,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   if (skip_to_next) return(NA)
   
   # Get full result
-  if (!is.null(full_result)) full_result_i <- full_result[[i]] else full_result_i <- NULL
+  if (!is.null(full_result)) full_result_i <- full_result[i,] else full_result_i <- NULL
   
   # Get full data
   gen <- get_data(i, params = params, "dos")
@@ -122,8 +131,11 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
       )
     ))
   
+  # bind rows
+  results <- results %>% dplyr::bind_rows()
+  
   # Combine with full result if mmrr/gdm
-  if (!is.null(full_result_i)) results <- dpylr::bind_rows(results, full_result_i)
+  if (!is.null(full_result_i)) results <- dplyr::bind_rows(results, full_result_i)
   
   # remove large objects
   rm("gen")
