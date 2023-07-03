@@ -15,7 +15,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   doSNOW::registerDoSNOW(cl)
   
   # Run common operations
-  if (method == "mmrr" | method == "gdm" | method == "gdm2" | method == "lfmm_fullK") 
+  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2", "lfmm_fullK"))
     full_result <- run_full(params, method = method, ncores = ncores, n = 1000) 
   else
     full_result <- NULL
@@ -152,7 +152,6 @@ run_full2 <- function(params, method, n = 1000, ncores = 10){
   
   future::plan(future::multisession, workers = ncores)
   
-  
   results <- future_map(
     1:nrow(params),
     \(i) run_full_helper(
@@ -258,7 +257,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
   # Run model on sub data set
   run_method <- get_method(method, type = "run")
   
-  if (method == "mmrr" | method == "gdm" | method == "gdm2") {
+  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) {
     sub_stats <- run_method(subgen, subgsd_df)
     # Calculate stats
     full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
@@ -284,6 +283,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
 get_method <- function(method, type = "run"){
   if (type == "run") {
     if (method == "mmrr") return(run_mmrr)
+    if (method == "mmrr2") return(run_mmrr2)
     if (method == "gdm") return(run_gdm)
     if (method == "gdm2") return(run_gdm2)
     if (method == "lfmm") return(run_lfmm)
@@ -291,9 +291,7 @@ get_method <- function(method, type = "run"){
   }
   
   if (type == "stat") {
-    if (method == "mmrr") return(stat_ibdibe)
-    if (method == "gdm") return(stat_ibdibe)
-    if (method == "gdm2") return(stat_ibdibe)
+    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) return(stat_ibdibe)
   }
   
   stop("invalid input")

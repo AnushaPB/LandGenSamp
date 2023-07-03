@@ -266,6 +266,24 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   return(results)
 }
 
+run_mmrr2 <- function(gen, gsd_df, distmeasure= "euc"){
+  #Format data for MMRR  
+  gendist <- calc_dist(gen, distmeasure)
+  
+  ##get env vars and coords
+  env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
+  env2_dist <- as.matrix(dist(gsd_df[,"env2"], diag = TRUE, upper = TRUE))
+  geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
+  
+  #Run  MMRR
+  mmrr_res <- MMRR(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
+  
+  #turn results into dataframe
+  results <- mmrr_results_df(mmrr_res)
+  
+  return(results)
+}
+
 
 mmrr_results_df <- function(x, name = NULL){
   #create data frame of results
