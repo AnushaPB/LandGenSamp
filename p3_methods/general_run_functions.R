@@ -15,7 +15,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   doSNOW::registerDoSNOW(cl)
   
   # Run common operations
-  if (method == "mmrr" | method == "gdm" | method == "lfmm_fullK") 
+  if (method == "mmrr" | method == "gdm" | method == "gdm2" | method == "lfmm_fullK") 
     full_result <- run_full(params, method = method, ncores = ncores, n = 1000)
   else
     full_result <- NULL
@@ -256,7 +256,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
   # Run model on sub data set
   run_method <- get_method(method, type = "run")
   
-  if (method == "mmrr" | method == "gdm") {
+  if (method == "mmrr" | method == "gdm" | method == "gdm2") {
     sub_stats <- run_method(subgen, subgsd_df)
     # Calculate stats
     full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
