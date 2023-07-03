@@ -16,7 +16,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # Run common operations
   if (method == "mmrr" | method == "gdm" | method == "gdm2" | method == "lfmm_fullK") 
-    full_result <- run_full(params, method = method, ncores = ncores, n = 1000)
+    full_result <- run_full(params, method = method, ncores = ncores, n = 1000) 
   else
     full_result <- NULL
   
@@ -152,6 +152,7 @@ run_full2 <- function(params, method, n = 1000, ncores = 10){
   
   future::plan(future::multisession, workers = ncores)
   
+  
   results <- future_map(
     1:nrow(params),
     \(i) run_full_helper(
@@ -162,10 +163,11 @@ run_full2 <- function(params, method, n = 1000, ncores = 10){
     ),
     .options = furrr::furrr_options(seed = TRUE, packages = get_packages()),
     .progress = TRUE
-  )
+  ) %>%
+    dplyr::bind_rows()
   
   ## Shut down parallel workers
-  future::plan("sequential")
+  future::plan("dsequential")
   
   return(results)
 }
