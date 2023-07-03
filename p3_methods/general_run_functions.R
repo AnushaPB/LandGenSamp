@@ -9,9 +9,14 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   # set cores
   if (is.null(ncores)) ncores <- 25
   
+  # make cluster
+  cl <- parallel::makeCluster(ncores) 
+  # using doSNOW to get progress bar
+  doSNOW::registerDoSNOW(cl)
+  
   # Run common operations
   if (method == "mmrr" | method == "gdm" | method == "lfmm_fullK") 
-    full_result <- run_full(params, method = method, ncores = ncores)
+    full_result <- run_full(params, method = method, ncores = ncores, n = 1000)
   else
     full_result <- NULL
   
@@ -28,6 +33,10 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
     path <- here::here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
+  
+  ## Shut down parallel workers
+  snow::stopCluster(cl)
+  
 }
 
 
@@ -59,11 +68,7 @@ run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site =
 }
 
 
-run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
-  cl <- parallel::makeCluster(ncores) 
-  # using doSNOW to get progress bar
-  doSNOW::registerDoSNOW(cl)
-  
+run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE) {
   pb <- txtProgressBar(max = nrow(params), style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
   
@@ -93,9 +98,6 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
   
   # end progress
   close(pb)
-  
-  ## Shut down parallel workers
-  parallel::stopCluster(cl)
   
   return(results)
 }
@@ -146,7 +148,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
 }
 
 
-run_full2 <- function(params, method, n = 2000, ncores = 10){
+run_full2 <- function(params, method, n = 1000, ncores = 10){
   
   future::plan(future::multisession, workers = ncores)
   
@@ -169,14 +171,14 @@ run_full2 <- function(params, method, n = 2000, ncores = 10){
 }
 
 
-run_full <- function(params, method, n = 2000, ncores = 10){
-
-  cl <- makeCluster(ncores) 
-  registerDoParallel(cl)
+run_full <- function(params, method, n = 2000){
+  pb <- txtProgressBar(max = nrow(params), style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
   
   results <- foreach(i = 1:nrow(params),
                      .combine = dplyr::bind_rows,
-                     .packages = get_packages()) %dopar% {
+                     .packages = get_packages(),
+                     .options.snow = list(progress = progress)) %dopar% {
                        # Read in general functions and objects
                        source(here::here("general_functions.R"))
                        source(here::here("p3_methods", "general_run_functions.R"))
@@ -188,9 +190,9 @@ run_full <- function(params, method, n = 2000, ncores = 10){
                                        method = method,
                                        n = n))
                      }
-  
-  ## Shut down parallel workers
-  stopCluster(cl)
+
+  # end progress
+  close(pb)
   
   return(results)
 }
@@ -281,6 +283,7 @@ get_method <- function(method, type = "run"){
   if (type == "run") {
     if (method == "mmrr") return(run_mmrr)
     if (method == "gdm") return(run_gdm)
+    if (method == "gdm2") return(run_gdm2)
     if (method == "lfmm") return(run_lfmm)
     if (method == "rda") return(run_rda)
   }
@@ -288,6 +291,7 @@ get_method <- function(method, type = "run"){
   if (type == "stat") {
     if (method == "mmrr") return(stat_ibdibe)
     if (method == "gdm") return(stat_ibdibe)
+    if (method == "gdm2") return(stat_ibdibe)
   }
   
   stop("invalid input")
