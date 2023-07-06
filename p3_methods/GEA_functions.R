@@ -1,4 +1,7 @@
 
+############
+#   LFMM   #
+############
 run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge"), K = NULL, loci_df = NULL, Kvals = 1:9){
   
   # get adaptive loci
@@ -312,7 +315,7 @@ run_rda_helper <- function(gen, gsd_df, loci_df, nloci = 10000, sig = 0.05, corr
   loci_trait2 <- loci_df$trait2 
   
   # Run RDA
-  mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale=F)
+  mod <- rda(gen[,1:nloci] ~ gsd_df$env1 + gsd_df$env2, scale = F)
   
   # correct PC
   if(correctPC){
@@ -476,7 +479,7 @@ rda_calc_confusion <- function(padj, pv, rv, loci_trait1, loci_trait2, sig = 0.0
 # https://github.com/Capblancq/RDA-landscape-genomics/blob/main/RDA_landscape_genomics.Rmd
 rdadapt <- function(rda,K)
 {
-  zscores<-rda$CCA$v[,1:as.numeric(K)]
+  zscores <- rda$CCA$v[,1:as.numeric(K)]
   resscale <- apply(zscores, 2, scale)
   resmaha <- covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dist
   lambda <- median(resmaha)/qchisq(0.5,df=K)
