@@ -166,7 +166,7 @@ run_full2 <- function(params, method, n = 1000, ncores = 10){
     dplyr::bind_rows()
   
   ## Shut down parallel workers
-  future::plan("dsequential")
+  future::plan("sequential")
   
   return(results)
 }
