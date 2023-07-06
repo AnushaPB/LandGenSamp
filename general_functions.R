@@ -224,7 +224,7 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 
 
 #get list of site IDs that correspond with parameter set, sampling strategy, and number of samples (and sample IDs)
-get_sites <- function(param_set, sampstrat, nsamp,  dir =  here(dirname(getwd()), "p2_sampling", "outputs")){
+get_sites <- function(param_set, sampstrat, nsamp,  dir =  here("p2_sampling", "outputs")){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #params - full set of parameters
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
