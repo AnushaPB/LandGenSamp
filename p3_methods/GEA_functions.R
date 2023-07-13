@@ -2,7 +2,7 @@
 ############
 #   LFMM   #
 ############
-run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge"), K = NULL, loci_df = NULL, Kvals = 1:9){
+run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge", "lasso"), K = NULL, loci_df = NULL, Kvals = 1:9){
   
   # get adaptive loci
   if (is.null(loci_df)) loci_df <- get_loci()
