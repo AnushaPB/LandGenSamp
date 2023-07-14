@@ -7,7 +7,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   source(here::here("p3_methods", "IBDIBE_functions.R"))
   
   # set cores
-  if (is.null(ncores)) ncores <- 25
+  if (is.null(ncores)) ncores <- 10
   
   # make cluster
   cl <- parallel::makeCluster(ncores) 
@@ -16,20 +16,20 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # Run common operations
   if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2", "lfmm_fullK"))
-    full_result <- run_full(params, method = method, ncores = ncores, n = 1000) 
+    full_result <- run_full(params, method = method, n = 1000) 
   else
     full_result <- NULL
   
   # run analysis for individual sampling
   if (any(sampling == "individual")){
-    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, method = method, full_result = full_result, site = FALSE, ncores = ncores)
+    ind_results <- run_analysis(params, ns = nsamps, strats = sampstrats, method = method, full_result = full_result, site = FALSE)
     path <- here::here("p3_methods", "outputs", paste0(method, "_indsampling_results.csv"))
     write.csv(ind_results, path, row.names = FALSE)
   }
   
   # run analysis for site sampling
   if (any(sampling == "site")){
-    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, method = method, full_result = full_result, site = TRUE, ncores = ncores)
+    site_results <- run_analysis(params, ns = nsites, strats = sitestrats, method = method, full_result = full_result, site = TRUE)
     path <- here::here("p3_methods", "outputs", paste0(method, "_sitesampling_results.csv"))
     write.csv(site_results, path, row.names = FALSE)
   }
@@ -42,7 +42,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
 
 run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
   
-  future::plan(future::multisession, workers = ncores)
+  future::plan(future::multicore, workers = ncores)
   
   results <-
     furrr::future_map(
