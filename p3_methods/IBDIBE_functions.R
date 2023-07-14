@@ -190,7 +190,7 @@ MMRR<-function(Y,X,nperm=50){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
   y<-unfold(Y)
-  if(is.null(names(X))) names(X) <- paste("X",1:length(X),sep="")
+  if(is.null(names(X)))names(X)<-paste("X",1:length(X),sep="")
   Xmats<-sapply(X,unfold)
   fit<-lm(y~Xmats)
   coeffs<-fit$coefficients
@@ -216,19 +216,11 @@ MMRR<-function(Y,X,nperm=50){
   tp<-tprob/(nperm+1)
   Fp<-Fprob/(nperm+1)
   names(r.squared)<-"r.squared"
-  
-  stat_df <- data.frame(coeffs, vars = names(coeffs))
-  stat_df <- merge(stat_df, data.frame(tstat, vars = names(tstat)), all = TRUE)
-  stat_df <- merge(stat_df, data.frame(tp, vars = names(tstat)), all = TRUE)
-  stat_df$vars <- c("Intercept",names(X))
-  tstat <- stat_df$tstat
-  tp <- stat_df$tp
-  coeffs <- stat_df$coeffs 
-  names(coeffs) <- names(tstat) <- names(tp) <- stat_df$vars
-  
+  names(coeffs)<-c("Intercept",names(X))
+  names(tstat)<-paste(c("Intercept",names(X)),"(t)",sep="")
+  names(tp)<-paste(c("Intercept",names(X)),"(p)",sep="")
   names(Fstat)<-"F-statistic"
   names(Fp)<-"F p-value"
-  
   return(list(r.squared=r.squared,
               coefficients=coeffs,
               tstatistic=tstat,
