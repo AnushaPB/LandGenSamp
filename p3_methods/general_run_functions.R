@@ -150,7 +150,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
 
 run_full2 <- function(params, method, n = 1000, ncores = 10){
   
-  future::plan(future::multisession, workers = ncores)
+  future::plan(future::multicore, workers = ncores)
   
   results <- future_map(
     1:nrow(params),
