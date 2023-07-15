@@ -11,8 +11,6 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # make cluster
   cl <- parallel::makeCluster(ncores) 
-  # using doSNOW to get progress bar
-  doSNOW::registerDoSNOW(cl)
   
   # Run common operations
   if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2", "lfmm_fullK"))
@@ -35,7 +33,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   }
   
   ## Shut down parallel workers
-  snow::stopCluster(cl)
+  stopCluster(cl)
   
 }
 
@@ -69,15 +67,12 @@ run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site =
 
 
 run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE) {
-  pb <- txtProgressBar(max = nrow(params), style = 3)
-  progress <- function(n) setTxtProgressBar(pb, n)
-  
+
   results <-
     foreach::foreach(
       i = 1:nrow(params),
       .combine = dplyr::bind_rows,
-      .packages = get_packages(),
-      .options.snow = list(progress = progress)
+      .packages = get_packages()
     ) %dopar% {
       # Read in general functions and objects
       source(here::here("general_functions.R"))
@@ -173,13 +168,10 @@ run_full2 <- function(params, method, n = 1000, ncores = 10){
 
 
 run_full <- function(params, method, n = 2000){
-  pb <- txtProgressBar(max = nrow(params), style = 3)
-  progress <- function(n) setTxtProgressBar(pb, n)
   
   results <- foreach(i = 1:nrow(params),
                      .combine = dplyr::bind_rows,
-                     .packages = get_packages(),
-                     .options.snow = list(progress = progress)) %dopar% {
+                     .packages = get_packages()) %dopar% {
                        # Read in general functions and objects
                        source(here::here("general_functions.R"))
                        source(here::here("p3_methods", "general_run_functions.R"))
