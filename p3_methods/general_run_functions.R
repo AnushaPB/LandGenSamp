@@ -91,9 +91,6 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
       ))
     }
   
-  # end progress
-  close(pb)
-  
   return(results)
 }
 
@@ -183,9 +180,6 @@ run_full <- function(params, method, n = 2000){
                                        method = method,
                                        n = n))
                      }
-
-  # end progress
-  close(pb)
   
   return(results)
 }
