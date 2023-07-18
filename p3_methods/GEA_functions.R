@@ -25,6 +25,7 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   #get adaptive loci
   loci_trait1 <- loci_df$trait1 
   loci_trait2 <- loci_df$trait2 
+  loci_maf <- maf_calc(gen, loci_trait1, loci_trait2)
   
   #if K is not specified, it is automatically calculated
   if (is.null(K)) K <- get_K(gen, coords = gsd_df[,c("x", "y")], K_selection = K_selection, Kvals = Kvals) 
@@ -43,13 +44,36 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
-  p05 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.05))
-  p10 <- purrr::map(c("none", "fdr", "holm", "bonferroni"), ~lfmm_calc_confusion(padj = .x, genmat = genmat, envmat = envmat, lfmm_mod = lfmm_mod, loci_trait1 = loci_trait1, loci_trait2 = loci_trait2, sig = 0.10))
-  pdf <- bind_rows(p05, p10)
-  df <- data.frame(K_factor = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = FALSE, pdf)
+  # change padjustment, alpha level, minimum minor allele frequency, and whether to test for all adaptive loci (i.e. combined trait1/2)
+  combos <-
+    expand.grid(
+      padj = c("none", "fdr", "holm", "bonferroni"),
+      p = c(0.05, 0.10),
+      maf = c(0, 0.05),
+      all = c(TRUE, FALSE)
+    )
+  
+  result <-
+    pmap(
+      combos,
+      \(padj, p, maf, all) return(calc_confusion_combos(
+        padj = as.character(padj),
+        p = p,
+        maf = maf,
+        all = all,
+        genmat = genmat,
+        envmat = envmat,
+        lfmm_mod = lfmm_mod,
+        loci_df = loci_df,
+        loci_maf = loci_maf
+      ))
+    )
+  
+  df <- data.frame(K_factor = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = FALSE, bind_rows(result))
   
   return(df)
 }
+
 
 
 # function to determine K
@@ -168,7 +192,33 @@ bestK <- function(tess3_obj, Kvals){
 }
 
 
-lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05){
+
+calc_confusion_combos <- function(padj, p, maf, all, genmat, envmat, lfmm_mod, loci_df, loci_maf){
+  if (maf == 0.05) {
+    loci_trait1 <- loci_maf$trait1
+    loci_trait2 <- loci_maf$trait2
+  } else {
+    loci_trait1 <- loci_df$trait1
+    loci_trait2 <- loci_df$trait2
+  }
+  
+  result <-
+    lfmm_calc_confusion(
+      padj = padj,
+      genmat = genmat,
+      envmat = envmat,
+      lfmm_mod = lfmm_mod,
+      loci_trait1 = loci_trait1,
+      loci_trait2 = loci_trait2,
+      sig = p,
+      all = all
+    )
+  
+  result <- data.frame(result, maf = maf)
+  return(result)
+}
+
+lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05, all = FALSE){
   
   #performs association testing using the fitted model:
   pv <- lfmm_test(Y = genmat, 
@@ -184,101 +234,155 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
                          env2 = p.adjust(pv$calibrated.pvalue[,2], method = padj))
   rownames(pvalues) <- colnames(genmat)
   
-  # calculate roc and pr 
-  pr1 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc.integral
-  pr2 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc.integral
-  roc1 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc
-  roc2 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc
+  if (all) {
+    loci_trait <- c(loci_trait1, loci_trait2)
+    
+    #env1 candidate loci
+    #Identify LFMM cand loci (P)
+    lfmm_loci <- unique(c(which(pvalues[,"env1"] < sig), which(pvalues[,"env2"] < sig)))
+    #Identify negatives
+    lfmm_neg <- (1:nrow(pvalues))[!(1:nrow(pvalues) %in% lfmm_loci)]
+    #check length makes sense
+    stopifnot(length(lfmm_loci) + length(lfmm_neg) == nrow(pvalues))
+    
+    #get confusion matrix values
+    #True Positives
+    TP <- sum(lfmm_loci %in% loci_trait)
+    #False Positives
+    FP <- sum(lfmm_loci %notin% loci_trait)
+    #True Negatives
+    TN <- sum(lfmm_neg %notin% loci_trait)
+    #False Negatives
+    FN <- sum(lfmm_neg %in% loci_trait)
+    #check sum makes sense
+    stopifnot(sum(TP, FP, TN, FN) == nrow(pvalues))
+    
+    #calc True Positive Rate (i.e. Sensitivity)
+    TPRCOMBO <- TP/(TP + FN)
+    #calc True Negative Rate (i.e. Specificity)
+    TNRCOMBO <- TN/(TN + FP)
+    #calc False Discovery Rate 
+    FDRCOMBO <- FP/(FP + TP)
+    # correct FDR if 0 is in the denom
+    if ((FP + TP == 0) & FP == 0) FDRCOMBO <- 0
+    #calc False Positive Rate 
+    FPRCOMBO <- FP/(FP + TN)
+    
+    df <- 
+      data.frame(padj = padj,
+                 sig = sig,
+                 TPRCOMBO = TPRCOMBO, 
+                 TNRCOMBO = TNRCOMBO,
+                 FDRCOMBO = FDRCOMBO, 
+                 FPRCOMBO = FPRCOMBO,
+                 TOTALN = length(lfmm_loci), 
+                 TOTALTP = TP, 
+                 TOTALFP = FP, 
+                 TOTALTN = TN,
+                 TOTALFN = FN, 
+                 all = TRUE)
+    
+  } else {
+    # calculate roc and pr 
+    pr1 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc.integral
+    pr2 <- PRROC::pr.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc.integral
+    roc1 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env1[loci_trait1]), scores.class1 = na.omit(pvalues$env1[-loci_trait1]))$auc
+    roc2 <- PRROC::roc.curve(scores.class0 = na.omit(pvalues$env2[loci_trait2]), scores.class1 = na.omit(pvalues$env2[-loci_trait2]))$auc
+    
+    #env1 candidate loci
+    #Identify LFMM cand loci (P)
+    lfmm_loci1 <- which(pvalues[,"env1"] < sig) 
+    #Identify negatives
+    lfmm_neg1 <- which(pvalues[,"env1"] >= sig | is.na(pvalues[,"env1"]))
+    #check length makes sense
+    stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
+    
+    #get confusion matrix values
+    #True Positives
+    TP1 <- sum(lfmm_loci1 %in% loci_trait1)
+    #False Positives
+    FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
+    #True Negatives
+    TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
+    #False Negatives
+    FN1 <- sum(lfmm_neg1 %in% loci_trait1)
+    #check sum makes sense
+    stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
+    
+    #env2 candidate loci
+    #Identify LFMM cand loci
+    lfmm_loci2 <- which(pvalues[,"env2"] < sig) 
+    #Identify negatives
+    lfmm_neg2 <- which(pvalues[,"env2"] >= sig | is.na(pvalues[,"env2"]))
+    #check length makes sense
+    stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
+    
+    #True Positives
+    TP2 <- sum(lfmm_loci2 %in% loci_trait2)
+    #False Positives
+    FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
+    #True Negatives
+    TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
+    #False Negatives
+    FN2 <- sum(lfmm_neg2 %in% loci_trait2)
+    #check length makes sense
+    stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
+    
+    #stats for all loci 
+    lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+    #calc confusion matrix
+    TP <- TP1 + TP2
+    FP <- FP1 + FP2
+    TN <- TN1 + TN2
+    FN <- FN1 + FN2
+    #check sum makes sense
+    stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
+    
+    #calc True Positive Rate (i.e. Sensitivity)
+    TPRCOMBO <- TP/(TP + FN)
+    #calc True Negative Rate (i.e. Specificity)
+    TNRCOMBO <- TN/(TN + FP)
+    #calc False Discovery Rate 
+    FDRCOMBO <- FP/(FP + TP)
+    # correct FDR if 0 is in the denom
+    if ((FP + TP == 0) & FP == 0) FDRCOMBO <- 0
+    #calc False Positive Rate 
+    FPRCOMBO <- FP/(FP + TN)
+    
+    # Calculate empirical pvalues (I THINK - CHECK THIS)
+    # Get B values (fixed effect)
+    Bvalues <-  data.frame(env1 = abs(lfmm_mod$B[,1]), env2 = abs(lfmm_mod$B[,2]))
+    null1 <- Bvalues$env1[-loci_trait1]
+    emp1 <- sapply(Bvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
+    emp1_mean <- mean(emp1, na.rm = TRUE)
+    null2 <- Bvalues$env2[-loci_trait2]
+    emp2 <- sapply(Bvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
+    emp2_mean <- mean(emp2, na.rm = TRUE)
+    EMPCOMBO <- mean(emp1_mean, emp2_mean, na.rm = TRUE)
+    
+    df <- 
+      data.frame(padj = padj,
+                 sig = sig,
+                 TPRCOMBO = TPRCOMBO, 
+                 TNRCOMBO = TNRCOMBO,
+                 FDRCOMBO = FDRCOMBO, 
+                 FPRCOMBO = FPRCOMBO,
+                 TOTALN = length(lfmm_loci), 
+                 TOTALTP = TP, 
+                 TOTALFP = FP, 
+                 TOTALTN = TN,
+                 TOTALFN = FN,
+                 emp1_mean = emp1_mean,
+                 emp2_mean = emp2_mean,
+                 EMPCOMBO = EMPCOMBO,
+                 pr1 = pr1,
+                 pr2 = pr2,
+                 roc1 = roc1,
+                 roc2 = roc2,
+                 all = FALSE)
+  }
   
-  #env1 candidate loci
-  #Identify LFMM cand loci (P)
-  lfmm_loci1 <- which(pvalues[,"env1"] < sig) 
-  #Identify negatives
-  lfmm_neg1 <- which(pvalues[,"env1"] >= sig | is.na(pvalues[,"env1"]))
-  #check length makes sense
-  stopifnot(length(lfmm_loci1) + length(lfmm_neg1) == nrow(pvalues))
-  
-  #get confusion matrix values
-  #True Positives
-  TP1 <- sum(lfmm_loci1 %in% loci_trait1)
-  #False Positives
-  FP1 <- sum(lfmm_loci1 %notin% loci_trait1)
-  #True Negatives
-  TN1 <- sum(lfmm_neg1 %notin% loci_trait1)
-  #False Negatives
-  FN1 <- sum(lfmm_neg1 %in% loci_trait1)
-  #check sum makes sense
-  stopifnot(sum(TP1, FP1, TN1, FN1) == nrow(pvalues))
-  
-  #env2 candidate loci
-  #Identify LFMM cand loci
-  lfmm_loci2 <- which(pvalues[,"env2"] < sig) 
-  #Identify negatives
-  lfmm_neg2 <- which(pvalues[,"env2"] >= sig | is.na(pvalues[,"env2"]))
-  #check length makes sense
-  stopifnot(length(lfmm_loci2) + length(lfmm_neg2) == nrow(pvalues))
-  
-  #True Positives
-  TP2 <- sum(lfmm_loci2 %in% loci_trait2)
-  #False Positives
-  FP2 <- sum(lfmm_loci2 %notin% loci_trait2)
-  #True Negatives
-  TN2 <- sum(lfmm_neg2 %notin% loci_trait2)
-  #False Negatives
-  FN2 <- sum(lfmm_neg2 %in% loci_trait2)
-  #check length makes sense
-  stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
-  
-  #stats for all loci 
-  lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
-  #calc confusion matrix
-  TP <- TP1 + TP2
-  FP <- FP1 + FP2
-  TN <- TN1 + TN2
-  FN <- FN1 + FN2
-  #check sum makes sense
-  stopifnot(sum(TP, FP, TN, FN) == 2*nrow(pvalues))
-  
-  #calc True Positive Rate (i.e. Sensitivity)
-  TPRCOMBO <- TP/(TP + FN)
-  #calc True Negative Rate (i.e. Specificity)
-  TNRCOMBO <- TN/(TN + FP)
-  #calc False Discovery Rate 
-  FDRCOMBO <- FP/(FP + TP)
-  # correct FDR if 0 is in the denom
-  if ((FP + TP == 0) & FP == 0) FDRCOMBO <- 0
-  #calc False Positive Rate 
-  FPRCOMBO <- FP/(FP + TN)
-  
-  # Calculate empirical pvalues (I THINK - CHECK THIS)
-  # Get B values (fixed effect)
-  Bvalues <-  data.frame(env1 = abs(lfmm_mod$B[,1]), env2 = abs(lfmm_mod$B[,2]))
-  null1 <- Bvalues$env1[-loci_trait1]
-  emp1 <- sapply(Bvalues$env1[loci_trait1], function(x){mean(x > null1, na.rm = TRUE)})
-  emp1_mean <- mean(emp1, na.rm = TRUE)
-  null2 <- Bvalues$env2[-loci_trait2]
-  emp2 <- sapply(Bvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
-  emp2_mean <- mean(emp2, na.rm = TRUE)
-  EMPCOMBO <- mean(emp1_mean, emp2_mean, na.rm = TRUE)
-  
-  return(data.frame(padj = padj,
-                    sig = sig,
-                    TPRCOMBO = TPRCOMBO, 
-                    TNRCOMBO = TNRCOMBO,
-                    FDRCOMBO = FDRCOMBO, 
-                    FPRCOMBO = FPRCOMBO,
-                    TOTALN = length(lfmm_loci), 
-                    TOTALTP = TP, 
-                    TOTALFP = FP, 
-                    TOTALTN = TN,
-                    TOTALFN = FN,
-                    emp1_mean = emp1_mean,
-                    emp2_mean = emp2_mean,
-                    EMPCOMBO = EMPCOMBO,
-                    pr1 = pr1,
-                    pr2 = pr2,
-                    roc1 = roc1,
-                    roc2 = roc2))
+  return(df)
 }
 
 
@@ -488,4 +592,17 @@ rdadapt <- function(rda,K)
   q.values_rdadapt<-qval$qvalues
   return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
+
+maf_calc <- function(gen, loci_trait1, loci_trait2, cutoff = 1.15){
+  gen1 <- gen[,loci_trait1]
+  maf1 <- map_dbl(1:length(loci_trait1), ~mean(gen1[,.x], na.rm = TRUE))
+  maf_trait1 <- loci_trait1[maf1 > 0.05 & maf1 < 0.95]
+    
+  gen2 <- gen[,loci_trait2]
+  maf2 <- map_dbl(1:length(loci_trait2), ~mean(gen2[,.x], na.rm = TRUE))
+  maf_trait2 <- loci_trait2[maf2 > 0.05 & maf1 < 0.95]
+  
+  return(list(trait1 = maf_trait1, trait2 = maf_trait2))
+}
+
 
