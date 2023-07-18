@@ -214,7 +214,7 @@ calc_confusion_combos <- function(padj, p, maf, all, genmat, envmat, lfmm_mod, l
       all = all
     )
   
-  result <- data.frame(result, maf = maf, nloci_trait = length(c(loci_trait1, loci_trait2)))
+  result <- data.frame(result, maf = maf, nloci_trait1 = length(loci_trait1), nloci_trait2 = length(loci_trait2))
   return(result)
 }
 
