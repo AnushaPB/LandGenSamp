@@ -11,6 +11,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
   # make cluster
   cl <- parallel::makeCluster(ncores) 
+  registerDoParallel(cl)
   
   # Run common operations
   if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2", "lfmm_fullK"))
