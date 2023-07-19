@@ -214,7 +214,7 @@ calc_confusion_combos <- function(padj, p, maf, all, genmat, envmat, lfmm_mod, l
       all = all
     )
   
-  result <- data.frame(result, maf = maf)
+  result <- data.frame(result, maf = maf, nloci_trait1 = length(loci_trait1), nloci_trait2 = length(loci_trait2))
   return(result)
 }
 
@@ -358,7 +358,7 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
     null2 <- Bvalues$env2[-loci_trait2]
     emp2 <- sapply(Bvalues$env2[loci_trait2], function(x){mean(x > null2, na.rm = TRUE)})
     emp2_mean <- mean(emp2, na.rm = TRUE)
-    EMPCOMBO <- mean(emp1_mean, emp2_mean, na.rm = TRUE)
+    EMPCOMBO <- mean(c(emp1_mean, emp2_mean), na.rm = TRUE)
     
     df <- 
       data.frame(padj = padj,
