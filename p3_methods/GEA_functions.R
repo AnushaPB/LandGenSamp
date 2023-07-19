@@ -214,7 +214,7 @@ calc_confusion_combos <- function(padj, p, maf, all, genmat, envmat, lfmm_mod, l
       all = all
     )
   
-  result <- data.frame(result, maf = maf, nloci_trait1 = length(loci_trait1), nloci_trait2 = length(loci_trait2))
+  result <- data.frame(result, maf = maf)
   return(result)
 }
 
@@ -593,7 +593,7 @@ rdadapt <- function(rda,K)
   return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
 
-maf_calc <- function(gen, loci_trait1, loci_trait2, cutoff = 0.1){
+maf_calc <- function(gen, loci_trait1, loci_trait2, cutoff = 0.05){
   gen1 <- gen[,loci_trait1]
   maf1 <- map_dbl(1:length(loci_trait1), ~mean(gen1[,.x], na.rm = TRUE))/2
   maf_trait1 <- loci_trait1[maf1 > cutoff & maf1 < (1 - cutoff)]
