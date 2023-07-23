@@ -186,7 +186,7 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
 # X is a list of independent distance matrices (with optional names)
 
 # NOTE: adjusted for sims
-MMRR<-function(Y,X,nperm=50){
+mmrr <- function(Y,X,nperm=50){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
   y<-unfold(Y)
@@ -221,6 +221,7 @@ MMRR<-function(Y,X,nperm=50){
   names(tp)<-paste(c("Intercept",names(X)),"(p)",sep="")
   names(Fstat)<-"F-statistic"
   names(Fp)<-"F p-value"
+  
   return(list(r.squared=r.squared,
               coefficients=coeffs,
               tstatistic=tstat,
@@ -250,7 +251,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
 
   #Run  MMRR
-  mmrr_res <- MMRR(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
+  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
   
   #turn results into dataframe
   results <- mmrr_results_df(mmrr_res)
@@ -268,7 +269,7 @@ run_mmrr2 <- function(gen, gsd_df, distmeasure= "euc"){
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
   
   #Run  MMRR
-  mmrr_res <- MMRR(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
+  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
   
   #turn results into dataframe
   results <- mmrr_results_df(mmrr_res)
