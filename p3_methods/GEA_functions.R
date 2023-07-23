@@ -560,7 +560,7 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
                  TNRCOMBO = TNRCOMBO,
                  FDRCOMBO = FDRCOMBO, 
                  FPRCOMBO = FPRCOMBO,
-                 TOTALN = length(lfmm_loci), 
+                 TOTALN = length(rda_loci), 
                  TOTALTP = TP, 
                  TOTALFP = FP, 
                  TOTALTN = TN,
