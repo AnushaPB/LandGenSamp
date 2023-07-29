@@ -148,13 +148,21 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
     # get pvalues
     modTest <- gdm.varImp_custom(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
     
-    pvals <- modTest$`Predictor p-values`
-    pvals$var <- row.names(pvals)
-    pvals <- left_join(data.frame(var = c("matrix_1", "matrix_2", "matrix_3")), pvals)
-    results <- data.frame(results,
-                          env1_p = pvals[pvals$var == "matrix_1", 2],
-                          env2_p = pvals[pvals$var == "matrix_2", 2],
-                          geo_p = pvals[pvals$var == "matrix_3", 2])
+    if (!is.null(modTest)) {
+      pvals <- modTest$`Predictor p-values`
+      pvals$var <- row.names(pvals)
+      pvals <- left_join(data.frame(var = c("matrix_1", "matrix_2", "matrix_3")), pvals)
+      results <- data.frame(results,
+                            env1_p = pvals[pvals$var == "matrix_1", 2],
+                            env2_p = pvals[pvals$var == "matrix_2", 2],
+                            geo_p = pvals[pvals$var == "matrix_3", 2])
+    } else {
+      results <- data.frame(results,
+                            env1_p = NA,
+                            env2_p = NA,
+                            geo_p = NA)
+    }
+    
   
   }
   
@@ -360,7 +368,8 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   
   # stop routine if fewer than two variables remain
   if(nVars<2){
-    stop("Function requires at least two predictor variables.")
+    warning("Function requires at least two predictor variables. Returning NULL")
+    return(NULL)
   }
   
   # reduce number of cores to nVars

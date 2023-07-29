@@ -2,7 +2,7 @@
 ############
 #   LFMM   #
 ############
-run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge", "lasso"), K = NULL, loci_df = NULL, Kvals = 1:9, maf = 0.05){
+run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge", "lasso"), K = NULL, loci_df = NULL, Kvals = 1:9, maf = c(0, 0.05)){
   
   # get adaptive loci
   if (is.null(loci_df)) loci_df <- get_loci()
@@ -638,18 +638,19 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     
     df <- 
       data.frame(padj = padj,
-                     sig = sig,
-                     TPRCOMBO = TPRCOMBO, 
-                     TNRCOMBO = TNRCOMBO,
-                     FDRCOMBO = FDRCOMBO, 
-                     FPRCOMBO = FPRCOMBO,
-                     TOTALN = length(rda_loci), 
-                     TOTALTP = TP, 
-                     TOTALFP = FP, 
-                     TOTALTN = TN,
-                     TOTALFN = FN,
-                     pr = pr,
-                     roc = roc)
+                 sig = sig,
+                 TPRCOMBO = TPRCOMBO, 
+                 TNRCOMBO = TNRCOMBO,
+                 FDRCOMBO = FDRCOMBO, 
+                 FPRCOMBO = FPRCOMBO,
+                 TOTALN = length(rda_loci), 
+                 TOTALTP = TP, 
+                 TOTALFP = FP, 
+                 TOTALTN = TN,
+                 TOTALFN = FN,
+                 pr = pr,
+                 roc = roc, 
+                 all = FALSE)
   
   }
   
