@@ -1,5 +1,6 @@
 library(here)
 library(tidyverse)
+library(furrr)
 source(here("general_functions.R"))
 
 future::plan(future::multisession, workers = 20)
