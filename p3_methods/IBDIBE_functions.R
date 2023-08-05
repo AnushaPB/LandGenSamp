@@ -68,10 +68,9 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
     results$ratio <- abs(results$env_coeff)/abs(results$geo_coeff)
     
     # get pvalues
-    safe_gdm.varImp <- safely(gdm.varImp)
-    modTest <- safe_gdm.varImp(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
-    if (is.null(modTest$error)) {
-      pvals <- modTest$result$`Predictor p-values`
+    modTest <- gdm.varImp_custom(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
+    if (is.null(modTest)) {
+      pvals <- modTest$`Predictor p-values`
       pvals$var <- row.names(pvals)
       pvals <- left_join(data.frame(var = c("matrix_1", "matrix_2")), pvals)
       results <- data.frame(results,

@@ -7,7 +7,9 @@
 SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",  buffer_size = NULL, edge_buffer = NULL, ldim = NULL, Nreps = 1000){
   # make coords
   coords <- gsd_df[,c("idx","x","y")]
-  coordinates(coords) <- ~x+y
+  # correct y coords if not corrected
+  if (all(gsd_df$y > 0)) gsd_df$y <- -gsd_df$y
+  coords <- sf::st_as_sf(coords, coords = c("x","y"))
   
   # sample sites
   if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, nsite = nsite, edge_buffer = edge_buffer, ldim = ldim)}
@@ -32,10 +34,14 @@ SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
   #buffer - buffer around site from which to draw samples randomly
   #edge_buffer - buffer from landscape edges to prevent sampling of sites
   
+  # convert coords to sp
+  coords <- sf::as_Spatial(coords)
+  
+  # make df
   site_samples <- data.frame()
   
-  #sample sites can be provided as either sp or coords in vector format (nloop just counts how many sites)
-  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)} else {nloop <- nrow(sample_sites)}
+  #sample sites can be provided as either sf or coords in vector format (nloop just counts how many sites)
+  nloop <- nrow(sample_sites)
   
   for(s in 1:nloop){
     #create buffer around sites from which to sample points
@@ -74,14 +80,15 @@ SiteSampleNear <- function(sample_sites, coords, npts){
   #npts - number of points to sample from each site
   site_samples <- data.frame()
   
-  #sample sites can be provided as either sp or coords in vector format (nloop just counts how many sites)
-  if(class(sample_sites)[1] == "SpatialPoints"){nloop <- length(sample_sites)} else {nloop <- nrow(sample_sites)}
+  #sample sites can be provided as either sf or coords in vector format (nloop just counts how many sites)
+  nloop <- nrow(sample_sites)
   
   for(s in 1:nloop){
     # get site coords
     site_coords <- sample_sites[s,]
     # creates a vector of distances between the site and all other points in the dataset
-    dist_vec <- sqrt((coords$x - site_coords$x)^2 + (coords$y - site_coords$y)^2)
+    dist_vec <- as.vector(sf::st_distance(coords, site_coords))
+    names(dist_vec) <- coords$idx
     # remove the distance of 0 (same site)
     dist_vec <- dist_vec[dist_vec != 0]
     dist_vec <- dist_vec[order(dist_vec)]
@@ -100,11 +107,17 @@ SiteSampleNear <- function(sample_sites, coords, npts){
 
 
 rand_samp <- function(coords, nsite, edge_buffer = NULL, ldim = NULL){
-  #buffer away from edges if ldim and edge_buffer provided
-  if(is.null(ldim) | is.null(edge_buffer)){coords_buffer <- coords} else {coords_buffer <- crop(coords, extent(edge_buffer, ldim-edge_buffer, edge_buffer, ldim-edge_buffer))}
+  
+  # buffer away from edges if ldim and edge_buffer provided
+  # negatives are to deal with -y values in coords
+  xmin = 0
+  xmax = ldim
+  ymin = -ldim
+  ymax = 0
+  if(is.null(ldim) | is.null(edge_buffer)){coords_buffer <- coords} else {coords_buffer <- sf::st_crop(coords, xmin = xmin + edge_buffer, ymin = ymin + edge_buffer, xmax = xmax - edge_buffer, ymax = ymax - edge_buffer)}
   
   #randomly select points to act as sites
-  sample_sites <- coords_buffer[sample(1:length(coords_buffer), nsite),]
+  sample_sites <- coords_buffer[sample(1:nrow(coords_buffer), nsite),]
   
   return(sample_sites)
 }
@@ -112,6 +125,7 @@ rand_samp <- function(coords, nsite, edge_buffer = NULL, ldim = NULL){
 
 #function to make equidistant sampling sites
 equi_samp <- function(nsite, ldim = 100, buffer = 10){
+  
   #nsite - number of points (or sites) to sample (should be a perfect square)
   #ldim - landscape dimension of one side (landscape should be a square)
   inc <- (ldim - buffer*2)/(sqrt(nsite) - 1)
@@ -120,30 +134,35 @@ equi_samp <- function(nsite, ldim = 100, buffer = 10){
   colnames(cgrid) <- c("x","y")
   
   #flip y coordinates to match simulation coords
-  cgrid$y <- -(cgrid$y)
+  cgrid$y <- -cgrid$y
   
   par(pty = "s")
   plot(cgrid, xlim = c(0,ldim), ylim = c(-ldim,0))
   
-  sp::coordinates(cgrid) <- ~x+y
+  cgrid <- sf::st_as_sf(cgrid, coords = c("x", "y"))
   
   return(cgrid)
 }
 
 # function to perform envgeo sampling
 envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = NULL){
+    
   sample.sets <- matrix(nrow=Nreps, ncol=nsite)
   results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
                         Mantel.r=numeric(Nreps), Mantel.p=numeric(Nreps),
                         mean.dist=numeric(Nreps))
+  
   if(is.null(ldim) | is.null(edge_buffer)){
     gsd_df <- gsd_df
   } else {
     #define buffer
-    buffmin <- edge_buffer
-    buffmax <- ldim - edge_buffer
+    xmin = 0 + edge_buffer
+    xmax = ldim - edge_buffer
+    ymin = -ldim + edge_buffer
+    ymax = 0 - edge_buffer
+    
     #buffer coordinates away from edge
-    gsd_df <- gsd_df[gsd_df$x > buffmin & gsd_df$x < buffmax & gsd_df$y > buffmin & gsd_df$y < buffmax,]
+    gsd_df <- gsd_df[gsd_df$x > xmin & gsd_df$x < xmax & gsd_df$y > ymin & gsd_df$y < ymax,]
   }
 
   env.df <- gsd_df[,c("env1","env2")]
@@ -176,7 +195,7 @@ envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = 
   sample_sites <- gsd_df[as.character(sub_df$idx), c("x","y")]
   
   #convert to coordinates
-  coordinates(sample_sites) <- ~x+y
+  sample_sites <- sf::st_as_sf(sample_sites, coords = c("x","y"))
   
   return(sample_sites)
 }
