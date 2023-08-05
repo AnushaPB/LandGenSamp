@@ -10,7 +10,7 @@ SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",
   coordinates(coords) <- ~x+y
   
   # sample sites
-  if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, nsite = nsite, buffer_size = buffer_size, edge_buffer = edge_buffer, ldim = ldim)}
+  if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, nsite = nsite, edge_buffer = edge_buffer, ldim = ldim)}
   if(site_method == "envgeo"){sample_sites <- envgeo_samp(gsd_df, nsite = nsite, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)}
   if(site_method == "equi"){sample_sites <- equi_samp(nsite = nsite, ldim = ldim)}
   
@@ -99,7 +99,7 @@ SiteSampleNear <- function(sample_sites, coords, npts){
 }
 
 
-rand_samp <- function(coords, nsite, buffer_size = 5, edge_buffer = NULL, ldim = NULL){
+rand_samp <- function(coords, nsite, edge_buffer = NULL, ldim = NULL){
   #buffer away from edges if ldim and edge_buffer provided
   if(is.null(ldim) | is.null(edge_buffer)){coords_buffer <- coords} else {coords_buffer <- crop(coords, extent(edge_buffer, ldim-edge_buffer, edge_buffer, ldim-edge_buffer))}
   
@@ -117,13 +117,15 @@ equi_samp <- function(nsite, ldim = 100, buffer = 10){
   inc <- (ldim - buffer*2)/(sqrt(nsite) - 1)
   xgrid <- ygrid <- seq(0+buffer, ldim-buffer, inc) 
   cgrid <- expand.grid(xgrid, ygrid)
+  colnames(cgrid) <- c("x","y")
+  
+  #flip y coordinates to match simulation coords
+  cgrid$y <- -(cgrid$y)
   
   par(pty = "s")
-  plot(cgrid, xlim = c(0,ldim), ylim = c(0,ldim))
+  plot(cgrid, xlim = c(0,ldim), ylim = c(-ldim,0))
   
-  colnames(cgrid) <- c("x","y")
   sp::coordinates(cgrid) <- ~x+y
-  
   
   return(cgrid)
 }

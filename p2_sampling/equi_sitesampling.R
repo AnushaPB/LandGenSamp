@@ -19,7 +19,7 @@ print(ldim)
 # confirm correct nsites
 print(nsites)
 
-for(n in nsites){
+for (n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
