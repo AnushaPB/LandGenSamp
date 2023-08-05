@@ -136,8 +136,8 @@ equi_samp <- function(nsite, ldim = 100, buffer = 10){
   #flip y coordinates to match simulation coords
   cgrid$y <- -cgrid$y
   
-  par(pty = "s")
-  plot(cgrid, xlim = c(0,ldim), ylim = c(-ldim,0))
+  #par(pty = "s")
+  #plot(cgrid, xlim = c(0,ldim), ylim = c(-ldim,0))
   
   cgrid <- sf::st_as_sf(cgrid, coords = c("x", "y"))
   
@@ -192,7 +192,7 @@ envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = 
   sub_df <- gsd_df[best_sample,]
   
   #overwrite sample sites with coordinates for sample sites using indexes
-  sample_sites <- gsd_df[as.character(sub_df$idx), c("x","y")]
+  sample_sites <- gsd_df[as.character(sub_df$idx), c("x","y", "idx")]
   
   #convert to coordinates
   sample_sites <- sf::st_as_sf(sample_sites, coords = c("x","y"))
