@@ -12,13 +12,13 @@ SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",
   coords <- sf::st_as_sf(coords, coords = c("x","y"))
   
   # sample sites
-  if(site_method == "rand"){sample_sites <- rand_samp(coords = coords, nsite = nsite, edge_buffer = edge_buffer, ldim = ldim)}
-  if(site_method == "envgeo"){sample_sites <- envgeo_samp(gsd_df, nsite = nsite, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)}
-  if(site_method == "equi"){sample_sites <- equi_samp(nsite = nsite, ldim = ldim)}
+  if (site_method == "rand") sample_sites <- rand_samp(coords = coords, nsite = nsite, edge_buffer = edge_buffer, ldim = ldim)
+  if (site_method == "envgeo") sample_sites <- envgeo_samp(gsd_df, nsite = nsite, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)
+  if (site_method == "equi") sample_sites <- equi_samp(nsite = nsite, ldim = ldim)
   
   # sample points around sites 
-  if(sample_method == "near"){site_samples <- SiteSampleNear(sample_sites, coords, npts = npts)}
-  if(sample_method == "buffer"){site_samples <- SiteSampleBuffer(sample_sites, coords, npts = npts, buffer_size = buffer_size)}
+  if (sample_method == "near") site_samples <- SiteSampleNear(sample_sites, coords, npts = npts)
+  if (sample_method == "buffer") site_samples <- SiteSampleBuffer(sample_sites, coords, npts = npts, buffer_size = buffer_size)
   
   # make a vector
   samples <- paste0(site_samples$idx, "_", site_samples$site)
