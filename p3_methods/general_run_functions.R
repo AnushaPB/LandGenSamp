@@ -220,6 +220,9 @@ run_full_helper <- function(i, params, method, n = 2000) {
   rm("gsd_df")
   gc()
   
+  filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
+  write.csv(full_result, filepath, row.names = FALSE)
+  
   return(full_result)
 }
 
