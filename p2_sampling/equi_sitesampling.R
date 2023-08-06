@@ -42,6 +42,7 @@ for (n in nsites){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
+      set.seed(5)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "equi", sample_method = "near", ldim = ldim)
       # print("nsite", n)
       # print("nsamp", length(samples))

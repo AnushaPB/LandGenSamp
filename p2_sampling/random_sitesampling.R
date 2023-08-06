@@ -33,6 +33,7 @@ for (n in nsites) {
       #get data
       gsd_df <- get_gsd(gsd_filepath)
       #sample
+      set.seed(4)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
     }
     

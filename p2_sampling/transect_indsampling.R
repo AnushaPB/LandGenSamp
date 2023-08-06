@@ -69,6 +69,7 @@ for(n in nsamps){
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       pts <- gsd_df[,c("idx","x","y")]
+      set.seed(6)
       samples <- transect_samp(pts, n, ytsct, buffer)
     }
     
