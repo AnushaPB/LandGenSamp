@@ -3,9 +3,9 @@ set.seed(42)
 library("here") #paths
 library("foreach")
 library("doParallel")
-
+library("dplyr")
 #read in general functions and objects
-source("general_functions.R")
+source(here("general_functions.R"))
 
 ##############
 #  MISMATCH  #
@@ -13,14 +13,13 @@ source("general_functions.R")
 
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) #not to overload your computer
+cl <- makeCluster(3)
 registerDoParallel(cl)
 
 system.time(
 res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   library("here")
-  
+  library("dplyr")
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -43,11 +42,11 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     
     #calculate phenotypic mistmatch
-    z1mis <- gsd_df$z1 - gsd_df$env1
-    z2mis <- gsd_df$z2 - gsd_df$env2
-    mis <- c(z1mis, z2mis)
+    z1mis <- abs(gsd_df$z1 - gsd_df$env1)
+    z2mis <- abs(gsd_df$z2 - gsd_df$env2)
+    mis <- z1mis + z2mis
     
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), mismatch = mean(mis))
+    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), mismatch_mean = mean(mis), mismatch_max = max(mis))
     for(nsamp in npts){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
@@ -55,11 +54,11 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subgsd_df <- gsd_df[subIDs,]
         
         #calculate phenotypic mistmatch
-        z1mis <- subgsd_df$z1 - subgsd_df$env1
-        z2mis <- subgsd_df$z2 - subgsd_df$env2
-        mis <- c(z1mis, z2mis)
+        z1mis <- abs(subgsd_df$z1 - subgsd_df$env1)
+        z2mis <- abs(subgsd_df$z2 - subgsd_df$env2)
+        mis <- z1mis + z2mis
         
-        sub_result <- data.frame(params[i,],  sampstrat = sampstrat, nsamp = nsamp, mismatch = mean(mis))
+        sub_result <- data.frame(params[i,],  sampstrat = sampstrat, nsamp = nsamp, mismatch_mean = mean(mis), mismatch_max = max(mis))
         
         #bind results
         result <- rbind.data.frame(result, sub_result)

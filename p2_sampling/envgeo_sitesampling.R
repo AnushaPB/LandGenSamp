@@ -10,7 +10,7 @@ set.seed(42)
 
 #register cores
 #these calculations are RAM intensive so only run few at a time
-cores <- 8
+cores <- 15
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
