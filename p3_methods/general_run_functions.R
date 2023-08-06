@@ -201,7 +201,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
   
   # Run model on full data set
   if (method == "lfmm_fullK") {
-    K <- get_K_tess(gen, coords = gsd[,c("x", "y")], Kvals = 1:9)
+    K <- get_K_tess(gen, coords = gsd_df[,c("x", "y")], Kvals = 1:9)
     result <- data.frame(K_factor = K)
   } else {
     run_method <- get_method(method, type = "run")
@@ -253,7 +253,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     stats <- dplyr::bind_cols(sub_stats, stats)
   } 
   
-  if (method == "lfmm_fullK") stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor)
+  if (method == "lfmm_fullK") stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor, lfmm_method = "ridge")
   
   if (method == "lfmm" | method == "rda")  stats <- run_method(subgen, subgsd_df)
     
@@ -273,7 +273,7 @@ get_method <- function(method, type = "run"){
     if (method == "mmrr2") return(run_mmrr2)
     if (method == "gdm") return(run_gdm)
     if (method == "gdm2") return(run_gdm2)
-    if (method == "lfmm") return(run_lfmm)
+    if (method == "lfmm" | method == "lfmm_fullK") return(run_lfmm)
     if (method == "rda") return(run_rda)
   }
   
@@ -281,7 +281,7 @@ get_method <- function(method, type = "run"){
     if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) return(stat_ibdibe)
   }
   
-  stop("invalid input")
+  stop("invalid method input")
 }
 
 
