@@ -4,7 +4,7 @@
 
 # SITE SAMPLING ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",  buffer_size = NULL, edge_buffer = NULL, ldim = NULL, Nreps = 1000){
+SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",  buffer_size = NULL, edge_buffer = NULL, ldim = 100, Nreps = 1000){
   # make coords
   coords <- gsd_df[,c("idx","x","y")]
   # correct y coords if not corrected
@@ -106,7 +106,7 @@ SiteSampleNear <- function(sample_sites, coords, npts){
 }
 
 
-rand_samp <- function(coords, nsite, edge_buffer = NULL, ldim = NULL){
+rand_samp <- function(coords, nsite, edge_buffer = NULL, ldim = 100){
   
   # buffer away from edges if ldim and edge_buffer provided
   # negatives are to deal with -y values in coords
@@ -145,7 +145,7 @@ equi_samp <- function(nsite, ldim = 100, buffer = 10){
 }
 
 # function to perform envgeo sampling
-envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = NULL){
+envgeo_samp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = 100){
     
   sample.sets <- matrix(nrow=Nreps, ncol=nsite)
   results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),

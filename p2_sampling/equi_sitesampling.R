@@ -26,6 +26,9 @@ for (n in nsites){
     library("rgeos")
     library("dplyr")
     
+    source(here("p2_sampling", "site_functions.R"))
+    source(here("general_functions.R"))
+    
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     

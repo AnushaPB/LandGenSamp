@@ -10,13 +10,14 @@ cores <- 10
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
-for(n in nsites){
-  samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+for (n in nsites) {
+  samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
     library("sp")
     library("rgeos")
-    library(dplyr)
+    library("dplyr")
+    
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
