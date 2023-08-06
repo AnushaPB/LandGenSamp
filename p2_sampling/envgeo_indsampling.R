@@ -70,6 +70,7 @@ for(n in nsamps){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
+      set.seed(2)
       samples <- envgeo_samp(gsd_df, npts = n, Nreps = 1000)
     }
     

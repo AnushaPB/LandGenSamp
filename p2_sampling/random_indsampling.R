@@ -28,6 +28,7 @@ for (n in nsamps){
     if (skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       #take random sample
+      set.seed(1)
       samples <- gsd_df[sample(1:nrow(gsd_df), n), "idx"]
     }
     
