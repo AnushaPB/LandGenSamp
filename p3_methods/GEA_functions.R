@@ -511,14 +511,16 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
   
   # adjust pvalues (or pass through if padj = "none")
   pvalues <- data.frame(p = p.adjust(pv, method = padj))
-  
+
   if (all) {
     #Identify rda cand loci (P)
     rv1 <- rv[rv$var == "env1", ]
+    rv1$p <- p.adjust(rv1$p, method = padj)
     stopifnot(nrow(rv1) == nrow(pvalues))
     rda_loci1 <- which(pvalues$p < sig & rv1$p < sig)
     
     rv2 <- rv[rv$var == "env2", ]
+    rv2$p <- p.adjust(rv2$p, method = padj)
     stopifnot(nrow(rv2) == nrow(pvalues))
     rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
     
@@ -572,6 +574,7 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     #env1 candidate loci
     #Identify rda cand loci (P)
     rv1 <- rv[rv$var == "env1", ]
+    rv1$p <- p.adjust(rv1$p, method = padj)
     stopifnot(nrow(rv1) == nrow(pvalues))
     rda_loci1 <- which(pvalues$p < sig & rv1$p < sig) 
     #Identify negatives
@@ -594,6 +597,7 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     #env2 candidate loci
     #Identify rda cand loci
     rv2 <- rv[rv$var == "env2", ]
+    rv2$p <- p.adjust(rv2$p, method = padj)
     stopifnot(nrow(rv2) == nrow(pvalues))
     rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
     #Identify negatives
