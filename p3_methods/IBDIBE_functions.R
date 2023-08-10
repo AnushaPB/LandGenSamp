@@ -993,9 +993,13 @@ stat_ibdibe <- function(sub, full, sig = 0.05){
   colnames(ae) <- paste0(colnames(err), "_", "ae")
   
   p_cols <- colnames(full)[grepl("_p", colnames(full))]
+  
   TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
   colnames(TPR) <- paste0(colnames(TPR), "_", "TPR")
   
-  df <- data.frame(err, ae, TPR)
+  FDR <- ((sub[,p_cols] < sig) & !(full[,p_cols] < sig))/(sub[,p_cols] < sig)
+  colnames(FDR) <- paste0(colnames(FDR), "_", "FDR")
+  
+  df <- data.frame(err, ae, TPR, FDR)
   return(df)
 }
