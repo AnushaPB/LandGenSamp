@@ -511,6 +511,12 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
   
   # adjust pvalues (or pass through if padj = "none")
   pvalues <- data.frame(p = p.adjust(pv, method = padj))
+  
+  # calculate TPR/FDR based only on RDA p-values (used for comparison with TPR/FDR that includes r)
+  rda_loci <- which(pvalues$p < sig)
+  loci_trait <- c(loci_trait1, loci_trait2)
+  TPRCOMBO_rdap <- sum(rda_loci %in% loci_trait)/length(loci_trait)
+  FDRCOMBO_rdap <- sum(rda_loci %notin% loci_trait)/length(rda_loci)
 
   if (all) {
     #Identify rda cand loci (P)
@@ -525,7 +531,6 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
     
     rda_loci <- unique(c(rda_loci1, rda_loci2))
-    loci_trait <- c(loci_trait1, loci_trait2)
     
     #Identify negatives
     rda_neg <- (1:nrow(pvalues))[!(1:nrow(pvalues) %in% rda_loci)]
@@ -558,6 +563,8 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     df <- 
       data.frame(padj = padj,
                  sig = sig,
+                 TPRCOMBO_rdap = TPRCOMBO_rdap,
+                 FDRCOMBO_rdap = FDRCOMBO_rdap,
                  TPRCOMBO = TPRCOMBO, 
                  TNRCOMBO = TNRCOMBO,
                  FDRCOMBO = FDRCOMBO, 
@@ -643,6 +650,8 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     df <- 
       data.frame(padj = padj,
                  sig = sig,
+                 TPRCOMBO_rdap = TPRCOMBO_rdap,
+                 FDRCOMBO_rdap = FDRCOMBO_rdap,
                  TPRCOMBO = TPRCOMBO, 
                  TNRCOMBO = TNRCOMBO,
                  FDRCOMBO = FDRCOMBO, 
