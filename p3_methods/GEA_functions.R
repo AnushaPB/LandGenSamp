@@ -106,7 +106,7 @@ get_K <- function(gen, coords = NULL, K_selection = "find.clusters", Kvals = 1:9
 # Determine best K using find.clusters
 get_K_fc <- function(gen, max.n.clust = 9, perc.pca = 70){
   if(is.null(max.n.clust)) max.n.clust <- nrow(gen) - 1
-  if( (nrow(gen) - 1) < max.n.clust) max.n.clust <- nrow(gen) - 1
+  if((nrow(gen) - 1) < max.n.clust) max.n.clust <- nrow(gen) - 1
   fc <- adegenet::find.clusters(gen,  pca.select = "percVar", perc.pca = perc.pca, choose.n.clust = FALSE, criterion = "diffNgroup", max.n.clust = max.n.clust)
   K <- max(as.numeric(fc$grp))
   return(K)
@@ -431,7 +431,13 @@ run_rda_helper <- function(gen, gsd_df, loci_df, sig, correctPC, maf){
   pv <- rdadapt_env$p.values
   
   # r values
-  rv <- rda_cor(gen, gsd_df[,c("env1", "env2")])
+  rv <- 
+    rda_cor(gen, gsd_df[,c("env1", "env2")])  %>% 
+    dplyr::select(r, snp, var) %>% mutate(r = abs(r)) %>% 
+    pivot_wider(names_from = "var", values_from = "r") %>%
+    mutate(var = apply(.[,c("env1", "env2")], 1, which.max))
+  
+  ## make into assignments for each var based on which has the highest correlation
   
   # NOTE: https://github.com/Capblancq/RDA-landscape-genomics used a bonferonni correction
   # correct pvals and get confusion matrix stats
@@ -520,20 +526,13 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
 
   if (all) {
     #Identify rda cand loci (P)
-    rv1 <- rv[rv$var == "env1", ]
-    rv1$p <- p.adjust(rv1$p, method = padj)
-    stopifnot(nrow(rv1) == nrow(pvalues))
-    rda_loci1 <- which(pvalues$p < sig & rv1$p < sig)
-    
-    rv2 <- rv[rv$var == "env2", ]
-    rv2$p <- p.adjust(rv2$p, method = padj)
-    stopifnot(nrow(rv2) == nrow(pvalues))
-    rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
+    rda_loci1 <- which(pvalues$p < sig & rv$var == 1)
+    rda_loci2 <- which(pvalues$p < sig & rv$var == 2) 
     
     rda_loci <- unique(c(rda_loci1, rda_loci2))
     
     #Identify negatives
-    rda_neg <- (1:nrow(pvalues))[!(1:nrow(pvalues) %in% rda_loci)]
+    rda_neg <- which(!(1:nrow(pvalues) %in% rda_loci))
     #check length makes sense
     stopifnot(length(rda_loci) + length(rda_neg) == nrow(pvalues))
     
@@ -580,12 +579,9 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     
     #env1 candidate loci
     #Identify rda cand loci (P)
-    rv1 <- rv[rv$var == "env1", ]
-    rv1$p <- p.adjust(rv1$p, method = padj)
-    stopifnot(nrow(rv1) == nrow(pvalues))
-    rda_loci1 <- which(pvalues$p < sig & rv1$p < sig) 
+    rda_loci1 <- which(pvalues$p < sig & rv$var == 1) 
     #Identify negatives
-    rda_neg1 <- which(!(pvalues$p < sig & rv1$p < sig))
+    rda_neg1 <- which(!(pvalues$p < sig & rv$var == 1))
     #check length makes sense
     stopifnot(length(rda_loci1) + length(rda_neg1) == nrow(pvalues))
     
@@ -603,12 +599,9 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     
     #env2 candidate loci
     #Identify rda cand loci
-    rv2 <- rv[rv$var == "env2", ]
-    rv2$p <- p.adjust(rv2$p, method = padj)
-    stopifnot(nrow(rv2) == nrow(pvalues))
-    rda_loci2 <- which(pvalues$p < sig & rv2$p < sig) 
+    rda_loci2 <- which(pvalues$p < sig & rv$var == 2) 
     #Identify negatives
-    rda_neg2 <- which(!(pvalues$p < sig & rv2$p < sig))
+    rda_neg2 <- which(!(pvalues$p < sig & rv$var == 2))
     #check length makes sense
     stopifnot(length(rda_loci2) + length(rda_neg2) == nrow(pvalues))
     
@@ -624,7 +617,7 @@ rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, lo
     stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
     
     #stats for all loci 
-    rda_loci <- c(rda_loci1, rda_loci2)
+    rda_loci <- unique(c(rda_loci1, rda_loci2))
     #calc confusion matrix
     TP <- TP1 + TP2
     FP <- FP1 + FP2
