@@ -101,6 +101,83 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
   
   # model combo
+  geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
+  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
+  
+  gdmData <-
+    formatsitepair(
+      gdmGen,
+      bioFormat = 3,
+      predData = gdmPred,
+      XColumn = "Longitude",
+      YColumn = "Latitude",
+      siteColumn = "site",
+      distPreds = list(geo = geoDist)
+    )
+  
+  #scale distance from 01
+  gdmData$distance <- range01(gdmData$distance) 
+  
+  #run GDM
+  gdm.model <- gdm(gdmData, geo = FALSE)
+  
+  if (is.null(gdm.model)){
+    #turn results into dataframe
+    results <- data.frame(env1_coeff = NA,
+                          env2_coeff = NA,
+                          geo_coeff = NA,
+                          ratio = NA,
+                          env1_p = NA,
+                          env2_p = NA,
+                          geo_p = NA)
+  } else {
+    predictors <- coeffs(gdm.model)
+    
+    # turn results into dataframe
+    results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
+                          env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
+                          geo_coeff = predictors[predictors$predictor == "matrix_1", "coefficient"])
+    results$ratio <- sum(abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
+    
+    # get pvalues
+    modTest <- gdm.varImp_custom(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
+    
+    if (!is.null(modTest)) {
+      pvals <- modTest$`Predictor p-values`
+      pvals$var <- row.names(pvals)
+      pvals <- left_join(data.frame(var = c("env1", "env2", "matrix_1")), pvals, by = "var")
+      results <- data.frame(results,
+                            env1_p = pvals[pvals$var == "env1", 2],
+                            env2_p = pvals[pvals$var == "env2", 2],
+                            geo_p = pvals[pvals$var == "matrix_1", 2])
+    } else {
+      results <- data.frame(results,
+                            env1_p = NA,
+                            env2_p = NA,
+                            geo_p = NA)
+    }
+    
+  
+  }
+  
+  
+  #remove rownames
+  rownames(results) <- NULL
+  
+  return(results)
+}
+
+
+
+run_gdm2_mat <- function(gen, gsd_df, distmeasure = "euc"){
+  #Format data for GDM  
+  gendist <- calc_dist(gen, distmeasure)
+  
+  #Format gdm dataframe
+  site <- 1:nrow(gendist) #vector of sites
+  gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
+  
+  # model combo
   env1Dist <- cbind(site, as.matrix(dist(gsd_df[,"env1"], method = "euclidean", diag = TRUE, upper = TRUE)))
   env2Dist <- cbind(site, as.matrix(dist(gsd_df[,"env2"], method = "euclidean", diag = TRUE, upper = TRUE)))
   geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
@@ -162,7 +239,7 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
                             geo_p = NA)
     }
     
-  
+    
   }
   
   
