@@ -1,0 +1,300 @@
+---
+title: "mmrr_resid_test"
+output: html_document
+date: "2023-07-14"
+---
+```{r}
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(raster)
+library(purrr)
+
+env <- read.csv(here("p1_gnxsims/MNLM/layers/seed1_env2_H50_r60.csv"), header = FALSE)
+env <- raster(as.matrix(env))
+names(env) <- "env"
+
+df <- data.frame(sampleRandom(env, 100, xy = TRUE))
+envdist <- as.matrix(dist(df$env))
+geodist <- as.matrix(dist(df[,c("x","y")]))
+gendist_env <- envdist
+gendist_geo <- geodist
+gendist_envgeo <- geodist + envdist
+
+source(here("p3_methods/IBDIBE_functions.R"))
+
+gendist_ls <- list(env = gendist_env, geo = gendist_geo, envgeo = gendist_envgeo)
+
+mod1 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env = envdist)
+      )))
+mod1df <- mod1 %>% bind_rows() %>% mutate(sim = names(mod1), mod = "og")
+
+
+env_mod <- lm(as.vector(envdist) ~ as.vector(geodist))
+resid_env <- matrix(env_mod$residuals, nrow = nrow(envdist))
+
+geo_mod <- lm(as.vector(geodist) ~ as.vector(envdist))
+resid_geo <- matrix(geo_mod$residuals, nrow = nrow(geodist))
+
+mod2 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env = resid_env)
+      ))) 
+mod2df <- mod2 %>% bind_rows() %>% mutate(sim = names(mod2), mod = "resid_env")
+
+mod3 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = resid_geo, env = envdist)
+      ))) 
+mod3df <- mod3 %>% bind_rows() %>% mutate(sim = names(mod3), mod = "resid_geo")
+
+mod4 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = resid_geo, env = resid_env)
+      ))) 
+mod4df <- mod4 %>% bind_rows() %>% mutate(sim = names(mod4), mod = "resid_envgeo")
+
+moddf <-
+  bind_rows(mod1df, mod2df, mod3df, mod4df) %>%
+  mutate(exp_env = sim %in% c("env", "envgeo"),
+         exp_geo = sim %in% c("geo", "envgeo")) %>%
+  mutate(env_match = (sim %in% c("env", "envgeo") & env_p < 0.05) | (sim == "geo" & !(env_p < 0.05)),
+         geo_match = (sim %in% c("geo", "envgeo") & geo_p < 0.05) | (sim == "env" & !(geo_p < 0.05)),
+         ) %>%
+  mutate(env_sig = case_when(env_p < 0.05 ~ "+", .default = "-"),
+         geo_sig = case_when(geo_p < 0.05 ~ "+", .default = "-"),)
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_env)) +
+  geom_text(aes(x = sim, y = mod, label = round(env_coeff, 2), col = env_sig), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_geo)) +
+  geom_text(aes(x = sim, y = mod, label = round(geo_coeff, 2), col = geo_p < 0.05), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(raster)
+library(purrr)
+
+env1 <- read.csv(here("p1_gnxsims/MNLM/layers/seed1_env1_H50_r60.csv"), header = FALSE)
+env2 <- read.csv(here("p1_gnxsims/MNLM/layers/seed1_env2_H50_r60.csv"), header = FALSE)
+
+env1 <- raster(as.matrix(env1))
+env2 <- raster(as.matrix(env2))
+env <- stack(env1,env2)
+names(env) <- c("env1", "env2")
+plot(env1)
+plot(env2)
+
+df <- data.frame(sampleRandom(env, 100, xy = TRUE))
+env1dist <- as.matrix(dist(df$env1))
+env2dist <- as.matrix(dist(df$env2))
+geodist <- as.matrix(dist(df[,c("x","y")]))
+envdist <- as.matrix(dist(df[,c("env1","env2")]))
+gendist_env <- env1dist + env2dist
+gendist_geo <- geodist
+gendist_envgeo <- geodist + env1dist + env2dist
+
+source(here("p3_methods/IBDIBE_functions.R"))
+
+gendist_ls <- list(env = gendist_env, geo = gendist_geo, envgeo = gendist_envgeo)
+mod1 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env1 = env1dist, env2 = env2dist)
+      )))
+mod1df <- mod1 %>% bind_rows() %>% mutate(sim = names(mod1), mod = "og1")
+  
+mod2 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env = envdist)
+      )))
+mod2df <- mod2 %>% bind_rows() %>% mutate(sim = names(mod2), mod = "og2")
+
+
+env_mod <- lm(as.vector(envdist) ~ as.vector(geodist))
+resid_env <- matrix(env_mod$residuals, nrow = nrow(envdist))
+env1_mod <- lm(as.vector(env1dist) ~ as.vector(geodist))
+resid_env1 <- matrix(env1_mod$residuals, nrow = nrow(envdist))
+env2_mod <- lm(as.vector(env2dist) ~ as.vector(geodist))
+resid_env2 <- matrix(env2_mod$residuals, nrow = nrow(envdist))
+geo_mod <- lm(as.vector(geodist) ~ as.vector(env1dist) + as.vector(env2dist))
+resid_geo <- matrix(geo_mod$residuals, nrow = nrow(geodist))
+
+mod3 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = resid_geo, env1 = resid_env1, env2 = resid_env2)
+      ))) 
+mod3df <- mod3 %>% bind_rows() %>% mutate(sim = names(mod3), mod = "resid1")
+
+mod4 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = resid_geo, env = resid_env)
+      ))) 
+mod4df <- mod4 %>% bind_rows() %>% mutate(sim = names(mod4), mod = "resid2")
+
+
+df1 <-
+  bind_rows(mod1df, mod3df) %>%
+  mutate(env1_match = (sim %in% c("env", "envgeo") & env1_p < 0.05) | (sim == "geo" & !(env1_p < 0.05)),
+         env2_match = (sim %in% c("env", "envgeo") & env2_p < 0.05) | (sim == "geo" & !(env2_p < 0.05)),
+         geo_match = (sim %in% c("geo", "envgeo") & geo_p < 0.05) | (sim == "env" & !(geo_p < 0.05)),
+         ) %>%
+  mutate(env_match = (env1_match + env2_match)/2, 
+         env_sig = ((env1_p < 0.05) | (env2_p < 0.05)),
+         env_coeff = (env1_coeff + env2_coeff))
+
+
+df2 <-
+  bind_rows(mod2df, mod4df) %>%
+  mutate(env_match = (sim %in% c("env", "envgeo") & env_p < 0.05) | (sim == "geo" & !(env_p < 0.05)),
+         geo_match = (sim %in% c("geo", "envgeo") & geo_p < 0.05) | (sim == "env" & !(geo_p < 0.05)),
+         ) %>%
+  mutate(env_sig = env_p < 0.05)
+
+moddf <- 
+  bind_rows(df1, df2) %>%
+  mutate(exp_env = sim %in% c("env", "envgeo"),
+         exp_geo = sim %in% c("geo", "envgeo")) 
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_env)) +
+  geom_text(aes(x = sim, y = mod, label = round(env_coeff, 2), col = env_sig), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_geo)) +
+  geom_text(aes(x = sim, y = mod, label = round(geo_coeff, 2), col = geo_p < 0.05), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(raster)
+library(purrr)
+
+env1 <- read.csv(here("p1_gnxsims/MNLM/layers/seed1_env1_H50_r60.csv"), header = FALSE)
+env2 <- read.csv(here("p1_gnxsims/MNLM/layers/seed1_env2_H50_r60.csv"), header = FALSE)
+
+env1 <- raster(as.matrix(env1))
+env2 <- raster(as.matrix(env2))
+env <- stack(env1,env2)
+names(env) <- c("env1", "env2")
+plot(env1)
+plot(env2)
+
+df <- data.frame(sampleRandom(env, 100, xy = TRUE))
+env1dist <- as.matrix(dist(df$env1))
+env2dist <- as.matrix(dist(df$env2))
+geodist <- as.matrix(dist(df[,c("x","y")]))
+envdist <- as.matrix(dist(df[,c("env1","env2")]))
+gendist_env <- env1dist + env2dist
+gendist_geo <- geodist
+gendist_envgeo <- geodist + env1dist + env2dist
+
+source(here("p3_methods/IBDIBE_functions.R"))
+
+gendist_ls <- list(env = gendist_env, geo = gendist_geo, envgeo = gendist_envgeo)
+mod1 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env1 = env1dist, env2 = env2dist),
+        nperm = 50
+      )))
+mod1df <- mod1 %>% bind_rows() %>% mutate(sim = names(mod1), mod = "dist(env1 + env2)")
+  
+mod2 <-
+  map(gendist_ls,
+      ~ mmrr_results_df(MMRR(
+        Y = .x,
+        X = list(geo = geodist, env = envdist)
+      )))
+mod2df <- mod2 %>% bind_rows() %>% mutate(sim = names(mod2), mod = "dist(env1) + dist(env2)")
+
+df1 <-
+  mod1df %>%
+  mutate(env1_match = (sim %in% c("env", "envgeo") & env1_p < 0.05) | (sim == "geo" & !(env1_p < 0.05)),
+         env2_match = (sim %in% c("env", "envgeo") & env2_p < 0.05) | (sim == "geo" & !(env2_p < 0.05)),
+         geo_match = (sim %in% c("geo", "envgeo") & geo_p < 0.05) | (sim == "env" & !(geo_p < 0.05)),
+         ) %>%
+  mutate(env_match = (env1_match + env2_match)/2, 
+         env_sig = ((env1_p < 0.05) | (env2_p < 0.05)),
+         env_coeff = (env1_coeff + env2_coeff))
+
+
+df2 <-
+  mod2df %>%
+  mutate(env_match = (sim %in% c("env", "envgeo") & env_p < 0.05) | (sim == "geo" & !(env_p < 0.05)),
+         geo_match = (sim %in% c("geo", "envgeo") & geo_p < 0.05) | (sim == "env" & !(geo_p < 0.05)),
+         ) %>%
+  mutate(env_sig = env_p < 0.05)
+
+moddf <- 
+  bind_rows(df1, df2) %>%
+  mutate(exp_env = sim %in% c("env", "envgeo"),
+         exp_geo = sim %in% c("geo", "envgeo"),
+         geo_coeff = round(geo_coeff,2),
+         env_coeff = round(env_coeff,2))
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_env)) +
+  geom_text(aes(x = sim, y = mod, label = round(env_coeff, 2), col = env_sig), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+ggplot(data = moddf) +
+  geom_tile(aes(x = sim, y = mod, fill = exp_geo)) +
+  geom_text(aes(x = sim, y = mod, label = round(geo_coeff, 2), col = geo_p < 0.05), size = 10) +
+  scale_color_manual(values=c("darkred", "darkgreen")) +
+  scale_fill_manual(values=c("pink", "lightgreen")) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+```
+
+
