@@ -1,6 +1,0 @@
-Points:
-- relationships change based on sampling strategy (at small sample sizes, large pop size is better; at large sample sizes, small pop size is better)
-- Phi has a positive effect on TPR for LFMM, but also a (weak) postiive effect on geo dist RMSE for GDM 
-- the coefficient of geodist decreases as you have more samples (makes sense, but pretty signif)
-- harder to estimate IBD versus IBE (RMSE for geo_coeff > RMSE for env coeffs)
-- MMRR is a lot less sensitive to the underlying parameters/sampling schemes compared to GDM 
