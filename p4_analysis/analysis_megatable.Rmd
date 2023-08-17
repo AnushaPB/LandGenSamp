@@ -1,0 +1,291 @@
+---
+title: "analysis_megatable"
+output: html_document
+date: "2022-10-18"
+---
+```{r}
+library(tidyverse)
+library(here)
+library(gt)
+```
+
+```{r}
+format_csv <- function(path){
+    read.csv(path) %>%
+    mutate(path = str_extract(basename(path), '.*(?=\\.csv)')) %>%
+    tidyr::separate(path, c("method", "sampling", "stat", "type"))
+}
+
+p4path <- here("p4_analysis", "outputs")
+
+df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%
+  map(format_csv) %>%   
+  bind_rows() %>%
+  filter(stat != "geocoefferr" & stat != "envcoefferr") %>%
+  mutate(method = toupper(method),
+         sampling = case_when(sampling == "indsampling" ~ "individual",
+                              sampling == "sitesampling" ~ "site",
+                              TRUE ~ sampling),
+         stat = map_chr(stat, make_pretty_names))
+
+```
+
+```{r}
+
+table_df <- 
+  df %>%
+  as_tibble() %>%
+  filter(Pr..F. < 0.05 | is.na(Pr..F.)) %>%
+  dplyr::select(method, stat, sampling, FixedEffects, Variable) %>%
+  #filter(Variable != "sampstrat") %>%
+  spread(Variable, FixedEffects) %>%
+  select(method,
+      stat,
+      sampling,
+      `Sample number`,
+      `Population size`, 
+      `Migration`,
+      `Selection strength`,
+      `Spatial autocorrelation`,
+      `Environmental correlation`) %>%
+  mutate()
+  
+write.csv(table_df, here("p4_analysis", "megatable.csv"), row.names = FALSE)
+
+```
+
+
+```{r}
+table_df %>%
+  filter(sampling == "individual" | sampling == "site") %>% 
+  gt(
+    rowname_col = "stat",
+    groupname_col = "method"
+    ) %>%
+  cols_label(
+      method = "Method",
+      stat = "Statistic",
+      sampling = "Sampling type",
+      `Sample number` = "Sample number",
+      `Population size` = "Population\nsize", 
+      `Selection strength` = "Selection\nstrength",
+      `Migration` = "Migration",
+      `Spatial autocorrelation` = "Spatial\nautocorrelation",
+      `Environmental correlation` = "Environmental\ncorrelation"
+    ) %>%
+  row_group_order(
+    groups = c("LFMM", "RDA", "MMRR", "GDM")
+    ) %>%
+  fmt_number(
+    columns = c(4:9),
+    decimals = 4,
+    suffixing = TRUE
+    ) %>%
+  data_color(
+    columns = 4:9,
+    colors = scales::col_numeric(
+      palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
+      domain = c(-0.40,0.40),
+      na.color = "white",
+    )
+  ) %>%
+  sub_missing(
+    columns = everything(),
+    rows = everything(),
+    missing_text = "n.s."
+    ) %>%
+  cols_width(
+    4:9 ~ px(120)
+  ) %>%
+  tab_spanner(
+    label = "Population Genetics",
+    columns = 5:7
+  ) %>%
+  tab_spanner(
+    label = "Landscape",
+    columns = 8:9
+  ) %>%
+  tab_spanner(
+    label = "Sampling",
+    columns = 3:4
+  )
+
+
+  
+```
+
+
+```{r}
+
+df <- 
+  list.files(p4path, full.names = TRUE, pattern = "*_tukey.csv") %>%
+  map(format_csv)  %>%   
+  bind_rows() %>%
+  filter(stat != "geocoefferr" & stat != "envcoefferr") %>%
+  mutate(method = toupper(method),
+         sampling = case_when(grepl("ind", sampling) ~ "individual",
+                              grepl("site", sampling) ~ "site",
+                              TRUE ~ sampling),
+         stat = map_chr(stat, make_pretty_names))
+
+df$estimate[df$p.value > 0.05] <- NA
+
+table_df <- 
+  df %>%
+  filter(sampling == "site" | sampling == "individual") %>%
+  select(contrast, estimate, method, stat, sampling) %>%
+  #filter(Variable != "sampstrat") %>%
+  spread(contrast, estimate) %>%
+  select(sampling, method, stat, 
+         "EG - G", "EG - R", "EG - T", 
+         "G - R", "G - T", 
+         "EG - EQ", "EQ - R",
+         "R - T") %>%
+  group_by(sampling) %>%
+  group_split()
+
+table_df_ind <- table_df[[1]] %>% select(-sampling, -"EG - EQ", -"EQ - R")
+table_df_site <- table_df[[2]] %>% select(-sampling, -"EG - G", -"G - R", -"G - T", -"R - T", -"EG - T")
+  
+write.csv(table_df_ind, here("p4_analysis", "tukey_ind.csv"), row.names = FALSE)
+
+write.csv(table_df_site, here("p4_analysis", "tukey_site.csv"), row.names = FALSE)
+
+```
+
+
+```{r}
+
+table_df_ind %>%
+  gt(
+    rowname_col = "stat",
+    groupname_col = "method"
+    ) %>%
+  row_group_order(
+    groups = c("LFMM", "RDA", "MMRR", "GDM")
+    ) %>%
+  cols_label(
+      method = "Method",
+      stat = "Statistic"
+    ) %>% 
+  fmt_number(
+    columns = c(3:8),
+    decimals = 3,
+    suffixing = TRUE
+    ) %>%
+  gtExtras::gt_hulk_col_numeric(
+    c(3:8), 
+    trim = TRUE, 
+    domain = c(-0.14,0.14),
+    na.color = "white"
+    ) %>%
+  sub_missing(
+    columns = everything(),
+    rows = everything(),
+    missing_text = "n.s."
+    ) %>%
+  cols_width(
+    c(3:8) ~ px(70)
+  ) 
+
+```
+
+```{r}
+
+table_df_site %>%
+  gt(
+    rowname_col = "stat",
+    groupname_col = "method"
+    ) %>%
+  row_group_order(
+    groups = c("LFMM", "RDA", "MMRR", "GDM")
+    ) %>%
+  cols_label(
+      method = "Method",
+      stat = "Statistic"
+    ) %>% 
+  fmt_number(
+    columns = c(3:5),
+    decimals = 3,
+    suffixing = TRUE
+    ) %>%
+  gtExtras::gt_hulk_col_numeric(
+    c(3:5), 
+    trim = TRUE, 
+    domain = c(-0.14,0.14),
+    na.color = "white"
+    ) %>%
+  sub_missing(
+    columns = everything(),
+    rows = everything(),
+    missing_text = "n.s."
+    ) %>%
+  cols_width(
+    c(3:5) ~ px(70)
+  ) 
+```
+
+```{r}
+
+compare_numbers <- function(vec) {
+  if (length(vec) != 4) {
+    stop("Input vector must contain exactly four elements.")
+  }
+  
+  comparison <- map_chr(1:3, ~ {
+    x <- vec[.x]
+    print(x)
+    y <- vec[.x + 1]
+    if (x > y) {
+      paste(x, ">", y)
+    } else if (x < y) {
+      paste(x, "<", y)
+    } else {
+      paste(x, "=", y)
+    }
+  })
+  
+  result <- paste(comparison, collapse = " ")
+  return(result)
+}
+
+# Example usage
+numbers <- c(2, 4, 2, 2)
+result <- compare_numbers(numbers)
+cat("Comparison:", result)
+
+lfmm_ind %>% 
+  group_by(K, phi, m, H, r, sampstrat) %>% 
+  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
+  group_by(K, phi, m, H, r) %>% 
+  filter(mean == max(mean)) %>%
+  group_by(sampstrat) %>%
+  summarize(count = n())
+
+lfmm_ind %>% 
+  group_by(K, phi, m, H, r, sampstrat) %>% 
+  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
+  group_by(K, phi, m, H, r) %>% 
+  filter(mean == min(mean)) %>%
+  group_by(sampstrat) %>%
+  summarize(count = n())
+
+lfmm_site %>% 
+  group_by(K, phi, m, H, r, sampstrat) %>% 
+  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
+  group_by(K, phi, m, H, r) %>% 
+  filter(mean == min(mean)) %>%
+  group_by(sampstrat) %>%
+  summarize(count = n())
+
+
+lfmm_site %>% 
+  group_by(K, phi, m, H, r, sampstrat, nsamp) %>% 
+  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
+  group_by(K, phi, m, H, r) %>% 
+  filter(mean == max(mean)) %>%
+  group_by(sampstrat) %>%
+  summarize(count = n())
+
+```
+
