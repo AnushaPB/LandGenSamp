@@ -3,48 +3,9 @@ library("foreach")
 library("doParallel")
 
 source(here("general_functions.R"))
+source(here("p2_sampling", "sampling_functions.R"))
 
 set.seed(42)
-
-transect_samp <- function(pts, npts, ytsct, buffer){
-  #pts - dataframe with IDs and coords
-  #npts - total number of points to sample (evenly split across transects)
-  #buffer - buffer around transects within which points are sampled 
-  
-  #convert y coords back to positive for transect sampling
-  pts$y <- -pts$y
-  #divide number of samples evenly among the transects
-  npts_tsct <- npts/length(ytsct)
-    
-  #plot all points (gray) (for debugging, comment out later)
-  par(pty="s")
-  plot(gsd_df$x, gsd_df$y, pch=19, cex=0.2, col="gray", main = npts)
-    
-  #create empty vector to store IDs
-  samples <- c()
-  for(i in 1:length(ytsct)){ 
-    #subset points around transect based on buffer
-    tsctsq <- subset(pts, y > (ytsct[i] - buffer) & y < (ytsct[i] + buffer))
-    #randomly sample subset of transect points to match number of samples needed for each transect
-    tsctsq <- tsctsq[sample(nrow(tsctsq), npts_tsct),]
-    #plot points sampled (for debugging, comment out later)
-    points(tsctsq$x, tsctsq$y, col=i+1)
-    #store IDs in list
-    samples <- c(samples, tsctsq$idx)
-  }
-  
-  #confirm correct number of samples were subsetted
-  stopifnot(npts == length(samples))
-  
-  #return vec of sample IDs
-  return(samples)
-}
-
-#horizontal transects (y-coords)
-ytsct <- c(ldim/2 - ldim/4, ldim/2, ldim/2 + ldim/4)
-#buffer around transects
-#NOTE: changed from 2 to 3 because a buffer of 2 did not include enough points
-buffer <- 3
 
 #register cores
 cl <- makeCluster(5)
@@ -70,7 +31,7 @@ for(n in nsamps){
       gsd_df <- get_gsd(gsd_filepath)
       pts <- gsd_df[,c("idx","x","y")]
       set.seed(6)
-      samples <- transect_samp(pts, n, ytsct, buffer)
+      samples <- transect_indsamp(pts, n)
     }
     
     #return vector of sample IDs

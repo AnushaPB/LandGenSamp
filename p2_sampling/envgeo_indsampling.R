@@ -5,49 +5,9 @@ library("doParallel")
 library("vegan")
 library("tidyverse")
 source(here("general_functions.R"))
-
-set.seed(42)
-
-envgeo_samp <- function(gsd_df, npts, Nreps = 1000){
-  Nreps <- 1000
-  sample.sets <- matrix(nrow=Nreps, ncol=npts)
-  results <- data.frame(env1.var=numeric(Nreps), env2.var=numeric(Nreps),
-                        Mantel.r=numeric(Nreps), Mantel.p=numeric(Nreps),
-                        mean.dist=numeric(Nreps))
-  
-  env.df <- gsd_df[,c("env1","env2")]
-  e.dist <-  as.matrix(dist(gsd_df[,c("env1","env2")], diag = TRUE, upper = TRUE)) 
-  g.dist <- as.matrix(dist(gsd_df[,c("x","y")], diag = TRUE, upper = TRUE))
-  for(i in 1:Nreps){
-    NN <- sample(1:nrow(gsd_df), npts, replace = FALSE)
-    sample.sets[i,] <- NN
-    
-    env.sub <- env.df[NN,]
-    g.dist.sub <- g.dist[NN, NN]
-    e.dist.sub <- e.dist[NN, NN]
-    
-    results$mean.dist[i] <- mean(g.dist.sub)
-    
-    results$env1.var[i] <- var(env.sub$env1)
-    results$env2.var[i] <- var(env.sub$env2)
-    
-    DxE <- mantel(g.dist.sub, e.dist.sub, permutations = 99)
-    results$Mantel.r[i] <- DxE$statistic
-    results$Mantel.p[i] <- DxE$signif
-  }
-  
-  score <- scale(1-results$Mantel.r) + scale(results$env1.var) + scale(results$env2.var)
-  best_sample <- sample.sets[which.max(score),]
-  sub_df <- gsd_df[best_sample,]
-  
-  #save IDs to vector
-  samples <- as.character(sub_df$idx)
-  
-  return(samples)
-}
+source(here("p2_sampling", "sampling_functions.R"))
 
 #register cores
-#THIS PROCESS USES A LOT OF RAM SO ONLY RUN A FEW AT A TIME
 cores <- 20
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
@@ -71,7 +31,7 @@ for(n in nsamps){
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       set.seed(2)
-      samples <- envgeo_samp(gsd_df, npts = n, Nreps = 1000)
+      samples <- envgeo_indsamp(gsd_df, npts = n, Nreps = 1000)
     }
     
     #return vector of sample IDs

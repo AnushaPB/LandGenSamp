@@ -1,3 +1,6 @@
+# You must be in p2_sampling to run this file
+# Create folder for outputs
+mkdir -p outputs
 
 # Create individual based datasets
 Rscript envgeo_indsampling.R

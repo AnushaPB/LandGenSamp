@@ -3,8 +3,7 @@ library("foreach")
 library("doParallel")
 
 source(here("general_functions.R"))
-
-set.seed(42)
+source(here("p2_sampling", "sampling_functions.R"))
 
 cl <- makeCluster(5) 
 registerDoParallel(cl)

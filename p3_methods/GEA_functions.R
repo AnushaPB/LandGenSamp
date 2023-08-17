@@ -1,4 +1,3 @@
-
 ############
 #   LFMM   #
 ############
@@ -688,5 +687,3 @@ maf_calc <- function(gen, loci_trait1, loci_trait2, cutoff = 0.05){
   
   return(list(trait1 = maf_trait1, trait2 = maf_trait2))
 }
-
-
