@@ -1,8 +1,8 @@
-source("general_functions.R")
-source("site_functions.R")
-library("here")
 library("foreach")
 library("doParallel")
+library("here")
+source(here("general_functions.R"))
+source(here("p2_sampling", "site_functions.R"))
 
 set.seed(42)
 
@@ -10,12 +10,13 @@ cores <- 10
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
-for(n in nsites){
-  samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+for (n in nsites) {
+  samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
     library("sp")
     library("rgeos")
+    library("dplyr")    
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
@@ -32,6 +33,7 @@ for(n in nsites){
       #get data
       gsd_df <- get_gsd(gsd_filepath)
       #sample
+      set.seed(4)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "rand", sample_method = "near")
     }
     

@@ -29,13 +29,55 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 
 ***
 
-<font size="5"> **Key** </font> 
-
 <font size="4"> **Plots:** </font> 
 
-**Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Note that each average encompasses all of the other varying simulation parameters.
+**Summary plots** - For the summary plots, each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Sample strategy is on the y-axis and number of sites is on the x-axis.Note that each average encompasses all of the other varying simulation parameters.
 
-**Full plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. For these plots: K = population size (not to be confused with the number of latent factors (K)), phi = selection strength, m = migration, H = spatial autocorrelation, r = correlation between environmental layers.
+**Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
+
+```{r,fig.width = 9, fig.height = 4}
+df <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv")) 
+ggdf <- make_ggdf(df, stat_name = "geo_p") 
+
+plots <-
+  map2(
+    c("K", "m", "phi", "H", "r"),
+    c(
+      "Population size (K)",
+      "Migration (m)",
+      "Selection strength (phi)",
+      "Spatial autocorrelation (H)",
+      "Environmental correlation (r)"
+    ),
+    ~ ggplot(ggdf, aes(x = nsamp, y = sampstrat)) +
+      geom_tile(aes(fill = .data[[.x]])) +
+      theme_bw() +
+      coord_fixed() +
+      facet_wrap(~ group, nrow = 4) +
+      theme(
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.margin = unit(rep(0.4, 4), "cm"),
+        strip.text.x = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(color = "black"),
+        plot.title = element_text(size = 12, face = "bold")
+      ) +
+      labs(fill = "Level") +
+      ggtitle(.y)
+  )
+
+do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
+```
 
 <font size="4"> **Methods:** </font> 
 
@@ -51,6 +93,11 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 
 ***
 
+
+```{r}
+stats <- c("TPRCOMBO_relaxed", "TPRCOMBO_strict", "FDRCOMBO_relaxed", "FDRCOMBO_strict")
+```
+
 # 1. LFMM
 
 ## 1.1 Individual sampling
@@ -60,66 +107,45 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 ```{r, fig.width=14, fig.height=7, include = FALSE}
 lfmm_ind <- format_lfmm(here(p3path, "lfmm_indsampling_results.csv")) 
 
-lfmm_ind_tidy <- lfmm_ind %>% 
-  group_by(method, K_selection) %>%
+lfmm_ind_tidy <- 
+  lfmm_ind %>% 
+  group_by(lfmm_method) %>%
   group_split()
 
-K_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "K.1", colpal = "cividis")
-TPR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.17)
-FDR_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.96)
-TOTALN_plots <- map(lfmm_ind_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
+summary_plots <-
+  map(c(stats, "TOTALN", "K_factor"),
+      ~ map(
+        lfmm_ind_tidy,
+        lfmm_plotter,
+        stat = .x,
+        maxv = agg_mm(lfmm_ind_tidy, .x)["max"],
+        minv = agg_mm(lfmm_ind_tidy, .x)["min"]
+      ))
 ```
 
 ```{r, fig.width=14, fig.height=7}
-walk(K_plots, grid.arrange)
-walk(TPR_plots, grid.arrange)
-walk(FDR_plots, grid.arrange)
-walk(TOTALN_plots, grid.arrange)
+walk(summary_plots, ~walk(.x, grid.arrange))
 ```
 
 ### 1.1.2 Linear mixed effects models
 
-*Only results from the ridge method are used in the final models*
+*Only results from the ridge method are used from here on out*
 
 ```{r, include = FALSE}
 lfmm_ind <- 
   lfmm_ind %>% 
-  filter(K_selection == "tess") %>%
-  filter(method == "ridge")
+  filter(lfmm_method == "ridge") 
 ```
 
-<font size="4.5"> **TPR** </font> 
-
 ```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
-run_lmer(lfmm_ind, "TPRCOMBO", filepath = here(p4path, "LFMM_individual_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font> 
-
-```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
-run_lmer(lfmm_ind, "FDRCOMBO", filepath = here(p4path, "LFMM_individual_FDR.csv"))
+walk(stats, ~run_lmer(lfmm_ind,  stat = .x, 
+                      filepath = make_lmer_path("lfmm", "ind", .x)))
 ```
 
 ### 1.1.3 Full plots
 
-<font size="4.5"> **K** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind, "K.1", colpal = "cividis")
-```
-
-<font size="4.5"> **TPR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind, "TPRCOMBO", colpal = "plasma")
-```
-
-<font size="4.5"> **FDR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind, "FDRCOMBO", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Total number of loci** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_ind, "TOTALN", colpal = "viridis")
+walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_ind, stat = .x)))
 ```
 
 ## 1.2 Site sampling
@@ -130,236 +156,43 @@ MEGAPLOT(lfmm_ind, "TOTALN", colpal = "viridis")
 lfmm_site <- format_lfmm(here(p3path, "lfmm_sitesampling_results.csv")) 
 
 lfmm_site_tidy <- lfmm_site %>% 
-  group_by(method, K_selection) %>%
+  group_by(lfmm_method) %>%
   group_split()
-```
 
-```{r, fig.width=14, fig.height=7, include = FALSE}
-K_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "K.1", colpal = "cividis")
-TPR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TPRCOMBO", colpal = "plasma")
-FDR_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- map(lfmm_site_tidy, lfmm_plotter, stat = "TOTALN", colpal = "viridis")
-```
-
-```{r, fig.width=14, fig.height=7}
-walk(K_plots, grid.arrange)
-```
-
-```{r, fig.width=14, fig.height=7}
-walk(TPR_plots, grid.arrange)
+summary_plots <-
+  map(c(stats, "TOTALN", "K_factor"),
+      ~ map(
+        lfmm_site_tidy,
+        lfmm_plotter,
+        stat = .x,
+        maxv = agg_mm(lfmm_site_tidy, .x)["max"],
+        minv = agg_mm(lfmm_site_tidy, .x)["min"]
+      ))
 ```
 
 ```{r, fig.width=14, fig.height=7}
-walk(FDR_plots, grid.arrange)
-```
-
-```{r, fig.width=14, fig.height=7}
-walk(TOTALN_plots, grid.arrange)
+walk(summary_plots, ~walk(.x, grid.arrange))
 ```
 
 ### 1.1.2 Linear mixed effects models
 
-*Only results from the ridge method are used in the final models*
+*Only results from the ridge method are used from here on out*
 
 ```{r}
 lfmm_site <- 
   lfmm_site %>% 
-  filter(K_selection == "tess") %>%
-  filter(method == "ridge") 
+  filter(lfmm_method == "ridge") 
 ```
 
-<font size="4.5"> **TPR** </font> 
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(lfmm_site, "TPRCOMBO", filepath = here(p4path, "LFMM_site_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font>
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(lfmm_site, "FDRCOMBO", filepath = here(p4path, "LFMM_site_FDR.csv"))
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(lfmm_site, .x, 
+                      filepath = make_lmer_path("lfmm", "site", .x)))
 ```
 
 ### 1.2.3 Full plots
 
-<font size="4.5"> **K** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site, "K.1", colpal = "cividis")
-```
-
-<font size="4.5"> **TPR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site, "TPRCOMBO", colpal = "plasma")
-```
-
-<font size="4.5"> **FDR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site, "FDRCOMBO", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Total number of loci** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(lfmm_site, "TOTALN", colpal = "viridis")
-```
-
-## 1.3 Latent factor test
-
-To determine the effect of K-selection on performance we ran LFMM using a constant K for all of the subsampled datasets from the same simulation (i.e., all sample sizes and strategies had the same K) and compared that to K-selection based on each sub-sampled dataset (i.e., K was allowed to vary by sample size and strategy). The constant K for each simulation was selected using a dataset of 1000 randomly selected individuals. For this test, we only evaluated the "ridge" and not the "lasso" method as our earlier tests demonstrated that, in general, the "ridge" method performed better. We compared the results using the same statistics (i.e., TPR and FDR) and linear mixed effects models. Overall, the final results did not vary substantially between constant and variable K and the effects of all the parameters tested remained the same. 
-
-### Individual sampling
-
-```{r, fig.width=14, fig.height=7, include = FALSE}
-lfmm_ind_fullK <- 
-  format_lfmm(here(p3path, "lfmm_indsampling_fullK_results.csv")) %>%
-  filter(method == "ridge")
-
-K_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "K.1", colpal = "cividis")
-TPR_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "TPRCOMBO", colpal = "plasma")
-FDR_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- lfmm_plotter(lfmm_ind_fullK, stat = "TOTALN", colpal = "plasma")
-```
-
-```{r, fig.width=14, fig.height=7}
-grid.arrange(K_plots)
-grid.arrange(TPR_plots)
-grid.arrange(FDR_plots)
-grid.arrange(TOTALN_plots)
-```
-
-<font size="4.5"> **TPR** </font> 
-
-```{r, results = 'asis'}
-run_lmer(lfmm_ind_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_indfullK_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font> 
-
-```{r, results = 'asis'}
-run_lmer(lfmm_ind_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_indfullK_FDR.csv"))
-```
-
-
-### Site sampling
-
-```{r, fig.width=14, fig.height=7, include = FALSE}
-lfmm_site_fullK <- 
-  format_lfmm(here(p3path, "lfmm_sitesampling_fullK_results.csv")) %>%
-  filter(method == "ridge")
-
-K_plots <- lfmm_plotter(lfmm_site_fullK, stat = "K.1", colpal = "cividis")
-TPR_plots <- lfmm_plotter(lfmm_site_fullK, stat = "TPRCOMBO", colpal = "plasma")
-FDR_plots <- lfmm_plotter(lfmm_site_fullK, stat = "FDRCOMBO", colpal = "viridis", direction = -1)
-TOTALN_plots <- lfmm_plotter(lfmm_site_fullK, stat = "TOTALN", colpal = "cividis")
-```
-
-```{r, fig.width=14, fig.height=7}
-grid.arrange(K_plots)
-grid.arrange(TPR_plots)
-grid.arrange(FDR_plots)
-grid.arrange(TOTALN_plots)
-```
-
-<font size="4.5"> **TPR** </font> 
-
-```{r, results = 'asis'}
-run_lmer(lfmm_site_fullK, "TPRCOMBO", filepath = here(p4path, "LFMM_sitefullK_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font> 
-
-```{r, results = 'asis'}
-run_lmer(lfmm_site_fullK, "FDRCOMBO", filepath = here(p4path, "LFMM_sitefullK_FDR.csv"))
-```
-
-### Comparison of effects
-
-```{r, results = 'asis'}
-format_csv <- function(path){
-    read.csv(path) %>%
-    mutate(path = str_extract(basename(path), '.*(?=\\.csv)')) %>%
-    tidyr::separate(path, c("method", "sampling", "stat", "type"))
-}
-
-
-p4path <- here("p4_analysis", "outputs")
-
-
-table_df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%
-  map(format_csv) %>%   
-  reduce(rbind) %>%
-  as_tibble() %>%
-  filter(stat != "geoerr" & stat != "enverr") %>%
-  filter(Pr..F. < 0.05) %>%
-  dplyr::select(method, stat, sampling, FixedEffects, Variable) %>%
-  spread(Variable, FixedEffects) %>%
-  select(method,
-      stat,
-      sampling,
-      `Sample number`,
-      `Population size`, 
-      `Migration`,
-      `Selection strength`,
-      `Spatial autocorrelation`,
-      `Environmental correlation`)
-  
-td <- table_df %>%
-  filter(method == "LFMM") %>% 
-  mutate(K = case_when(sampling == "individual" ~ "Variable K",
-                          sampling == "site" ~ "Variable K",
-                          sampling == "indfullK" ~ "Constant K",
-                          sampling == "sitefullK" ~ "Constant K")) %>%
-  mutate(sampling = case_when(sampling == "individual" ~ "individual",
-                          sampling == "site" ~ "site",
-                          sampling == "indfullK" ~ "individual",
-                          sampling == "sitefullK" ~ "site")) %>%
-  arrange(desc(stat), sampling, K) %>%
-  select(-method) %>%
-  gt(
-    rowname_col = "K",
-    groupname_col = "stat"
-    ) %>%
-  cols_label(
-      stat = "Statistic",
-      sampling = "Sampling type",
-      `Sample number` = "Sample number",
-      `Population size` = "Population\nsize", 
-      `Selection strength` = "Selection\nstrength",
-      `Migration` = "Migration",
-      `Spatial autocorrelation` = "Spatial\nautocorrelation",
-      `Environmental correlation` = "Environmental\ncorrelation"
-    ) %>%
-  fmt_number(
-    columns = 3:8,
-    decimals = 4,
-    suffixing = TRUE
-    ) %>%
-  data_color(
-    columns = 3:8,
-    colors = scales::col_numeric(
-      palette = c("#8787fcff","#fcfcfcff", "#f6b26bff"),
-      domain = c(-0.12,0.12),
-      na.color = "white",
-    )
-  ) %>%
-  sub_missing(
-    columns = everything(),
-    rows = everything(),
-    missing_text = "n.s."
-    ) %>%
-  tab_spanner(
-    label = "Population Genetics",
-    columns = 4:6
-  ) %>%
-  tab_spanner(
-    label = "Landscape",
-    columns = 7:8
-  ) %>%
-  tab_spanner(
-    label = "Sampling",
-    columns = 2:3
-  ) 
-  
-print(td)
+walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_site, stat = .x)))
 ```
 
 # 2. RDA
@@ -368,28 +201,33 @@ print(td)
 
 ### 2.1.1 Summary plots
 
-```{r, fig.width=14, fig.height=7}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 rda_ind <- format_rda(here(p3path, "rda_indsampling_results.csv"))
 rda_ind_tidy <- 
   rda_ind %>%
   group_by(correctPC) %>%
   group_split()
+
+
+summary_plots <-
+  map(c(stats, "TOTALN"),
+      ~ map(
+        rda_ind_tidy,
+        rda_plotter,
+        stat = .x,
+        maxv = agg_mm(rda_ind_tidy, .x)["max"],
+        minv = agg_mm(rda_ind_tidy, .x)["min"]
+      ))
 ```
 
-```{r, fig.width=14, fig.height=7, include = FALSE}
-TPR_plots <- map(rda_ind_tidy, rda_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.088)
-FDR_plots <- map(rda_ind_tidy, rda_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.14)
-TOTALN_plots <- map(rda_ind_tidy, rda_plotter, stat = "TOTALN", colpal = "viridis")
-```
 
 ```{r, fig.width=14, fig.height=7}
-walk(TPR_plots, grid.arrange)
-walk(FDR_plots, grid.arrange)
+walk(summary_plots, ~walk(.x, grid.arrange))
 ```
 
 ### 2.1.2 Linear mixed effects models
 
-*Only results from the standard RDA (not the partial RDA) are used in the final models*
+*Only results from the standard RDA (not the partial RDA) are used from here on out*
 
 ```{r}
 rda_ind <- 
@@ -397,62 +235,46 @@ rda_ind <-
   filter(correctPC == "FALSE") 
 ```
 
-<font size="4.5"> **TPR** </font> 
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(rda_ind, "TPRCOMBO", filepath = here(p4path, "RDA_individual_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font> 
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(rda_ind, "FDRCOMBO", filepath = here(p4path, "RDA_individual_FDR.csv"))
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(rda_ind, .x, 
+                      filepath = make_lmer_path("rda", "ind", .x)))
 ```
 
 ### 1.1.3 Full plots
 
-<font size="4.5"> **TPR** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_ind, "TPRCOMBO", colpal = "plasma")
-```
-
-<font size="4.5"> **FDR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_ind, "FDRCOMBO", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Total number of loci** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_ind, "TOTALN", colpal = "viridis")
+walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_ind, stat = .x)))
 ```
 
 ## 2.2 Site sampling
 
 ### 2.2.1 Summary plots
 
-```{r, fig.width=14, fig.height=7}
+```{r, fig.width=14, fig.height=7, include = FALSE}
 rda_site <- format_rda(here(p3path, "rda_sitesampling_results.csv")) 
 rda_site_tidy <- 
   rda_site %>%
   group_by(correctPC) %>%
   group_split()
-```
 
-```{r, fig.width=14, fig.height=7, include = FALSE}
-TPR_plots <- map(rda_site_tidy, rda_plotter, stat = "TPRCOMBO", colpal = "plasma", maxv = 0.066)
-FDR_plots <- map(rda_site_tidy, rda_plotter, stat = "FDRCOMBO", colpal = "viridis", direction = -1, maxv = 0.092)
-TOTALN_plots <- map(rda_site_tidy, rda_plotter, stat = "TOTALN", colpal = "viridis")
+summary_plots <-
+  map(c(stats, "TOTALN"),
+      ~ map(
+        rda_site_tidy,
+        rda_plotter,
+        stat = .x,
+        maxv = agg_mm(rda_site_tidy, .x)["max"],
+        minv = agg_mm(rda_site_tidy, .x)["min"]
+      ))
 ```
 
 ```{r, fig.width=14, fig.height=7}
-walk(TPR_plots, grid.arrange)
-walk(FDR_plots, grid.arrange)
-walk(TOTALN_plots, grid.arrange)
+walk(summary_plots, ~walk(.x, grid.arrange))
 ```
 
 ### 2.2.2 Linear mixed effects models
 
-*Only results from the standard RDA (not the partial RDA) are used in the final models*
+*Only results from the standard RDA (not the partial RDA) are used from here on out*
 
 ```{r}
 rda_site <- 
@@ -460,105 +282,64 @@ rda_site <-
   filter(correctPC == "FALSE") 
 ```
 
-<font size="4.5"> **TPR** </font> 
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(rda_site, "TPRCOMBO", filepath = here(p4path, "RDA_site_TPR.csv"))
-```
-
-<font size="4.5"> **FDR** </font> 
-
-```{r, message = FALSE, results = 'asis'}
-run_lmer(rda_site, "FDRCOMBO", filepath = here(p4path, "RDA_site_FDR.csv"))
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(rda_site, .x, 
+                     filepath = make_lmer_path("rda", "site", .x)))
 ```
 
 ### 2.2.3 Full plots
 
-<font size="4.5"> **TPR** </font> 
 ```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_site, "TPRCOMBO", colpal = "plasma")
-```
-
-<font size="4.5"> **FDR** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_site, "FDRCOMBO", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Total number of loci** </font> 
-```{r,fig.width = 21, fig.height = 13}
-MEGAPLOT(rda_site, "TOTALN", colpal = "viridis")
-```
-
-
-```{r, fig.width=12, fig.height=11, include = TRUE}
-# code used to create main figures:
-arrange_figures(lfmm_ind, rda_ind, "FDR", 
-                "A. LFMM", "B. RDA",
-                colpal = "viridis", direction = -1, dig = 2, maxv = 0.86, minv = 0)
-
-arrange_figures(lfmm_ind, rda_ind, "TPR", 
-                "A. LFMM", "B. RDA",
-                colpal = "plasma", direction = 1, dig = 2, minv = 0, maxv = 0.14)
-
-arrange_figures(lfmm_site, rda_site, "TPR", 
-                "A. LFMM", "B. RDA",
-                colpal = "plasma", direction = 1, dig = 2, minv = 0, maxv = 0.18)
-
-arrange_figures(lfmm_site, rda_site, "FDR", 
-                "A. LFMM", "B. RDA",
-                colpal = "viridis", direction = -1, dig = 2, maxv = 1, minv = 0)
-
+walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 ```
 
 ```{r, fig.width = 6, fig.height = 6}
+plot_stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
 results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
 
-filt_results <- map(results,  ~filter(.x, phi == 0.5, H == 0.5, m == 1.00, r == 0.3, K == 2))
+filt_results <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3))
 
 sub_results <- map(filt_results, \(x){
   
-  stopifnot(nrow(x)/16 == 30 | nrow(x)/9 == 30)
+  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
   
-   x <- 
+  x <- 
      x %>%
      group_by(nsamp, sampstrat) %>%
-     summarize(TPR = mean(TPRCOMBO, na.rm = TRUE), FDR = mean(FDRCOMBO, na.rm = TRUE), .groups = "keep") 
+     summarize_at(plot_stats, mean, na.rm = TRUE, .groups = "keep") 
+  
+   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
    
    stopifnot(nrow(x) == 16 | nrow(x) == 9)
                     
    return(x)
 })
 
-TPR_plots <- map(sub_results, heat_plot, stat_name = "TPR", maxv = 0.54, minv = 0)
+plots <-
+  map(sub_results, \(df) map(map_chr(plot_stats, make_pretty_names), ~heat_plot(
+    df,
+    stat_name = .x,
+    maxv = ifelse(grepl("TPR", .x), 0.849, 1),
+    minv = 0
+  ))) %>% transpose()
 
-FDR_plots <- map(sub_results, heat_plot, stat_name = "FDR", maxv = 1.0, minv = 0, 
-                 colpal = "viridis", direction = -1)
+plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
 
-TPR_ind <- ggarrange(TPR_plots[[1]], TPR_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
-FDR_ind <- ggarrange(FDR_plots[[1]], FDR_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
-
-TPR_site <- ggarrange(TPR_plots[[2]], TPR_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
-FDR_site <- ggarrange(FDR_plots[[2]], FDR_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
-
-
-pdf(here("plots", "GEA_ind.pdf"))
-ggarrange(TPR_ind, FDR_ind, nrow = 2, align = "h")
+pdf(here("plots", "GEA_ind.pdf"), width = 6, height = 6)
+do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
 dev.off()
 
-pdf(here("plots", "GEA_site.pdf"))
-ggarrange(TPR_site, FDR_site, nrow = 2, align = "h")
+pdf(here("plots", "GEA_site.pdf"), width = 6, height = 6)
+do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
 dev.off()
 
-pdf(here("plots", "GEA_TPR_legend.pdf"))
-ggarrange(TPR_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+pdf(here("plots", "GEA_legends.pdf"), width = 6, height = 6)
+plot_legend <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "right"))
+do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
 dev.off()
-
-pdf(here("plots", "GEA_FDR_legend.pdf"))
-ggarrange(FDR_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
-dev.off()
-
-map(filt_results, run_lmer,  stat = "TPRCOMBO", f = formula("stat ~ nsamp + sampstrat + (1 | seed)"))
-map(filt_results, run_lmer,  stat = "FDRCOMBO", f = formula("stat ~ nsamp + sampstrat + (1 | seed)"))
 ```
 
-- NOTE: figure out how to describe FDR pattern with r (EG is best when r is high and worst when r is low...)
+
+
+

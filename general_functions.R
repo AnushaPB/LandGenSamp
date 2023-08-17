@@ -1,14 +1,9 @@
-#library to create paths
-library("here")
-library("stringr")
-
 #####################
 # GENERAL FUNCTIONS #
 #####################
 
-#create filepath based on params index and data type (e.g. genetic data = gen, geospatial data = gsd, and adaptive loci = loci)
+#create filepath based on params index and data type (e.g. genetic data = gen/dos, geospatial data = gsd, and adaptive loci = loci)
 #REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
-#FOR FILES NOT NESTED IN SUBFOLDERS
 create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")){
   
   #set of parameter names in filepath form
@@ -24,7 +19,8 @@ create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx",
                                        "_it-", params[i,"it"], "_t-1000_spp-spp_0.vcf")}
   if(type == "gsd"){filepath <- paste0(datadir, "/mod-", paramset,
                                        "_it-",params[i,"it"], "_t-1000_spp-spp_0.csv")}
-  if(type == "loci"){filepath <- paste0(datadir, "/nnloci_", paramset, ".csv")}
+  if(type == "dos"){filepath <- paste0(datadir, "/dos-", paramset, 
+                                       "_it-", params[i,"it"], "_t-1000_spp-spp_0.csv")}
   
   print(filepath)
   return(filepath)
@@ -36,7 +32,14 @@ get_gen <- function(filepath){
   #read vcf
   vcf <- read.vcfR(filepath)
   #convert to genlight from vcf
-  genlight <- vcfR2genlight(vcf) 
+  genmat <- vcf_to_dosage(vcf)
+  return(genmat)
+}
+
+#Convert from vcf to dosage
+vcf_to_dosage <- function(vcf){
+  #convert to genlight from vcf
+  genlight <- vcfR::vcfR2genlight(vcf) 
   #convert to matrix
   genmat <- as.matrix(genlight)
   #assign IDs from genlight to matrix rownames
@@ -49,19 +52,16 @@ get_gsd <- function(filepath){
   gsd_df <- read.csv(filepath)
   #assign IDs to rownames
   rownames(gsd_df) <- gsd_df$idx
-  #extract env values
-  gsd_df$env1 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=,)')) 
-  gsd_df$env2 <- as.numeric(stringr::str_extract(gsd_df$e, '(?<=, )[^,]+(?=\\])')) 
-  #extract trait values (figure out the regex way to do this later)
-  #remove brackets
-  z <- gsub("\\[|\\]", "", gsd_df$z)
-  #split on comma
-  z <- stringr::str_split_fixed(z, ", ", n=2)
-  #change to numeric
-  z <- apply(z, 2, as.numeric)
-  #add back to df
-  gsd_df$z1 <- z[,1]
-  gsd_df$z2 <- z[,2]
+  #extract env and z values
+  gsd_df <- gsd_df %>%
+    tidyr::extract(z, into = c("z1", "z2"), regex = "\\[(.*), (.*)\\]", remove = FALSE) %>%
+    tidyr::extract(e, into = c("env0", "env1", "env2"), regex = "\\[(.*), (.*), (.*)\\]", remove = FALSE) %>%
+    dplyr::mutate(across(c(z1, z2, env0, env1, env2), as.numeric))
+  
+  if (all(is.na(gsd_df$z1))) gsd_df <- gsd_df %>% mutate(z1 = parse_number(z))
+  
+  #correct coordinates
+  gsd_df$y <- -gsd_df$y
   return(gsd_df)
 }
 
@@ -80,22 +80,25 @@ get_data <- function(i, params, type){
     df <- get_gsd(filepath)
   }
   
-  if(type == "loci"){
+  if(type == "dos"){
     filepath <- create_filepath(i, params, type)
     print(filepath)
-    df <- read.csv(filepath)
+    df <- read.csv(filepath, row.names = 1)
   }
   
   return(df)
 }
 
 #get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples
-get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling", "outputs")){
+get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling", "outputs"), site = FALSE){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  subIDs <- read.csv(paste0(outdir, "/samples_", sampstrat, nsamp, ".csv"))
+  if (site) 
+    subIDs <- read.csv(paste0(outdir, "/site_samples_", sampstrat, nsamp, ".csv"))
+  else
+    subIDs <- read.csv(paste0(outdir, "/samples_", sampstrat, nsamp, ".csv"))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -122,9 +125,8 @@ get_samples <- function(param_set, sampstrat, nsamp, outdir = here("p2_sampling"
 skip_check <- function(i, params){
   gen_filepath <- create_filepath(i, params = params, "gen")
   gsd_filepath <- create_filepath(i, params = params, "gsd")
-  loci_filepath <- create_filepath(i, params = params, "loci")
   skip_to_next <- FALSE
-  if(file.exists(loci_filepath) == FALSE | file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
+  if(file.exists(gen_filepath) == FALSE | file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
   if(skip_to_next) { print("File does not exist:")
     print(params[i,]) } 
   return(skip_to_next)
@@ -228,20 +230,64 @@ quick.elbow <- function(varpc,low=.08,max.pc=.9) {
 }
 
 
+#get list of site IDs that correspond with parameter set, sampling strategy, and number of samples (and sample IDs)
+get_sites <- function(param_set, sampstrat, nsamp,  dir =  here("p2_sampling", "outputs")){
+  #param_set - vector of one set of parameters (e.g. params[i,])
+  #params - full set of parameters
+  #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
+  #nsamp - number of samples
+  
+  subIDs <- read.csv(paste0(dir, "/site_ids_", sampstrat, nsamp, ".csv"))
+  
+  subIDs <- subIDs[subIDs$K == param_set$K 
+                   & subIDs$phi == param_set$phi
+                   & subIDs$m == param_set$m 
+                   & subIDs$seed == param_set$seed
+                   & subIDs$H == param_set$H
+                   & subIDs$r == param_set$r
+                   & subIDs$it == param_set$it,]
+  
+  #confirm there is only one set of IDs being used
+  stopifnot(nrow(subIDs) == 1)
+  
+  #remove parameter columns and convert to vector of IDs
+  subIDs <- subIDs[,!names(subIDs) %in% names(param_set)]
+  subIDs <- unlist(subIDs)
+  
+  #confirm that final set of IDs is a vector
+  stopifnot(is.vector(subIDs))
+  
+  return(subIDs)
+}
+
+# make loci_df and convert from python to R indexing by adding 1
+get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7) + 1
+
+which0 <- function(x){
+  y <- which(x)
+  if (length(y) == 0) return(0) else return(y)
+}
+
+
+get_packages <- function(){
+  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
+}
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
 
 #nloci 
-nloci = 10000
+nloci <- 10000
 #landscape dimensions (square)
-ldim = 100
-#number of points to sample (individual)
-npts <- c(36, 81, 144, 225)
-#sampling strategies (individual)
+ldim <- 100
+#sampling strategies
 sampstrats <- c("rand", "grid", "trans", "envgeo")
+sitestrats <-  c("rand", "equi", "envgeo")
+nsites <- c(9, 16, 25)
+nsamps <- c(36, 81, 144, 225)
+npts <- nsamps
 #Create dataframe with all variable combos
-params <- expand.grid(K = c(1, 2), 
+params <- expand.grid(K = c(1,2), 
                       phi = c(0.5, 1.0),
                       m = c(0.25, 1.0),
                       seed = c(1, 2, 3),

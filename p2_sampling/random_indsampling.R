@@ -6,14 +6,14 @@ source(here("general_functions.R"))
 
 set.seed(42)
 
-cores <- detectCores()
-cl <- makeCluster(cores[1]-10) #not to overload your computer
+cl <- makeCluster(5) 
 registerDoParallel(cl)
 
-for (n in npts){
+for (n in nsamps){
   samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
-    
+    library("tidyverse")
+    library("dplyr")
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
@@ -28,6 +28,7 @@ for (n in npts){
     if (skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
       #take random sample
+      set.seed(1)
       samples <- gsd_df[sample(1:nrow(gsd_df), n), "idx"]
     }
     

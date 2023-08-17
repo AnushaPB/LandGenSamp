@@ -10,7 +10,7 @@ set.seed(42)
 
 #register cores
 #these calculations are RAM intensive so only run few at a time
-cores <- 3
+cores <- 15
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
@@ -19,6 +19,7 @@ for(n in nsites){
     library("here")
     library("vegan")
     library("raster")
+    library("dplyr")
     library("rgeos")
     
     #create file path
@@ -34,6 +35,7 @@ for(n in nsites){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
+      set.seed(3)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "envgeo", Nreps = 1000)
     }
     

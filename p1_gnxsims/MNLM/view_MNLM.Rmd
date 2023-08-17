@@ -38,6 +38,9 @@ for(seed in c(1,2,3)){
                                           )), header=FALSE)
       env1 <- raster(as.matrix(env1))
       env2 <- raster(as.matrix(env2))
+      
+      print(range(values(env1)))
+      print(range(values(env2)))
     
       plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)
       plot(env2, box=FALSE, axes=FALSE, col=mako(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)

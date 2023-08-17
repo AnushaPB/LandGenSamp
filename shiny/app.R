@@ -6,22 +6,18 @@ source(here("p4_analysis", "analysis_functions.R"))
 source(here("shiny", "app_functions.R"))
 
 # Load data
-combos <- expand_grid(method = c("lfmm", "rda", "gdm", "mmrr"), sampling = c("individual", "site"))
+combos <- expand_grid(method = c("lfmm", "rda", "gdm", "mmrr", "mmrr2", "gdm2"), sampling = c("individual", "site"))
 clean_data <- pmap(combos, get_app_data)
 names(clean_data) <- pmap_chr(combos, ~paste0(.x,"_", .y))
 
 # Make key for stats
 stat_options <- 
-  list(lfmm = c("TPR", "FDR", "nloci detected", "number of latent factors"),
-       rda = c("TPR", "FDR", "nloci detected"),
+  list(lfmm = colnames(clean_data$lfmm_ind)[-c(1:9)],
+       rda = colnames(clean_data$rda_ind)[-c(1:9)],
        mmrr = colnames(clean_data$mmrr_ind)[-c(1:9)],
-       gdm =  c("Ratio Absolute Error", "Ratio Bias", 
-                "IBD Absolute Error", "IBD Bias",
-                "IBE Absolute Error", "IBE Bias",
-                "Ratio of IBE to IBD", 
-                "IBD Coefficient", 
-                "IBE Coefficient",
-                "Proportion of Null Models"))
+       gdm = colnames(clean_data$gdm_ind)[-c(1:9)],
+       mmrr2 = colnames(clean_data$mmrr2_ind)[-c(1:9)],
+       gdm2 = colnames(clean_data$gdm2_ind)[-c(1:9)])
 
 
 stat_convert <- function(stat){
@@ -39,6 +35,9 @@ stat_convert <- function(stat){
   if (stat == "Proportion of Null Models") return("ratio")
   return(stat)
 }
+
+
+
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   
@@ -54,7 +53,7 @@ ui <- fluidPage(
       # Select method
       selectInput("method", 
                   label = "method",
-                  choices = c("lfmm", "rda", "mmrr", "gdm"),
+                  choices = c("lfmm", "rda", "mmrr", "mmrr2", "gdm", "gdm2"),
                   selected = "lfmm"), 
       
       # Select input for sampling type
@@ -107,11 +106,11 @@ server <- function(input, output) {
     
     if (method == "lfmm") {
       tagList(
-        selectInput("lfmmMethod",
+        selectInput("lfmm_method",
                     "lfmm method",
                     choices = c("ridge", "lasso"),
                     selected = "ridge"),
-        selectInput("K_selection",
+        selectInput("K_method",
                     "K selection method",
                     choices = c("tess", "tracy.widom", "find.clusters", "quick.elbow"),
                     selected = "tess"),
@@ -172,8 +171,8 @@ server <- function(input, output) {
     if (input$method == "lfmm"){
       x <- 
         x %>%
-        filter(method == input$lfmmMethod) %>%
-        filter(K_selection == input$K_selection)
+        filter(lfmm_method == input$lfmm_method) %>%
+        filter(K_method == input$K_method)
     }
     
     if (input$method == "rda"){
@@ -191,10 +190,10 @@ server <- function(input, output) {
     
     colpal <- "cividis"
     error_stat <- grepl("*_ae*", stat_name) | grepl("*err*", stat_name)
-    if (stat_name == "TPR") colpal <- "plasma"
-    if ((stat_name %in% c("FDR", "RAE")) | error_stat) {colpal <- "viridis"; direction <- -1} else direction <- 1
-    if (stat_name %in% c("TOTALN", "geo_coeff", "comboenv_coeff", "ratio", "K.1")) colpal <- "cividis"
-    if (stat_name %in% c("ratio_err", "geo_err", "comboenv_err")) divergent <- TRUE else divergent <- FALSE
+    if (grepl("TPR", stat_name)) colpal <- "plasma"
+    if (grepl("FDR", stat_name) | error_stat) {colpal <- "viridis"; direction <- -1} else direction <- 1
+    if (stat_name %in% c("TOTALN", "geo_coeff", "comboenv_coeff", "ratio", "K_factor")) colpal <- "cividis"
+    if (stat_name %in% c("ratio_err", "geo_coeff_err", "comboenv_coeff_err")) divergent <- TRUE else divergent <- FALSE
     
     if (input$plot_type == "megaplot") print(MEGAPLOT(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction))
     if (input$plot_type == "summary") print(summary_hplot(x, stat_name = stat_name, dig = 2, colpal = colpal, divergent = divergent, direction = direction))
@@ -221,7 +220,7 @@ filter_additional_variables <- function(filtered_data, input) {
   filter_ranges <- list(
     K = c(1, 2),
     m = c(0.25, 1.00),
-    phi = c(0.1, 0.5),
+    phi = c(0.5, 1),
     r = c(0.3, 0.6),
     H = c(0.05, 0.5)
   )

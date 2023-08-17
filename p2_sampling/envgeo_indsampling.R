@@ -3,7 +3,7 @@ library("here")
 library("foreach")
 library("doParallel")
 library("vegan")
-
+library("tidyverse")
 source(here("general_functions.R"))
 
 set.seed(42)
@@ -47,16 +47,16 @@ envgeo_samp <- function(gsd_df, npts, Nreps = 1000){
 }
 
 #register cores
-#THIS PROCESS USES A LOT OF RAM SO ONLY RUN TWO AT A TIME
-cores <- 2
-cl <- makeCluster(cores) #not to overload your computer
+#THIS PROCESS USES A LOT OF RAM SO ONLY RUN A FEW AT A TIME
+cores <- 20
+cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
-for(n in npts){
+for(n in nsamps){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("vegan")
-    
+    library("tidyverse")
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
     
@@ -70,6 +70,7 @@ for(n in npts){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
+      set.seed(2)
       samples <- envgeo_samp(gsd_df, npts = n, Nreps = 1000)
     }
     

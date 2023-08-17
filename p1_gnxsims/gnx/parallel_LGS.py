@@ -474,7 +474,7 @@ params = {
 
 # define parameters to vary
 K_array = [1, 2]
-phi_array = [0.1, 0.5]
+phi_array = [0.5, 1.0]
 m_array = [0.25, 1]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
@@ -483,7 +483,7 @@ r_array = [0.3, 0.6]
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
 sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-# create a 2D array of seeds for simulations  (add 1000 to make it different from m100)
+# create a 2D array of seeds for simulations
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
@@ -491,7 +491,8 @@ sim_array = np.append(sim_array, sim_seeds, 1)
 # directory where input/output data will be stored
 #FIX THIS SO IT ISN'T A HARD PATH
 #dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
-dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
+#dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
+dir = "/media/wanglab/DataDrive/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
 # note: currently gnx dumps most output files in a folder where the script is run
 
 def run_sims(sim_list, params):

@@ -19,11 +19,15 @@ print(ldim)
 # confirm correct nsites
 print(nsites)
 
-for(n in nsites){
+for (n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
     library("rgeos")
+    library("dplyr")
+    
+    source(here("p2_sampling", "site_functions.R"))
+    source(here("general_functions.R"))
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")
@@ -38,6 +42,7 @@ for(n in nsites){
     #run sampling
     if(skip_to_next == FALSE){
       gsd_df <- get_gsd(gsd_filepath)
+      set.seed(5)
       samples <- SiteSample(gsd_df, nsite = n, npts = global_npts, site_method = "equi", sample_method = "near", ldim = ldim)
       # print("nsite", n)
       # print("nsamp", length(samples))

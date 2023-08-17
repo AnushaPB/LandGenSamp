@@ -29,17 +29,77 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 
 ***
 
-<font size="5"> **Notes:** </font> 
+**Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. *Note that each average encompasses all of the other varying simulation parameters as seen in the Full plots*.
 
-**Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Note that each average encompasses all of the other varying simulation parameters.
 
-**Full plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. For these plots: K = population size (not to be confused with the number of latent factors (K)), phi = selection strength, m = migration, H = spatial autocorrelation, r = correlation between environmental layers.
+**Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
-**RAE** - Ratio Absolute Error - is the absolute difference between the observed and expected estimate of the ratio of IBE to IBD (i.e. the coefficient of IBE divided by the coefficient of IBD)
+```{r,fig.width = 9, fig.height = 4}
+df <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv")) 
+ggdf <- make_ggdf(df, stat_name = "geo_p") 
 
-**Bias** - bias was calculated by taking the mean difference between the observed and expected coefficients or ratios
+plots <-
+  map2(
+    c("K", "m", "phi", "H", "r"),
+    c(
+      "Population size (K)",
+      "Migration (m)",
+      "Selection strength (phi)",
+      "Spatial autocorrelation (H)",
+      "Environmental correlation (r)"
+    ),
+    ~ ggplot(ggdf, aes(x = nsamp, y = sampstrat)) +
+      geom_tile(aes(fill = .data[[.x]])) +
+      theme_bw() +
+      coord_fixed() +
+      facet_wrap(~ group, nrow = 4) +
+      theme(
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.margin = unit(rep(0.4, 4), "cm"),
+        strip.text.x = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(color = "black"),
+        plot.title = element_text(size = 12, face = "bold")
+      ) +
+      labs(fill = "Level") +
+      ggtitle(.y)
+  )
+
+do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
+```
+
+**TPR** - True Positive Rate
+
+**FDR** - False Discovery Rate
+
+**Absolute error** - error was calculated by taking the mean absolute difference between the observed and expected coefficients 
+
+**Bias** - bias was calculated by taking the mean difference between the observed and expected coefficients
 
 ***
+
+```{r}
+stats <- c(
+    "geo_p_TPR",
+    "env_p_TPR",
+    "geo_p_FDR",
+    "env_p_FDR",
+    "geo_coeff_err_ae",
+    "env_coeff_err_ae",
+    "geo_coeff_err",
+    "env_coeff_err"
+  )
+```
 
 # 1. MMRR
 
@@ -48,100 +108,44 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 ### 1.1.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7}
-mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
-
-# overall error
-mmrr_gdm_plotter(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
-
-# bias
-mmrr_gdm_plotter(mmrr_ind, "ratio_err", divergent = TRUE)
-mmrr_gdm_plotter(mmrr_ind, "comboenv_err", divergent = TRUE)
-mmrr_gdm_plotter(mmrr_ind, "geo_err", divergent = TRUE)
+mmrr_ind <- format_mmrr(here(p3path, "mmrr2_indsampling_results.csv"))
+walk(stats, ~ mmrr_gdm_plotter(mmrr_ind, stat = .x))
 ```
 
 ### 1.1.2 Linear mixed effects models
 
-<font size="4.5"> **RAE** </font> 
-
-```{r, , message = FALSE, results = 'asis'}
-run_lmer(mmrr_ind, "ratio_ae", filepath = here(p4path, "MMRR_individual_RAE.csv"))
+```{r, message = FALSE, results = 'asis'}
+walk(stats, ~run_lmer(mmrr_ind, .x, 
+                      filepath = make_lmer_path("mmrr", "ind", .x)))
 ```
 
 ### 1.1.3 Full plots
 
-<font size="4.5"> **RAE** </font> 
-
 ```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_ind, "ratio_ae", colpal = "viridis", direction = -1)
+walk(stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 ```
-
-<font size="4.5"> **Ratio Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_ind, "ratio_err", colpal = "viridis", divergent = TRUE)
-```
-
-<font size="4.5"> **IBD Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_ind, "geo_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBE Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_ind, "comboenv_err", divergent = TRUE)
-```
-
 
 ## 1.2 Site sampling
 
 ### 1.2.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7}
-mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
+mmrr_site <- format_mmrr(here(p3path, "mmrr2_sitesampling_results.csv"))
 
-# overall error
-mmrr_gdm_plotter(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
-
-# bias
-mmrr_gdm_plotter(mmrr_site, "ratio_err", divergent = TRUE)
-mmrr_gdm_plotter(mmrr_site, "comboenv_err", divergent = TRUE)
-mmrr_gdm_plotter(mmrr_site, "geo_err", divergent = TRUE)
+walk(stats, ~ mmrr_gdm_plotter(mmrr_site, stat = .x))
 ```
 
 ### 1.2.2 Linear mixed effects models
 
-<font size="4.5"> **RAE** </font> 
-
-```{r, , message = FALSE, results = 'asis'}
-run_lmer(mmrr_site, "ratio_ae", filepath = here(p4path, "MMRR_site_RAE.csv"))
+```{r, message = FALSE, results = 'asis'}
+walk(stats, ~run_lmer(mmrr_site, .x, 
+                      filepath = make_lmer_path("mmrr", "site", .x)))
 ```
 
 ### 1.2.3 Full plots
 
-<font size="4.5"> **RAE** </font> 
-
 ```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_site, "ratio_ae", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Ratio Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_site, "ratio_err", colpal = "viridis", divergent = TRUE)
-```
-
-<font size="4.5"> **IBD Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_site, "geo_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBE Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(mmrr_site, "comboenv_err", divergent = TRUE)
+walk(stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
 ```
 
 # 2. GDM
@@ -151,49 +155,22 @@ MEGAPLOT(mmrr_site, "comboenv_err", divergent = TRUE)
 ### 2.1.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7}
-gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
+gdm_ind <- format_gdm(here(p3path, "gdm2_indsampling_results.csv"))
 
-# overall error
-mmrr_gdm_plotter(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
-
-# bias
-mmrr_gdm_plotter(gdm_ind, "ratio_err", divergent = TRUE)
-mmrr_gdm_plotter(gdm_ind, "comboenv_err", divergent = TRUE)
-mmrr_gdm_plotter(gdm_ind, "geo_err", divergent = TRUE)
+walk(c(stats, "env_p_TPR0"), ~ mmrr_gdm_plotter(gdm_ind, stat = .x))
 ```
 
 ### 2.1.2 Linear mixed effects models
 
-<font size="4.5"> **RAE** </font> 
-
-```{r, , message = FALSE, results = 'asis'}
-run_lmer(gdm_ind, "ratio_ae", filepath = here(p4path, "GDM_individual_RAE.csv"))
+```{r, message = FALSE, results = 'asis'}
+walk(stats, ~run_lmer(gdm_ind, .x, 
+                      filepath = make_lmer_path("gdm", "ind", .x)))
 ```
 
 ### 2.1.3 Full plots
 
-<font size="4.5"> **RAE** </font> 
-
 ```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_ind, "ratio_ae", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Ratio Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_ind, "ratio_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBD Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBE Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_ind, "geo_err", divergent = TRUE)
+walk(stats, ~print(MEGAPLOT(gdm_ind, stat = .x)))
 ```
 
 ### 2.1.4 Failed fits
@@ -210,48 +187,21 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ### 2.2.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7}
-gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
+gdm_site <- format_gdm(here(p3path, "gdm2_sitesampling_results.csv"))
 
-# overall error
-mmrr_gdm_plotter(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
-
-# bias
-mmrr_gdm_plotter(gdm_site, "ratio_err", divergent = TRUE)
-mmrr_gdm_plotter(gdm_site, "comboenv_err", divergent = TRUE)
-mmrr_gdm_plotter(gdm_site, "geo_err", divergent = TRUE)
+walk(stats, ~ mmrr_gdm_plotter(gdm_site, stat = .x))
 ```
 
 ### 2.2.2 Linear mixed effects models
 
-<font size="4.5"> **RAE** </font> 
-```{r, , message = FALSE, results = 'asis'}
-run_lmer(gdm_site, "ratio_ae", filepath = here(p4path, "GDM_site_RAE.csv"))
+```{r, message = FALSE, results = 'asis'}
+walk(stats, ~run_lmer(gdm_site, .x, 
+                      filepath = make_lmer_path("gdm", "site", .x)))
 ```
 
 ### 2.2.3 Full plots
-
-<font size="4.5"> **RAE** </font> 
-
 ```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_site, "ratio_ae", colpal = "viridis", direction = -1)
-```
-
-<font size="4.5"> **Ratio Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_site, "ratio_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBD Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
-```
-
-<font size="4.5"> **IBE Bias** </font> 
-
-```{r, fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
+walk(stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
 ```
 
 ### 2.2.4 Failed fits
@@ -264,70 +214,169 @@ MEGAPLOT(gdm_site, "geo_err", divergent = TRUE)
 MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
 
-
-```{r, eval = FALSE, fig.width=12, fig.height=11}
-# Figures
-arrange_figures(gdm_ind, mmrr_ind, "RAE",
-                "A. GDM", "B. MMRR",
-                colpal = "viridis", direction = -1, dig = 2, maxv = 0.21, minv = 0.03)
-
-arrange_figures(gdm_site, mmrr_site, "RAE", 
-                "A. GDM", "B. MMRR",
-                colpal = "viridis", direction = -1, dig = 2, maxv = 0.3, minv = 0.07)
-```
-
-
-```{r, fig.width = 6, fig.height = 6}
+```{r, fig.width = 6, fig.height = 24}
 results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
 
-filt_results <- map(results,  ~filter(.x, phi == 0.5, H == 0.5, m == 1.00, r == 0.3, K == 2))
+filt_results <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2))
 
 sub_results <- map(filt_results, \(x){
-   x <- 
+  
+  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
+  
+  x <- 
      x %>%
      group_by(nsamp, sampstrat) %>%
-     summarize(RAE = mean(RAE, na.rm = TRUE), 
-               ratio_err = mean(ratio_err, na.rm = TRUE), 
-               env_err = mean(comboenv_err, na.rm = TRUE),
-               geo_err = mean(geo_err, na.rm = TRUE),
-               .groups = "keep") %>%
-     rename(Bias = ratio_err)
+     summarize_at(stats, mean, na.rm = TRUE, .groups = "keep") 
+  
+   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
    
    stopifnot(nrow(x) == 16 | nrow(x) == 9)
                     
    return(x)
 })
 
-RAE_plots <- map(sub_results, heat_plot, stat_name = "RAE", maxv = 0.31, minv = 0.04, 
-                 colpal = "viridis", direction = -1)
 
-ratio_err_plots <- map(sub_results, heat_plot, stat_name = "Bias", divergent = TRUE,
-                       minv = -0.06, maxv = 0.30)
+plots <-
+  map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
+    df,
+    stat_name = .x,
+    maxv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 1.01, 0.4),
+    minv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 0, -0.3)
+  ))) %>% transpose()
 
-RAE_ind <- ggarrange(RAE_plots[[1]], RAE_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
-ERR_ind <- ggarrange(ratio_err_plots[[1]], ratio_err_plots[[3]], common.legend = TRUE, nrow = 1, legend = "none")
+plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
 
-RAE_site <- ggarrange(RAE_plots[[2]], RAE_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
-ERR_site <- ggarrange(ratio_err_plots[[2]], ratio_err_plots[[4]], common.legend = TRUE, nrow = 1, legend = "none")
-
-pdf(here("plots", "IBDIBE_ind.pdf"))
-ggarrange(RAE_ind, ERR_ind, nrow = 2, align = "h")
-ggarrange(RAE_site, ERR_site, nrow = 2, align = "h")
-
-pdf(here("plots", "IBDIBE_ind.pdf"))
-ggarrange(RAE_ind, ERR_ind, nrow = 2, align = "h")
+pdf(here("plots", "IBDIBE_ind.pdf"), width = 6, height = 12)
+do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
 dev.off()
 
-pdf(here("plots", "IBDIBE_site.pdf"))
-ggarrange(RAE_site, ERR_site, nrow = 2, align = "h")
+pdf(here("plots", "IBDIBE_site.pdf"), width = 6, height = 12)
+do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
 dev.off()
 
-pdf(here("plots", "IBDIBE_RAE_legend.pdf"))
-ggarrange(RAE_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+pdf(here("plots", "IBDIBE_legends.pdf"), width = 6, height = 12)
+plot_legend <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "right"))
+do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
+dev.off()
+```
+
+```{r, fig.width = 6, fig.height = 12}
+
+filt_results <- map(results,  ~filter(.x, H == 0.5, m != 1, K != 2))
+
+sub_results <- map(filt_results, \(x){
+  
+  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
+  
+  x <- 
+     x %>%
+     group_by(nsamp, sampstrat) %>%
+     summarize_at(stats, mean, na.rm = TRUE, .groups = "keep") 
+  
+   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
+   
+   stopifnot(nrow(x) == 16 | nrow(x) == 9)
+                    
+   return(x)
+})
+
+
+plots <-
+  map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
+    df,
+    stat_name = .x,
+    maxv = ifelse(grepl("TPR", .x), 0.8, 1),
+    minv = 0
+  ))) %>% transpose()
+
+plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
+
+pdf(here("plots", "IBDIBE_ind2.pdf"), width = 6, height = 12)
+do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
 dev.off()
 
-pdf(here("plots", "IBDIBE_RE_legend.pdf"))
-ggarrange(ratio_err_plots[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+pdf(here("plots", "IBDIBE_site2.pdf"), width = 6, height = 12)
+do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
+dev.off()
+```
+
+
+```{r, fig.width = 5.5, fig.height = 8}
+results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
+
+filt_results <- map(results,  ~filter(.x, H != 0.05, m != 1.00, K == 2))
+
+sub_results <- map(filt_results, \(x){
+   
+  x <- 
+     x %>%
+     group_by(nsamp, sampstrat) %>%
+     summarize(`IBE TPR` = mean(env_p_TPR, na.rm = TRUE), 
+               `IBD TPR` = mean(geo_p_TPR, na.rm = TRUE),
+               `IBE AE` = mean(env_coeff_err_ae, na.rm = TRUE),
+               `IBD AE` = mean(geo_coeff_err_ae, na.rm = TRUE),
+               `IBE Bias` = mean(env_coeff_err, na.rm = TRUE),
+               `IBD Bias` = mean(geo_coeff_err, na.rm = TRUE),
+               .groups = "keep") 
+   
+   stopifnot(nrow(x) == 16 | nrow(x) == 9)
+                    
+   return(x)
+})
+
+
+IBETPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE TPR", maxv = 1, minv = 0.1, 
+                 colpal = "plasma", direction = 1))
+
+IBDTPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD TPR", maxv = 1, minv = 0.1, 
+                 colpal = "plasma", direction = 1))
+
+IBDAE_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD AE", maxv = 0.16, minv = 0, 
+                 colpal = "viridis", direction = -1))
+
+IBEAE_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE AE", maxv = 0.16, minv = 0, 
+                 colpal = "viridis", direction = -1))
+
+IBDBias_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD Bias", maxv = 0.15, minv = -0.07, 
+                 colpal = "divergent"))
+
+IBEBias_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE Bias", maxv = 0.15, minv = -0.07, 
+                 colpal = "divergent"))
+
+plots <- list(IBETPR_plots, IBDTPR_plots, IBDAE_plots, IBEAE_plots, IBDBias_plots, IBEBias_plots)
+ind_plots <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+site_plots <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
+names(ind_plots) <- names(site_plots) <- names(plots) <- c("IBETPR", "IBDTPR", "IBDAE", "IBEAE", "IBDBias", "IBEBias")
+
+
+pdf(here("plots", "IBE_ind.pdf"))
+ggarrange(ind_plots$IBETPR, ind_plots$IBEAE, ind_plots$IBEBias, nrow = 3, align = "h")
+dev.off()
+
+pdf(here("plots", "IBE_site.pdf"))
+ggarrange(site_plots$IBETPR, site_plots$IBEAE, site_plots$IBEBias, nrow = 3, align = "h")
+dev.off()
+
+pdf(here("plots", "IBD_ind.pdf"))
+ggarrange(ind_plots$IBDTPR, ind_plots$IBDAE, ind_plots$IBDBias, nrow = 3, align = "h")
+dev.off()
+
+pdf(here("plots", "IBD_site.pdf"))
+ggarrange(site_plots$IBDTPR, site_plots$IBDAE, site_plots$IBDBias, nrow = 3, align = "h")
+dev.off()
+
+pdf(here("plots", "TPR_legend.pdf"))
+ggarrange(plots$IBETPR[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+
+pdf(here("plots", "AE_legend.pdf"))
+ggarrange(plots$IBDAE[[1]], common.legend = TRUE, nrow = 1, legend = "right")
+dev.off()
+
+pdf(here("plots", "Bias_legend.pdf"))
+ggarrange(plots$IBDBias[[1]], common.legend = TRUE, nrow = 1, legend = "right")
 dev.off()
 ```
 
@@ -339,5 +388,28 @@ NOTES:
 - what is significant varies based on sample size - sample size is treated as continuous
 - do I need to run more simulations to get more power?
 
+```{r, fig.width = 20}
+a <- mmrr_ind %>% filter(sampstrat == "full")
+b <- gdm_ind %>% filter(sampstrat == "full")
+d <- left_join(a, b, by = c("K", "m", "phi", "r", "H", "seed", "it"))
+colnames(d)
+ggplot(d, aes(x = geo_coeff.x, y = geo_coeff.y, col = (d$m == 1 & d$H == 0.05 & d$r == 0.3), pch = factor(K))) + 
+  geom_point()
+ggplot(d, aes(x = env1_coeff.x, y = env1_coeff.y, col = m, pch = factor(K))) + 
+  geom_point()
+ggplot(d, aes(x = env2_coeff.x, y = env1_coeff.y, col = m, pch = factor(K))) + 
+  geom_point()
+
+d %>% filter(geo_coeff.y > 1 & geo_coeff.x < 0.7)
+
+e <- b
+e <- gdm_ind %>% mutate_at(c("K", "m", "phi", "r", "H", "seed", "it", "nsamp", "sampstrat"), as.factor)
+f <- mmrr_ind %>% mutate_at(c("K", "m", "phi", "r", "H", "seed", "it", "nsamp", "sampstrat"), as.factor)
+
+MEGAPLOT(e, stat ="geo_coeff")
+MEGAPLOT(f, stat ="geo_coeff")
+
+plot(b$geo_coeff, a$geo_coeff)
+```
 
 - NOTE: figure out how to describe bias patter (underestimation for grid only occurs under certain scenarios)
