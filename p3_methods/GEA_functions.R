@@ -56,7 +56,7 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
   #run model
   if (lfmm_method == "ridge") lfmm_mod <- tryCatch(lfmm::lfmm_ridge(genmat, envmat, K = K), error = function(x) NULL)
   if (lfmm_method == "lasso") lfmm_mod <- tryCatch(lfmm::lfmm_lasso(genmat, envmat, K = K), error = function(x) NULL)
-  if (is.null(lfmm_mod)) return(data.frame(K = K, K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
+  if (is.null(lfmm_mod)) return(data.frame(K_method = K_selection, lfmm_method = lfmm_method, NULL_mod = TRUE))
   
   # correct pvals and get confusion matrix stats
   # change padjustment, alpha level, minimum minor allele frequency, and whether to test for all adaptive loci (i.e. combined trait1/2)
@@ -204,8 +204,6 @@ bestK <- function(tess3_obj, Kvals){
   return(K)
 }
 
-
-
 lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05, all = FALSE){
   
   #performs association testing using the fitted model:
@@ -317,7 +315,7 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
     stopifnot(sum(TP2, FP2, TN2, FN2) == nrow(pvalues))
     
     #stats for all loci 
-    lfmm_loci <- c(lfmm_loci1, lfmm_loci2)
+    lfmm_loci <- unique(c(lfmm_loci1, lfmm_loci2))
     #calc confusion matrix
     TP <- TP1 + TP2
     FP <- FP1 + FP2
