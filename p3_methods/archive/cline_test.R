@@ -12,9 +12,10 @@ source("general_functions.R")
 #  Cline Test  #
 ################
 
-prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
-  res1 <- data.frame(gen[,(loci_df$trait0 + 1)]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env1, method = "kendall")[c("p.value","estimate")])
-  res2 <- data.frame(gen[,(loci_df$trait1 + 1)]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env2, method = "kendall")[c("p.value","estimate")])
+prop_cline <- function(gen, gsd_df, sig = 0.05){
+  loci_df <- get_loci()
+  res1 <- data.frame(gen[,loci_df$trait1]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env1, method = "kendall")[c("p.value","estimate")])
+  res2 <- data.frame(gen[,loci_df$trait2]) %>% purrr::map_dfr(~ cor.test(., gsd_df$env2, method = "kendall")[c("p.value","estimate")])
   p <- c(res1$p.value, res2$p.value)
   est <- c(res1$estimate, res2$estimate)
   # note: use sum/length instead of mean because you want NAs to count as the cline not being detected
@@ -24,18 +25,16 @@ prop_cline <- function(gen, loci_df, gsd_df, sig = 0.05){
 }
 
 #register cores
-cores <- detectCores()
-cl <- makeCluster(cores[1]-3) 
+cl <- makeCluster(10) 
 registerDoParallel(cl)
 
 system.time(
   res_cline <- foreach(i=1:nrow(params), .combine=rbind, .packages = c("here", "vcfR", "dplyr", "purrr")) %dopar% {
-    gen <- get_data(i, params = params, "gen")
+    gen <- get_data(i, params = params, "dos")
     gsd_df <- get_data(i, params = params, "gsd")
-    loci_df <- get_data(i, params = params, "loci")
     
     # calculate prop of clines for full dataset
-    fulldf <- prop_cline(gen, loci_df, gsd_df)
+    fulldf <- prop_cline(gen, gsd_df)
     
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), fulldf)
     
@@ -47,7 +46,7 @@ system.time(
         subgsd_df <- gsd_df[subIDs,]
         
         # calculate prop of clines for sub dataset
-        subdf <- prop_cline(gen = subgen, loci_df = loci_df, gsd_df = subgsd_df)
+        subdf <- prop_cline(gen = subgen, gsd_df = subgsd_df)
         
         # save and format new result
         sub_result <- data.frame(params[i,], sampstrat = sampstrat, nsamp = nsamp, subdf)
