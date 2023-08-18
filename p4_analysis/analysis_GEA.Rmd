@@ -87,9 +87,11 @@ do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
 
 **FDR** - False Discovery Rate
 
-**lasso vs ridge**- "lasso" and "ridge" are different methods utilized by LFMM that have different penalization functions (Caye et al., 2019)
+**strict vs relaxed TPR/FDR** - "relaxed" means any adaptive loci identified was counted as a true positive and "strict" means only an adaptive loci identified with the correct environmental variable was counted as a true positive
 
 **pRDA** - partial RDA conditioning on two PC axes to control for population genetic structure
+
+**lasso vs ridge**- "lasso" and "ridge" are different methods utilized by LFMM that have different penalization functions (Caye et al., 2019)
 
 ***
 
@@ -293,7 +295,11 @@ walk(stats, ~run_lmer(rda_site, .x,
 walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 ```
 
+---
+
 ```{r, fig.width = 6, fig.height = 6}
+# Code used to create figures:
+
 plot_stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
 results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
 
