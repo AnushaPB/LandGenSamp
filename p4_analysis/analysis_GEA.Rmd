@@ -36,7 +36,8 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
 ```{r,fig.width = 9, fig.height = 4}
-df <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv")) 
+df <- format_data("mmrr", "individual") 
+
 ggdf <- make_ggdf(df, stat_name = "geo_p") 
 
 plots <-
@@ -107,7 +108,7 @@ stats <- c("TPRCOMBO_relaxed", "TPRCOMBO_strict", "FDRCOMBO_relaxed", "FDRCOMBO_
 ### 1.1.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7, include = FALSE}
-lfmm_ind <- format_lfmm(here(p3path, "lfmm_indsampling_results.csv")) 
+lfmm_ind <- format_data("lfmm", "individual") 
 
 lfmm_ind_tidy <- 
   lfmm_ind %>% 
@@ -155,7 +156,7 @@ walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_ind, stat = .x)))
 ### 1.2.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7, include = FALSE}
-lfmm_site <- format_lfmm(here(p3path, "lfmm_sitesampling_results.csv")) 
+lfmm_site <- format_data("lfmm", "site") 
 
 lfmm_site_tidy <- lfmm_site %>% 
   group_by(lfmm_method) %>%
@@ -204,7 +205,7 @@ walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_site, stat = .x)))
 ### 2.1.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7, include = FALSE}
-rda_ind <- format_rda(here(p3path, "rda_indsampling_results.csv"))
+rda_ind <- format_data("rda", "individual") 
 rda_ind_tidy <- 
   rda_ind %>%
   group_by(correctPC) %>%
@@ -253,7 +254,8 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_ind, stat = .x)))
 ### 2.2.1 Summary plots
 
 ```{r, fig.width=14, fig.height=7, include = FALSE}
-rda_site <- format_rda(here(p3path, "rda_sitesampling_results.csv")) 
+rda_site <- format_data("rda", "site") 
+
 rda_site_tidy <- 
   rda_site %>%
   group_by(correctPC) %>%
