@@ -19,6 +19,7 @@ coeffs <- function(gdm.model){
 #for scaling genetic distances from 0 to 1 for GDM
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
+# run GDM with one combined environmental distance measured (not used in final analysis)
 run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   #Format data for GDM  
   gendist <- calc_dist(gen, distmeasure)
@@ -91,7 +92,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   return(results)
 }
 
-
+# run GDM with each environmental variable treated separately
 run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
   #Format data for GDM  
   gendist <- calc_dist(gen, distmeasure)
@@ -167,89 +168,7 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
   return(results)
 }
 
-
-
-run_gdm2_mat <- function(gen, gsd_df, distmeasure = "euc"){
-  #Format data for GDM  
-  gendist <- calc_dist(gen, distmeasure)
-  
-  #Format gdm dataframe
-  site <- 1:nrow(gendist) #vector of sites
-  gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
-  
-  # model combo
-  env1Dist <- cbind(site, as.matrix(dist(gsd_df[,"env1"], method = "euclidean", diag = TRUE, upper = TRUE)))
-  env2Dist <- cbind(site, as.matrix(dist(gsd_df[,"env2"], method = "euclidean", diag = TRUE, upper = TRUE)))
-  geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
-  gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, REMOVE = rep(1, nrow(gsd_df)))
-  
-  gdmData <-
-    formatsitepair(
-      gdmGen,
-      bioFormat = 3,
-      predData = gdmPred,
-      XColumn = "Longitude",
-      YColumn = "Latitude",
-      siteColumn = "site",
-      distPreds = list(env1 = env1Dist, env2 = env2Dist, geo = geoDist)
-    )
-  
-  #remove placeholder column
-  gdmData <- gdmData[,!grepl("*REMOVE*", colnames(gdmData))]
-  
-  #scale distance from 01
-  gdmData$distance <- range01(gdmData$distance) 
-  
-  #run GDM
-  gdm.model <- gdm(gdmData, geo = FALSE)
-  
-  if (is.null(gdm.model)){
-    #turn results into dataframe
-    results <- data.frame(env1_coeff = NA,
-                          env2_coeff = NA,
-                          geo_coeff = NA,
-                          ratio = NA,
-                          env1_p = NA,
-                          env2_p = NA,
-                          geo_p = NA)
-  } else {
-    predictors <- coeffs(gdm.model)
-    
-    # turn results into dataframe
-    results <- data.frame(env1_coeff = predictors[predictors$predictor == "matrix_1", "coefficient"],
-                          env2_coeff = predictors[predictors$predictor == "matrix_2", "coefficient"],
-                          geo_coeff = predictors[predictors$predictor == "matrix_3", "coefficient"])
-    results$ratio <- sum(abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
-    
-    # get pvalues
-    modTest <- gdm.varImp_custom(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
-    
-    if (!is.null(modTest)) {
-      pvals <- modTest$`Predictor p-values`
-      pvals$var <- row.names(pvals)
-      pvals <- left_join(data.frame(var = c("matrix_1", "matrix_2", "matrix_3")), pvals)
-      results <- data.frame(results,
-                            env1_p = pvals[pvals$var == "matrix_1", 2],
-                            env2_p = pvals[pvals$var == "matrix_2", 2],
-                            geo_p = pvals[pvals$var == "matrix_3", 2])
-    } else {
-      results <- data.frame(results,
-                            env1_p = NA,
-                            env2_p = NA,
-                            geo_p = NA)
-    }
-    
-    
-  }
-  
-  
-  #remove rownames
-  rownames(results) <- NULL
-  
-  return(results)
-}
-
-
+# customized variable importance function (changed code so that if null models pop up they don't result in an error, they just aren't counted)
 gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect=FALSE,
                        nPerm=50, pValue=0.05, parallel=FALSE, cores=2, sampleSites=1,
                        sampleSitePairs=1, outFile=NULL){
@@ -823,7 +742,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   return(outObject)
 }
 
-
+# GDM function needed by gdm.varImp_custom
 permutateSitePair <- function(spTab, siteVarTab, indexTab, vNames){
   
   #################
@@ -903,8 +822,6 @@ permutateSitePair <- function(spTab, siteVarTab, indexTab, vNames){
 # MMRR performs Multiple Matrix Regression with Randomization analysis
 # Y is a dependent distance matrix
 # X is a list of independent distance matrices (with optional names)
-
-# NOTE: adjusted for sims
 mmrr <- function(Y,X,nperm=50){
   #compute regression coefficients and test statistics
   nrowsY<-nrow(Y)
@@ -951,7 +868,6 @@ mmrr <- function(Y,X,nperm=50){
 
 # unfold converts the lower diagonal elements of a matrix into a vector
 # unfold is called by MMRR
-
 unfold<-function(X){
   x<-vector()
   for(i in 2:nrow(X)) x<-c(x,X[i,1:i-1])
@@ -960,8 +876,8 @@ unfold<-function(X){
 }
 
 
-# Run MMRR
-run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
+# Run MMRR with one enviornmental matrix of combined distances (not used in final analysis)
+run_mmrr <- function(gen, gsd_df, distmeasure = "euc"){
   #Format data for MMRR  
   gendist <- calc_dist(gen, distmeasure)
   
@@ -978,6 +894,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure= "euc"){
   return(results)
 }
 
+# Run MMRR with two seperate enviornmental distance matrices
 run_mmrr2 <- function(gen, gsd_df, distmeasure= "euc"){
   #Format data for MMRR  
   gendist <- calc_dist(gen, distmeasure)
@@ -996,9 +913,8 @@ run_mmrr2 <- function(gen, gsd_df, distmeasure= "euc"){
   return(results)
 }
 
-
+#create data frame of results
 mmrr_results_df <- function(x, name = NULL){
-  #create data frame of results
   df <- 
     data.frame(coeff = x$coefficients, p = x$tpvalue, var = names(x$coefficients)) %>%
     filter(var != "Intercept") %>%
@@ -1017,6 +933,7 @@ mmrr_results_df <- function(x, name = NULL){
 #   GENERAL   #
 ###############
 
+# calculate different genetic distance measures
 calc_dist <- function(gen, distmeasure = "euc"){
   if(distmeasure == "bray"){
     K <- nrow(gen)
@@ -1061,7 +978,7 @@ calc_dist <- function(gen, distmeasure = "euc"){
   return(gendist)
 }
 
-
+# calculate statistics for MMRR and GDM
 stat_ibdibe <- function(sub, full, sig = 0.05){
   err_cols <- colnames(sub)[grepl("coeff", colnames(full)) | grepl("ratio", colnames(full))]
   err <- map(err_cols, ~err_coeff(full[.x], sub[.x])) %>% bind_cols()
