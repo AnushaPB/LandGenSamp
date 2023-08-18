@@ -20,13 +20,13 @@ df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max =
 ```{r fig.width=20, fig.height=7}
 df <- read.csv(here("p3_methods", "outputs", "mismatch_results.csv"))
 
-df$eff_mismatch <- df$phi * df$mismatch
+df$eff_mismatch <- df$phi * df$mismatch_mean
 
 ggplot(df[df$sampstrat == "full", ], aes(x = eff_mismatch, fill = factor(phi))) +
   geom_boxplot()
 
-df %>% filter(sampstrat == "full") %>% group_by(phi, K, m, r, H) %>% summarise(mean(abs(mismatch)))
-df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mismatch)))
+df %>% filter(sampstrat == "full") %>% group_by(phi, K, m, r, H) %>% summarise(mean(abs(mismatch_mean)))
+df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mismatch_mean)))
 
 ```
 
