@@ -877,3 +877,86 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
 # SMAPE: https://www.r-bloggers.com/2021/08/how-to-calculate-smape-in-r/
 # a = actual, f = forecasted
 smape <- function(a, f) {  return (1/length(a) * sum(2*abs(f-a) / (abs(a)+abs(f))*100))}
+
+
+# functions used for example simulations:
+
+plot_phenotype2 <- function(df1, df2, env, title1){
+  df1$y <- -df1$y
+  df2$y <- -df2$y
+  
+  p1 <- ggplot() +
+    geom_tile(data = env, aes(x = x, y = y), fill = "gray", alpha = 0.5) +
+    geom_point(data = df1, aes(x, y, col = z1), size = 0.9, alpha = 0.7) +
+    coord_equal() +
+    theme_void() + 
+    scale_color_viridis(option = "viridis", limits = c(0,1)) + 
+    theme(legend.position = "none")
+  
+  p2 <- ggplot() +
+    geom_tile(data = env, aes(x = x, y = y), fill = "gray", alpha = 0.5) +
+    geom_point(data = df2, aes(x, y, col = z1), size = 0.9, alpha = 0.7) +
+    coord_equal() +
+    theme_void() + 
+    scale_color_viridis(option = "viridis", limits = c(0,1)) + 
+    theme(legend.position = "none")
+  
+  plt <- grid.arrange(p1, p2, nrow = 2)
+  plt <- grid.arrange(plt, top = grid::textGrob(title1, just = "center", gp=gpar(fontsize=20)))
+}
+
+new_cols <- function(x, level, param){
+  x$level <- level
+  x$param <- param
+  return(x)
+}
+
+
+get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
+  #param_set - vector of one set of parameters (e.g. params[i,])
+  #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
+  #nsamp - number of samples
+  
+  if(!site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/samples_", sampstrat, nsamp, ".csv")))
+  if(site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/site_samples_", sampstrat, nsamp, ".csv")))
+  
+  subIDs <- subIDs[subIDs$K == param_set$K 
+                   & subIDs$phi == param_set$phi
+                   & subIDs$m == param_set$m 
+                   & subIDs$seed == param_set$seed
+                   & subIDs$H == param_set$H
+                   & subIDs$r == param_set$r
+                   & subIDs$it == param_set$it,]
+  
+  #confirm there is only one set of IDs being used
+  stopifnot(nrow(subIDs) == 1)
+  
+  #remove parameter columns and convert to vector of IDs
+  subIDs <- subIDs[,!names(subIDs) %in% names(param_set)]
+  subIDs <- unlist(subIDs)
+  
+  #confirm that final set of IDs is a vector
+  stopifnot(is.vector(subIDs))
+  
+  return(as.character(subIDs))
+}
+
+plot_example_samples <- function(.x, .y, site = FALSE, df, env1){
+  #subsample from data based on sampling strategy and number of samples
+  if (site) subIDs <- get_example_samples(param_set, sampstrat = .x, nsamp = 16, site = TRUE)
+  if (!site) subIDs <- get_example_samples(param_set, sampstrat = .x, nsamp = 81, site = FALSE)
+  subgsd_df <- df[subIDs,]
+  
+  p <- ggplot() +
+    geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
+    geom_point(data = subgsd_df, aes(x, y, fill = z1), 
+               colour = rgb(0,0,0,0.5), pch = 21, size = 3) +
+    coord_equal() +
+    theme_void() + 
+    scale_color_viridis(option = "mako") + 
+    scale_fill_viridis(option = "mako") +
+    theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20)) +
+    ggtitle(.y)
+  
+  return(p)
+}
