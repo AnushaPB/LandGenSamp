@@ -1,4 +1,5 @@
 
+# Plot every single unique simulation, averaged across all replicates for a given statistic
 MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, direction = 1, na.rm=TRUE, dig = 3, pretty_names = TRUE){
   stat_name <- stat
   agg <- make_ggdf(df, stat_name = stat_name, aggfunc = aggfunc, na.rm = na.rm)
@@ -47,6 +48,7 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
   
 }
 
+# convert ugly stat column names to pretty readable human names
 make_pretty_names <- function(stat_name) {
   new_name <- ""
   if (stat_name == "K_factor") new_name <- "Number of latent factors"
@@ -66,6 +68,7 @@ make_pretty_names <- function(stat_name) {
   return(new_name)
 }
 
+# get a color pallette based on the provided statistic
 get_colpal <- function(stat_name){
   if (is.null(stat_name)) return(list(colpal = "cividis", direction = 1))
   if (stat_name == "K_factor" | stat_name == "TOTALN") return(list(colpal = "cividis", direction = 1))
@@ -75,12 +78,14 @@ get_colpal <- function(stat_name){
   return(list(colpal = "cividis", direction = 1))
 }
 
+# create path for dumping lmer results
 make_lmer_path <- function(method, sampling, stat){
   stat <- gsub("_", "", stat)
   filepath <- paste0(method, "_", sampling, "_", stat, ".csv")
   return(here(p4path, filepath))
 }
 
+# make df for ggplot
 make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
   ggdf <- 
     df %>%
@@ -114,6 +119,7 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
   return(ggdf)
 }
 
+# create summary plot that groups simulation by parameter levels and summarizes over the stat
 summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig=3, aggfunc = mean, minv = NULL, maxv = NULL, direction = 1, title = NULL, full = FALSE, pretty_names = TRUE){
  
   agg <- make_agg(df, stat_name = stat_name, na.rm = na.rm, dig = dig, aggfunc = aggfunc, minv = minv, maxv = maxv, full = full)
@@ -131,6 +137,7 @@ summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, d
   return(p)
 }
 
+# create low/high aggregated dataframe for plotting
 make_agg <- function(df, stat_name = "stat", na.rm = TRUE, dig = 3, aggfunc = mean, minv = NULL, maxv = NULL, full = FALSE){
   
   # Summarize dataframe
@@ -181,6 +188,7 @@ make_agg <- function(df, stat_name = "stat", na.rm = TRUE, dig = 3, aggfunc = me
   return(agg)
 }
 
+# get overall minimum and maximum from a list of dataframes for a given stat
 agg_mm <- function(x, stat){
   result <-
     map(x, \(df, y = stat) {
@@ -193,7 +201,7 @@ agg_mm <- function(x, stat){
   return(c(min = min(result$min, na.rm = TRUE), max = max(result$max, na.rm = TRUE)))
 }
 
-
+# create heat_plot from a df given a stat
 heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NULL, facet = FALSE, dig = 2, 
                       colpal = NULL, direction = 1){
   
@@ -244,73 +252,7 @@ heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NU
   
   return(p)
 }
-
-summary_vplot <- function(df, stat = "stat", plot.type = "rain_plot", varlist = c("K", "phi", "H", "r", "m", "sampstrat"), colpal = "plasma", nrow = 2){
-  
-  df$stat <- df[,stat]
-  
-  plot_list <- map(varlist, get(plot.type), df, stat, colpal)
-  
-  pl <- do.call("grid.arrange", c(plot_list, nrow = nrow))
-  
-  return(pl)
-}
-
-
-vplot <- function(var, df, stat, colpal = "plasma"){
-  p <- ggplot(df, aes(fill=get(var), y=stat, x=factor(nsamp))) + 
-    #geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
-    scale_fill_viridis(discrete=T, option=colpal, name = var) +
-    xlab("nsamp") +
-    theme_bw()+
-    geom_boxplot(width = 0.4, position = position_dodge(width = 0.9))+
-    #geom_point(aes(col=K),position = position_dodge(width = 0.9), alpha=0.1)+
-    scale_colour_viridis(discrete=T, option=colpal, name = var)+
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21))
-  
-  return(p)
-}
-
-
-rain_plot <- function(var, df, stat, colpal = "plasma"){
-  p <- ggplot(df, aes(fill=get(var), y=stat, x=factor(nsamp))) + 
-    ## add half-violin from {ggdist} package
-    ggdist::stat_halfeye(
-      ## custom bandwidth
-      adjust = .5, 
-      ## adjust height
-      width = .6, 
-      ## move geom to the right
-      justification = -.2, 
-      ## remove slab interval
-      .width = 0, 
-      point_colour = NA,
-      position = position_dodge(width = 0.9)
-    ) + 
-    geom_boxplot(
-      width = .12, 
-      ## remove outliers
-      outlier.color = NA, ## `outlier.shape = NA` works as well
-      position = position_dodge(width = 0.9)
-    ) +
-    scale_fill_viridis(discrete=T, 
-                       option=colpal, 
-                       name = var) +
-    
-    scale_colour_viridis(discrete=T, 
-                         option=colpal, 
-                         name = var) +
-    xlab("nsamp") +
-    theme_bw() + 
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"), text=element_text(size=21)) + 
-    ## remove white space on the left
-    coord_cartesian(xlim = c(1.2, NA))
-  
-  return(p)
-}
-
+# custom functions for aggregation
 custom_agg <- function(agg, aggfunc = mean, na.rm = TRUE){
   
   if(is.character(aggfunc)){
@@ -331,10 +273,30 @@ custom_agg <- function(agg, aggfunc = mean, na.rm = TRUE){
   return(agg %>% summarize(stat = aggfunc(stat, na.rm = na.rm), .groups = "keep"))
 }
 
+# convert parameter columns to factors
 var_to_fact <- function(df){
   mutate_at(df, c("K", "phi", "m", "seed", "H", "r", "nsamp", "sampstrat", "it"), as.factor)
 }
 
+# general function for formatting data
+format_data <- function(method, sampling, p_filter = TRUE) {
+  if (sampling == "individual") sampling <- "indsampling"
+  if (sampling == "site") sampling <- "sitesampling"
+  
+  file_name <- paste0(method, "_", sampling, "_results.csv")
+  path <- here("p3_methods", "outputs", file_name)
+  
+  if (method == "lfmm") df <- format_lfmm(path, p_filter = p_filter)
+  if (method == "rda") df <- format_rda(path, p_filter = p_filter)
+  if (method == "mmrr") df <- format_mmrr(path)
+  if (method == "mmrr2") df <- format_mmrr(path)
+  if (method == "gdm") df <- format_gdm(path)
+  if (method == "gdm2") df <- format_gdm(path)
+  
+  return(df)
+}
+
+# format MMRR results
 format_mmrr <- function(path, full = FALSE){
   df <- read.csv(path)
   df <- extra_ibeibd_stats(df)
@@ -381,6 +343,7 @@ format_mmrr <- function(path, full = FALSE){
   return(df)
 }
 
+# format GDM results
 format_gdm <- function(path, full = FALSE){
   df <- read.csv(path)
   
@@ -434,7 +397,7 @@ format_gdm <- function(path, full = FALSE){
   return(df)
 }
 
-
+# plot MMRR and GDM summary results
 mmrr_gdm_plotter <- function(x, stat, ...) {
   capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
   title <- paste0("Statistic: ", make_pretty_names(stat))
@@ -442,6 +405,7 @@ mmrr_gdm_plotter <- function(x, stat, ...) {
   return()
 }
 
+# format LFMM results
 format_lfmm <- function(path, p_filter = TRUE){
   
   df <- read.csv(path)
@@ -479,7 +443,7 @@ format_lfmm <- function(path, p_filter = TRUE){
     mutate(all = case_when(all == TRUE ~ "relaxed", all == FALSE ~ "strict")) %>%
     
     # select stats for analysis
-    select(K, phi, m, seed, H, r, it, sampstrat, nsamp, K_method, lfmm_method, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN, K_factor) %>%
+    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, K_method, lfmm_method, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN, K_factor) %>%
 
     # widen stats
     pivot_wider(names_from = all, 
@@ -488,7 +452,7 @@ format_lfmm <- function(path, p_filter = TRUE){
     
     # TEMPORARY: TOTALN for all = FALSE/strict was incorrectly calculated (didn't use unique loci)
     mutate(TOTALN = TOTALN_relaxed) %>%
-    select(-TOTALN_relaxed, -TOTALN_strict)
+    dplyr::select(-TOTALN_relaxed, -TOTALN_strict)
   
   
   if (p_filter) {
@@ -508,7 +472,7 @@ format_lfmm <- function(path, p_filter = TRUE){
   
   return(df)
 }
-
+ # plot LFMM results
 lfmm_plotter <- function(x, stat, ...) {
   capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
   lfmm_method <- unique(x$lfmm_method)
@@ -520,19 +484,7 @@ lfmm_plotter <- function(x, stat, ...) {
   return(grob3)
 }
 
-rda_plotter <- function(x, stat, ...) {
-  capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
-  correctPC <- as.logical(unique(x$correctPC))
-  if(correctPC) rda_method <- "partial (PC correction)" else rda_method <- "standard (no PC correction)"
-  stat <- make_pretty_names(stat)
-  subtitle <- paste0("RDA method: ", rda_method)
-  title <- paste0(stat)
-  grob2 <- grid.arrange(grob, top = grid::textGrob(subtitle, x = 0, hjust = 0, gp=gpar(fontsize=20)))
-  grob3 <- grid.arrange(grob2, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=24)))
-  return(grob3)
-}
-
-
+# format RDA results
 format_rda <- function(path, p_filter = TRUE, full = FALSE){
   
   df <- read.csv(path)
@@ -577,7 +529,7 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
     mutate(all = case_when(all == TRUE ~ "relaxed", all == FALSE ~ "strict")) %>%
     
     # select stats for analysis
-    select(K, phi, m, seed, H, r, it, sampstrat, nsamp, correctPC, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN) %>%
+    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, correctPC, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN) %>%
     
     # widen stats
     pivot_wider(names_from = all, 
@@ -599,6 +551,21 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
   return(df)
 }
 
+
+# plot RDA results
+rda_plotter <- function(x, stat, ...) {
+  capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
+  correctPC <- as.logical(unique(x$correctPC))
+  if(correctPC) rda_method <- "partial (PC correction)" else rda_method <- "standard (no PC correction)"
+  stat <- make_pretty_names(stat)
+  subtitle <- paste0("RDA method: ", rda_method)
+  title <- paste0(stat)
+  grob2 <- grid.arrange(grob, top = grid::textGrob(subtitle, x = 0, hjust = 0, gp=gpar(fontsize=20)))
+  grob3 <- grid.arrange(grob2, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=24)))
+  return(grob3)
+}
+
+# run linear mixed effects models and make pretty tables
 run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
   
   # check number of rows
@@ -640,6 +607,7 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
   return()
 }
 
+# make pretty tukey table for comparing sampstrats
 pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
   em <- emmeans::emmeans(mod, pairwise ~ sampstrat, adjust = "tukey")
   em_df <- data.frame(em$contrasts)
@@ -694,6 +662,7 @@ pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
   return(em_tb)
 }
 
+# make pretty anova table
 pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
   
   aov <- anova(mod)
@@ -794,31 +763,7 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
   return(aov_tb)
 }
 
-
-arrange_figures <- function(df1, df2, stat, title1 = NULL, title2 = NULL, ...){
-  p1 <- summary_hplot(df1, stat, title = title1, ...)
-  p2 <- summary_hplot(df2, stat, title = title2, ...)
-  plot <- ggarrange(p1, p2, common.legend = TRUE, nrow = 2, legend = "right")
-  return(plot)
-}
-
-format_data <- function(method, sampling, p_filter = FALSE) {
-  if (sampling == "individual") sampling <- "indsampling"
-  if (sampling == "site") sampling <- "sitesampling"
-  
-  file_name <- paste0(method, "_", sampling, "_results.csv")
-  path <- here("p3_methods", "outputs", file_name)
-  
-  if (method == "lfmm") df <- format_lfmm(path, p_filter = p_filter)
-  if (method == "rda") df <- format_rda(path, p_filter = p_filter)
-  if (method == "mmrr") df <- format_mmrr(path)
-  if (method == "mmrr2") df <- format_mmrr(path)
-  if (method == "gdm") df <- format_gdm(path)
-  if (method == "gdm2") df <- format_gdm(path)
-  
-  return(df)
-}
-
+# calculate extra ibeibd statistics
 extra_ibeibd_stats <- function(df){
   #Create dataframe with all variable combos
   params <- expand.grid(K = unique(df$K), 
@@ -836,6 +781,7 @@ extra_ibeibd_stats <- function(df){
   return(new_df)
 }
 
+# helper for extra_ibeibd_stats
 ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   subdf <- df[df$K == K & df$phi == phi & df$m == m & df$seed == seed & df$H == H & df$r == r & df$it == it, ]
   
@@ -879,8 +825,9 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
 smape <- function(a, f) {  return (1/length(a) * sum(2*abs(f-a) / (abs(a)+abs(f))*100))}
 
 
-# functions used for example simulations:
+# Example simulations --------------------------------------------------------------------------
 
+# plot example of phenotypes
 plot_phenotype2 <- function(df1, df2, env, title1){
   df1$y <- -df1$y
   df2$y <- -df2$y
@@ -905,13 +852,14 @@ plot_phenotype2 <- function(df1, df2, env, title1){
   plt <- grid.arrange(plt, top = grid::textGrob(title1, just = "center", gp=gpar(fontsize=20)))
 }
 
+# make new columns based on the level and parameter
 new_cols <- function(x, level, param){
   x$level <- level
   x$param <- param
   return(x)
 }
 
-
+# get example sets of samples
 get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
   #param_set - vector of one set of parameters (e.g. params[i,])
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
@@ -941,6 +889,7 @@ get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
   return(as.character(subIDs))
 }
 
+# plot example sets of samples
 plot_example_samples <- function(.x, .y, site = FALSE, df, env1){
   #subsample from data based on sampling strategy and number of samples
   if (site) subIDs <- get_example_samples(param_set, sampstrat = .x, nsamp = 16, site = TRUE)
