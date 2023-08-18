@@ -1,5 +1,6 @@
 # INDIVIDUAL SAMPLING ---------------------------------------------------------------------------------------------------------------------------------------------------
 
+# perform EG sampling
 envgeo_indsamp <- function(gsd_df, npts, Nreps = 1000){
   Nreps <- 1000
   sample.sets <- matrix(nrow=Nreps, ncol=npts)
@@ -38,7 +39,7 @@ envgeo_indsamp <- function(gsd_df, npts, Nreps = 1000){
   return(samples)
 }
 
-
+# perform grid sampling
 grid_indsamp <- function(pts, npts, ldim){
   # switch coordinates back to positive y to sample grid
   pts$y <- -pts$y
@@ -69,7 +70,7 @@ grid_indsamp <- function(pts, npts, ldim){
   return(samples)
 }
 
-
+# perform transect sampling
 transect_indsamp <- function(pts, npts){
   #pts - dataframe with IDs and coords
   #npts - total number of points to sample (evenly split across transects)
@@ -134,7 +135,7 @@ SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",
   return(samples)
 }
 
-
+# note: buffer was not used in the final analyses
 SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
   #sample_sites - coordinates of sampling sites
   #coords - coordinates of all individuals in data set
@@ -214,6 +215,7 @@ SiteSampleNear <- function(sample_sites, coords, npts){
 }
 
 
+# randomly sample sites
 rand_sitesamp <- function(coords, nsite, edge_buffer = NULL, ldim = 100){
   
   # buffer away from edges if ldim and edge_buffer provided
@@ -231,7 +233,7 @@ rand_sitesamp <- function(coords, nsite, edge_buffer = NULL, ldim = 100){
 }
 
 
-#function to make equidistant sampling sites
+#make equidistant sampling sites
 equi_sitesamp <- function(nsite, ldim = 100, buffer = 10){
   
   #nsite - number of points (or sites) to sample (should be a perfect square)
@@ -252,7 +254,7 @@ equi_sitesamp <- function(nsite, ldim = 100, buffer = 10){
   return(cgrid)
 }
 
-# function to perform envgeo sampling
+#perform envgeo sitesampling
 envgeo_sitesamp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldim = 100){
   
   sample.sets <- matrix(nrow=Nreps, ncol=nsite)
@@ -307,6 +309,8 @@ envgeo_sitesamp <- function(gsd_df, nsite, Nreps = 1000, edge_buffer = NULL, ldi
   
   return(sample_sites)
 }
+
+# GLOBAL PARAMETERS
 
 #method to use for site sampling (can be "near" or "buffer")
 site_method <- "near"
