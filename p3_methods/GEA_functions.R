@@ -1,6 +1,8 @@
 ############
 #   LFMM   #
 ############
+
+# run LFMM2
 run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridge", "lasso"), K = NULL, loci_df = NULL, Kvals = 1:9, maf = c(0, 0.05)){
   
   # get adaptive loci
@@ -19,6 +21,7 @@ run_lfmm <- function(gen, gsd_df, K_selection = c("tess"), lfmm_method = c("ridg
   return(result)
 }
 
+# helper for run_lfmm
 run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess", lfmm_method = "ridge", Kvals = 1:9, maf = 0){
   
   #get adaptive loci
@@ -88,7 +91,7 @@ run_lfmm_helper <- function(gen, gsd_df, loci_df, K = NULL, K_selection = "tess"
 
 
 
-# function to determine K
+# determine K
 get_K <- function(gen, coords = NULL, K_selection = "find.clusters", Kvals = 1:9, ...){
   
   if(K_selection == "tracy.widom") K <- get_K_tw(gen)
@@ -111,7 +114,7 @@ get_K_fc <- function(gen, max.n.clust = 9, perc.pca = 70){
   return(K)
 }
 
-# Function to determine best K based on elbow
+# determine best K based on elbow
 get_K_elbow <- function(gen){
   # run pca
   pc <- prcomp(gen)
@@ -129,7 +132,7 @@ get_K_elbow <- function(gen){
   return(K)
 }
 
-# Function to determine best K using tracy widom test
+# determine best K using tracy widom test
 get_K_tw <- function(gen, maxK = NULL){
   # run pca
   pc <- prcomp(gen)
@@ -172,6 +175,7 @@ get_K_tw <- function(gen, maxK = NULL){
   return(K)
 }
 
+# determine best K based on TESS
 get_K_tess <- function(gen, coords, Kvals = 1:9, tess_method = "projected.ls", ploidy = 2){
   # coordinates must be a matrix
   coords <- as.matrix(coords)
@@ -203,6 +207,7 @@ bestK <- function(tess3_obj, Kvals){
   return(K)
 }
 
+# calculate confusion matrix stats for LFMM
 lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loci_trait2, sig = 0.05, all = FALSE){
   
   #performs association testing using the fitted model:
@@ -375,6 +380,7 @@ lfmm_calc_confusion <- function(padj, genmat, envmat, lfmm_mod, loci_trait1, loc
 #   RDA    #
 ############
 
+# run RDA
 run_rda <- function(gen, gsd_df, loci_df = NULL, correctPC = c(TRUE, FALSE), maf = c(0, 0.05)){
   # get loci
   if (is.null(loci_df)) loci_df <- get_loci()
@@ -388,6 +394,7 @@ run_rda <- function(gen, gsd_df, loci_df = NULL, correctPC = c(TRUE, FALSE), maf
   return(result)
 }
 
+# helper function for run_rda
 run_rda_helper <- function(gen, gsd_df, loci_df, sig, correctPC, maf){
   
   #get adaptive loci
@@ -467,13 +474,7 @@ run_rda_helper <- function(gen, gsd_df, loci_df, sig, correctPC, maf){
 }
 
 
-#' Genotype-environment correlation test
-#'
-#' @param gen dosage matrix
-#' @param var dataframe with predictor variables
-#'
-#' @return dataframe with r and p-values from correlation test
-#' @export
+# Genotype-environment correlation test
 rda_cor <- function(gen, var){
   cor_df <- purrr::map_dfr(colnames(gen), rda_cor_env_helper, gen, var)
   rownames(cor_df) <- NULL
@@ -481,10 +482,7 @@ rda_cor <- function(gen, var){
   return(cor_df)
 }
 
-#' Helper function for rda_cor_test
-#'
-#' @export
-#' @noRd
+# Helper function for rda_cor_test
 rda_cor_env_helper <- function(snp_name, snp_df, env){
   cor_df <- data.frame(t(apply(env, 2, rda_cor_helper, snp_df[,snp_name])))
   cor_df$snp <- snp_name
@@ -492,10 +490,7 @@ rda_cor_env_helper <- function(snp_name, snp_df, env){
   return(cor_df)
 }
 
-#' Helper function for rda_cor_test
-#'
-#' @export
-#' @noRd
+# Helper function for rda_cor_test
 rda_cor_helper <- function(envvar, snp){
   if(sum(!is.na(envvar)) < 3 | sum(!is.na(snp)) < 3) return(c(r = NA, p = NA))
   # kendall is used instead of pearson because it is non-parameteric and doesn't require vars to be continuous
@@ -507,6 +502,7 @@ rda_cor_helper <- function(envvar, snp){
   return(results)
 }
 
+# calculate confusion matrix stats for RDA
 rda_calc_confusion <- function(padj = "fdr", sig = 0.05, all = FALSE, pv, rv, loci_trait1, loci_trait2){
   
   #for readibility, just negates the in function
@@ -672,18 +668,4 @@ rdadapt <- function(rda,K)
   qval <- qvalue(reschi2test)
   q.values_rdadapt<-qval$qvalues
   return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
-}
-
-maf_calc <- function(gen, loci_trait1, loci_trait2, cutoff = 0.05){
-  gen1 <- gen[,loci_trait1]
-  maf1 <- map_dbl(1:length(loci_trait1), ~mean(gen1[,.x], na.rm = TRUE))/2
-  maf_trait1 <- loci_trait1[maf1 > cutoff & maf1 < (1 - cutoff)]
-  maf_trait1 <- colnames(gen)[maf_trait1]
-    
-  gen2 <- gen[,loci_trait2]
-  maf2 <- map_dbl(1:length(loci_trait2), ~mean(gen2[,.x], na.rm = TRUE))/2
-  maf_trait2 <- loci_trait2[maf2 > cutoff & maf2 < (1 - cutoff)]
-  maf_trait2 <- colnames(gen)[maf_trait2]
-  
-  return(list(trait1 = maf_trait1, trait2 = maf_trait2))
 }
