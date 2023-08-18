@@ -47,7 +47,7 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     mis <- z1mis + z2mis
     
     result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), mismatch_mean = mean(mis), mismatch_max = max(mis))
-    for(nsamp in npts){
+    for(nsamp in nsamps){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
         subIDs <- get_samples(params[i,], sampstrat, nsamp)
