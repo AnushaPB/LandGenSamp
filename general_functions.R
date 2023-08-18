@@ -1,9 +1,7 @@
 #####################
 # GENERAL FUNCTIONS #
 #####################
-
 #create filepath based on params index and data type (e.g. genetic data = gen/dos, geospatial data = gsd, and adaptive loci = loci)
-#REALLY SHOULD SWITCH SO INPUT FILE IS JUST PARAMSET INSTEAD OF I and PARAMS
 create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")){
   
   #set of parameter names in filepath form
@@ -138,27 +136,6 @@ err_coeff <- function(full_coeff, sub_coeff){
   return(err)
 }
 
-#function to calculate RMSE (NO LONGER USING BECAUSE THERE AREN"T MULTIPLE VALUES (USING MAE INSTEAD))
-#currently two functions because I am not sure whether to calculate the RMSE when the coeffs aren't signif
-#on the one hand insignificant coeffs aren't meaningful, but it is hard to calculate averages for stats with NAs
-#e.g. if the coeffs aren't signif they are likely to be far from the true values/should be represented in the mean stat
-#currently using the first function for this reason (rmse_coeff)
-
-rmse_coeff <- function(full_coeff, sub_coeff){
-  sqerr <- (sub_coeff - full_coeff)^2
-  res <- sqrt(mean(sqerr))
-  return(res)
-}
-
-rmse_coeff_p <- function(full_coeff, sub_coeff, full_p, sub_p, alpha = 0.05){
-  sqerr <- (sub_coeff - full_coeff)^2
-  res <- sqrt(mean(sqerr))
-  res[full_p > alpha] <- NA
-  res[sub_p > alpha] <- NA
-  return(res)
-}
-
-
 # quickly choose an elbow for a PC. 
 # at variance below 5% per component, choose the largest % drop
 # designed for variance percentages, but will also work given a full set of Evalues
@@ -263,15 +240,17 @@ get_sites <- function(param_set, sampstrat, nsamp,  dir =  here("p2_sampling", "
 # make loci_df and convert from python to R indexing by adding 1
 get_loci <- function() data.frame(trait1 = 0:3, trait2 = 4:7) + 1
 
+# utility function to return 0 instead of integer(0) for which
 which0 <- function(x){
   y <- which(x)
   if (length(y) == 0) return(0) else return(y)
 }
 
-
+# get list of packages to provide when parallelizing
 get_packages <- function(){
   c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
 }
+
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
@@ -285,7 +264,6 @@ sampstrats <- c("rand", "grid", "trans", "envgeo")
 sitestrats <-  c("rand", "equi", "envgeo")
 nsites <- c(9, 16, 25)
 nsamps <- c(36, 81, 144, 225)
-npts <- nsamps
 #Create dataframe with all variable combos
 params <- expand.grid(K = c(1,2), 
                       phi = c(0.5, 1.0),
