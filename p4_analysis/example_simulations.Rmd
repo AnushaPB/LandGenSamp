@@ -14,6 +14,7 @@ library("viridis")
 library("gridExtra")
 
 source(here("general_functions.R"))
+source(here("p4_analysis", "analysis_functions.R"))
 ```
 
 
