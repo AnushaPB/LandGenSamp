@@ -1,4 +1,5 @@
 
+# run landscape genomics sampling methods
 run_method <- function(method, sampling = c("individual", "site"), ncores = NULL){
   # Read in general functions and objects
   source(here::here("general_functions.R"))
@@ -38,35 +39,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   
 }
 
-
-run_analysis2 <- function(params, ns, strats, method, full_result = NULL, site = FALSE, ncores = 25) {
-  
-  future::plan(future::multicore, workers = ncores)
-  
-  results <-
-    furrr::future_map(
-      1:nrow(params),
-      ~ run_analysis_helper(
-        i = .x,
-        params = params,
-        ns = ns,
-        strats = strats,
-        method = method,
-        full_result = full_result,
-        site = site
-      ),
-      .options = furrr::furrr_options(seed = TRUE, packages = get_packages()),
-      .progress = TRUE
-    )
-  
-  results <- dplyr::bind_rows(results)
-  
-  future::plan("sequential")
-  
-  return(results)
-}
-
-
+# run method for a set of parameters and sampling strategies
 run_analysis <- function(params, ns, strats, method, full_result = NULL, site = FALSE) {
 
   results <-
@@ -95,6 +68,7 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
   return(results)
 }
 
+# helper function for run analysis. Runs analysis for one simulation (i).
 run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE){
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
@@ -140,31 +114,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   return(results)
 }
 
-
-run_full2 <- function(params, method, n = 1000, ncores = 10){
-  
-  future::plan(future::multicore, workers = ncores)
-  
-  results <- future_map(
-    1:nrow(params),
-    \(i) run_full_helper(
-      i,
-      params = params,
-      method = method,
-      n = n
-    ),
-    .options = furrr::furrr_options(seed = TRUE, packages = get_packages()),
-    .progress = TRUE
-  ) %>%
-    dplyr::bind_rows()
-  
-  ## Shut down parallel workers
-  future::plan("sequential")
-  
-  return(results)
-}
-
-
+# run method with a "full" approximating dataset
 run_full <- function(params, method, n = 2000){
   
   results <- foreach(i = 1:nrow(params),
@@ -185,6 +135,7 @@ run_full <- function(params, method, n = 2000){
   return(results)
 }
 
+# helper for run_full
 run_full_helper <- function(i, params, method, n = 2000) {
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
@@ -230,7 +181,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
   return(full_result)
 }
 
-
+# run analyses for subsampled datasets
 run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method, site, full_K = FALSE) {
   
   subIDs <- get_samples(params[i,], sampstrat = strat, nsamp = n, site = site)
@@ -274,6 +225,7 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
   return(sub_result)
 }
 
+# get method function 
 get_method <- function(method, type = "run"){
   if (type == "run") {
     if (method == "mmrr") return(run_mmrr)
