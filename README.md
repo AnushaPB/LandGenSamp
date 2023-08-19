@@ -6,7 +6,9 @@ Landscape genomic sampling project
 I have tried to create a complete list of files in all of the
 directories and what they are for, but I am a fallible human being, so
 shoot me an email if I have missed anything or you have questions
-(<anusha.bishop@berkeley.edu>)
+(<anusha.bishop@berkeley.edu>).
+
+*Note that most of the scripts are parallelized*
 
 ### 1.1 [p1_simulations](https://github.com/AnushaPB/LandGenSamp/tree/main/p1_gnxsims)
 
@@ -61,11 +63,11 @@ Analyze and visualize landscape genomic results
 
     [p4_analysis]
     |   analysis_functions.R - functions used for running summary analyses
-    |   analysis_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods
-    |   analysis_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods
+    |   analysis_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods (File S2)
+    |   analysis_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods (File S3)
     |   analysis_simulations.Rmd - notebook for visualizing summary statistics for simulations
     |   analysis_megatable.Rmd - notebook for creating giant tables of mixed model results
-    |   example_simulations.Rmd - notebook used to visualize example simulations
+    |   example_simulations.Rmd - notebook used to visualize example simulations for Figure 1
     |  
     └───[outputs] - directory for storing analysis outputs
     |  
