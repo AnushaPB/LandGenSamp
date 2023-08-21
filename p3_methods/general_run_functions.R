@@ -115,7 +115,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
 }
 
 # run method with a "full" approximating dataset
-run_full <- function(params, method, n = 2000){
+run_full <- function(params, method, n = 1000){
   
   results <- foreach(i = 1:nrow(params),
                      .combine = dplyr::bind_rows,
@@ -136,10 +136,18 @@ run_full <- function(params, method, n = 2000){
 }
 
 # helper for run_full
-run_full_helper <- function(i, params, method, n = 2000) {
+run_full_helper <- function(i, params, method, n = 1000) {
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
+  
+  if (method == "gdm_cache"){
+    paramset <- params[i,]
+    paramset[,c("phi", "m", "r", "H")] <- paramset[,c("phi", "m", "r", "H")] * 100
+    filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
+    full_result <- read.csv(filepath)
+    return(full_result)
+  }
 
   gen <- get_data(i, params = params, "dos")
   gsd_df <- get_data(i, params = params, "gsd")
@@ -177,6 +185,7 @@ run_full_helper <- function(i, params, method, n = 2000) {
     filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
     write.csv(full_result, filepath, row.names = FALSE)
   }
+  
   
   return(full_result)
 }
