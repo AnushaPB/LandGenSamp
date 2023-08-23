@@ -94,8 +94,8 @@ stats <- c(
     "env_p_TPR",
     "geo_p_FDR",
     "env_p_FDR",
-    "geo_coeff_err_ae",
-    "env_coeff_err_ae",
+    "geo_coeff_err_ae_scale",
+    "env_coeff_err_ae_scale",
     "geo_coeff_err",
     "env_coeff_err"
   )
@@ -213,37 +213,50 @@ walk(stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
 MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```
 
+---
+
 ```{r, fig.width = 6, fig.height = 24}
-results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
 
-filt_results <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2))
-
-sub_results <- map(filt_results, \(x){
-  
+summarize_stats <- function(x, stats) {
   stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
   
-  x <- 
-     x %>%
-     group_by(nsamp, sampstrat) %>%
-     summarize_at(stats, mean, na.rm = TRUE, .groups = "keep") 
+  x <-
+    x %>%
+    group_by(nsamp, sampstrat) %>%
+    summarize_at(stats, mean, na.rm = TRUE, .groups = "keep")
   
-   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
-   
-   stopifnot(nrow(x) == 16 | nrow(x) == 9)
-                    
-   return(x)
-})
+  colnames(x)[-(1:2)] <-
+    map_chr(colnames(x)[-(1:2)], make_pretty_names)
+  
+  stopifnot(nrow(x) == 16 | nrow(x) == 9)
+  
+  return(x)
+}
 
+ibdibe_figplot <- function(df){
+  df_stats <- df %>% ungroup() %>% dplyr::select(-nsamp, -sampstrat) %>% colnames()
+  pretty_stats <- map_chr(df_stats, make_pretty_names)
+  result <-
+    map(pretty_stats,
+        ~ heat_plot(
+          df,
+          stat_name = .x,
+          maxv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 1.01, 0.4),
+          minv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 0,-0.3)
+        ))
+  return(result)
+}
 
-plots <-
-  map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
-    df,
-    stat_name = .x,
-    maxv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 1.01, 0.4),
-    minv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 0, -0.3)
-  ))) %>% transpose()
+results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
 
-plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+filt_results <- map(results,  ~filter(.x, H == 0.5, m == 0.25))
+
+sub_results <- map(IBDIBE_stats, \(stats) map(filt_results, ~summarize_stats(.x, stats)))
+
+plots <- map(sub_results, ~transpose(map(.x, ibdibe_figplot)))
+
+plot_ind <- map(plots, \(plot) map(plot, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none")))
+
 plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
 
 pdf(here("plots", "IBDIBE_ind.pdf"), width = 6, height = 12)
@@ -314,8 +327,8 @@ sub_results <- map(filt_results, \(x){
      group_by(nsamp, sampstrat) %>%
      summarize(`IBE TPR` = mean(env_p_TPR, na.rm = TRUE), 
                `IBD TPR` = mean(geo_p_TPR, na.rm = TRUE),
-               `IBE AE` = mean(env_coeff_err_ae, na.rm = TRUE),
-               `IBD AE` = mean(geo_coeff_err_ae, na.rm = TRUE),
+               `IBE AE` = mean(env_coeff_err_ae_scale, na.rm = TRUE),
+               `IBD AE` = mean(geo_coeff_err_ae_scale, na.rm = TRUE),
                `IBE Bias` = mean(env_coeff_err, na.rm = TRUE),
                `IBD Bias` = mean(geo_coeff_err, na.rm = TRUE),
                .groups = "keep") 
@@ -326,10 +339,10 @@ sub_results <- map(filt_results, \(x){
 })
 
 
-IBETPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE TPR", maxv = 1, minv = 0.1, 
+IBETPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE TPR", maxv = 1, minv = 0, 
                  colpal = "plasma", direction = 1))
 
-IBDTPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD TPR", maxv = 1, minv = 0.1, 
+IBDTPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD TPR", maxv = 1, minv = 0, 
                  colpal = "plasma", direction = 1))
 
 IBDAE_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD AE", maxv = 0.16, minv = 0, 
