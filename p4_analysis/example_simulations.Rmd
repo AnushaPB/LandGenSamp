@@ -12,11 +12,11 @@ library("here")
 library("tidyverse")
 library("viridis")
 library("gridExtra")
+library("vcfR")
 
 source(here("general_functions.R"))
 source(here("p4_analysis", "analysis_functions.R"))
 ```
-
 
 ```{r, fig.height = 8, fig.width = 4}
 env1 <- raster(as.matrix(read.csv(here("p4_analysis/example_data/seed1_env1_H50_r60.csv"), header = FALSE)))
