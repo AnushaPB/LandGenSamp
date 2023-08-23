@@ -39,15 +39,22 @@ table_df <-
   dplyr::select(method, stat, sampling, FixedEffects, Variable) %>%
   #filter(Variable != "sampstrat") %>%
   spread(Variable, FixedEffects) %>%
-  select(method,
-      stat,
-      sampling,
-      `Sample number`,
-      `Population size`, 
-      `Migration`,
-      `Selection strength`,
-      `Spatial autocorrelation`,
-      `Environmental correlation`) %>%
+  dplyr::select(
+    method,
+    stat,
+    sampling,
+    `Sample number`,
+    `Population size`,
+    `Migration`,
+    `Selection strength`,
+    `Spatial autocorrelation`,
+    `Environmental correlation`
+  ) %>% 
+   mutate(method = toupper(method),
+         sampling = case_when(grepl("ind", sampling) ~ "individual",
+                              grepl("site", sampling) ~ "site",
+                              TRUE ~ sampling),
+         stat = map_chr(stat, make_pretty_names)) %>%
   mutate()
   
 write.csv(table_df, here("p4_analysis", "megatable.csv"), row.names = FALSE)
@@ -133,10 +140,10 @@ df$estimate[df$p.value > 0.05] <- NA
 table_df <- 
   df %>%
   filter(sampling == "site" | sampling == "individual") %>%
-  select(contrast, estimate, method, stat, sampling) %>%
+  dplyr::select(contrast, estimate, method, stat, sampling) %>%
   #filter(Variable != "sampstrat") %>%
   spread(contrast, estimate) %>%
-  select(sampling, method, stat, 
+  dplyr::select(sampling, method, stat, 
          "EG - G", "EG - R", "EG - T", 
          "G - R", "G - T", 
          "EG - EQ", "EQ - R",
@@ -144,8 +151,10 @@ table_df <-
   group_by(sampling) %>%
   group_split()
 
-table_df_ind <- table_df[[1]] %>% select(-sampling, -"EG - EQ", -"EQ - R")
-table_df_site <- table_df[[2]] %>% select(-sampling, -"EG - G", -"G - R", -"G - T", -"R - T", -"EG - T")
+table_df_ind <-
+  table_df[[1]] %>% dplyr::select(-sampling,-"EG - EQ",-"EQ - R")
+table_df_site <-
+  table_df[[2]] %>% dplyr::select(-sampling,-"EG - G",-"G - R",-"G - T",-"R - T",-"EG - T")
   
 write.csv(table_df_ind, here("p4_analysis", "tukey_ind.csv"), row.names = FALSE)
 
@@ -176,7 +185,7 @@ table_df_ind %>%
   gtExtras::gt_hulk_col_numeric(
     c(3:8), 
     trim = TRUE, 
-    domain = c(-0.14,0.14),
+    domain = c(-0.18,0.18),
     na.color = "white"
     ) %>%
   sub_missing(
@@ -212,7 +221,7 @@ table_df_site %>%
   gtExtras::gt_hulk_col_numeric(
     c(3:5), 
     trim = TRUE, 
-    domain = c(-0.14,0.14),
+    domain = c(-0.18,0.18),
     na.color = "white"
     ) %>%
   sub_missing(
