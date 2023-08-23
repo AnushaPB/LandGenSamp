@@ -114,7 +114,7 @@ walk(stats, ~ mmrr_gdm_plotter(mmrr_ind, stat = .x))
 
 ### 1.1.2 Linear mixed effects models
 
-```{r, message = FALSE, results = 'asis'}
+```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(mmrr_ind, .x, 
                       filepath = make_lmer_path("mmrr", "ind", .x)))
 ```
@@ -137,7 +137,7 @@ walk(stats, ~ mmrr_gdm_plotter(mmrr_site, stat = .x))
 
 ### 1.2.2 Linear mixed effects models
 
-```{r, message = FALSE, results = 'asis'}
+```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(mmrr_site, .x, 
                       filepath = make_lmer_path("mmrr", "site", .x)))
 ```
@@ -156,13 +156,12 @@ walk(stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
 
 ```{r, fig.width=14, fig.height=7}
 gdm_ind <- format_gdm(here(p3path, "gdm2_indsampling_results.csv"))
-
 walk(c(stats, "env_p_TPR0"), ~ mmrr_gdm_plotter(gdm_ind, stat = .x))
 ```
 
 ### 2.1.2 Linear mixed effects models
 
-```{r, message = FALSE, results = 'asis'}
+```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(gdm_ind, .x, 
                       filepath = make_lmer_path("gdm", "ind", .x)))
 ```
@@ -194,7 +193,7 @@ walk(stats, ~ mmrr_gdm_plotter(gdm_site, stat = .x))
 
 ### 2.2.2 Linear mixed effects models
 
-```{r, message = FALSE, results = 'asis'}
+```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(gdm_site, .x, 
                       filepath = make_lmer_path("gdm", "site", .x)))
 ```
@@ -306,7 +305,7 @@ dev.off()
 ```{r, fig.width = 5.5, fig.height = 8}
 results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
 
-filt_results <- map(results,  ~filter(.x, H != 0.05, m != 1.00, K == 2))
+filt_results <- map(results,  ~filter(.x, H != 0.05, m != 1.00))
 
 sub_results <- map(filt_results, \(x){
    
