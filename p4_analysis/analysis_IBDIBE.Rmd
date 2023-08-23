@@ -215,8 +215,7 @@ MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 
 ---
 
-```{r, fig.width = 6, fig.height = 24}
-
+```{r, fig.width = 6, fig.height = 12}
 summarize_stats <- function(x, stats) {
   stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
   
@@ -233,44 +232,96 @@ summarize_stats <- function(x, stats) {
   return(x)
 }
 
-ibdibe_figplot <- function(df){
-  df_stats <- df %>% ungroup() %>% dplyr::select(-nsamp, -sampstrat) %>% colnames()
-  pretty_stats <- map_chr(df_stats, make_pretty_names)
+ibdibe_figplot <- function(df, stats, minmax){
+  pretty_stats <- map_chr(stats, make_pretty_names)
+  minmax <- minmax %>% filter(pretty_names == .x)
   result <-
     map(pretty_stats,
         ~ heat_plot(
           df,
           stat_name = .x,
-          maxv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 1.01, 0.4),
-          minv = ifelse((grepl("TPR", .x) | grepl("FDR", .x)), 0,-0.3)
+          maxv = pull(minmax, max),
+          minv = pull(minmax, min)
         ))
   return(result)
+}
+
+make_ibdibe_figs <- function(filt_results, substats, fileprefix, minmax_stats) {
+  sub_results <-
+    map(filt_results, ~ summarize_stats(.x, stats = substats))
+  
+  minmax_stats <-
+    map(c("min", "max"), \(f) {
+      map(sub_results, \(x, cols = colnames(x)[-(1:2)]) {
+        x %>%
+          ungroup() %>%
+          dplyr::select(cols) %>%
+          summarize_all(f, na.rm = TRUE)
+      }) %>%
+        bind_rows() %>%
+        summarize_all(f) %>%
+        pivot_longer(everything(), names_to = "pretty_names", values_to = f)
+    }) %>%
+    do.call(what = left_join) 
+  
+  plots <-
+    map(sub_results, ~ ibdibe_figplot(.x, stats = substats, minmax = minmax_stats)) %>% transpose()
+  
+  plot_ind <-
+    map(plots,
+        ~ ggarrange(
+          .x[[1]],
+          .x[[3]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "none"
+        ))
+  
+  plot_site <-
+    map(plots,
+        ~ ggarrange(
+          .x[[2]],
+          .x[[4]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "none"
+        ))
+  
+  pdf(here("plots", paste0(fileprefix, "_ind.pdf")),
+      width = 6,
+      height = 12)
+  do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
+  dev.off()
+  
+  pdf(here("plots", paste0(fileprefix, "_site.pdf")),
+      width = 6,
+      height = 12)
+  do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
+  dev.off()
+  
+  pdf(here("plots", paste0(fileprefix, "_legends.pdf")),
+      width = 6,
+      height = 12)
+  plot_legend <-
+    map(plots,
+        ~ ggarrange(
+          .x[[1]],
+          .x[[3]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "right"
+        ))
+  do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
+  dev.off()
 }
 
 results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
 
 filt_results <- map(results,  ~filter(.x, H == 0.5, m == 0.25))
 
-sub_results <- map(IBDIBE_stats, \(stats) map(filt_results, ~summarize_stats(.x, stats)))
+ibdibe_stats <- list(ibd = stats[grepl("geo", stats)], ibe = stats[grepl("env", stats)])
 
-plots <- map(sub_results, ~transpose(map(.x, ibdibe_figplot)))
-
-plot_ind <- map(plots, \(plot) map(plot, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none")))
-
-plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
-
-pdf(here("plots", "IBDIBE_ind.pdf"), width = 6, height = 12)
-do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
-dev.off()
-
-pdf(here("plots", "IBDIBE_site.pdf"), width = 6, height = 12)
-do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
-dev.off()
-
-pdf(here("plots", "IBDIBE_legends.pdf"), width = 6, height = 12)
-plot_legend <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "right"))
-do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
-dev.off()
+  
 ```
 
 ```{r, fig.width = 6, fig.height = 12}
@@ -292,7 +343,6 @@ sub_results <- map(filt_results, \(x){
                     
    return(x)
 })
-
 
 plots <-
   map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
