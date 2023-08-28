@@ -10,8 +10,9 @@
 *.tif
 
 #Ignore data. envs and outputs
-/data
-/outputs
+p1_gnxsim/LGS_data
+p2_sampling/outputs
+p3_methods/outputs
 /venv
 /pyout
 
