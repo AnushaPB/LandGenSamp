@@ -1,6 +1,6 @@
 
 # Plot every single unique simulation, averaged across all replicates for a given statistic
-MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, direction = 1, na.rm=TRUE, dig = 3, pretty_names = TRUE){
+MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, na.rm=TRUE, dig = 3, pretty_names = TRUE){
   stat_name <- stat
   agg <- make_ggdf(df, stat_name = stat_name, aggfunc = aggfunc, na.rm = na.rm)
   
@@ -30,16 +30,12 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
           plot.title = element_text(size = 30, face = "bold"))
   
   # get default color palettes based on stats
-  if (is.null(colpal)){
-    pal <- get_colpal(stat_name)
-    colpal <- pal$colpal
-    direction <- pal$direction
-  }
+  if (is.null(colpal)) colpal <- get_colpal(stat_name)
   
-  if(colpal == "divergent"){
+  if(any(colpal == "divergent")){
     p <- p + scale_fill_gradient2(low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
   } else {
-    p <- p + scale_fill_viridis(limits = c(minv, maxv), option = colpal, direction = direction)
+    p <- p + scale_fill_gradientn(colors = colpal, name = stat_name, limits = c(minv, maxv))
   }
 
   p <- p + ggtitle(stat_name)
@@ -56,8 +52,9 @@ make_pretty_names <- function(stat_name) {
   if (stat_name == "TPRCOMBO") new_name <- "TPR"
   if (stat_name == "FDRCOMBO") new_name <- "FDR"
   if (stat_name == "FDRCOMBO") new_name <- "FDR"
-  if (grepl("*_coeff_err", stat_name) | grepl("*coefferr", stat_name)) new_name <- "Bias"
-  if (grepl("*_coeff_err_ae", stat_name) | grepl("*coefferrae", stat_name)) new_name <- "AE"
+  if (grepl("*coeff", stat_name) | grepl("*coeff", stat_name)) new_name <- "Coefficient"
+  if (grepl("*_coeff_err", stat_name) | grepl("*coefferr", stat_name)) new_name <- "ME"
+  if (grepl("*_coeff_err_ae", stat_name) | grepl("*coefferrae", stat_name)) new_name <- "MAE"
   if (grepl("*TPR", stat_name)) new_name <- "TPR"
   if (grepl("*FDR", stat_name)) new_name <- "FDR"
   if (grepl("*geo*", stat_name)) new_name <- paste("IBD", new_name)
@@ -70,12 +67,20 @@ make_pretty_names <- function(stat_name) {
 
 # get a color pallette based on the provided statistic
 get_colpal <- function(stat_name){
-  if (is.null(stat_name)) return(list(colpal = "cividis", direction = 1))
-  if (stat_name == "K_factor" | stat_name == "TOTALN") return(list(colpal = "cividis", direction = 1))
-  if (grepl("*_coeff_err_ae", stat_name) | grepl("*FDR*", stat_name)) return(list(colpal = "viridis", direction = -1))
-  if (grepl("*_coeff_err", stat_name)) return(list(colpal = "divergent"))
-  if (grepl("*TPR*", stat_name)) return(list(colpal = "plasma", direction = 1))
-  return(list(colpal = "cividis", direction = 1))
+  # Create a color palettes
+  purplecols <- colorRampPalette(c(plasma(5, begin = 0.1, end = 0.45), "#F7F7F7"))
+  orangecols <- colorRampPalette(c(inferno(5, begin = 0.5, end = 1), "#F7F7F7"))
+  redcols <- colorRampPalette(c(rocket(5, begin = 0.2, end = 0.9), "#F7F7F7"))
+  cyancols <- colorRampPalette(c(mako(5, begin = 0.4, end = 0.9), "#F7F7F7"))
+  
+  if (is.null(stat_name)) return(rev(purplecols(100)))
+  if (stat_name == "K_factor" | stat_name == "TOTALN") return(rev(purplecols(100)))
+  if (grepl("*_coeff_err_ae", stat_name) | grepl("MAE", stat_name)) return(rev(orangecols(100)))
+  if (grepl("*FDR*", stat_name)) return(rev(redcols(100)))
+  if (grepl("*_coeff_err", stat_name) | grepl("ME", stat_name)) return("divergent")
+  if (grepl("*TPR*", stat_name)) return(rev(cyancols(100)))
+  if (grepl("geo_coeff", stat_name) | grepl("env_coeff", stat_name) | grepl("Coefficient", stat_name)) return(rev(purplecols(100)))
+  return(rev(purplecols(100)))
 }
 
 # create path for dumping lmer results
@@ -120,19 +125,15 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
 }
 
 # create summary plot that groups simulation by parameter levels and summarizes over the stat
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig=3, aggfunc = mean, minv = NULL, maxv = NULL, direction = 1, title = NULL, full = FALSE, pretty_names = TRUE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig=3, aggfunc = mean, minv = NULL, maxv = NULL, title = NULL, full = FALSE, pretty_names = TRUE){
  
   agg <- make_agg(df, stat_name = stat_name, na.rm = na.rm, dig = dig, aggfunc = aggfunc, minv = minv, maxv = maxv, full = full)
   
   # get default color palettes based on stats
-  if (is.null(colpal)){
-    pal <- get_colpal(stat_name)
-    colpal <- pal$colpal
-    direction <- pal$direction
-  }
+  if (is.null(colpal)) colpal <- get_colpal(stat_name)
   
   p <- heat_plot(agg, stat_name = NULL, minv = minv, maxv = maxv, title = title, facet = TRUE, dig = dig, 
-                 colpal = colpal, direction = direction)
+                 colpal = colpal)
   
   return(p)
 }
@@ -203,7 +204,7 @@ agg_mm <- function(x, stat){
 
 # create heat_plot from a df given a stat
 heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NULL, facet = FALSE, dig = 2, 
-                      colpal = NULL, direction = 1){
+                      colpal = NULL){
   
   if (!is.null(stat_name)) df$stat <- df[[stat_name]]
   
@@ -236,16 +237,12 @@ heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NU
   if (facet) p <- p + facet_grid(low_high ~ param)
   
   # get default color palettes based on stats
-  if (is.null(colpal)){
-    pal <- get_colpal(stat_name)
-    colpal <- pal$colpal
-    direction <- pal$direction
-  }
+  if (is.null(colpal)) colpal <- get_colpal(stat_name)
   
-  if (colpal == "divergent"){
+  if (any(colpal == "divergent")){
     p <- p + scale_fill_gradient2(name = stat_name, low = "#2066AC", mid="#F7F7F7", high = "#d79232", midpoint = 0, limits=c(minv, maxv))
   } else {
-    p <- p + scale_fill_viridis(name = stat_name, limits = c(minv, maxv), option = colpal, direction = direction)
+    p <- p + scale_fill_gradientn(colors = colpal, name = stat_name, limits = c(minv, maxv))
   }
   
   if (!is.null(title)) p <- p + ggtitle(title)
@@ -299,6 +296,15 @@ format_data <- function(method, sampling, p_filter = TRUE) {
 # format MMRR results
 format_mmrr <- function(path, full = FALSE){
   df <- read.csv(path)
+  
+  # get scaled coeffs
+  scale_max <- max(c(max(df$env1_coeff, na.rm = TRUE), max(df$env2_coeff, na.rm = TRUE), max(df$geo_coeff, na.rm = TRUE)))
+  df$env1_coeff_scale <- df$env1_coeff/scale_max
+  df$env2_coeff_scale <- df$env2_coeff/scale_max
+  df$geo_coeff_scale <- df$geo_coeff/scale_max
+  df$env_coeff <- df$env1_coeff + df$env2_coeff
+  df$env_coeff_scale <- df$env1_coeff_scale + df$env2_coeff_scale
+  
   df <- extra_ibeibd_stats(df)
   
   if (!full) df <- df %>% filter(sampstrat != "full") 
@@ -347,6 +353,19 @@ format_mmrr <- function(path, full = FALSE){
 format_gdm <- function(path, full = FALSE){
   df <- read.csv(path)
   
+  # calculate scaled coeffs
+  scale_max <- max(c(max(df$env1_coeff, na.rm = TRUE), max(df$env2_coeff, na.rm = TRUE), max(df$geo_coeff, na.rm = TRUE)))
+  df$env1_coeff_scale <- df$env1_coeff/scale_max
+  df$env2_coeff_scale <- df$env2_coeff/scale_max
+  df$geo_coeff_scale <- df$geo_coeff/scale_max
+  df$env_coeff <- df$env1_coeff + df$env2_coeff
+  df$env_coeff_scale <- df$env1_coeff_scale + df$env2_coeff_scale
+  
+  # check that NA for p-vals are only present when coeffs are 0 or NA
+  stopifnot(sum(is.na(df$env1_p) & (df$env1_coeff == 0 | is.na(df$env1_coeff)))/sum(is.na(df$env1_p)) == 1)
+  stopifnot(sum(is.na(df$env2_p) & (df$env2_coeff == 0 | is.na(df$env2_coeff)))/sum(is.na(df$env2_p)) == 1)
+  
+  # get extra IBE/IBD stats
   df <- extra_ibeibd_stats(df)
   
   #give sampling strategies simpler names
@@ -579,21 +598,36 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
   moddf <- df[df$sampstrat != "full",]
   moddf$stat <- moddf[, stat]
   
-  # check if all 1 value
+  # check for unique values
   if (length(unique(moddf$stat)) == 1) {
     aov_df <- data.frame(Variable = NA, FixedEffects = NA, Sum.Sq = NA, Mean.Sq = NA, NumDF = NA, DenDF = NA, F.value = NA, Pr..F. = NA)
     if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
     em_df <- data.frame(contrast = NA, estimate = NA, SE = NA, df = NA, z.ratio = NA, p.value = NA)
     if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
-    warning(paste("\nAll values of", stat, "are", unique(moddf$stat), "; no model is returned"))
+    warning(paste("\nAll values of", stat, "are NA for one set of parameters; no model is returned"))
     return()
   }
+  
+  # check if all values are NAs for a parameter level
+  params <- c("K", "m", "phi", "H", "r")
+  na_check <-
+    map_lgl(
+      params,
+      ~ moddf %>% 
+        group_by(.data[[.x]]) %>% 
+        summarize(na = all(is.na(stat))) %>% 
+        pull(na) %>% 
+        any())
+  names(na_check) <- params
+  if (any(na_check)) warning(paste("\nAll values of", stat, "are NA for a level of", paste(params[na_check], collapse = " "), "; this parameter is dropped from the model"))
   
   # make nsamp into continuous variable
   moddf$nsamp <- as.numeric(as.character(moddf$nsamp))
   
-  # mixed model
-  if (is.null(f)) f <- formula("stat ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)")
+  # mixed model (remove params with all NA values for a level)
+  if (is.null(f)) f <- formula(paste0("stat ~ nsamp + sampstrat +", paste(params[!na_check], collapse = "+"), "+ (1 | seed)"))
+  
+  moddf <- moddf %>% select(stat, nsamp, sampstrat, K, phi, m, H, r, seed, it) 
   mod <- lmerTest::lmer(f, moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
   
   # anova 
@@ -789,11 +823,10 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   sub <- subdf[subdf$sampstrat != "full",]
   
   if (any(colnames(df) == "env1_coeff")){
-    
-    # calculate SMAPE (deal with zeros)
-    sub$env1_smape <- smape(full$env1_coeff, sub$env1_coeff)
-    sub$env2_smape <- smape(full$env2_coeff, sub$env2_coeff)
-    sub$env_smape <- (sub$env1_smape + sub$env2_smape)/2
+    # replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
+    # NA p-values are the result of the coefficient being zero
+    sub <- sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
+    full <- full %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
     
     # calculate FDR
     sub$env1_p_FDR <- (!(full$env1_p < 0.05) & sub$env1_p < 0.05)/(sub$env1_p < 0.05)
@@ -804,26 +837,60 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
     sub$geo_p_FDR <- (!(full$geo_p < 0.05) & sub$geo_p < 0.05)/(sub$geo_p < 0.05)
     sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0 
     
+    # calculate TPR
+    sub$env1_p_FDR <- (!(full$env1_p < 0.05) & sub$env1_p < 0.05)/(sub$env1_p < 0.05)
+    sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0 
+    sub$env2_p_FDR <- (!(full$env2_p < 0.05) & sub$env2_p < 0.05)/(sub$env2_p < 0.05)
+    sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0 
+    sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR)/2
+    sub$geo_p_FDR <- (!(full$geo_p < 0.05) & sub$geo_p < 0.05)/(sub$geo_p < 0.05)
+    sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0 
+    
+    # convert back to NA
+    sub <- sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(.x == 100, NA, .x))
+    full <- full %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(.x == 100, NA, .x))
+    
     # calculate IBE
     full$IBE <- abs(full$env1_coeff) + abs(full$env2_coeff)
     sub$IBE <- abs(sub$env1_coeff) + abs(sub$env2_coeff)
     sub$IBE_err_ae <- abs(full$IBE - sub$IBE)
-    sub$IBE_smape <- smape(full$IBE, sub$IBE)
+    sub$IBE_percerr <- abs(full$IBE - sub$IBE)/abs(full$IBE)
+    
+    # calculate TNR
+    sub$env1_p_TNR <- (!(full$env1_p < 0.05) & !(sub$env1_p < 0.05))/!(full$env1_p < 0.05)
+    sub$env1_p_TNR[is.na(sub$env1_p_TNR)] <- 1
+    sub$env2_p_TNR <- (!(full$env2_p < 0.05) & !(sub$env2_p < 0.05))/!(full$env2_p < 0.05)
+    sub$env2_p_TNR[is.na(sub$env2_p_TNR)] <- 1
+    sub$env_p_TNR <- (sub$env1_p_TNR + sub$env2_p_TNR)/2
+    sub$geo_p_TNR <- (!(full$geo_p < 0.05) & !(sub$geo_p < 0.05))/!(full$geo_p < 0.05)
+    sub$geo_p_TNR[is.na(sub$geo_p_TNR)] <- 1 
+    
+    # calculate agreement
+    sub$env1_agree <- (full$env1_p < 0.05) == (sub$env1_p < 0.05)
+    sub$env2_agree <- (full$env2_p < 0.05) == (sub$env2_p < 0.05)
+    sub$env_agree <- (sub$env1_agree + sub$env2_agree)/2
+    sub$geo_agree <- (full$geo_p < 0.05) == (sub$geo_p < 0.05)
+    
+    # calculate scaled error
+    if (any(colnames(df) == "env1_coeff_scale")){
+      sub$env1_coeff_err_scale <- sub$env1_coeff_scale - full$env1_coeff_scale
+      sub$env2_coeff_err_scale <- sub$env2_coeff_scale - full$env2_coeff_scale
+      sub$geo_coeff_err_scale <- sub$geo_coeff_scale - full$geo_coeff_scale
+      sub$env_coeff_err_scale <- (sub$env1_coeff_scale + sub$env2_coeff_scale)/2
+      
+      sub$env1_coeff_err_ae_scale <- abs(sub$env1_coeff_err_scale)
+      sub$env2_coeff_err_ae_scale <- abs(sub$env2_coeff_err_scale)
+      sub$geo_coeff_err_ae_scale <- abs(sub$geo_coeff_err_scale)
+      sub$env_coeff_err_ae_scale <- (sub$env1_coeff_err_ae_scale + sub$env2_coeff_err_ae_scale)/2
+    }
     
   } 
     
-  sub$geo_rpd <- 2 * abs(sub$geo_coeff - full$geo_coeff)/(abs(full$geo_coeff) + abs(sub$geo_coeff))
-  
   new_df <- bind_rows(sub, full)
   stopifnot(nrow(new_df) == nrow(subdf))
   
   return(new_df)
 }
-
-# SMAPE: https://www.r-bloggers.com/2021/08/how-to-calculate-smape-in-r/
-# a = actual, f = forecasted
-smape <- function(a, f) {  return (1/length(a) * sum(2*abs(f-a) / (abs(a)+abs(f))*100))}
-
 
 # Example simulations --------------------------------------------------------------------------
 
@@ -908,4 +975,116 @@ plot_example_samples <- function(.x, .y, site = FALSE, df, env1){
     ggtitle(.y)
   
   return(p)
+}
+
+# Figures --------------------------------------------------------------------------------
+summarize_stats <- function(x, stats) {
+  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
+  
+  x <-
+    x %>%
+    group_by(nsamp, sampstrat) %>%
+    summarize_at(stats, mean, na.rm = TRUE, .groups = "keep")
+  
+  colnames(x)[-(1:2)] <-
+    map_chr(colnames(x)[-(1:2)], make_pretty_names)
+  
+  stopifnot(nrow(x) == 16 | nrow(x) == 9)
+  
+  return(x)
+}
+
+
+make_gea_figs <- function(sub_results, stats, fileprefix) {
+  plots <-
+    map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
+      df,
+      stat_name = .x,
+      maxv = 1,
+      minv = 0
+    ))) %>% transpose()
+  
+  plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
+  plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
+  
+  pdf(here("plots", paste0(fileprefix, "_GEA_ind.pdf")), width = 6, height = 6)
+  print(do.call(ggarrange, c(plot_ind, ncol = 1, align = "h")))
+  dev.off()
+  
+  pdf(here("plots", paste0(fileprefix, "_GEA_site.pdf")), width = 6, height = 6)
+  print(do.call(ggarrange, c(plot_site, ncol = 1, align = "h")))
+  dev.off()
+  
+  pdf(here("plots", paste0(fileprefix, "_GEA_legends.pdf")), width = 6, height = 6)
+  plot_legend <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "right"))
+  print(do.call(ggarrange, c(plot_legend, ncol = 1, align = "h")))
+  dev.off() 
+}
+
+
+ibdibe_figplot <- function(df, stats, minmax){
+  pretty_stats <- map_chr(stats, make_pretty_names)
+  result <-
+    map(pretty_stats,
+        ~ heat_plot(
+          df,
+          stat_name = .x,
+          maxv = pull(filter(minmax, pretty_names == .x), max),
+          minv = pull(filter(minmax, pretty_names == .x), min)
+        ))
+  return(result)
+}
+
+make_ibdibe_figs <- function(sub_results, substats, fileprefix, minmax_stats) {
+  plots <-
+    map(sub_results, ~ ibdibe_figplot(.x, stats = substats, minmax = minmax_stats)) %>% transpose()
+  
+  plot_ind <-
+    map(plots,
+        ~ ggarrange(
+          .x[[1]],
+          .x[[3]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "none"
+        ))
+  
+  plot_site <-
+    map(plots,
+        ~ ggarrange(
+          .x[[2]],
+          .x[[4]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "none"
+        ))
+  
+  print(do.call(ggarrange, c(plot_ind, ncol = 1, align = "h")))
+  pdf(here("plots", paste0(fileprefix, "_ind.pdf")),
+      width = 6,
+      height = 9)
+  print(do.call(ggarrange, c(plot_ind, ncol = 1, align = "h")))
+  dev.off()
+  
+  print(do.call(ggarrange, c(plot_site, ncol = 1, align = "h")))
+  pdf(here("plots", paste0(fileprefix, "_site.pdf")),
+      width = 6,
+      height = 9)
+  print(do.call(ggarrange, c(plot_site, ncol = 1, align = "h")))
+  dev.off()
+  
+  pdf(here("plots", paste0(fileprefix, "_legends.pdf")),
+      width = 6,
+      height = 8)
+  plot_legend <-
+    map(plots,
+        ~ ggarrange(
+          .x[[1]],
+          .x[[3]],
+          common.legend = TRUE,
+          nrow = 1,
+          legend = "right"
+        ))
+  print(do.call(ggarrange, c(plot_legend, ncol = 1, align = "h")))
+  dev.off()
 }
