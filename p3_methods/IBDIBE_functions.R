@@ -988,10 +988,14 @@ stat_ibdibe <- function(sub, full, sig = 0.05){
   
   p_cols <- colnames(full)[grepl("_p", colnames(full))]
   
+  # replace NA with 1 for calculations because NA values means the coefficient was zero so it should be treated as no negative
+  sub[,p_cols] <- purrr::map_dbl(sub[,p_cols], ~ifelse(is.na(.x), 1, .x))
   TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
   colnames(TPR) <- paste0(colnames(TPR), "_", "TPR")
   
   FDR <- ((sub[,p_cols] < sig) & !(full[,p_cols] < sig))/(sub[,p_cols] < sig)
+  # replace NA with 0 because NA occurs when denominator is 0 (in which case numerator would also be 0 for this calc)
+  FDR <- purrr::map_dbl(FDR, ~ifelse(is.na(.x), 0, .x))
   colnames(FDR) <- paste0(colnames(FDR), "_", "FDR")
   
   df <- data.frame(err, ae, TPR, FDR)
