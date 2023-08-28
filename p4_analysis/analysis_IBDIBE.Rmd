@@ -21,6 +21,8 @@ library("ggpubr")
 
 source(here("p4_analysis", "analysis_functions.R"))
 
+source(here("p3_methods", "IBDIBE_functions.R"))
+
 p4path <- here("p4_analysis", "outputs")
 p3path <- here("p3_methods", "outputs")
 
@@ -35,7 +37,7 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
 ```{r,fig.width = 9, fig.height = 4}
-df <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv")) 
+df <- format_gdm(here(p3path, "gdm2_indsampling_results.csv")) 
 ggdf <- make_ggdf(df, stat_name = "geo_p") 
 
 plots <-
@@ -82,23 +84,34 @@ do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
 
 **FDR** - False Discovery Rate
 
-**Absolute error** - error was calculated by taking the mean absolute difference between the observed and expected coefficients 
+**ME** - mean error was calculated by taking the mean difference between the observed and expected coefficients, because the absolute value is not taken this measurement is used to determine whether over- or underestimation is occurring. For IBE ME the two environmental coefficient errors were averaged.
 
-**Bias** - bias was calculated by taking the mean difference between the observed and expected coefficients
+**MAE** - mean absolute error calculated as the difference between the observed and expected coefficients. For IBE MAE the two environmental coefficient errors were averaged.
+
+
 
 ***
 
 ```{r}
-stats <- c(
+stats <- 
+  c(
     "geo_p_TPR",
-    "env_p_TPR",
     "geo_p_FDR",
-    "env_p_FDR",
     "geo_coeff_err_ae_scale",
-    "env_coeff_err_ae_scale",
-    "geo_coeff_err",
-    "env_coeff_err"
+    "env_p_TPR",
+    "env_p_FDR",
+    "env_coeff_err_ae_scale"
   )
+
+plot_stats <- 
+  c(
+    "geo_coeff_scale", 
+    "geo_coeff_err_scale", 
+    stats[grepl("geo",stats)], 
+    "env_coeff_err_scale", 
+    "env_coeff_scale", 
+    stats[grepl("env",stats)]
+    )
 ```
 
 # 1. MMRR
@@ -109,7 +122,8 @@ stats <- c(
 
 ```{r, fig.width=14, fig.height=7}
 mmrr_ind <- format_mmrr(here(p3path, "mmrr2_indsampling_results.csv"))
-walk(stats, ~ mmrr_gdm_plotter(mmrr_ind, stat = .x))
+
+walk(plot_stats, ~ mmrr_gdm_plotter(mmrr_ind, stat = .x))
 ```
 
 ### 1.1.2 Linear mixed effects models
@@ -122,7 +136,7 @@ walk(stats, ~run_lmer(mmrr_ind, .x,
 ### 1.1.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
+walk(plot_stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 ```
 
 ## 1.2 Site sampling
@@ -132,7 +146,7 @@ walk(stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 ```{r, fig.width=14, fig.height=7}
 mmrr_site <- format_mmrr(here(p3path, "mmrr2_sitesampling_results.csv"))
 
-walk(stats, ~ mmrr_gdm_plotter(mmrr_site, stat = .x))
+walk(plot_stats, ~ mmrr_gdm_plotter(mmrr_site, stat = .x))
 ```
 
 ### 1.2.2 Linear mixed effects models
@@ -145,7 +159,7 @@ walk(stats, ~run_lmer(mmrr_site, .x,
 ### 1.2.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
+walk(plot_stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
 ```
 
 # 2. GDM
@@ -156,7 +170,8 @@ walk(stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
 
 ```{r, fig.width=14, fig.height=7}
 gdm_ind <- format_gdm(here(p3path, "gdm2_indsampling_results.csv"))
-walk(c(stats, "env_p_TPR0"), ~ mmrr_gdm_plotter(gdm_ind, stat = .x))
+
+walk(plot_stats, ~ mmrr_gdm_plotter(gdm_ind, stat = .x))
 ```
 
 ### 2.1.2 Linear mixed effects models
@@ -169,17 +184,18 @@ walk(stats, ~run_lmer(gdm_ind, .x,
 ### 2.1.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(stats, ~print(MEGAPLOT(gdm_ind, stat = .x)))
+walk(plot_stats, ~print(MEGAPLOT(gdm_ind, stat = .x)))
 ```
 
 ### 2.1.4 Failed fits
 
 *Occasionally GDM fails to fit a model, in which case an NA value is assigned. Here we visualize the proportion of NAs (i.e., cases of failed fit) across the simulations:*
 
-<font size="4.5"> **Proportion of failed models:** </font> 
+<font size="4.5"> **Proportion of failed full models:** </font> 
 ```{r,  fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
+MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 ```
+
 
 ## 2.2 Site sampling
 
@@ -188,7 +204,7 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
 ```{r, fig.width=14, fig.height=7}
 gdm_site <- format_gdm(here(p3path, "gdm2_sitesampling_results.csv"))
 
-walk(stats, ~ mmrr_gdm_plotter(gdm_site, stat = .x))
+walk(plot_stats, ~ mmrr_gdm_plotter(gdm_site, stat = .x))
 ```
 
 ### 2.2.2 Linear mixed effects models
@@ -200,7 +216,7 @@ walk(stats, ~run_lmer(gdm_site, .x,
 
 ### 2.2.3 Full plots
 ```{r, fig.width = 21, fig.height = 13}
-walk(stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
+walk(plot_stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
 ```
 
 ### 2.2.4 Failed fits
@@ -210,268 +226,73 @@ walk(stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
 <font size="4.5"> **Proportion of failed models:** </font> 
 
 ```{r,  fig.width = 21, fig.height = 13}
-MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = "mako")
+MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 ```
 
 ---
 
-```{r, fig.width = 6, fig.height = 12}
-summarize_stats <- function(x, stats) {
-  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
-  
-  x <-
-    x %>%
-    group_by(nsamp, sampstrat) %>%
-    summarize_at(stats, mean, na.rm = TRUE, .groups = "keep")
-  
-  colnames(x)[-(1:2)] <-
-    map_chr(colnames(x)[-(1:2)], make_pretty_names)
-  
-  stopifnot(nrow(x) == 16 | nrow(x) == 9)
-  
-  return(x)
-}
+```{r, fig.width = 6, fig.height = 9}
 
-ibdibe_figplot <- function(df, stats, minmax){
-  pretty_stats <- map_chr(stats, make_pretty_names)
-  minmax <- minmax %>% filter(pretty_names == .x)
-  result <-
-    map(pretty_stats,
-        ~ heat_plot(
-          df,
-          stat_name = .x,
-          maxv = pull(minmax, max),
-          minv = pull(minmax, min)
-        ))
-  return(result)
-}
+stats <- c(
+    "geo_p_TPR",
+    "geo_p_FDR",
+    "geo_coeff_err_ae_scale",
+    "env_p_TPR",
+    "env_p_FDR",
+    "env_coeff_err_ae_scale"
+  )
 
-make_ibdibe_figs <- function(filt_results, substats, fileprefix, minmax_stats) {
-  sub_results <-
-    map(filt_results, ~ summarize_stats(.x, stats = substats))
-  
-  minmax_stats <-
-    map(c("min", "max"), \(f) {
-      map(sub_results, \(x, cols = colnames(x)[-(1:2)]) {
-        x %>%
-          ungroup() %>%
-          dplyr::select(cols) %>%
-          summarize_all(f, na.rm = TRUE)
-      }) %>%
-        bind_rows() %>%
-        summarize_all(f) %>%
-        pivot_longer(everything(), names_to = "pretty_names", values_to = f)
+results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
+
+filt_results_good <- map(results,  ~filter(.x, K == 1, phi == 1, H == 0.5, r == 0.3, m == 0.25))
+sub_results_good <- map(filt_results_good, ~ summarize_stats(.x, stats = stats))
+
+filt_results_bad <- map(results,  ~filter(.x, K != 1, phi != 1, H != 0.5, r != 0.3, m != 0.25))
+sub_results_bad <- map(filt_results_bad, ~ summarize_stats(.x, stats = stats))
+
+minmax <-
+  map(c("min", "max"), \(f) {
+    map(c(sub_results_good, sub_results_bad), \(x, cols = colnames(x)[-c(1:2)]) {
+      x %>%
+        ungroup() %>%
+        dplyr::select(cols) %>%
+        summarize_all(f, na.rm = TRUE)
     }) %>%
-    do.call(what = left_join) 
-  
-  plots <-
-    map(sub_results, ~ ibdibe_figplot(.x, stats = substats, minmax = minmax_stats)) %>% transpose()
-  
-  plot_ind <-
-    map(plots,
-        ~ ggarrange(
-          .x[[1]],
-          .x[[3]],
-          common.legend = TRUE,
-          nrow = 1,
-          legend = "none"
-        ))
-  
-  plot_site <-
-    map(plots,
-        ~ ggarrange(
-          .x[[2]],
-          .x[[4]],
-          common.legend = TRUE,
-          nrow = 1,
-          legend = "none"
-        ))
-  
-  pdf(here("plots", paste0(fileprefix, "_ind.pdf")),
-      width = 6,
-      height = 12)
-  do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
-  dev.off()
-  
-  pdf(here("plots", paste0(fileprefix, "_site.pdf")),
-      width = 6,
-      height = 12)
-  do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
-  dev.off()
-  
-  pdf(here("plots", paste0(fileprefix, "_legends.pdf")),
-      width = 6,
-      height = 12)
-  plot_legend <-
-    map(plots,
-        ~ ggarrange(
-          .x[[1]],
-          .x[[3]],
-          common.legend = TRUE,
-          nrow = 1,
-          legend = "right"
-        ))
-  do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
-  dev.off()
-}
+      bind_rows() %>%
+      summarize_all(f) %>%
+      pivot_longer(everything(), names_to = "pretty_names", values_to = f)
+  }) %>%
+  do.call(what = left_join) %>%
+  separate_wider_delim(pretty_names, " ", names = c("IBDIBE", "stat"), cols_remove = FALSE)  
 
-results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
+minmax_stats <- 
+  minmax %>%
+  group_by(stat) %>%
+  summarise(min = min(min), max = max(max)) %>%
+  right_join(select(minmax, -min, -max)) %>%
+  mutate(max = case_when(stat == "FDR" ~ 1, .default = max))
 
-filt_results <- map(results,  ~filter(.x, H == 0.5, m == 0.25))
+ibdibe_stats <- list(IBD = stats[grepl("geo", stats)], IBE = stats[grepl("env", stats)])
 
-ibdibe_stats <- list(ibd = stats[grepl("geo", stats)], ibe = stats[grepl("env", stats)])
+iwalk(
+  ibdibe_stats,
+  ~ make_ibdibe_figs(
+    sub_results_good,
+    substats = .x,
+    minmax_stats = minmax_stats,
+    fileprefix = paste0(.y, "_good")
+  )
+)  
 
-  
-```
-
-```{r, fig.width = 6, fig.height = 12}
-
-filt_results <- map(results,  ~filter(.x, H == 0.5, m != 1, K != 2))
-
-sub_results <- map(filt_results, \(x){
-  
-  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
-  
-  x <- 
-     x %>%
-     group_by(nsamp, sampstrat) %>%
-     summarize_at(stats, mean, na.rm = TRUE, .groups = "keep") 
-  
-   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
-   
-   stopifnot(nrow(x) == 16 | nrow(x) == 9)
-                    
-   return(x)
-})
-
-plots <-
-  map(sub_results, \(df) map(map_chr(stats, make_pretty_names), ~heat_plot(
-    df,
-    stat_name = .x,
-    maxv = ifelse(grepl("TPR", .x), 0.8, 1),
-    minv = 0
-  ))) %>% transpose()
-
-plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
-plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
-
-pdf(here("plots", "IBDIBE_ind2.pdf"), width = 6, height = 12)
-do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
-dev.off()
-
-pdf(here("plots", "IBDIBE_site2.pdf"), width = 6, height = 12)
-do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
-dev.off()
+iwalk(
+  ibdibe_stats,
+  ~ make_ibdibe_figs(
+    sub_results_bad,
+    substats = .x,
+    minmax_stats = minmax_stats,
+    fileprefix = paste0(.y, "_bad")
+  )
+)  
 ```
 
 
-```{r, fig.width = 5.5, fig.height = 8}
-results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
-
-filt_results <- map(results,  ~filter(.x, H != 0.05, m != 1.00))
-
-sub_results <- map(filt_results, \(x){
-   
-  x <- 
-     x %>%
-     group_by(nsamp, sampstrat) %>%
-     summarize(`IBE TPR` = mean(env_p_TPR, na.rm = TRUE), 
-               `IBD TPR` = mean(geo_p_TPR, na.rm = TRUE),
-               `IBE AE` = mean(env_coeff_err_ae_scale, na.rm = TRUE),
-               `IBD AE` = mean(geo_coeff_err_ae_scale, na.rm = TRUE),
-               `IBE Bias` = mean(env_coeff_err, na.rm = TRUE),
-               `IBD Bias` = mean(geo_coeff_err, na.rm = TRUE),
-               .groups = "keep") 
-   
-   stopifnot(nrow(x) == 16 | nrow(x) == 9)
-                    
-   return(x)
-})
-
-
-IBETPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE TPR", maxv = 1, minv = 0, 
-                 colpal = "plasma", direction = 1))
-
-IBDTPR_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD TPR", maxv = 1, minv = 0, 
-                 colpal = "plasma", direction = 1))
-
-IBDAE_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD AE", maxv = 0.16, minv = 0, 
-                 colpal = "viridis", direction = -1))
-
-IBEAE_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE AE", maxv = 0.16, minv = 0, 
-                 colpal = "viridis", direction = -1))
-
-IBDBias_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBD Bias", maxv = 0.15, minv = -0.07, 
-                 colpal = "divergent"))
-
-IBEBias_plots <- map(sub_results, ~heat_plot(.x, stat_name = "IBE Bias", maxv = 0.15, minv = -0.07, 
-                 colpal = "divergent"))
-
-plots <- list(IBETPR_plots, IBDTPR_plots, IBDAE_plots, IBEAE_plots, IBDBias_plots, IBEBias_plots)
-ind_plots <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
-site_plots <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
-names(ind_plots) <- names(site_plots) <- names(plots) <- c("IBETPR", "IBDTPR", "IBDAE", "IBEAE", "IBDBias", "IBEBias")
-
-
-pdf(here("plots", "IBE_ind.pdf"))
-ggarrange(ind_plots$IBETPR, ind_plots$IBEAE, ind_plots$IBEBias, nrow = 3, align = "h")
-dev.off()
-
-pdf(here("plots", "IBE_site.pdf"))
-ggarrange(site_plots$IBETPR, site_plots$IBEAE, site_plots$IBEBias, nrow = 3, align = "h")
-dev.off()
-
-pdf(here("plots", "IBD_ind.pdf"))
-ggarrange(ind_plots$IBDTPR, ind_plots$IBDAE, ind_plots$IBDBias, nrow = 3, align = "h")
-dev.off()
-
-pdf(here("plots", "IBD_site.pdf"))
-ggarrange(site_plots$IBDTPR, site_plots$IBDAE, site_plots$IBDBias, nrow = 3, align = "h")
-dev.off()
-
-pdf(here("plots", "TPR_legend.pdf"))
-ggarrange(plots$IBETPR[[1]], common.legend = TRUE, nrow = 1, legend = "right")
-dev.off()
-
-pdf(here("plots", "AE_legend.pdf"))
-ggarrange(plots$IBDAE[[1]], common.legend = TRUE, nrow = 1, legend = "right")
-dev.off()
-
-pdf(here("plots", "Bias_legend.pdf"))
-ggarrange(plots$IBDBias[[1]], common.legend = TRUE, nrow = 1, legend = "right")
-dev.off()
-```
-
-NOTES: 
-- problem: inferences across all simulations are different from that of a single simulation
-- average across all simulation also don't make sense
-- but we care about what is true across them all in some sense because that is the info we can go off of, not the "best case scenario" - however the average of them all assumes that the simulations cover all of parameter space as a meaningful summary
-- fuck i don't care about any of this
-- what is significant varies based on sample size - sample size is treated as continuous
-- do I need to run more simulations to get more power?
-
-```{r, fig.width = 20}
-a <- mmrr_ind %>% filter(sampstrat == "full")
-b <- gdm_ind %>% filter(sampstrat == "full")
-d <- left_join(a, b, by = c("K", "m", "phi", "r", "H", "seed", "it"))
-colnames(d)
-ggplot(d, aes(x = geo_coeff.x, y = geo_coeff.y, col = (d$m == 1 & d$H == 0.05 & d$r == 0.3), pch = factor(K))) + 
-  geom_point()
-ggplot(d, aes(x = env1_coeff.x, y = env1_coeff.y, col = m, pch = factor(K))) + 
-  geom_point()
-ggplot(d, aes(x = env2_coeff.x, y = env1_coeff.y, col = m, pch = factor(K))) + 
-  geom_point()
-
-d %>% filter(geo_coeff.y > 1 & geo_coeff.x < 0.7)
-
-e <- b
-e <- gdm_ind %>% mutate_at(c("K", "m", "phi", "r", "H", "seed", "it", "nsamp", "sampstrat"), as.factor)
-f <- mmrr_ind %>% mutate_at(c("K", "m", "phi", "r", "H", "seed", "it", "nsamp", "sampstrat"), as.factor)
-
-MEGAPLOT(e, stat ="geo_coeff")
-MEGAPLOT(f, stat ="geo_coeff")
-
-plot(b$geo_coeff, a$geo_coeff)
-```
-
-- NOTE: figure out how to describe bias patter (underestimation for grid only occurs under certain scenarios)
