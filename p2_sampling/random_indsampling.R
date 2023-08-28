@@ -5,7 +5,7 @@ library("doParallel")
 source(here("general_functions.R"))
 source(here("p2_sampling", "sampling_functions.R"))
 
-cl <- makeCluster(5) 
+cl <- makeCluster(25) 
 registerDoParallel(cl)
 
 for (n in nsamps){

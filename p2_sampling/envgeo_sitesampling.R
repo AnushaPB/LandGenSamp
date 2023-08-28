@@ -3,14 +3,14 @@ library("foreach")
 library("doParallel")
 library("vegan")
 
-source(here("p2_sampling", "site_functions.R"))
+source(here("p2_sampling", "sampling_functions.R"))
 source(here("general_functions.R"))
 
 set.seed(42)
 
 #register cores
 #these calculations are RAM intensive so only run few at a time
-cores <- 15
+cores <- 20
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
