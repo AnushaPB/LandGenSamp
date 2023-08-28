@@ -15,7 +15,6 @@ format_csv <- function(path){
     mutate(path = str_extract(basename(path), '.*(?=\\.csv)')) %>%
     tidyr::separate(path, c("method", "sampling", "stat", "type"))
 }
-
 p4path <- here("p4_analysis", "outputs")
 
 df <- list.files(p4path, full.names = TRUE, pattern = "*_lmer.csv") %>%
