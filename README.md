@@ -8,7 +8,13 @@ directories and what they are for, but I am a fallible human being, so
 shoot me an email if I have missed anything or you have questions
 (<anusha.bishop@berkeley.edu>).
 
-Software versions: - Ubuntu 20.04.6 - R 4.3.0 - Python 3.9.7
+Software versions:
+
+- Ubuntu 20.04.6
+
+- R 4.3.0
+
+- Python 3.9.7
 
 [renv](https://rstudio.github.io/renv/articles/renv.html) was used to
 manage R package dependencies. If you clone this repository and open the
