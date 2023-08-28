@@ -36,7 +36,7 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
 ```{r,fig.width = 9, fig.height = 4}
-df <- format_data("mmrr", "individual") 
+df <- format_data("gdm2", "individual") 
 
 ggdf <- make_ggdf(df, stat_name = "geo_p") 
 
@@ -301,51 +301,17 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 
 ```{r, fig.width = 6, fig.height = 6}
 # Code used to create figures:
-
-plot_stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
+fig_stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
 results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
 
-filt_results <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3))
+filt_results_good <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3))
+sub_results_good <- map(filt_results_good, ~ summarize_stats(.x, stats = fig_stats))
 
-sub_results <- map(filt_results, \(x){
-  
-  stopifnot(nrow(x) %% 16 == 0 | nrow(x) %% 9 == 0)
-  
-  x <- 
-     x %>%
-     group_by(nsamp, sampstrat) %>%
-     summarize_at(plot_stats, mean, na.rm = TRUE, .groups = "keep") 
-  
-   colnames(x)[-(1:2)] <- map_chr(colnames(x)[-(1:2)], make_pretty_names)
-   
-   stopifnot(nrow(x) == 16 | nrow(x) == 9)
-                    
-   return(x)
-})
+filt_results_bad <- map(results,  ~filter(.x, H != 0.5, m != 1, K != 2, phi != 1, r != 0.3))
+sub_results_bad <- map(filt_results_bad, ~ summarize_stats(.x, stats = fig_stats))
 
-plots <-
-  map(sub_results, \(df) map(map_chr(plot_stats, make_pretty_names), ~heat_plot(
-    df,
-    stat_name = .x,
-    maxv = ifelse(grepl("TPR", .x), 0.849, 1),
-    minv = 0
-  ))) %>% transpose()
-
-plot_ind <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "none"))
-plot_site <- map(plots, ~ggarrange(.x[[2]], .x[[4]], common.legend = TRUE, nrow = 1, legend = "none"))
-
-pdf(here("plots", "GEA_ind.pdf"), width = 6, height = 6)
-do.call(ggarrange, c(plot_ind, ncol = 1, align = "h"))
-dev.off()
-
-pdf(here("plots", "GEA_site.pdf"), width = 6, height = 6)
-do.call(ggarrange, c(plot_site, ncol = 1, align = "h"))
-dev.off()
-
-pdf(here("plots", "GEA_legends.pdf"), width = 6, height = 6)
-plot_legend <- map(plots, ~ggarrange(.x[[1]], .x[[3]], common.legend = TRUE, nrow = 1, legend = "right"))
-do.call(ggarrange, c(plot_legend, ncol = 1, align = "h"))
-dev.off()
+make_gea_figs(sub_results_good, stats = fig_stats, fileprefix = "good")
+make_gea_figs(sub_results_bad, stats = fig_stats, fileprefix = "bad")
 ```
 
 
