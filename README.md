@@ -8,7 +8,16 @@ directories and what they are for, but I am a fallible human being, so
 shoot me an email if I have missed anything or you have questions
 (<anusha.bishop@berkeley.edu>).
 
-*Note that most of the scripts are parallelized*
+Software versions: - Ubuntu 20.04.6 - R 4.3.0 - Python 3.9.7
+
+[renv](https://rstudio.github.io/renv/articles/renv.html) was used to
+manage R package dependencies. If you clone this repository and open the
+project (i.e., the .Rproj file), renv will automatically start up and
+ask you if you want to install all the required packages by running
+`renv::restore()`.
+
+*Note: most of the scripts are parallelized and written to run on 10-25
+processors with 126 GB RAM*
 
 ### 1.1 [p1_simulations](https://github.com/AnushaPB/LandGenSamp/tree/main/p1_gnxsims)
 
