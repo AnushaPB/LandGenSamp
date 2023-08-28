@@ -3,7 +3,7 @@ library("foreach")
 library("doParallel")
 library("raster")
 
-source(here("p2_sampling", "site_functions.R"))
+source(here("p2_sampling", "sampling_functions.R"))
 source(here("general_functions.R"))
 
 set.seed(42)
@@ -26,7 +26,7 @@ for (n in nsites){
     library("rgeos")
     library("dplyr")
     
-    source(here("p2_sampling", "site_functions.R"))
+    source(here("p2_sampling", "sampling_functions.R"))
     source(here("general_functions.R"))
     
     #create file path

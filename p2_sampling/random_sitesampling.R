@@ -2,11 +2,11 @@ library("foreach")
 library("doParallel")
 library("here")
 source(here("general_functions.R"))
-source(here("p2_sampling", "site_functions.R"))
+source(here("p2_sampling", "sampling_functions.R"))
 
 set.seed(42)
 
-cores <- 10
+cores <- 20
 cl <- makeCluster(cores) 
 registerDoParallel(cl)
 
