@@ -79,6 +79,7 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   
   # Get full data
   gen <- get_data(i, params = params, "dos")
+  if (grepl(method, "gdm")) gen <- gen/2
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Create a data frame of all combinations of n and strats
@@ -150,6 +151,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
   }
 
   gen <- get_data(i, params = params, "dos")
+  if (grepl(method, "gdm")) gen <- gen/2
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Subsample full data randomly
