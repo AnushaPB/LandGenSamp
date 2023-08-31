@@ -48,7 +48,8 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   gdmData <- gdmData[,!grepl("*REMOVE*", colnames(gdmData))]
   
   #scale distance from 01
-  gdmData$distance <- range01(gdmData$distance) 
+  #gdmData$distance <- range01(gdmData$distance) 
+  gdmData$distance <- gdmData$distance/100
   
   #run GDM
   gdm.model <- gdm(gdmData, geo = FALSE)
