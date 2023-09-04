@@ -79,7 +79,6 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   
   # Get full data
   gen <- get_data(i, params = params, "dos")
-  if (grepl(method, "gdm")) gen <- gen/2
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Create a data frame of all combinations of n and strats
@@ -151,7 +150,6 @@ run_full_helper <- function(i, params, method, n = 1000) {
   }
 
   gen <- get_data(i, params = params, "dos")
-  if (grepl(method, "gdm")) gen <- gen/2
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Subsample full data randomly
@@ -159,6 +157,9 @@ run_full_helper <- function(i, params, method, n = 1000) {
   s <- sample(nrow(gsd_df), n, replace = FALSE)
   gen <- gen[s,]
   gsd_df <- gsd_df[s,]
+  
+  # Calculate gendist 
+  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) gen <- calc_dist(gen/2, distmeasure = "euc") 
   
   # Run model on full data set
   if (method == "lfmm_fullK") {
@@ -205,9 +206,17 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     # Confirm that the number of sites matches the number of sample IDs
     stopifnot(length(subIDs) == length(siteIDs))
     # Calculate allele frequency by site (average)
-    subgen <- data.frame(aggregate(subgen, list(siteIDs), FUN = mean)[-1])
+    # Divide subgen by 2 because gen is dosages
+    subgen <- data.frame(aggregate(subgen/2, list(siteIDs), FUN = mean)[-1])
     # Calculate env values by site
     subgsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[-1])
+    # Convert gen to genetic distance
+    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) subgen <- calc_dist(subgen, distmeasure = "euc") 
+  } else {
+    # Convert gen to genetic distance
+    # divide by 2 if not site so that dosage gets converted to allele frequencies
+    # this is important for gdm so that the scaling from 0 to 1 by dividing by 100 works
+    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) subgen <- calc_dist(subgen/2, distmeasure = "euc") 
   }
   
   # Run model on sub data set

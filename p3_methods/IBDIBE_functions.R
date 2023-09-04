@@ -21,10 +21,7 @@ range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 
 # run GDM with each environmental variable treated separately
-run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
-  #Format data for GDM  
-  gendist <- calc_dist(gen, distmeasure)
-  
+run_gdm2 <- function(gendist, gsd_df){
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
@@ -99,7 +96,8 @@ run_gdm2 <- function(gen, gsd_df, distmeasure = "euc"){
 
 
 # run GDM with one combined environmental distance measured (not used in final analysis)
-run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
+run_gdm <- function(gendist, gsd_df){
+    
   #Format data for GDM  
   gendist <- calc_dist(gen, distmeasure)
   
@@ -107,7 +105,7 @@ run_gdm <- function(gen, gsd_df, distmeasure = "euc"){
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
   
-  # model combo
+  #Model combo
   envDist <- cbind(site, as.matrix(dist(gsd_df[,c("env1", "env2")], method = "euclidean", diag = TRUE, upper = TRUE)))
   geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
   gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, REMOVE = rep(1, nrow(gsd_df)))
@@ -881,9 +879,7 @@ unfold<-function(X){
 
 
 # Run MMRR with one enviornmental matrix of combined distances (not used in final analysis)
-run_mmrr <- function(gen, gsd_df, distmeasure = "euc"){
-  #Format data for MMRR  
-  gendist <- calc_dist(gen, distmeasure)
+run_mmrr <- function(gendist, gsd_df){
   
   ##get env vars and coords
   env_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
@@ -899,9 +895,7 @@ run_mmrr <- function(gen, gsd_df, distmeasure = "euc"){
 }
 
 # Run MMRR with two seperate enviornmental distance matrices
-run_mmrr2 <- function(gen, gsd_df, distmeasure= "euc"){
-  #Format data for MMRR  
-  gendist <- calc_dist(gen, distmeasure)
+run_mmrr2 <- function(gendist, gsd_df){
   
   ##get env vars and coords
   env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
