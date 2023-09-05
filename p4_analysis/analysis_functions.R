@@ -308,8 +308,9 @@ format_mmrr <- function(path, full = FALSE){
   df <- extra_ibeibd_stats(df)
   
   if (!full) df <- df %>% filter(sampstrat != "full") 
+  
   #give sampling strategies simpler names
-  df <- df %>%
+  df2 <- df %>%
     
     # rename sampstrats
     mutate(sampstrat = case_when(
@@ -325,9 +326,9 @@ format_mmrr <- function(path, full = FALSE){
     var_to_fact() 
   
   # make combos
-  if (any(colnames(df) == "env1_coeff")) {
-    df <- 
-      df %>%  
+  if (any(colnames(df2) == "env1_coeff")) {
+    df2 <- 
+      df2 %>%  
       # make combo variables
       mutate(comboenv_coeff_err = (env1_coeff_err + env2_coeff_err)/2,
              comboenv_coeff = (env1_coeff + env2_coeff)/2,
@@ -342,11 +343,10 @@ format_mmrr <- function(path, full = FALSE){
   }
   
   # check number of rows
-  if ("trans" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
-  if ("equi" %in% df$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
+  if ("trans" %in% df2$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
+  if ("equi" %in% df2$sampstrat) stopifnot(nrow(df) %% (960 * 3 * 3) == 0)
   
-  
-  return(df)
+  return(df2)
 }
 
 # format GDM results
@@ -368,11 +368,11 @@ format_gdm <- function(path, full = FALSE){
   # get extra IBE/IBD stats
   df <- extra_ibeibd_stats(df)
   
+  # filter full
+  if (!full) df <- df %>% filter(sampstrat != "full") 
+    
   #give sampling strategies simpler names
   df <- df %>%
-    
-    # remove full rows
-    filter(sampstrat != "full") %>%
     
     # rename sampstrats
     mutate(sampstrat = case_when(
@@ -381,6 +381,7 @@ format_gdm <- function(path, full = FALSE){
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
       sampstrat == "equi" ~ "EQ",
+      sampstrat == "full" ~ "full",
       TRUE ~ "NA")) %>%
     
     # convert to factors
@@ -428,6 +429,9 @@ mmrr_gdm_plotter <- function(x, stat, ...) {
 format_lfmm <- function(path, p_filter = TRUE){
   
   df <- read.csv(path)
+  
+  # TEMP: filter to only include phi = 0.1 and phi = 1.0
+  df <- df %>% filter(phi == 0.5 | phi == 1.0)
   
   #give sampling strategies simpler names
   df <-
