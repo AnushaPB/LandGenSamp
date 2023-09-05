@@ -62,10 +62,16 @@ run_gdm2 <- function(gendist, gsd_df){
     results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
                           env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
                           geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
+    
     results$ratio <- sum(abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
     
+    
+    # check if both env coefficients are 0
+    # modTest cannot be run if both are 0
+    do_modTest <- !(results$env1_coeff == 0 & results$env2_coeff == 0)
+      
     # get pvalues
-    modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F)
+    if (do_modTest) modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) else modTest <- NULL
     
     if (!is.null(modTest)) {
       pvals <- modTest$`Predictor p-values`
@@ -81,8 +87,6 @@ run_gdm2 <- function(gendist, gsd_df){
                             env2_p = NA,
                             geo_p = NA)
     }
-    
-    
   }
   
   #remove rownames
