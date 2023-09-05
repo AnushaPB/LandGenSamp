@@ -27,7 +27,6 @@ run_gdm2 <- function(gendist, gsd_df){
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
   
   # model combo
-  geoDist <- cbind(site, as.matrix(dist(gsd_df[,c("x", "y")], method = "euclidean", diag = TRUE, upper = TRUE)))
   gdmPred <- data.frame(site = site, Longitude = gsd_df$x, Latitude = gsd_df$y, env1 = gsd_df$env1, env2 = gsd_df$env2)
   
   gdmData <-
@@ -37,8 +36,7 @@ run_gdm2 <- function(gendist, gsd_df){
       predData = gdmPred,
       XColumn = "Longitude",
       YColumn = "Latitude",
-      siteColumn = "site",
-      distPreds = list(geo = geoDist)
+      siteColumn = "site"
     )
   
   #scale distance from 01
@@ -46,7 +44,7 @@ run_gdm2 <- function(gendist, gsd_df){
   gdmData$distance <- gdmData$distance/100
   
   #run GDM
-  gdm.model <- gdm(gdmData, geo = FALSE)
+  gdm.model <- gdm(gdmData, geo = TRUE)
   
   if (is.null(gdm.model)){
     #turn results into dataframe
@@ -63,20 +61,20 @@ run_gdm2 <- function(gendist, gsd_df){
     # turn results into dataframe
     results <- data.frame(env1_coeff = predictors[predictors$predictor == "env1", "coefficient"],
                           env2_coeff = predictors[predictors$predictor == "env2", "coefficient"],
-                          geo_coeff = predictors[predictors$predictor == "matrix_1", "coefficient"])
+                          geo_coeff = predictors[predictors$predictor == "Geographic", "coefficient"])
     results$ratio <- sum(abs(results$env1_coeff) + abs(results$env2_coeff))/abs(results$geo_coeff)
     
     # get pvalues
-    modTest <- gdm.varImp_custom(gdmData, geo = FALSE, nPerm = 50, parallel = F, predSelect = F)
+    modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F)
     
     if (!is.null(modTest)) {
       pvals <- modTest$`Predictor p-values`
       pvals$var <- row.names(pvals)
-      pvals <- left_join(data.frame(var = c("env1", "env2", "matrix_1")), pvals, by = "var")
+      pvals <- left_join(data.frame(var = c("env1", "env2", "Geographic")), pvals, by = "var")
       results <- data.frame(results,
                             env1_p = pvals[pvals$var == "env1", 2],
                             env2_p = pvals[pvals$var == "env2", 2],
-                            geo_p = pvals[pvals$var == "matrix_1", 2])
+                            geo_p = pvals[pvals$var == "Geographic", 2])
     } else {
       results <- data.frame(results,
                             env1_p = NA,
@@ -84,16 +82,14 @@ run_gdm2 <- function(gendist, gsd_df){
                             geo_p = NA)
     }
     
-  
+    
   }
-  
   
   #remove rownames
   rownames(results) <- NULL
   
   return(results)
 }
-
 
 # run GDM with one combined environmental distance measured (not used in final analysis)
 run_gdm <- function(gendist, gsd_df){
