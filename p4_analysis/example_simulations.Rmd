@@ -200,8 +200,9 @@ p1
 ```
 
 ```{r, include = false}
-dfs <- purrr::map(list.files(here("p4_analysis/example_data/example_combos"), full.names = TRUE), get_gsd)
-names(dfs) <- c("phi10", "H5", "r30", "D", "m25", "K2")
+dfs_all <- purrr::map(list.files(here("p4_analysis/example_data/example_combos"), full.names = TRUE), get_gsd)
+names(dfs_all) <- c("phi10", "H5", "r30", "D", "m25", "phi50", "K2")
+dfs <- dfs_all[-6]
 
 df <- bind_rows(new_cols(dfs[["phi10"]], "low", "selection\nstrength"),
           new_cols(dfs[["D"]], "high", "selection\nstrength"),
@@ -220,16 +221,14 @@ df <- bind_rows(new_cols(dfs[["phi10"]], "low", "selection\nstrength"),
 
 ```
 
-```{r, fig.width = 18, fig.height= 9}
+```{r, fig.height = 12, fig.width= 10}
+# create dfs with scaled coords so that you can plot faceted plots
 df1 <- data.frame(df, zw = df$z1, 
                   xw = scales::rescale(df$x, to=c(0,0.48)), yw = scales::rescale(df$y, to=c(0,0.48)))
 df2 <- data.frame(df, zw = df$z2, 
                   xw = scales::rescale(df$x, to=c(0.52,1)), yw = scales::rescale(df$y, to=c(0,0.48)))
 dfw <- bind_rows(df1, df2)
 
-```
-
-```{r, fig.height = 12, fig.width= 10}
 
 ggplot(dfw, aes(x = xw, y = yw, col = zw)) + 
   geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
@@ -260,6 +259,34 @@ ggplot(dfw, aes(x = xw, y = yw, col = zw)) +
         panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1)) +
   coord_fixed() 
 
+```
+```{r}
+phidf <- 
+  bind_rows(data.frame(dfs_all$phi10, phi = 0.1), data.frame(dfs_all$D, phi = 1.0), data.frame(dfs_all$phi50, phi = 0.5)) %>%
+  pivot_longer(c(z1, z2))
+  
+
+ggplot(phidf, aes(x = x, y = y, col = value)) + 
+  geom_rect(xmin = 0, xmax = 100, ymin = -100, ymax = 0, fill = "#D3D3D3", col = "#D3D3D3") +
+  geom_point(pch = 16, size = 0.9) +
+  facet_grid(name ~ phi, switch = "both") +
+  theme_bw() +
+  xlab("phi") +
+  ylab("trait") +
+  scale_color_viridis_c(option = "mako", alpha = 0.8)+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), legend.position = "none",
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(), 
+        plot.margin=unit(rep(0.4,4),"cm"),
+        strip.background =element_blank(),
+        strip.text = element_text(color = "#282828", size = 11),
+        plot.title = element_text(size=20),
+        legend.key.size = unit(1, 'cm'), 
+        panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1)) +
+  coord_fixed() 
 ```
 
 ```{r}
