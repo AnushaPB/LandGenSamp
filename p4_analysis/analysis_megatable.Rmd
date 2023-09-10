@@ -7,6 +7,9 @@ date: "2022-10-18"
 library(tidyverse)
 library(here)
 library(gt)
+
+source(here("p4_analysis", "analysis_functions.R"))
+source(here("general_functions.R"))
 ```
 
 ```{r}
@@ -147,24 +150,173 @@ table_df <-
          "G - R", "G - T", 
          "EG - EQ", "EQ - R",
          "R - T") %>%
+  mutate(method = factor(method, levels = c("LFMM", "RDA", "MMRR", "GDM")),
+         stat = factor(stat, levels = c("TPR relaxed", "TPR strict",
+                                  "FDR relaxed", "FDR strict",
+                                  "IBD TPR", "IBD FDR", "IBD MAE",
+                                  "IBE TPR", "IBE FDR", "IBE MAE"))) %>%
   group_by(sampling) %>%
-  group_split()
+  group_split() 
 
 table_df_ind <-
-  table_df[[1]] %>% dplyr::select(-sampling,-"EG - EQ",-"EQ - R")
+  table_df[[1]] %>% dplyr::select(-"EG - EQ",-"EQ - R", -"sampling")
 table_df_site <-
-  table_df[[2]] %>% dplyr::select(-sampling,-"EG - G",-"G - R",-"G - T",-"R - T",-"EG - T")
+  table_df[[2]] %>% dplyr::select(-"EG - G",-"G - R",-"G - T",-"R - T",-"EG - T", -"sampling")
+
+table_df <- left_join(table_df_ind, table_df_site, by = c("stat", "method"))
   
-write.csv(table_df_ind, here("p4_analysis", "tukey_ind.csv"), row.names = FALSE)
+write.csv(table_df, here("p4_analysis", "tukey.csv"), row.names = FALSE)
 
-write.csv(table_df_site, here("p4_analysis", "tukey_site.csv"), row.names = FALSE)
+```
+
+```{r}
+big_table_A <- 
+  table_df %>%
+  pivot_longer(-c("method", "stat")) %>%
+  separate_wider_delim(name, " - ", names = c("V1", "V2"))
+
+big_table_B <-
+  big_table_A %>%
+  mutate(value = -1 * value) %>%
+  rename(V1 = V2, V2 = V1)
+  
+big_table <- 
+  bind_rows(big_table_A, big_table_B) %>%
+  mutate(name = paste0(V1, " - ", V2)) %>%
+  select(-V1, -V2) %>%
+  mutate(value = case_when(grepl("TPR", stat) & value > 0 ~ "better",
+                   grepl("TPR", stat) & value < 0 ~ "worse",
+                   (grepl("FDR", stat) | grepl("MAE", stat)) & value > 0 ~ "worse",
+                   (grepl("FDR", stat) | grepl("MAE", stat)) & value < 0 ~ "better",
+                   is.na(value) ~ "same",
+                   .default = NA)) %>%
+  mutate(sampling = case_when((grepl(".y", name) | grepl("EQ", name)) ~ "site", TRUE ~ "individual")) %>%
+  arrange(method, stat, name)
+
+big_table_ind <- 
+  big_table %>%
+  filter(sampling == "individual") %>%
+  select(-sampling) %>%
+  pivot_wider(names_from = name, values_from = value)
+
+big_table_site <- 
+  big_table %>%
+  filter(sampling == "site") %>%
+  select(-sampling) %>%
+  pivot_wider(names_from = name, values_from = value)
+
+big_table_combo <- left_join(big_table_ind, big_table_site)
+
+write.csv(big_table_combo, here("p4_analysis", "tukey_bin.csv"), row.names = FALSE)
+```
+
+```{r}
+big_table2 <- 
+  bind_rows(big_table_A, big_table_B) %>%
+  mutate(name = paste0(V1, " - ", V2)) %>%
+  select(-V1, -V2) %>%
+  mutate(sampling = case_when((grepl(".y", name) | grepl("EQ", name)) ~ "site", TRUE ~ "individual")) %>%
+  arrange(method, stat, name)
+
+big_table_ind2 <- 
+  big_table2 %>%
+  filter(sampling == "individual") %>%
+  select(-sampling) %>%
+  pivot_wider(names_from = name, values_from = value)
+
+big_table_site2 <- 
+  big_table2 %>%
+  filter(sampling == "site") %>%
+  select(-sampling) %>%
+  pivot_wider(names_from = name, values_from = value)
+
+big_table_combo2 <- left_join(big_table_ind2, big_table_site2)
+
+write.csv(big_table_combo2, here("p4_analysis", "tukey_val.csv"), row.names = FALSE)
+```
+
+```{r}
+
+big_table_combo %>%
+  gt(
+    rowname_col = "stat",
+    groupname_col = "method"
+    ) %>%
+  row_group_order(
+    groups = c("LFMM", "RDA", "MMRR", "GDM")
+    ) %>%
+  cols_label(
+      method = "Method",
+      stat = "Statistic"
+    ) %>%
+  cols_width(
+    c(3:20) ~ px(70),
+    c(1)  ~ px(100)
+  ) %>%
+  cols_label(
+    ends_with("G") ~ "G",
+    ends_with("EG") ~ "EG",
+    ends_with("R") ~ "R",
+    ends_with("R.x") ~ "R",
+    ends_with("R.y") ~ "R",
+    ends_with("T") ~ "T",
+    ends_with("EQ") ~ "EQ"
+  ) %>%
+  data_color(
+    c(3:20),
+    palette = c("lightgreen", "gray", "tomato")
+  ) %>%
+  tab_spanner(
+    label = "EG",
+    columns = c(2:5)
+  ) %>% 
+  tab_spanner(
+    label = "G",
+    columns = c(6:8)
+  ) %>% 
+  tab_spanner(
+    label = "R",
+    columns = c(9:11)
+  ) %>% 
+   tab_spanner(
+    label = "T",
+    columns = c(12:14)
+  ) %>%
+  tab_spanner(
+    label = "Individual-based sampling",
+    columns = c(2:14)
+  ) %>%
+  tab_spanner(
+    label = "EG ",
+    columns = c(15:16)
+  ) %>%
+  tab_spanner(
+    label = "EQ ",
+    columns = c(17:18)
+  ) %>%
+  tab_spanner(
+    label = "R ",
+    columns = c(19:20)
+  ) %>%
+  tab_spanner(
+    label = "Site-based sampling",
+    columns = c(15:20)
+  ) %>%
+  tab_style(
+    style = list(
+      cell_text(color = rgb(0,0,0,0))
+      ),
+    locations = cells_body(
+      columns = c(1:20)
+    )
+  ) 
+
 
 ```
 
 
 ```{r}
-
-table_df_ind %>%
+table_df %>%
   gt(
     rowname_col = "stat",
     groupname_col = "method"
@@ -177,12 +329,12 @@ table_df_ind %>%
       stat = "Statistic"
     ) %>% 
   fmt_number(
-    columns = c(3:8),
+    columns = c(3:11),
     decimals = 3,
     suffixing = TRUE
     ) %>%
   gtExtras::gt_hulk_col_numeric(
-    c(3:8), 
+    c(3:11), 
     trim = TRUE, 
     domain = c(-0.18,0.18),
     na.color = "white"
@@ -193,44 +345,21 @@ table_df_ind %>%
     missing_text = "n.s."
     ) %>%
   cols_width(
-    c(3:8) ~ px(70)
-  ) 
-
-```
-
-```{r}
-
-table_df_site %>%
-  gt(
-    rowname_col = "stat",
-    groupname_col = "method"
-    ) %>%
-  row_group_order(
-    groups = c("LFMM", "RDA", "MMRR", "GDM")
-    ) %>%
+    c(3:11) ~ px(70)
+  ) %>%
   cols_label(
-      method = "Method",
-      stat = "Statistic"
-    ) %>% 
-  fmt_number(
-    columns = c(3:5),
-    decimals = 3,
-    suffixing = TRUE
-    ) %>%
-  gtExtras::gt_hulk_col_numeric(
-    c(3:5), 
-    trim = TRUE, 
-    domain = c(-0.18,0.18),
-    na.color = "white"
-    ) %>%
-  sub_missing(
-    columns = everything(),
-    rows = everything(),
-    missing_text = "n.s."
-    ) %>%
-  cols_width(
-    c(3:5) ~ px(70)
-  ) 
+    `EG - R.x` = "EG - R",
+    `EG - R.y` = "EG - R"
+  ) %>%
+  tab_spanner(
+    label = "Individual-based sampling",
+    columns = c(1:8)
+  ) %>%
+  tab_spanner(
+    label = "Site-based sampling",
+    columns = c(9:11)
+  )
+
 ```
 
 ```{r}
