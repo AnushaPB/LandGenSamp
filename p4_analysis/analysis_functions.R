@@ -46,23 +46,25 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
 
 # convert ugly stat column names to pretty readable human names
 make_pretty_names <- function(stat_name) {
-  new_name <- ""
-  if (stat_name == "K_factor") new_name <- "Number of latent factors"
-  if (stat_name == "TOTALN") new_name <- "Total number of loci"
-  if (stat_name == "TPRCOMBO") new_name <- "TPR"
-  if (stat_name == "FDRCOMBO") new_name <- "FDR"
-  if (stat_name == "FDRCOMBO") new_name <- "FDR"
-  if (grepl("*coeff", stat_name) | grepl("*coeff", stat_name)) new_name <- "Coefficient"
-  if (grepl("*_coeff_err", stat_name) | grepl("*coefferr", stat_name)) new_name <- "ME"
-  if (grepl("*_coeff_err_ae", stat_name) | grepl("*coefferrae", stat_name)) new_name <- "MAE"
-  if (grepl("*TPR", stat_name)) new_name <- "TPR"
-  if (grepl("*FDR", stat_name)) new_name <- "FDR"
-  if (grepl("*geo*", stat_name)) new_name <- paste("IBD", new_name)
-  if (grepl("*env*", stat_name)) new_name <- paste("IBE", new_name)
-  if (grepl("relaxed", stat_name)) new_name <- paste(new_name, "relaxed")
-  if (grepl("strict", stat_name)) new_name <- paste(new_name, "strict")
-  if (new_name == "") new_name <- stat_name
-  return(new_name)
+  map_chr(stat_name, \(stat_name){
+    new_name <- ""
+    if (stat_name == "K_factor") new_name <- "Number of latent factors"
+    if (stat_name == "TOTALN") new_name <- "Total number of loci"
+    if (stat_name == "TPRCOMBO") new_name <- "TPR"
+    if (stat_name == "FDRCOMBO") new_name <- "FDR"
+    if (stat_name == "FDRCOMBO") new_name <- "FDR"
+    if (grepl("*coeff", stat_name) | grepl("*coeff", stat_name)) new_name <- "Coefficient"
+    if (grepl("*_coeff_err", stat_name) | grepl("*coefferr", stat_name)) new_name <- "ME"
+    if (grepl("*_coeff_err_ae", stat_name) | grepl("*coefferrae", stat_name)) new_name <- "MAE"
+    if (grepl("*TPR", stat_name)) new_name <- "TPR"
+    if (grepl("*FDR", stat_name)) new_name <- "FDR"
+    if (grepl("*geo*", stat_name)) new_name <- paste("IBD", new_name)
+    if (grepl("*env*", stat_name)) new_name <- paste("IBE", new_name)
+    if (grepl("relaxed", stat_name)) new_name <- paste(new_name, "relaxed")
+    if (grepl("strict", stat_name)) new_name <- paste(new_name, "strict")
+    if (new_name == "") new_name <- stat_name
+    return(new_name)
+  })
 }
 
 # get a color pallette based on the provided statistic
@@ -70,7 +72,7 @@ get_colpal <- function(stat_name){
   # Create a color palettes
   purplecols <- colorRampPalette(c(plasma(5, begin = 0.1, end = 0.45), "#F7F7F7"))
   orangecols <- colorRampPalette(c(inferno(5, begin = 0.5, end = 1), "#F7F7F7"))
-  redcols <- colorRampPalette(c(rocket(5, begin = 0.2, end = 0.9), "#F7F7F7"))
+  redcols <- colorRampPalette(c(rocket(5, begin = 0.4, end = 0.9), "#F7F7F7"))
   cyancols <- colorRampPalette(c(mako(5, begin = 0.4, end = 0.9), "#F7F7F7"))
   
   if (is.null(stat_name)) return(rev(purplecols(100)))
@@ -78,7 +80,7 @@ get_colpal <- function(stat_name){
   if (grepl("*_coeff_err_ae", stat_name) | grepl("MAE", stat_name)) return(rev(orangecols(100)))
   if (grepl("*FDR*", stat_name)) return(rev(redcols(100)))
   if (grepl("*_coeff_err", stat_name) | grepl("ME", stat_name)) return("divergent")
-  if (grepl("*TPR*", stat_name)) return(rev(cyancols(100)))
+  if (grepl("*TPR*", stat_name)) return(cyancols(100))
   if (grepl("geo_coeff", stat_name) | grepl("env_coeff", stat_name) | grepl("Coefficient", stat_name)) return(rev(purplecols(100)))
   return(rev(purplecols(100)))
 }
@@ -823,73 +825,94 @@ extra_ibeibd_stats <- function(df){
 ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   subdf <- df[df$K == K & df$phi == phi & df$m == m & df$seed == seed & df$H == H & df$r == r & df$it == it, ]
   
+  # Fix NA values for GDM (there are no NA values for MMRR, so this will not affect it):
+  # first, create a column to keep track of NA values that are the result of 2/3 coeffs being 0 (because then p-values can't be calculated with varImp)
+  # these values should ultimately be kept NA
+  subdf <- subdf %>% mutate(trueNA = rowSums(select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
+  # Remaining NA values are the result of just one coefficient being zero (but p-values were still calculated for other vars)
+  # replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
+  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
+  # finally, switch true NA values back and drop the column
+  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% select(!trueNA)
+  
+  # split into full and sub
   full <- subdf[subdf$sampstrat == "full",]
   sub <- subdf[subdf$sampstrat != "full",]
   
-  if (any(colnames(df) == "env1_coeff")){
-    # replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
-    # NA p-values are the result of the coefficient being zero
-    sub <- sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
-    full <- full %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
+  # calculate FDR
+  sub$env1_p_FDR <-
+    (!(full$env1_p < 0.05) & sub$env1_p < 0.05) / (sub$env1_p < 0.05)
+  sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0
+  sub$env2_p_FDR <-
+    (!(full$env2_p < 0.05) & sub$env2_p < 0.05) / (sub$env2_p < 0.05)
+  sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0
+  sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR) / 2
+  sub$geo_p_FDR <-
+    (!(full$geo_p < 0.05) & sub$geo_p < 0.05) / (sub$geo_p < 0.05)
+  sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0
+  
+  # calculate TPR
+  sub$env1_p_FDR <-
+    (!(full$env1_p < 0.05) & sub$env1_p < 0.05) / (sub$env1_p < 0.05)
+  sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0
+  sub$env2_p_FDR <-
+    (!(full$env2_p < 0.05) & sub$env2_p < 0.05) / (sub$env2_p < 0.05)
+  sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0
+  sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR) / 2
+  sub$geo_p_FDR <-
+    (!(full$geo_p < 0.05) & sub$geo_p < 0.05) / (sub$geo_p < 0.05)
+  sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0
+  
+  # convert back to NA
+  sub <-
+    sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ ifelse(.x == 100, NA, .x))
+  full <-
+    full %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ ifelse(.x == 100, NA, .x))
+  
+  # calculate IBE
+  full$IBE <- abs(full$env1_coeff) + abs(full$env2_coeff)
+  sub$IBE <- abs(sub$env1_coeff) + abs(sub$env2_coeff)
+  sub$IBE_err_ae <- abs(full$IBE - sub$IBE)
+  sub$IBE_percerr <- abs(full$IBE - sub$IBE) / abs(full$IBE)
+  
+  # calculate TNR
+  sub$env1_p_TNR <-
+    (!(full$env1_p < 0.05) &
+       !(sub$env1_p < 0.05)) / !(full$env1_p < 0.05)
+  sub$env1_p_TNR[is.na(sub$env1_p_TNR)] <- 1
+  sub$env2_p_TNR <-
+    (!(full$env2_p < 0.05) &
+       !(sub$env2_p < 0.05)) / !(full$env2_p < 0.05)
+  sub$env2_p_TNR[is.na(sub$env2_p_TNR)] <- 1
+  sub$env_p_TNR <- (sub$env1_p_TNR + sub$env2_p_TNR) / 2
+  sub$geo_p_TNR <-
+    (!(full$geo_p < 0.05) & !(sub$geo_p < 0.05)) / !(full$geo_p < 0.05)
+  sub$geo_p_TNR[is.na(sub$geo_p_TNR)] <- 1
+  
+  # calculate agreement
+  sub$env1_agree <- (full$env1_p < 0.05) == (sub$env1_p < 0.05)
+  sub$env2_agree <- (full$env2_p < 0.05) == (sub$env2_p < 0.05)
+  sub$env_agree <- (sub$env1_agree + sub$env2_agree) / 2
+  sub$geo_agree <- (full$geo_p < 0.05) == (sub$geo_p < 0.05)
+  
+  # calculate scaled error
+  if (any(colnames(df) == "env1_coeff_scale")) {
+    sub$env1_coeff_err_scale <-
+      sub$env1_coeff_scale - full$env1_coeff_scale
+    sub$env2_coeff_err_scale <-
+      sub$env2_coeff_scale - full$env2_coeff_scale
+    sub$geo_coeff_err_scale <-
+      sub$geo_coeff_scale - full$geo_coeff_scale
+    sub$env_coeff_err_scale <-
+      (sub$env1_coeff_scale + sub$env2_coeff_scale) / 2
     
-    # calculate FDR
-    sub$env1_p_FDR <- (!(full$env1_p < 0.05) & sub$env1_p < 0.05)/(sub$env1_p < 0.05)
-    sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0 
-    sub$env2_p_FDR <- (!(full$env2_p < 0.05) & sub$env2_p < 0.05)/(sub$env2_p < 0.05)
-    sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0 
-    sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR)/2
-    sub$geo_p_FDR <- (!(full$geo_p < 0.05) & sub$geo_p < 0.05)/(sub$geo_p < 0.05)
-    sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0 
-    
-    # calculate TPR
-    sub$env1_p_FDR <- (!(full$env1_p < 0.05) & sub$env1_p < 0.05)/(sub$env1_p < 0.05)
-    sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0 
-    sub$env2_p_FDR <- (!(full$env2_p < 0.05) & sub$env2_p < 0.05)/(sub$env2_p < 0.05)
-    sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0 
-    sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR)/2
-    sub$geo_p_FDR <- (!(full$geo_p < 0.05) & sub$geo_p < 0.05)/(sub$geo_p < 0.05)
-    sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0 
-    
-    # convert back to NA
-    sub <- sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(.x == 100, NA, .x))
-    full <- full %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(.x == 100, NA, .x))
-    
-    # calculate IBE
-    full$IBE <- abs(full$env1_coeff) + abs(full$env2_coeff)
-    sub$IBE <- abs(sub$env1_coeff) + abs(sub$env2_coeff)
-    sub$IBE_err_ae <- abs(full$IBE - sub$IBE)
-    sub$IBE_percerr <- abs(full$IBE - sub$IBE)/abs(full$IBE)
-    
-    # calculate TNR
-    sub$env1_p_TNR <- (!(full$env1_p < 0.05) & !(sub$env1_p < 0.05))/!(full$env1_p < 0.05)
-    sub$env1_p_TNR[is.na(sub$env1_p_TNR)] <- 1
-    sub$env2_p_TNR <- (!(full$env2_p < 0.05) & !(sub$env2_p < 0.05))/!(full$env2_p < 0.05)
-    sub$env2_p_TNR[is.na(sub$env2_p_TNR)] <- 1
-    sub$env_p_TNR <- (sub$env1_p_TNR + sub$env2_p_TNR)/2
-    sub$geo_p_TNR <- (!(full$geo_p < 0.05) & !(sub$geo_p < 0.05))/!(full$geo_p < 0.05)
-    sub$geo_p_TNR[is.na(sub$geo_p_TNR)] <- 1 
-    
-    # calculate agreement
-    sub$env1_agree <- (full$env1_p < 0.05) == (sub$env1_p < 0.05)
-    sub$env2_agree <- (full$env2_p < 0.05) == (sub$env2_p < 0.05)
-    sub$env_agree <- (sub$env1_agree + sub$env2_agree)/2
-    sub$geo_agree <- (full$geo_p < 0.05) == (sub$geo_p < 0.05)
-    
-    # calculate scaled error
-    if (any(colnames(df) == "env1_coeff_scale")){
-      sub$env1_coeff_err_scale <- sub$env1_coeff_scale - full$env1_coeff_scale
-      sub$env2_coeff_err_scale <- sub$env2_coeff_scale - full$env2_coeff_scale
-      sub$geo_coeff_err_scale <- sub$geo_coeff_scale - full$geo_coeff_scale
-      sub$env_coeff_err_scale <- (sub$env1_coeff_scale + sub$env2_coeff_scale)/2
-      
-      sub$env1_coeff_err_ae_scale <- abs(sub$env1_coeff_err_scale)
-      sub$env2_coeff_err_ae_scale <- abs(sub$env2_coeff_err_scale)
-      sub$geo_coeff_err_ae_scale <- abs(sub$geo_coeff_err_scale)
-      sub$env_coeff_err_ae_scale <- (sub$env1_coeff_err_ae_scale + sub$env2_coeff_err_ae_scale)/2
-    }
-    
-  } 
-    
+    sub$env1_coeff_err_ae_scale <- abs(sub$env1_coeff_err_scale)
+    sub$env2_coeff_err_ae_scale <- abs(sub$env2_coeff_err_scale)
+    sub$geo_coeff_err_ae_scale <- abs(sub$geo_coeff_err_scale)
+    sub$env_coeff_err_ae_scale <-
+      (sub$env1_coeff_err_ae_scale + sub$env2_coeff_err_ae_scale) / 2
+  }
+  
   new_df <- bind_rows(sub, full)
   stopifnot(nrow(new_df) == nrow(subdf))
   
@@ -1091,4 +1114,66 @@ make_ibdibe_figs <- function(sub_results, substats, fileprefix, minmax_stats) {
         ))
   print(do.call(ggarrange, c(plot_legend, ncol = 1, align = "h")))
   dev.off()
+}
+
+sampling_plot <- function(df, aggdf){
+  ggplot(df, aes(x = as.numeric(as.character(nsamp)), y = value)) + 
+    geom_boxplot(aes(group = nsamp), fill = "aquamarine1", col = "cyan4", lwd = 1, alpha = 0.3) +
+    geom_line(data = aggdf, col = "black", lwd = 1) +
+    geom_point(data = aggdf, col = "black", cex = 3) +
+    xlab("Number of samples") +
+    ylab("Statistic") +
+    facet_grid(name ~ method) +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 18),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          title = element_text(size = 20),
+          panel.spacing = unit(0.5, "lines")) 
+}
+
+ibdibe_nsamp_plot <- function(df, sampling, stats){
+  aggdf <- 
+    df %>%
+    group_by(nsamp, method, sampling) %>%
+    filter(sampling == !!sampling) %>%
+    summarize_at(stats, mean, na.rm = TRUE) %>%
+    pivot_longer(all_of(stats)) %>%
+    mutate(name = factor(make_pretty_names(name),
+                         levels = !!make_pretty_names(stats)))
+  
+  ggdf <- 
+    df %>%
+    filter(sampling == !!sampling) %>%
+    pivot_longer(all_of(stats)) %>%
+    mutate(name = factor(make_pretty_names(name),
+                         levels = !!make_pretty_names(stats))) %>%
+    drop_na(value) 
+  
+  sampling_plot2(ggdf, aggdf, stats)
+}
+
+sampling_plot2 <- function(df, aggdf, stats){
+  fake_point <- 
+    data.frame(nsamp = 20, value = c(0,1), name = make_pretty_names(stats)[!grepl("MAE", make_pretty_names(stats))]) %>%
+    mutate(name = factor(name, levels = !!make_pretty_names(stats)[!grepl("MAE", make_pretty_names(stats))]))
+  
+  ggplot(df, aes(x = as.numeric(as.character(nsamp)), y = value)) + 
+    geom_boxplot(aes(group = nsamp), lwd = 1, alpha = 0.3) +
+    geom_line(data = aggdf, col = "black", lwd = 1) +
+    geom_point(data = aggdf, col = "black", cex = 3) +
+    geom_point(data = fake_point, col = "white") +
+    xlab("Number of samples") +
+    ylab("Statistic") +
+    ggh4x::facet_grid2(name ~ method, scales = "free_y") +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 18),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          title = element_text(size = 20),
+          panel.spacing = unit(0.5, "lines")) 
 }
