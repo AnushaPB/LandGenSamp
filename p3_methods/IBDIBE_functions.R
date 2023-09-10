@@ -170,7 +170,14 @@ run_gdm <- function(gendist, gsd_df){
   return(results)
 }
 
-# customized variable importance function (changed code so that if null models pop up they don't result in an error, they just aren't counted)
+# Customized variable importance function (changed code so that if null models pop up they don't result in an error, they just aren't counted)
+# 
+# All changes are marked by "CHANGE"
+#
+# *Summary of issue*
+# Problem: In the loop to create "permVarDev" if there is a NULL gdm model for a variable (k) the value assigned to permVarDev[[k]] is NULL which means that the list ends up having a length less than the number of variables such that the line:
+# names(permVarDev) <- varNames.x throws the error: 'names' attribute [2] must be the same length as the vector [1]".
+# Change: I think one solution to this is to have a value of NA assigned to permVarDev[[k]] if the GDM model is NULL. 
 gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect=FALSE,
                        nPerm=50, pValue=0.05, parallel=FALSE, cores=2, sampleSites=1,
                        sampleSitePairs=1, outFile=NULL){
@@ -365,6 +372,8 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   
   # stop routine if fewer than two variables remain
   if(nVars<2){
+    # CHANGE 1: changed stop() to warning() so that NULL is returned
+    #stop("Function requires at least two predictor variables.")
     warning("Function requires at least two predictor variables. Returning NULL")
     return(NULL)
   }
@@ -465,6 +474,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   
   # use replicate if number of perms is small or parallel == FALSE
   if(parallel==F | nPerm <= 25){
+    # CHANGE 2 (trivial): added "pbapply::" instead of importing
     permSpt <- pbapply::pbreplicate(nPerm, list(permutateSitePair(currSitePair,
                                                                   siteData,
                                                                   indexTab,
@@ -622,6 +632,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
           try(gdm(x, geo=geo, splines=splines, knots=knots))
         })
         
+        # CHANGE 3 (major): if the result is NULL replace it with a vector of NA values the same length as nPerm
         ##extracts deviance of permuted gdms
         result <-  unlist(sapply(gdmPermVar, function(mod){mod$gdmdeviance}))
         if (is.null(result)) result <- rep(NA, nPerm)
@@ -637,6 +648,8 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       varDevTab <- permVarDev[[grepper]]
       
       # number of perms for which GDM converged
+      # CHANGE 4: only count cases where varDevTab is not NA 
+      #nConv <- length(varDevTab)
       nConv <- length(na.omit(varDevTab))
       nModsConverge[which(rownames(varImpTable) == var),v] <- nConv
       
@@ -661,6 +674,9 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       }
       
       # calculate p-Value
+      # CHANGE 5: if all varDevTab is NA, p-values are NA
+      #permDevReduct <- noVarGDM$gdmdeviance - varDevTab	
+      #pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
       if (is.null(noVarGDM$gdmdeviance) | all(is.na(varDevTab))){
         pValues[which(rownames(pValues) == var),v] <- NA
       } else {
