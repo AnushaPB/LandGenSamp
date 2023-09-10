@@ -299,8 +299,8 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 
 ---
 
-```{r, fig.width = 6, fig.height = 6}
-# Code used to create figures:
+```{r, fig.width = 6, fig.height = 6, include = FALSE}
+# Code used to create main figures:
 fig_stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
 results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
 
@@ -315,5 +315,33 @@ make_gea_figs(sub_results_bad, stats = fig_stats, fileprefix = "bad")
 ```
 
 
+```{r, fig.width = 14, fig.height = 6, include = FALSE}
+# Code used to create sample number figures:
+df <- bind_rows(data.frame(lfmm_ind, method = "LFMM", sampling = "individual"),
+                data.frame(rda_ind, method = "RDA", sampling = "individual"),
+                data.frame(lfmm_site, method = "LFMM", sampling = "site"),
+                data.frame(rda_site, method = "RDA", sampling = "site"))
+df <-
+  df %>%
+  filter(sampstrat == "R", H == 0.5, phi == 1.0, r == 0.3, m == 1.0, K == 2.0)
 
+aggdf <- 
+  df %>%
+  group_by(nsamp, method, sampling) %>%
+  summarize(TPRCOMBO_relaxed = mean(TPRCOMBO_relaxed, na.rm = TRUE), 
+            FDRCOMBO_relaxed = mean(FDRCOMBO_relaxed, na.rm = TRUE)) %>%
+  pivot_longer(c(TPRCOMBO_relaxed, FDRCOMBO_relaxed)) %>%
+  mutate(name = factor(make_pretty_names(name), levels = c("TPR relaxed", "FDR relaxed")))
+
+ggdf <- 
+  df %>%
+  pivot_longer(c(TPRCOMBO_relaxed, FDRCOMBO_relaxed)) %>%
+  mutate(name = factor(make_pretty_names(name), levels = c("TPR relaxed", "FDR relaxed")))
+
+ind_plt <- sampling_plot(ggdf[ggdf$sampling == "individual",], aggdf[aggdf$sampling == "individual",])
+site_plt <- sampling_plot(ggdf[ggdf$sampling == "site",], aggdf[aggdf$sampling == "site",])
+
+ggarrange(ind_plt + ggtitle("A. Individual-based sampling"), 
+          site_plt + ggtitle("B. Site-based sampling"))
+```
 
