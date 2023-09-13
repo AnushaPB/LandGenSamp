@@ -591,13 +591,11 @@ rda_plotter <- function(x, stat, ...) {
 }
 
 # run linear mixed effects models and make pretty tables
-run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
+run_lmer <- function(df, stat, filepath = NULL){
   
   # check number of rows
   if ("trans" %in% df$sampstrat) stopifnot(nrow(df) == (960 * 4 * 4))
   if ("equi" %in% df$sampstrat) stopifnot(nrow(df) == (960 * 3 * 3))
-  
-  if (!is.null(seed)) set.seed(seed)
   
   # mixed effect model
   df <- data.frame(df)
@@ -631,8 +629,7 @@ run_lmer <- function(df, stat, filepath = NULL, seed = 22, f = NULL){
   moddf$nsamp <- as.numeric(as.character(moddf$nsamp))
   
   # mixed model (remove params with all NA values for a level)
-  if (is.null(f)) f <- formula(paste0("stat ~ nsamp + sampstrat +", paste(params[!na_check], collapse = "+"), "+ (1 | seed)"))
-  
+  f <- formula(paste0("stat ~ nsamp + sampstrat +", paste(params[!na_check], collapse = "+"), "+ (1 | seed)"))
   moddf <- moddf %>% select(stat, nsamp, sampstrat, K, phi, m, H, r, seed, it) 
   mod <- lmerTest::lmer(f, moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
   
@@ -1116,64 +1113,59 @@ make_ibdibe_figs <- function(sub_results, substats, fileprefix, minmax_stats) {
   dev.off()
 }
 
-sampling_plot <- function(df, aggdf){
-  ggplot(df, aes(x = as.numeric(as.character(nsamp)), y = value)) + 
-    geom_boxplot(aes(group = nsamp), fill = "aquamarine1", col = "cyan4", lwd = 1, alpha = 0.3) +
-    geom_line(data = aggdf, col = "black", lwd = 1) +
-    geom_point(data = aggdf, col = "black", cex = 3) +
-    xlab("Number of samples") +
-    ylab("Statistic") +
-    facet_grid(name ~ method) +
-    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
-          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
-          panel.background = element_blank(),
-          strip.text = element_text(size = 18),
-          axis.text = element_text(size = 16),
-          axis.title = element_text(size = 18),
-          title = element_text(size = 20),
-          panel.spacing = unit(0.5, "lines")) 
-}
-
-ibdibe_nsamp_plot <- function(df, sampling, stats){
-  aggdf <- 
-    df %>%
-    group_by(nsamp, method, sampling) %>%
-    filter(sampling == !!sampling) %>%
-    summarize_at(stats, mean, na.rm = TRUE) %>%
-    pivot_longer(all_of(stats)) %>%
-    mutate(name = factor(make_pretty_names(name),
-                         levels = !!make_pretty_names(stats)))
+sampling_plot <- function(ggdf){
+  stats <- unique(ggdf$name)
   
-  ggdf <- 
-    df %>%
-    filter(sampling == !!sampling) %>%
-    pivot_longer(all_of(stats)) %>%
-    mutate(name = factor(make_pretty_names(name),
-                         levels = !!make_pretty_names(stats))) %>%
-    drop_na(value) 
-  
-  sampling_plot2(ggdf, aggdf, stats)
-}
-
-sampling_plot2 <- function(df, aggdf, stats){
   fake_point <- 
-    data.frame(nsamp = 20, value = c(0,1), name = make_pretty_names(stats)[!grepl("MAE", make_pretty_names(stats))]) %>%
-    mutate(name = factor(name, levels = !!make_pretty_names(stats)[!grepl("MAE", make_pretty_names(stats))]))
+    data.frame(nsamp = 20, mean_value = c(0,0,0,0,1,1,1,1),
+               name = stats[!grepl("MAE", stats)]) %>%
+    mutate(name = factor(name, levels = stats[!grepl("MAE", stats)]))
   
-  ggplot(df, aes(x = as.numeric(as.character(nsamp)), y = value)) + 
-    geom_boxplot(aes(group = nsamp), lwd = 1, alpha = 0.3) +
-    geom_line(data = aggdf, col = "black", lwd = 1) +
-    geom_point(data = aggdf, col = "black", cex = 3) +
+  ind_plt <- 
+    ggplot(ggdf[ggdf$sampling == "individual",], aes(x = as.numeric(as.character(nsamp)), y = mean_value)) +
     geom_point(data = fake_point, col = "white") +
+    geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = simulation), alpha = 0.3) +
+    geom_line(lwd = 1, aes(col = simulation), alpha = 0.7) +
+    geom_point(cex = 2, aes(col = simulation), alpha = 0.7) +
+    ggh4x::facet_grid2(name~method, scales = "free_y") +
     xlab("Number of samples") +
     ylab("Statistic") +
-    ggh4x::facet_grid2(name ~ method, scales = "free_y") +
     theme(panel.border = element_rect(colour = "lightgray", fill = NA),
           strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
           panel.background = element_blank(),
           strip.text = element_text(size = 18),
           axis.text = element_text(size = 16),
           axis.title = element_text(size = 18),
+          legend.text = element_text(size = 18),
           title = element_text(size = 20),
-          panel.spacing = unit(0.5, "lines")) 
+          panel.spacing = unit(0.5, "lines")) +
+    scale_color_manual(values = c("best" = "#6aa84f", "worst" = "orange")) + 
+    scale_fill_manual(values = c("best" = "#b6d7a8ff", "worst" =  "#f9cb9cff")) 
+  
+  site_plt <- 
+    ggplot(ggdf[ggdf$sampling == "site",], aes(x = as.numeric(as.character(nsamp)), y = mean_value)) +
+    geom_point(data = fake_point, col = "white") +
+    geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = simulation), alpha = 0.5) +
+    geom_line(lwd = 1, aes(col = simulation), alpha = 0.7) +
+    geom_point(cex = 2, aes(col = simulation), alpha = 0.7) +
+    ggh4x::facet_grid2(name~method, scales = "free_y") +
+    xlab("Number of samples") +
+    ylab("Statistic") +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 18),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          legend.text = element_text(size = 18),
+          title = element_text(size = 20),
+          panel.spacing = unit(0.5, "lines")) +
+    scale_color_manual(values = c("best" = "#6aa84f", "worst" = "orange")) + 
+    scale_fill_manual(values = c("best" = "#b6d7a8ff", "worst" =  "#f9cb9cff")) 
+  
+  ggarrange(ind_plt + ggtitle("A. Individual-based sampling"),
+            site_plt + ggtitle("B. Site-based sampling"),
+            common.legend = TRUE,
+            legend = "right")
 }
+
