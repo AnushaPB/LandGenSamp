@@ -21,7 +21,7 @@ range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 
 # run GDM with each environmental variable treated separately
-run_gdm2 <- function(gendist, gsd_df){
+run_gdm <- function(gendist, gsd_df){
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
