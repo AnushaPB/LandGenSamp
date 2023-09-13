@@ -15,7 +15,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   registerDoParallel(cl)
   
   # Run common operations
-  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2", "lfmm_fullK"))
+  if (method %in% c("mmrr", "gdm", "lfmm_fullK"))
     full_result <- run_full(params, method = method, n = 1000) 
   else
     full_result <- NULL
@@ -159,7 +159,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
   gsd_df <- gsd_df[s,]
   
   # Calculate gendist 
-  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) gen <- calc_dist(gen/2, distmeasure = "euc") 
+  if (method %in% c("mmrr", "gdm")) gen <- calc_dist(gen/2, distmeasure = "euc") 
   
   # Run model on full data set
   if (method == "lfmm_fullK") {
@@ -182,7 +182,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
   rm("gsd_df")
   gc()
   
-  if (method == "gdm2" | method == "gdm"){
+  if (method == "gdm"){
     paramset <- params[i,]
     paramset[,c("phi", "m", "r", "H")] <- paramset[,c("phi", "m", "r", "H")] * 100
     filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
@@ -211,18 +211,18 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     # Calculate env values by site
     subgsd_df <- data.frame(aggregate(subgsd_df, list(siteIDs), FUN = mean)[-1])
     # Convert gen to genetic distance
-    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) subgen <- calc_dist(subgen, distmeasure = "euc") 
+    if (method %in% c("mmrr", "gdm")) subgen <- calc_dist(subgen, distmeasure = "euc") 
   } else {
     # Convert gen to genetic distance
     # divide by 2 if not site so that dosage gets converted to allele frequencies
     # this is important for gdm so that the scaling from 0 to 1 by dividing by 100 works
-    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) subgen <- calc_dist(subgen/2, distmeasure = "euc") 
+    if (method %in% c("mmrr", "gdm")) subgen <- calc_dist(subgen/2, distmeasure = "euc") 
   }
   
   # Run model on sub data set
   run_method <- get_method(method, type = "run")
   
-  if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) {
+  if (method %in% c("mmrr", "gdm")) {
     sub_stats <- run_method(subgen, subgsd_df)
     # Calculate stats
     full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
@@ -249,15 +249,13 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
 get_method <- function(method, type = "run"){
   if (type == "run") {
     if (method == "mmrr") return(run_mmrr)
-    if (method == "mmrr2") return(run_mmrr2)
     if (method == "gdm") return(run_gdm)
-    if (method == "gdm2") return(run_gdm2)
     if (method == "lfmm" | method == "lfmm_fullK") return(run_lfmm)
     if (method == "rda") return(run_rda)
   }
   
   if (type == "stat") {
-    if (method %in% c("mmrr", "mmrr2", "gdm", "gdm2")) return(stat_ibdibe)
+    if (method %in% c("mmrr", "gdm")) return(stat_ibdibe)
   }
   
   stop("invalid method input")
