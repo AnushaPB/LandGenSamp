@@ -17,7 +17,8 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
     coord_fixed() + 
     facet_wrap( ~ group, nrow = 4) +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
+          panel.grid.minor = element_blank(), 
+          legend.position = "right", legend.title = element_blank(),
           axis.title.x=element_blank(), axis.ticks.x=element_blank(),
           axis.title.y=element_blank(), axis.ticks.y=element_blank(),
           axis.text.x = element_text(color = "grey50", size = 14),
@@ -220,7 +221,7 @@ heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NU
     geom_text(aes(label = round(stat, dig), hjust = 0.5), size = 5) +
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), legend.position = "none",
+          panel.grid.minor = element_blank(), legend.position = "right",
           axis.title.x=element_blank(), axis.ticks.x=element_blank(),
           axis.title.y=element_blank(), axis.ticks.y=element_blank(),
           axis.text.x = element_text(color = "grey50", size = 16),
@@ -420,9 +421,9 @@ format_gdm <- function(path, full = FALSE){
 }
 
 # plot MMRR and GDM summary results
-mmrr_gdm_plotter <- function(x, stat, ...) {
+ibdibe_plot <- function(x, stat, ...) {
   capture.output(grob <- summary_hplot(x, stat_name = stat, ...))
-  title <- paste0("Statistic: ", make_pretty_names(stat))
+  title <- paste0(make_pretty_names(stat))
   grob2 <- grid.arrange(grob, top = grid::textGrob(title, x = 0, hjust = 0, gp=gpar(fontsize=20)))
   return()
 }
@@ -981,7 +982,7 @@ get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
 }
 
 # plot example sets of samples
-plot_example_samples <- function(.x, .y, site = FALSE, df, env1){
+plot_example_samples <- function(.x, .y, site = FALSE, df, params_set, env1){
   #subsample from data based on sampling strategy and number of samples
   if (site) subIDs <- get_example_samples(param_set, sampstrat = .x, nsamp = 16, site = TRUE)
   if (!site) subIDs <- get_example_samples(param_set, sampstrat = .x, nsamp = 81, site = FALSE)
@@ -995,7 +996,8 @@ plot_example_samples <- function(.x, .y, site = FALSE, df, env1){
     theme_void() + 
     scale_color_viridis(option = "mako") + 
     scale_fill_viridis(option = "mako") +
-    theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20)) +
+    theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
+          panel.background = element_rect(fill = "lightgray")) +
     ggtitle(.y)
   
   return(p)
