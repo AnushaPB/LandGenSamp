@@ -1,0 +1,193 @@
+---
+title: "File_S2"
+output: html_document
+date: "2023-09-13"
+---
+
+# Paramaterizing correlations between environmental layers
+
+To determine how to set the levels of correlation between our environmental layers we created distributions of correlations between temperature and precipitation globally. We downloaded global average temperature and precipitation data for 1970-2000 at a resolution of 2.5 minutes of a degree from WorldClim using the "geodata" package (Hijmans  et al., 2023). This data is monthly, so we took the mean across all months to get one raster layer representing temperature and one representing precipitation. To generate our distributions we randomly sampled one thousand 100 by 100 cell sections of each raster and calculated the correlation between temperature and precipitation within those sections. We took the absolute value of the correlations since for our simulations only the magnitude matters, not the direction. FOr our simulations we chose 0.30 for our low level and 0.60 for our high level which corresponded to approximately the first and second quartile (i.e., the median) of the distribution of correlations. We didn't select the third quartile value of 0.84 because when a pair of environmental variables has a correlation greater than 0.70 one of them is usually dropped in landscape genomic analyses. Therefore, we wanted our high level of correlation to still be below the threshold of being too correlated to be disentangled.
+
+*The code used to create these distributions can be found in the same notebook used to generate this file: [GITHUB LINK]*
+
+```{r, include = FALSE}
+library(terra)
+library(tidyverse)
+library(geodata)
+library(here)
+```
+
+```{r, result = FALSE, message = FALSE, include = FALSE}
+# Download temperature and precipitation data (tavg) at 2.5 arc-min resolution
+tavg <- worldclim_global(var = "tavg", res = 2.5, path = here("p1_gnxsims", "MNLM"))
+prec <- worldclim_global(var = "prec", res = 2.5, path = here("p1_gnxsims", "MNLM"))
+
+tavg <- mean(tavg)
+prec <- mean(prec)
+env <- c(tavg, prec)
+```
+
+
+```{r fig.width = 10, fig.height = 5, include = FALSE}
+# Create bootstrapped distribution of correlations and Moran's I
+# x - raster stack of two layers
+# ldim - subraster dimensions (creates a 100x100 subsampled raster)
+# percent.na - maximum percentage of NA values allowed in the subsampled raster
+# nsamp - how many subsampled rasters to generate
+boot_rnM <- function(x,
+                 ldim = 100,
+                 nsamp = 1000, 
+                 percent.na = 0){
+  
+  #convert from pixels to coordinate units (assumes x and y units are the same)
+  ldimconv <- ldim*res(x)[1]
+  
+  #Create buffered raster based on ldim (dimensions of subrasters)
+  #so that when the subrasters are created in the next step they don't extend outside of the extent 
+  #(only needed for xmax/ymax since the box is created by adding to an initial coordinate
+  buffrast <- crop(x, ext(ext(x)[1],
+                          ext(x)[2] - ldimconv,
+                          ext(x)[3],
+                          ext(x)[4] - ldimconv))
+  
+  #vectors for saving results
+  r <- c()
+  Mtavg <- c()
+  Mprec <- c()
+  
+  #vector to save initial cell values so the same subraster isn't sampled twice
+  initvec <- c()
+  
+  #get non na cell numbers
+  notna <- which(complete.cases(values(buffrast)))
+  
+  #loop to create subrasters
+  for(i in 1:nsamp){
+    
+    #Initial conditions for while loops
+    pna <- 1
+	  tn <- 0
+	  init <- notna[1]
+	  
+	  #Loop through subrasters while the percent of NAs is above a threshold 
+	  #AND while the number of attempts to get the raster to meet this condition is below 1000 (just so it doesn't run forever)
+	  testn = 1000
+  	while (pna > percent.na & tn <= testn){
+  	  #Loop through initial points for the subraster corner that have not been sampled before
+  	  while (init %in% initvec){
+  	    init <- sample(notna, size = 1)
+  	  }
+  	  
+  	  #add point to vector so it isn't sampled again
+  	  initvec <- c(initvec, init)
+  	  #get coordinates of the initial corner (lower left)
+  	  coord1 <- xyFromCell(buffrast, init)
+  	  #add ldim to corner to get the upper right corner of the subraster
+  	  coord2 <- coord1 + ldimconv
+  	  #create coords object for cropping
+    	coords <- c(coord1[1], coord2[1], coord1[2], coord2[2])
+    	#crop raster with coords to get subraster
+  	  newx <- crop(x, ext(coords))
+  	  #calculate the percentage of NAs
+  	  pna <- sum(is.na(values(newx)))/(ncell(newx)*nlyr(x))
+  	  #tracker for number of loops
+  	  tn <- tn + 1
+  	}
+	  if (tn == testn){"failed to find a subraster below the NA threshold in testn attempts"}
+	  #calculate and save pearson's correlation for each subraster
+	  #calc correlation
+	  r <- layerCor(newx, "pearson", na.rm=T)$`pearson`[1,2]
+	  
+    f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
+    Mt <- autocor(newx[[1]], w = f, method = "moran", global = TRUE)
+    Mp <- autocor(newx[[2]], w = f, method = "moran", global = TRUE)
+    
+	  cor <- append(cor, r)
+	  Mtavg <- append(Mtavg, Mt)
+	  Mprec <- append(Mprec, Mp)
+  }
+	return(list(r = cor, Moran_prec = Mprec, Moran_tavg = Mtavg))
+}
+```
+
+```{r, include = FALSE, cache = TRUE, include = FALSE}
+set.seed(3)
+results <- boot_rnM(env)
+```
+
+```{r, fig.width = 9, fig.height = 3, echo = FALSE}
+df <-  
+  data.frame(results) %>%
+  # get absolute value of r since we only care about magnitude
+  mutate(r = abs(r)) %>%
+  # get Moran stats into one column
+  pivot_longer(c(Moran_prec, Moran_tavg), names_to = "env", values_to = "Moran") %>%
+  mutate(env = case_when(env == "Moran_prec" ~ "prec", env == "Moran_tavg" ~ "tavg"))
+
+ggplot(df) +
+  geom_boxplot(aes(x = r), fill = "cornflowerblue", alpha = 0.5, lwd = 1) +
+  theme_classic() +
+  geom_vline(aes(xintercept = 0.3), col = "aquamarine2", lwd = 1.5, lty = "dashed") +
+  geom_vline(aes(xintercept = 0.6), col = "orange", lwd = 1.5, lty = "dashed") +
+  ylim(-1,1) +
+  theme(axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 16),
+        axis.title = element_text(size = 18)) +
+  xlab("|Correlation between Temperature and Precipitation|")
+```
+
+**Figure 1.** Boxplot of the absolute value of correlations between global temperature and precipitation. Green and orange dashed lines represent the low and high levels of correlation used in our simulation.
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = Moran), fill = "cornflowerblue", alpha = 0.5, lwd = 1) +
+  theme_classic() +
+  ylim(-1,1) +
+  theme(axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 16),
+        axis.title = element_text(size = 18)) +
+  xlab("Moran's I")
+```
+```{r}
+set.seed(334)
+
+H = 0.5
+nlm50 <-
+  nlm_mpd(
+    ncol = 103,
+    nrow = 103,
+    resolution = 1,
+    roughness = 1 - H,
+    rand_dev = 1,
+    rescale = TRUE,
+    verbose = FALSE
+  )
+
+
+H = 0.05
+nlm05 <-
+  nlm_mpd(
+    ncol = 103,
+    nrow = 103,
+    resolution = 1,
+    roughness = 1 - H,
+    rand_dev = 1,
+    rescale = TRUE,
+    verbose = FALSE
+  )
+
+f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
+M_H50 <- autocor(rast(nlm50), w = f, method = "moran", global = TRUE)
+M_H05 <- autocor(rast(nlm05), w = f, method = "moran", global = TRUE)
+```
+
+### References:
+
+1. Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
+
+2. Hijmans RJ, Barbosa M, Ghosh A, Mandel A (2023). geodata: Download Geographic
+  Data. R package version 0.5-8, <https://CRAN.R-project.org/package=geodata>.
