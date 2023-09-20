@@ -298,38 +298,8 @@ params = {
                     # whether to generate recombination paths at each timestep
                     'allow_ad_hoc_recomb': False,
                     # whether to save mutation logs
-                    'mut_log': False,
-
-                    'traits': {
-
-                        # --------------------------#
-                        # --- trait 1 parameters ---#
-                        # --------------------------#
-                        # trait name (TRAIT NAMES MUST BE UNIQUE!)
-                        'trait_1': {
-                            # trait-selection Layer name
-                            'layer': 'lyr_0',
-                            # polygenic selection coefficient
-                            'phi': phi,
-                            # number of loci underlying trait
-                            'n_loci': 4,
-                            # mutation rate at loci underlying trait
-                            'mu': 0,
-                            # mean of distr of effect sizes
-                            'alpha_distr_mu': 0.25,
-                            # variance of distr of effect size
-                            'alpha_distr_sigma': 0,
-                            # max allowed magnitude for an alpha value
-                            'max_alpha_mag': None,
-                            # curvature of fitness function
-                            'gamma': 1,
-                            # whether the trait is universally advantageous
-                            'univ_adv': True
-                        }
-
-                        #### NOTE: Individual Traits' sections can be copy-and-pasted (and
-                        #### assigned distinct keys and names), to create additional Traits.
-
+                    'mut_log': False
+                        
                     },  # <END> 'traits'
 
                 },  # <END> 'gen_arch'
@@ -501,8 +471,6 @@ def run_sims(sim_list, params):
         params['comm']['species']['spp_0']['init']['K_factor'] = K
         params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
         
         # creates a unique random seed for every parameter set
         params['model']['num'] = int(simseed)
