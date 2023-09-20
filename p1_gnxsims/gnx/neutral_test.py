@@ -528,8 +528,6 @@ def run_sims(sim_list, params):
         params['comm']['species']['spp_0']['init']['K_factor'] = K
         params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
         
         # creates a unique random seed for every parameter set
         params['model']['num'] = int(simseed)
