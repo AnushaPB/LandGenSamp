@@ -325,7 +325,7 @@ params = {
                             'gamma': 1,
                             # whether the trait is universally advantageous
                             'univ_adv': True
-                        },
+                        }
 
                         #### NOTE: Individual Traits' sections can be copy-and-pasted (and
                         #### assigned distinct keys and names), to create additional Traits.
