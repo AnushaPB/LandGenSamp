@@ -365,7 +365,7 @@ r_array = [0.3]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
-sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, H_array, r_array)).T.reshape(-1, 6)
+sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, H_array, r_array)).T.reshape(-1, 5)
 # create a 2D array of seeds for simulations
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
