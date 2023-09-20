@@ -82,7 +82,63 @@ params = {
 
                 },  # <END> 'init'
 
-            },  # <END> layer num.0
+            },  # <END> layer num. 0
+
+            # layer name (LAYER NAMES MUST BE UNIQUE!)
+            'lyr_1': {
+
+                # -------------------------------------#
+                # --- layer num. 1: init parameters ---#
+                # -------------------------------------#
+
+                # initiating parameters for this layer
+                'init': {
+
+                    # parameters for a 'defined'-type Layer
+                    'defined': {
+                        # raster to use for the Layer
+                        'rast': env1,
+                        # point coordinates
+                        'pts': None,
+                        # point values
+                        'vals': None,
+                        # interpolation method {None, 'linear', 'cubic',
+                        # 'nearest'}
+                        'interp_method': None,
+
+                    },  # <END> 'defined'
+
+                },  # <END> 'init'
+
+            },  # <END> layer num. 1
+
+            # layer name (LAYER NAMES MUST BE UNIQUE!)
+            'lyr_2': {
+
+                # -------------------------------------#
+                # --- layer num. 2: init parameters ---#
+                # -------------------------------------#
+
+                # initiating parameters for this layer
+                'init': {
+
+                    # parameters for a 'defined'-type Layer
+                    'defined': {
+                        # raster to use for the Layer
+                        'rast': env2,
+                        # point coordinates
+                        'pts': None,
+                        # point values
+                        'vals': None,
+                        # interpolation method {None, 'linear', 'cubic',
+                        # 'nearest'}
+                        'interp_method': None,
+
+                    },  # <END> 'defined'
+
+                },  # <END> 'init'
+
+            },  # <END> layer num. 2
 
             #### NOTE: Individual Layers' sections can be copy-and-pasted (and
             #### assigned distinct keys and names), to create additional Layers.
@@ -207,6 +263,8 @@ params = {
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
+                    # file defining custom genomic arch
+                    'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
                     'L': 10000,
                     # num of chromosomes (doesn't matter when there is no linkage)
@@ -360,12 +418,13 @@ params = {
 K_array = [1]
 phi_array = [1.0]
 m_array = [0.25]
+seed_array = [1]
 H_array = [0.5]
-r_array = [0.3]
+r_array = [0.6]
 
 # create an array of all combinations of those parameters
 # (second argument of reshape should be the number of parameters being varied)
-sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, H_array, r_array)).T.reshape(-1, 5)
+sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
 # create a 2D array of seeds for simulations
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 # append simulation seeds to sim_array
@@ -383,13 +442,14 @@ def run_sims(sim_list, params):
     K = float(sim_list[0])
     phi = float(sim_list[1])
     m = float(sim_list[2])
+    seed = float(sim_list[3])
     H = float(sim_list[4])
     r = float(sim_list[5])
     simseed = float(sim_list[6])
 
     #create mod name
-    mod_name = "neutral_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
-        int(m * 100)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
+        int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
     path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
@@ -397,7 +457,13 @@ def run_sims(sim_list, params):
         print(mod_name + " exists, skipping")
     else:
         print(mod_name + " starting")
-        
+       
+        # get env layers
+        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+                int(r * 100)) + ".csv", delimiter=',')
+
         # redefine params
         params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
         params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
@@ -435,7 +501,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 2
+    ncpu = 20
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
