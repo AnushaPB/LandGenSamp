@@ -324,33 +324,8 @@ params = {
                             # curvature of fitness function
                             'gamma': 1,
                             # whether the trait is universally advantageous
-                            'univ_adv': False
-                        },  # <END> trait 0
-
-                        # --------------------------#
-                        # --- trait 2 parameters ---#
-                        # --------------------------#
-                        # trait name (TRAIT NAMES MUST BE UNIQUE!)
-                        'trait_2': {
-                            # trait-selection Layer name
-                            'layer': 'lyr_0',
-                            # polygenic selection coefficient
-                            'phi': phi,
-                            # number of loci underlying trait
-                            'n_loci': 4,
-                            # mutation rate at loci underlying trait
-                            'mu': 0,
-                            # mean of distr of effect sizes
-                            'alpha_distr_mu': 0.25,
-                            # variance of distr of effect size
-                            'alpha_distr_sigma': 0,
-                            # max allowed magnitude for an alpha value
-                            'max_alpha_mag': None,
-                            # curvature of fitness function
-                            'gamma': 1,
-                            # whether the trait is universally advantageous
-                            'univ_adv': False
-                        },  # <END> trait 0
+                            'univ_adv': True
+                        },
 
                         #### NOTE: Individual Traits' sections can be copy-and-pasted (and
                         #### assigned distinct keys and names), to create additional Traits.
