@@ -263,6 +263,8 @@ params = {
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
+                    # file defining custom genomic arch
+                    'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
                     'L': 10000,
                     # num of chromosomes (doesn't matter when there is no linkage)
@@ -299,7 +301,6 @@ params = {
                     'allow_ad_hoc_recomb': False,
                     # whether to save mutation logs
                     'mut_log': False
-                        
                     },  # <END> 'traits'
 
                 },  # <END> 'gen_arch'
@@ -471,7 +472,7 @@ def run_sims(sim_list, params):
         params['comm']['species']['spp_0']['init']['K_factor'] = K
         params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
         params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-        
+      
         # creates a unique random seed for every parameter set
         params['model']['num'] = int(simseed)
 
