@@ -263,8 +263,6 @@ params = {
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
-                    # file defining custom genomic arch
-                    'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
                     'L': 10000,
                     # num of chromosomes (doesn't matter when there is no linkage)
