@@ -34,7 +34,7 @@ Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
 └───[gnx]
     │   create_genomic_architecture.R - create genomic architecture file for gnx simulations
     │   genomic_architecture.csv - genomic architecture file created by create_genomic_architecture.R
-    │   parallel_LGS.py - run geonomics simulations
+    │   run_gnx.py - run geonomics simulations
     │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files
     │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files
     │   
@@ -99,7 +99,7 @@ cd p1_gnxsims/gnx
 Rscript create_genomic_architecture.R
 ## Run simulations (note: this takes several weeks and is parallelized)
 ## contact anusha.bishop@berkeley.edu if you would like the simulation results
-python3 parallel_LGS.py
+python3 run_gnx.py
 
 # Create subsampled datasets
 cd ../p2_gnxsims

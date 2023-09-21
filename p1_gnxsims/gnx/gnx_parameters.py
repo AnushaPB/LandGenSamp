@@ -1,34 +1,4 @@
 
-import geonomics as gnx
-import numpy as np
-import pandas as pd
-import multiprocessing as mp
-import sys
-import matplotlib.pyplot as plt
-from functools import partial
-from os.path import exists
-
-# Make uniform array
-def make_unif_array(n):
-    """Makes a square array of ones, size n x n cells."""
-    array = np.ones((n, n))
-    return array
-
-
-unifenv = make_unif_array(100)
-
-#define default parameters (!these will be changed in the loop, I just define them here to create the variables!)
-#Params to define
-##K_factor = K
-K = 0
-##movement_distance_distr_param2 = md/dispersal_distance_distr_param2 = dd
-m = 0
-##phi = phi
-phi = 0
-##envs
-env1 = unifenv
-env2 = unifenv
-
 params = {
     # --------------------------------------------------------------------------#
 
@@ -69,7 +39,7 @@ params = {
                     # parameters for a 'defined'-type Layer
                     'defined': {
                         # raster to use for the Layer
-                        'rast': unifenv,
+                        'rast': [UNIFORM ENVIRONMENTAL LAYER],
                         # point coordinates
                         'pts': None,
                         # point values
@@ -97,7 +67,7 @@ params = {
                     # parameters for a 'defined'-type Layer
                     'defined': {
                         # raster to use for the Layer
-                        'rast': env1,
+                        'rast': [NLM LAYER],
                         # point coordinates
                         'pts': None,
                         # point values
@@ -125,7 +95,7 @@ params = {
                     # parameters for a 'defined'-type Layer
                     'defined': {
                         # raster to use for the Layer
-                        'rast': env2,
+                        'rast': [NLM LAYER],
                         # point coordinates
                         'pts': None,
                         # point values
@@ -169,7 +139,7 @@ params = {
                     # carrying-capacity Layer name
                     'K_layer': 'lyr_0',
                     # multiplicative factor for carrying-capacity layer
-                    'K_factor': K,
+                    'K_factor': [VARIED TO CONTROL POPULATION SIZE],
                 },  # <END> 'init'
 
                 # -------------------------------------#
@@ -230,13 +200,13 @@ params = {
                     # 1st param of distr of movement distance
                     'movement_distance_distr_param1': 0,
                     # 2nd param of distr of movement distance
-                    'movement_distance_distr_param2': m,
+                    'movement_distance_distr_param2': [VARIED TO CONTROL MIGRATION],
                     # movement distance distr to use
                     'movement_distance_distr': 'lognormal',
                     # 1st param of distr of dispersal distance
                     'dispersal_distance_distr_param1': 0,
                     # 2nd param of distr of dispersal distance
-                    'dispersal_distance_distr_param2': m,
+                    'dispersal_distance_distr_param2': [VARIED TO CONTROL MIGRATION],
                     # dispersal distance distr to use
                     'dispersal_distance_distr': 'lognormal',
                     'move_surf': {
@@ -264,6 +234,7 @@ params = {
                     # whether to jitter recomb bps, only needed to correctly track num_trees
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
+                    # found here /p1_gnxsims/gnx/
                     'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
                     'L': 10000,
@@ -312,7 +283,7 @@ params = {
                             # trait-selection Layer name
                             'layer': 'lyr_1',
                             # polygenic selection coefficient
-                            'phi': phi,
+                            'phi': [VARIED TO CONTROL SELECTION STRENGTH],
                             # number of loci underlying trait
                             'n_loci': 4,
                             # mutation rate at loci underlying trait
@@ -327,7 +298,7 @@ params = {
                             'gamma': 1,
                             # whether the trait is universally advantageous
                             'univ_adv': False
-                        },  # <END> trait 0
+                        },  # <END> trait 1
 
                         # --------------------------#
                         # --- trait 2 parameters ---#
@@ -337,7 +308,7 @@ params = {
                             # trait-selection Layer name
                             'layer': 'lyr_2',
                             # polygenic selection coefficient
-                            'phi': phi,
+                            'phi': [VARIED TO CONTROL SELECTION STRENGTH],
                             # number of loci underlying trait
                             'n_loci': 4,
                             # mutation rate at loci underlying trait
@@ -352,7 +323,7 @@ params = {
                             'gamma': 1,
                             # whether the trait is universally advantageous
                             'univ_adv': False
-                        },  # <END> trait 0
+                        },  # <END> trait 2
 
                         #### NOTE: Individual Traits' sections can be copy-and-pasted (and
                         #### assigned distinct keys and names), to create additional Traits.
@@ -471,106 +442,3 @@ params = {
     }  # <END> 'model'
 
 }  # <END> params
-
-# define parameters to vary
-K_array = [1, 2]
-phi_array = [0.5, 1.0]
-m_array = [0.25, 1]
-seed_array = [1, 2, 3]
-H_array = [0.05, 0.5]
-r_array = [0.3, 0.6]
-
-# create an array of all combinations of those parameters
-# (second argument of reshape should be the number of parameters being varied)
-sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
-# create a 2D array of seeds for simulations
-sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
-# append simulation seeds to sim_array
-sim_array = np.append(sim_array, sim_seeds, 1)
-
-# directory where input/output data will be stored
-#FIX THIS SO IT ISN'T A HARD PATH
-#dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
-#dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
-dir = "/media/wanglab/DataDrive/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
-# note: currently gnx dumps most output files in a folder where the script is run
-
-def run_sims(sim_list, params):
-    # !ORDER MATTERS! must match order of params from before
-    K = float(sim_list[0])
-    phi = float(sim_list[1])
-    m = float(sim_list[2])
-    seed = float(sim_list[3])
-    H = float(sim_list[4])
-    r = float(sim_list[5])
-    simseed = float(sim_list[6])
-
-    #create mod name
-    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
-        int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
-    
-    #check if file path to final iteration (it-9) already exists
-    path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
-    if exists(path_to_file):
-        print(mod_name + " exists, skipping")
-    else:
-        print(mod_name + " starting")
-       
-        # get env layers
-        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
-                int(r * 100)) + ".csv", delimiter=',')
-        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
-                int(r * 100)) + ".csv", delimiter=',')
-
-        # redefine params
-        params['landscape']['layers']['lyr_1']['init']['defined']['rast'] = env1
-        params['landscape']['layers']['lyr_2']['init']['defined']['rast'] = env2
-        params['comm']['species']['spp_0']['init']['K_factor'] = K
-        params['comm']['species']['spp_0']['movement']['movement_distance_distr_param2'] = m
-        params['comm']['species']['spp_0']['movement']['dispersal_distance_distr_param2'] = m
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_1']['phi'] = phi
-        params['comm']['species']['spp_0']['gen_arch']['traits']['trait_2']['phi'] = phi
-        
-        # creates a unique random seed for every parameter set
-        params['model']['num'] = int(simseed)
-
-        # print params to confirm proper params were used (in output)
-        print(params)
-
-        # make our params dict into a proper Geonomics ParamsDict object
-        params = gnx.make_params_dict(params, mod_name)
-        # then use it to make a model
-        mod = gnx.make_model(parameters=params, verbose=True)
-
-        # run the model
-        mod.run(verbose = True)
-
-        # save and print all of the non-neutral loci
-        loci_df = pd.DataFrame()
-        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-        print("\nNON-NEUTRAL LOCI:")
-        print(mod.comm[0].gen_arch.nonneut_loci)
-
-
-
-#multiprocessing
-if __name__ == '__main__':
-    #count number of cores
-    #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 20
-
-    #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
-    #mp.set_start_method('spawn')
-    #make pool
-    pool = mp.Pool(ncpu)
-
-    #setup function (params is a constant argument)
-    run_sims_params = partial(run_sims, params = params)
-    #map function onto array
-    pool.map_async(run_sims_params, sim_array)
-
-    #close the pool
-    pool.close()
-    pool.join()
