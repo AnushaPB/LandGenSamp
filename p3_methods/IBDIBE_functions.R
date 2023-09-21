@@ -822,11 +822,12 @@ unfold<-function(X){
 run_mmrr <- function(gendist, gsd_df){
   
   ##get env vars and coords
-  env_dist <- as.matrix(dist(gsd_df[,c("env1", "env2")], diag = TRUE, upper = TRUE))
+  env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
+  env2_dist <- as.matrix(dist(gsd_df[,"env2"], diag = TRUE, upper = TRUE))
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
-
+  
   #Run  MMRR
-  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env = env_dist), nperm = 50)
+  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
   
   #turn results into dataframe
   results <- mmrr_results_df(mmrr_res)
