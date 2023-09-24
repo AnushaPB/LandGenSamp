@@ -4,6 +4,7 @@ library(here)
 #install.packages("devtools")
 #devtools::install_github("ropensci/NLMR")
 library(NLMR)
+library(spatialEco)
 
 wdir <- here("p1_gnxsims", "MNLM")
 
@@ -46,8 +47,6 @@ mnlm <- function(ncol, nrow, H, sd = 1, r){
   return(s)
 }
 
-
-
 f <- matrix(c(0,1,0,1,0,1,0,1,0), nrow=3)
 
 dim <- 100
@@ -66,7 +65,7 @@ for(seed in c(1, 2, 3)){
       env1 <- nlm.s[[1]]
       #crop from 101x101 to 100x100 so that it is easier to partition the landscape for grid sampling later
       env1 <- crop(env1, c(0,100,0,100))
-      MI1 <- round(Moran(env1,  w=f),2)
+      MI1 <- round(Moran(env1, w=f),2)
       
       env2 <- nlm.s[[2]]
       env2 <- crop(env2, c(0,100,0,100))
@@ -77,9 +76,9 @@ for(seed in c(1, 2, 3)){
       plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env1 (Moran's I = ",MI1,")"))
       plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env2 (Moran's I = ",MI2,")"))
       
-      rascor <- rasterCorrelation(env1,env2,5)
-      MIr <- round(Moran(rascor),2)
-      plot(rascor, col=paldiv(100), box=FALSE, axes=FALSE, zlim = c(-1,1), 
+      rascor <- rasterCorrelation(rast(env1),rast(env2),5)
+      MIr <- round(Moran(raster(rascor)),2)
+      plot(rascor, col=inferno(100), box=FALSE, axes=FALSE, zlim = c(-1,1), 
            main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
       
       write.table(as.matrix(env1), row.names = FALSE, col.names=FALSE, sep=",",
