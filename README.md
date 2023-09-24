@@ -1,7 +1,7 @@
 Landscape genomic sampling project
 ================
 
-## 1. Main Pipeline
+## 1. Files
 
 I have tried to create a complete list of files in all of the
 directories and what they are for, but I am a fallible human being, so
@@ -88,7 +88,7 @@ Analyze and visualize landscape genomic results
     |  
     └───[example_data] - directory for storing example data used by example_simulations.Rmd
 
-## To run everything:
+# 2. Running everything
 
 ``` bash
 # Create MNLMs
