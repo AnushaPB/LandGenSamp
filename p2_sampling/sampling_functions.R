@@ -20,7 +20,6 @@ envgeo_indsamp <- function(gsd_df, npts, Nreps = 1000){
     e.dist.sub <- e.dist[NN, NN]
     
     results$mean.dist[i] <- mean(g.dist.sub)
-    
     results$env1.var[i] <- var(env.sub$env1)
     results$env2.var[i] <- var(env.sub$env2)
     
@@ -29,7 +28,7 @@ envgeo_indsamp <- function(gsd_df, npts, Nreps = 1000){
     results$Mantel.p[i] <- DxE$signif
   }
   
-  score <- scale(1-results$Mantel.r) + scale(results$env1.var) + scale(results$env2.var)
+  score <- scale(1 - results$Mantel.r) + scale(results$env1.var) + scale(results$env2.var)
   best_sample <- sample.sets[which.max(score),]
   sub_df <- gsd_df[best_sample,]
   
