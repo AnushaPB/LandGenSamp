@@ -18,37 +18,75 @@ wdir <- here("p1_gnxsims", "MNLM")
 
 
 ```{r CHUNK TO READ FILES, fig.width=14, fig.height=20, warning=FALSE}
+view_mnlm <- function(seed, H, r){
+  env1 <- read.csv(here(wdir, "layers", paste0("seed",seed,
+                                      "_env1",
+                                      "_H", gsub("\\.", "", as.character(H*100)),
+                                      "_r", gsub("\\.", "", as.character(r*100)),
+                                      ".csv"
+                                      )), header=FALSE)
+  
+  env2 <- read.csv(here(wdir, "layers", paste0("seed",seed,
+                                      "_env2",
+                                      "_H", gsub("\\.", "", as.character(H*100)),
+                                      "_r", gsub("\\.", "", as.character(r*100)),
+                                      ".csv"
+                                      )), header=FALSE)
+  env1 <- raster(as.matrix(env1))
+  env2 <- raster(as.matrix(env2))
+    
+  plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, 
+       main = paste("env: 1", "seed:", seed, "H:", H, "r:", r), legend = FALSE)
+  plot(env2, box=FALSE, axes=FALSE, col=mako(100), legend.width=2, 
+       main = paste("env: 2", "seed:", seed, "H:", H, "r:", r), legend = FALSE)
+}
+
+combos <- expand.grid(seed = c(1,2,3), H = c(0.05, 0.5), r = c(0.3, 0.6))
 
 par(mfrow=c(6,4), mar=rep(3,4), oma=rep(0,4))
-for(seed in c(1,2,3)){
+pmap(combos, view_mnlm)
+
+```
+
+
+```{r}
+f <- matrix(c(0,1,0,1,0,1,0,1,0), nrow=3)
+
+dim <- 100
+n <- 3
+d <- (n^2-1)/2
+f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
+
+par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
+for(seed in c(1, 2, 3)){
   for(H in c(0.05,0.5)){
     for(r in c(0.3, 0.6)){
-      env1 <- read.csv(here(wdir, "layers", paste0("seed",seed,
-                                          "_env1",
-                                          "_H", gsub("\\.", "", as.character(H*100)),
-                                          "_r", gsub("\\.", "", as.character(r*100)),
-                                          ".csv"
-                                          )), header=FALSE)
+      set.seed(seed)
       
-      env2 <- read.csv(here(wdir, "layers", paste0("seed",seed,
-                                          "_env2",
-                                          "_H", gsub("\\.", "", as.character(H*100)),
-                                          "_r", gsub("\\.", "", as.character(r*100)),
-                                          ".csv"
-                                          )), header=FALSE)
-      env1 <- raster(as.matrix(env1))
-      env2 <- raster(as.matrix(env2))
+      nlm.s <- mnlm(101, 101, H = H, sd = 1, r = r)
       
-      print(range(values(env1)))
-      print(range(values(env2)))
-    
-      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)
-      plot(env2, box=FALSE, axes=FALSE, col=mako(100), legend.width=2, main = paste(seed, H, r), legend = FALSE)
+      env1 <- nlm.s[[1]]
+      #crop from 101x101 to 100x100 so that it is easier to partition the landscape for grid sampling later
+      env1 <- crop(env1, c(0,100,0,100))
+      MI1 <- round(Moran(env1, w=f),2)
+      
+      env2 <- nlm.s[[2]]
+      env2 <- crop(env2, c(0,100,0,100))
+      MI2 <- round(Moran(env2,  w=f),2)
+      
+      pearcor <- round(layerStats(stack(env1,env2),"pearson")$`pearson correlation coefficient`,1)[1,2]
+      
+      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env1 (Moran's I = ",MI1,")"))
+      plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env2 (Moran's I = ",MI2,")"))
+      
+      rascor <- rasterCorrelation(rast(env1),rast(env2),5)
+      MIr <- round(Moran(raster(rascor)),2)
+      plot(rascor, col=inferno(100), box=FALSE, axes=FALSE, zlim = c(-1,1), 
+           main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
       
     }
   }
 }
 
 ```
-
 
