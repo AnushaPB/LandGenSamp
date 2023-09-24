@@ -18,185 +18,46 @@ source(here("general_functions.R"))
 source(here("p4_analysis", "analysis_functions.R"))
 ```
 
-```{r, fig.height = 8, fig.width = 4}
-env1 <- raster(as.matrix(read.csv(here("p4_analysis/example_data/seed1_env1_H50_r60.csv"), header = FALSE)))
-env2 <- raster(as.matrix(read.csv(here("p4_analysis/example_data/seed1_env2_H50_r60.csv"), header = FALSE)))
-extent(env1) <- c(0,100,-100,0)
-extent(env2) <- c(0,100,-100,0)
-envstk <- stack(env1, env2)
-env1 <- data.frame(raster::rasterToPoints(env1), env = 1)
-env2 <- data.frame(raster::rasterToPoints(env2), env = 2)
-env <- rbind(env1, env2)
+```{r, fig.height = 4, fig.width = 8}
+format_env <- function(env = 1, H = 0.5, r = 0.6, seed = 1){
+  # read in data 
+  path <- here("p1_gnxsims/MNLM/layers")
+  envfile <- paste0("seed", seed, "_env", env, "_H", H*100, "_r", r*100, ".csv")
+  env <- raster(as.matrix(read.csv(here(path, envfile), header = FALSE)))
+  extent(env) <- c(0,100,-100,0)
+  return(env)
+}
 
-envpc <- RStoolbox::rasterPCA(envstk)
-envpc <- envpc$map[[1]]
-envpcdf <- data.frame(rasterToPoints(envpc))
+get_env <- function(H = 0.5, r = 0.6){
+  # read in data 
+  envstk <- map(c(1,2), ~format_env(env = .x, H = H, r = r)) %>% stack()
+  names(envstk) <- c("env1", "env2")
+  
+  # format as df  
+  env <- 
+    data.frame(raster::rasterToPoints(envstk), H = H, r = r) %>%
+    pivot_longer(c(env1, env2), names_to = "env", values_to = "layer")
+  
+  return(env)
+}
 
-p1 <- ggplot(env1) +
+env <- 
+  expand.grid(H = c(0.05, 0.50), r = c(0.3, 0.6)) %>%
+  pmap(get_env) %>% 
+  bind_rows() %>%
+  mutate(group = case_when(H == 0.5 ~ "High H", TRUE ~ "Low H")) %>%
+  mutate(group = case_when(r == 0.6 ~ paste0(group, " & high r"), TRUE ~ paste0(group, " & low r"))) %>%
+  mutate(env = case_when(env == "env1" ~ "Env 1", env == "env2" ~ "Env 2"))
+
+ggplot(env) +
   geom_tile(aes(x = x, y = y, fill = layer)) +
   coord_equal() +
   theme_void() + 
-  scale_fill_viridis(option = "mako") + 
-  facet_wrap(~ env, ncol = 1) + 
-  theme(legend.position = "none", strip.text.x = element_blank())
+  scale_fill_viridis_c(option = "mako") + 
+  facet_grid(env ~ group, switch = "y") + 
+  theme(legend.position = "none",
+        strip.text = element_text(size = 12, margin = margin(0.1,0,0.1,0, "cm")))
 
-p2 <- ggplot(env2) +
-  geom_tile(aes(x = x, y = y, fill = layer)) +
-  coord_equal() +
-  theme_void() + 
-  scale_fill_viridis(option = "mako") + 
-  facet_wrap(~ env, ncol = 1) + 
-  theme(legend.position = "none", strip.text.x = element_blank())
-
-grid.arrange(p1, p2, ncol = 1)
-
-```
-
-```{r, fig.width=4, fig.height=8}
-df <- get_gsd(here("p4_analysis/example_data/mod-K2_phi50_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
-p1 <- ggplot() +
-  geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = df, aes(x, y, fill = z1), colour = rgb(1,1,1,0.5), pch = 21, size = 2) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis(option = "mako") + 
-  scale_fill_viridis(option = "mako") +
-  theme(legend.position = "none")
-
-p2 <- ggplot() +
-  geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = df, aes(x, y, fill = z2), colour = rgb(1,1,1,0.5), pch = 21, size = 2) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis(option = "mako") + 
-  scale_fill_viridis(option = "mako") +
-  theme(legend.position = "none")
-
-grid.arrange(p1, p2, ncol = 1)
-```
-```{r, fig.width=4, fig.height=8}
-s <- sample(nrow(df), 144)
-subdf <- df[s, ]
-p1 <- ggplot() +
-  geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = subdf, aes(x, y, fill = z1), colour =rgb(0,0,0,0.5), pch = 21, size = 3) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis(option = "mako") + 
-  scale_fill_viridis(option = "mako") +
-  theme(legend.position = "none")
-
-p2 <- ggplot() +
-  geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = subdf, aes(x, y, fill = z2), colour = rgb(0,0,0,0.5), pch = 21, size = 3) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis(option = "mako") + 
-  scale_fill_viridis(option = "mako") +
-  theme(legend.position = "none")
-
-grid.arrange(p1, p2, ncol = 1)
-```
-
-
-```{r}
-vcf <- vcfR::read.vcfR(here("p4_analysis/example_data/mod-K2_phi50_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.vcf"))
-dos <- vcf_to_dosage(vcf[1:8,])
-colnames(dos) <- paste0("locus_", 1:ncol(dos))
-gdf <- data.frame(df, dos)[s,]
-```
-
-```{r, fig.width = 16, fig.height = 8}
-gd <- 
-  gdf %>%
-  pivot_longer(paste0("locus_", 1:8), names_to = "locus") %>%
-  mutate(locus = gsub("locus_", "", locus)) %>%
-  mutate(value = value/2) 
-
-gd1 <- gd %>% filter(locus %in% c(1,2,3,4))
-
-p1 <- ggplot() +
-  geom_tile(data = env1, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = gd1, aes(x, y, col = value), size = 4) +
-  coord_equal() +
-  theme_void() + 
-  scale_fill_viridis(option = "mako") +
-  scale_color_viridis(option = "magma") +
-  theme(legend.position = "none", strip.text.x = element_blank()) +
-  facet_grid( ~ locus)
-
-
-gd2 <- gd %>% filter(locus %in% c(5,6,7,8))
-
-p2 <- ggplot() +
-  geom_tile(data = env2, aes(x = x, y = y, fill = layer), alpha = 0.5) +
-  geom_point(data = gd2, aes(x, y, col = value), size = 4) +
-  coord_equal() +
-  theme_void() + 
-  scale_fill_viridis(option = "mako") +
-  scale_color_viridis(option = "magma") +
-  theme(legend.position = "none", strip.text.x = element_blank()) +
-  facet_grid( ~ locus)
-
-
-grid.arrange(p1, p2, nrow = 2)
-```
-
-
-```{r, fig.width = 8, fig.height=8}
-set.seed(144)
-s <- sample(nrow(dos), 144)
-gendist <- as.matrix(dist(dos[s,], diag = TRUE, upper = TRUE))
-p1 <- gendist  %>%
-  data.frame() %>%
-  rownames_to_column("sample") %>%
-  gather("sample2", "gendist", -"sample") %>%
-  ggplot(ggplot2::aes(x = sample, y = sample2, fill = gendist)) +
-    geom_tile() +
-    coord_equal() +
-    scale_fill_viridis(option = "mako") +
-    theme_void() +
-    theme(legend.position = "none", plot.margin = unit(rep(0.5,4), "cm")) 
-
-envdist1 <- as.matrix(dist(df$env1[s], diag = TRUE, upper = TRUE))
-p2 <- envdist1  %>%
-  data.frame() %>%
-  rownames_to_column("sample") %>%
-  gather("sample2", "gendist", -"sample") %>%
-  ggplot(ggplot2::aes(x = sample, y = sample2, fill = gendist)) +
-    geom_tile() +
-    coord_equal() +
-    scale_fill_viridis(option = "viridis") +
-    theme_void() +
-    theme(legend.position = "none", plot.margin = unit(rep(0.5,4), "cm")) 
-
-envdist2 <- as.matrix(dist(df$env2[s], diag = TRUE, upper = TRUE))
-p3 <- envdist2 %>%
-  data.frame() %>%
-  rownames_to_column("sample") %>%
-  gather("sample2", "gendist", -"sample") %>%
-  ggplot(ggplot2::aes(x = sample, y = sample2, fill = gendist)) +
-    geom_tile() +
-    coord_equal() +
-    scale_fill_viridis(option = "viridis") +
-    theme_void() +
-    theme(legend.position = "none", plot.margin = unit(rep(0.5,4), "cm")) 
-
-geodist <- as.matrix(dist(df[s,c("x","y")], diag = TRUE, upper = TRUE))
-p4 <- geodist %>%
-  data.frame() %>%
-  rownames_to_column("sample") %>%
-  gather("sample2", "gendist", -"sample") %>%
-  ggplot(ggplot2::aes(x = sample, y = sample2, fill = gendist)) +
-    geom_tile() +
-    coord_equal() +
-    scale_fill_viridis(option = "viridis") +
-    theme_void() +
-    theme(legend.position = "none", plot.margin = unit(rep(0.5,4), "cm")) 
-
-grid.arrange(p1,p2,p3,p4,nrow = 2)
-
-p1
 ```
 
 ```{r, include = false}
@@ -228,7 +89,6 @@ df1 <- data.frame(df, zw = df$z1,
 df2 <- data.frame(df, zw = df$z2, 
                   xw = scales::rescale(df$x, to=c(0.52,1)), yw = scales::rescale(df$y, to=c(0,0.48)))
 dfw <- bind_rows(df1, df2)
-
 
 ggplot(dfw, aes(x = xw, y = yw, col = zw)) + 
   geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
@@ -289,36 +149,66 @@ ggplot(phidf, aes(x = x, y = y, col = value)) +
   coord_fixed() 
 ```
 
-```{r}
+```{r, fig.width = 7, fig.height = 7}
 df <- get_gsd(here("p4_analysis/example_data/example_combos/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
+
+env1 <- format_env(env = 1, H = 0.5, r = 0.6, seed = 1)
 
 param_set <- data.frame(K = 1, phi = 1, m = 1, seed = 1, H = 0.50, r = 0.60, it = 0)
 
-grd_site <- map2(c("rand", "equi", "envgeo"), c("R", "EQ", "EG"), 
-                 plot_example_samples, site = TRUE, env1 = env1, df = df)
+get_samples <- function(sampstrat, nsamp, site, param_set, df){
+  subIDs <- get_example_samples(param_set, sampstrat = sampstrat, nsamp = nsamp, site = site)
+  subgsd_df <- df[subIDs,]
+  subgsd_df$nsamp <- nsamp
+  subgsd_df$sampstrat <- sampstrat
+  return(subgsd_df)
+}
 
-grd_ind <- map2(c("rand", "grid", "envgeo", "trans"), 
-               c("R", "G", "EG", "T"), plot_example_samples, site = FALSE, env1 = env1, df = df)
+ind_samples <-
+  expand.grid(sampstrat = c("rand", "grid", "envgeo", "trans"), 
+              nsamp = c(36, 81, 144, 225)) %>%
+  pmap(get_samples, site = FALSE, param_set = param_set, df = df) %>%
+  bind_rows() %>%
+  mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
+                           sampstrat == "grid" ~ "G",
+                           sampstrat == "envgeo" ~ "EG",
+                           sampstrat == "trans" ~ "T")) %>%
+  mutate(sampstrat = factor(sampstrat, levels = c("T", "R", "G", "EG")))
 
-site0 <- do.call(grid.arrange, c(grd_site, nrow = 1, ncol = 4))
-site <- grid.arrange(site0, 
-                    left = grid::textGrob("site", 
-                                          x = 0, 
-                                          hjust = 0.9, 
-                                          vjust = 1,
-                                          rot = 90,
-                                          gp=gpar(fontsize=20)))
+site_samples <-
+  expand.grid(sampstrat = c("rand", "equi", "envgeo"), 
+              nsamp = c(9, 16, 25)) %>%
+  pmap(get_samples, site = TRUE, param_set = param_set, df = df) %>%
+  bind_rows() %>%
+  mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
+                           sampstrat == "equi" ~ "EQ",
+                           sampstrat == "envgeo" ~ "EG")) %>%
+  mutate(sampstrat = factor(sampstrat, levels = c("R", "EQ", "EG")))
 
-ind0 <- do.call(grid.arrange, c(grd_ind, nrow = 1))
-ind <- grid.arrange(ind0, 
-                    left = grid::textGrob("individual", 
-                                          x = 0, 
-                                          hjust = 0.6, 
-                                          vjust = 1,
-                                          rot = 90,
-                                          gp=gpar(fontsize=20)))
+
+ggplot(ind_samples, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.5) + 
+  geom_point(aes(fill = env1), colour = rgb(0,0,0,0.5), pch = 21, size = 2) +
+  coord_equal() +
+  theme_void() + 
+  scale_color_viridis_c(option = "mako") + 
+  scale_fill_viridis_c(option = "mako") +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
+        strip.text = element_text(size = 20))+
+  facet_grid(sampstrat ~ nsamp, switch = "both")
+
+ggplot(site_samples, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.5) + 
+  geom_point(aes(fill = env1), colour = rgb(0,0,0,0.5), pch = 21, size = 2) +
+  coord_equal() +
+  theme_void() + 
+  scale_color_viridis_c(option = "mako") + 
+  scale_fill_viridis_c(option = "mako") +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
+        strip.text = element_text(size = 20))+
+  facet_grid(sampstrat ~ nsamp, switch = "both")
 
 ```
-```{r, fig.height = 7, fig.width = 11}
+ ```{r, fig.height = 7, fig.width = 11}
 grid.arrange(ind,site)
 ```
