@@ -17,7 +17,7 @@ coeffs <- function(gdm.model){
 }
 
 #for scaling genetic distances from 0 to 1 for GDM
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+range01 <- function(x){(x - min(x))/(max(x) - min(x))}
 
 
 # run GDM with each environmental variable treated separately
@@ -40,7 +40,7 @@ run_gdm <- function(gendist, gsd_df){
     )
   
   #scale distance from 01
-  gdmData$distance <- gdmData$distance/100
+  gdmData$distance <- range01(gdmData$distance)
   
   #run GDM
   gdm.model <- gdm(gdmData, geo = TRUE)
