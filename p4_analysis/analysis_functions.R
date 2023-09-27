@@ -631,7 +631,7 @@ run_lmer <- function(df, stat, filepath = NULL){
   
   # mixed model (remove params with all NA values for a level)
   f <- formula(paste0("stat ~ nsamp + sampstrat +", paste(params[!na_check], collapse = "+"), "+ (1 | seed)"))
-  moddf <- moddf %>% select(stat, nsamp, sampstrat, K, phi, m, H, r, seed, it) 
+  moddf <- moddf %>% dplyr::select(stat, nsamp, sampstrat, K, phi, m, H, r, seed, it) 
   mod <- lmerTest::lmer(f, moddf, na.action = "na.omit", subset = NULL, weights = NULL, offset = NULL)
   
   # anova 
@@ -1122,13 +1122,14 @@ sampling_plot <- function(ggdf){
     data.frame(nsamp = 20, mean_value = c(0,0,0,0,1,1,1,1),
                name = stats[!grepl("MAE", stats)]) %>%
     mutate(name = factor(name, levels = stats[!grepl("MAE", stats)]))
-  
+
   ind_plt <- 
     ggplot(ggdf[ggdf$sampling == "individual",], aes(x = as.numeric(as.character(nsamp)), y = mean_value)) +
     geom_point(data = fake_point, col = "white") +
-    geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = simulation), alpha = 0.3) +
-    geom_line(lwd = 1, aes(col = simulation), alpha = 0.7) +
-    geom_point(cex = 2, aes(col = simulation), alpha = 0.7) +
+    geom_ribbon(aes(ymin = lower2, ymax = upper2), alpha = 0.3, fill = "#5cc8acff") +
+    geom_ribbon(aes(ymin = lower1, ymax = upper1), alpha = 0.3, fill = "#5cc8acff") +
+    geom_line(lwd = 1, col = "#40a2aaff", alpha = 1) +
+    geom_point(cex = 2, col = "#40a2aaff", alpha = 1) +
     ggh4x::facet_grid2(name~method, scales = "free_y") +
     xlab("Number of samples") +
     ylab("Statistic") +
@@ -1140,16 +1141,16 @@ sampling_plot <- function(ggdf){
           axis.title = element_text(size = 18),
           legend.text = element_text(size = 18),
           title = element_text(size = 20),
-          panel.spacing = unit(0.5, "lines")) +
-    scale_color_manual(values = c("best" = "#6aa84f", "worst" = "orange")) + 
-    scale_fill_manual(values = c("best" = "#b6d7a8ff", "worst" =  "#f9cb9cff")) 
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right") 
   
   site_plt <- 
     ggplot(ggdf[ggdf$sampling == "site",], aes(x = as.numeric(as.character(nsamp)), y = mean_value)) +
     geom_point(data = fake_point, col = "white") +
-    geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = simulation), alpha = 0.5) +
-    geom_line(lwd = 1, aes(col = simulation), alpha = 0.7) +
-    geom_point(cex = 2, aes(col = simulation), alpha = 0.7) +
+    geom_ribbon(aes(ymin = lower2, ymax = upper2), alpha = 0.3, fill = "#5cc8acff") +
+    geom_ribbon(aes(ymin = lower1, ymax = upper1), alpha = 0.3, fill = "#5cc8acff") +
+    geom_line(lwd = 1, col = "#40a2aaff", alpha = 1) +
+    geom_point(cex = 2, col = "#40a2aaff", alpha = 1) +
     ggh4x::facet_grid2(name~method, scales = "free_y") +
     xlab("Number of samples") +
     ylab("Statistic") +
@@ -1161,9 +1162,7 @@ sampling_plot <- function(ggdf){
           axis.title = element_text(size = 18),
           legend.text = element_text(size = 18),
           title = element_text(size = 20),
-          panel.spacing = unit(0.5, "lines")) +
-    scale_color_manual(values = c("best" = "#6aa84f", "worst" = "orange")) + 
-    scale_fill_manual(values = c("best" = "#b6d7a8ff", "worst" =  "#f9cb9cff")) 
+          panel.spacing = unit(0.5, "lines"))
   
   ggarrange(ind_plt + ggtitle("A. Individual-based sampling"),
             site_plt + ggtitle("B. Site-based sampling"),

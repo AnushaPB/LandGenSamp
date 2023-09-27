@@ -82,11 +82,11 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   gsd_df <- get_data(i, params = params, "gsd")
   
   # Create a data frame of all combinations of n and strats
-  combinations <- expand.grid(n = ns, strat = strats)
+  combos <- expand.grid(n = ns, strat = strats)
   
   # Iterate over each combination using pmap
   results <-
-    purrr::pmap(combinations, \(n, strat) return(
+    purrr::pmap(combos, \(n, strat) return(
       run_subsampled(
         i,
         params = params,
@@ -159,6 +159,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
   gsd_df <- gsd_df[s,]
   
   # Calculate gendist 
+  # gen/2 so that the distances are calculated based on allele frequencies (comparable to site-based sampling)
   if (method %in% c("mmrr", "gdm")) gen <- calc_dist(gen/2, distmeasure = "euc") 
   
   # Run model on full data set
@@ -214,8 +215,8 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
     if (method %in% c("mmrr", "gdm")) subgen <- calc_dist(subgen, distmeasure = "euc") 
   } else {
     # Convert gen to genetic distance
-    # divide by 2 if not site so that dosage gets converted to allele frequencies
-    # this is important for gdm so that the scaling from 0 to 1 by dividing by 100 works
+    # subgen/2 so that the distances are calculated based on allele frequencies (comparable to site-based sampling)
+    # this is also important for gdm so that the scaling from 0 to 1 by dividing by 100 works
     if (method %in% c("mmrr", "gdm")) subgen <- calc_dist(subgen/2, distmeasure = "euc") 
   }
   

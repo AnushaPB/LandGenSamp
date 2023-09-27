@@ -13,10 +13,10 @@ source(here("general_functions.R"))
 ```
 
 ```{r}
-format_csv <- function(path){
-    read.csv(path) %>%
-    mutate(path = str_extract(basename(path), '.*(?=\\.csv)')) %>%
-    tidyr::separate(path, c("method", "sampling", "stat", "type"))
+format_csv <- function(filepath){
+    read.csv(filepath) %>%
+    mutate(filepath = str_extract(basename(filepath), '.*(?=\\.csv)')) %>%
+    tidyr::separate(filepath, c("method", "sampling", "stat", "type"))
 }
 p4path <- here("p4_analysis", "outputs")
 
@@ -310,8 +310,6 @@ big_table_combo %>%
       columns = c(1:20)
     )
   ) 
-
-
 ```
 
 
