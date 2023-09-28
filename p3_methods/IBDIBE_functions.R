@@ -911,7 +911,7 @@ stat_ibdibe <- function(sub, full, sig = 0.05){
   p_cols <- colnames(full)[grepl("_p", colnames(full))]
   
   # replace NA pvalue with 1 for calculations because NA values means the coefficient was zero so the significance test  should treat it as a negative
-  sub[,p_cols] <- purrr::map_dbl(sub[,p_cols], ~ifelse(is.na(.x), 1, .x))
+  sub <- sub %>% mutate_at(p_cols,~ifelse(is.na(.x), 1, .x))
   
   # True positive rate
   TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
