@@ -216,7 +216,9 @@ big_table2 <-
   mutate(name = paste0(V1, " - ", V2)) %>%
   select(-V1, -V2) %>%
   mutate(sampling = case_when((grepl(".y", name) | grepl("EQ", name)) ~ "site", TRUE ~ "individual")) %>%
-  arrange(method, stat, name)
+  arrange(method, stat, name) %>%
+  mutate(value = as.character(round(value, 3))) %>%
+  mutate(value = case_when(is.na(value) ~ "n.s.", TRUE ~ value)) 
 
 big_table_ind2 <- 
   big_table2 %>%
@@ -230,13 +232,15 @@ big_table_site2 <-
   select(-sampling) %>%
   pivot_wider(names_from = name, values_from = value)
 
-big_table_combo2 <- left_join(big_table_ind2, big_table_site2)
+big_table_combo2 <- 
+  left_join(big_table_ind2, big_table_site2) %>%
+  filter(!grepl("strict", stat)) %>%
+  mutate(stat = gsub(" relaxed", "", stat)) 
 
-write.csv(big_table_combo2, here("p4_analysis", "tukey_val.csv"), row.names = FALSE)
+write.csv(big_table_combo2, here("p4_analysis", "tukey.csv"), row.names = FALSE)
 ```
 
 ```{r}
-
 big_table_combo %>%
   gt(
     rowname_col = "stat",
@@ -264,7 +268,7 @@ big_table_combo %>%
   ) %>%
   data_color(
     c(3:20),
-    palette = c("lightgreen", "gray", "tomato")
+    palette = c("cornflowerblue", "gray", "orange")
   ) %>%
   tab_spanner(
     label = "EG",
@@ -357,70 +361,6 @@ table_df %>%
     label = "Site-based sampling",
     columns = c(9:11)
   )
-
-```
-
-```{r}
-
-compare_numbers <- function(vec) {
-  if (length(vec) != 4) {
-    stop("Input vector must contain exactly four elements.")
-  }
-  
-  comparison <- map_chr(1:3, ~ {
-    x <- vec[.x]
-    print(x)
-    y <- vec[.x + 1]
-    if (x > y) {
-      paste(x, ">", y)
-    } else if (x < y) {
-      paste(x, "<", y)
-    } else {
-      paste(x, "=", y)
-    }
-  })
-  
-  result <- paste(comparison, collapse = " ")
-  return(result)
-}
-
-# Example usage
-numbers <- c(2, 4, 2, 2)
-result <- compare_numbers(numbers)
-cat("Comparison:", result)
-
-lfmm_ind %>% 
-  group_by(K, phi, m, H, r, sampstrat) %>% 
-  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
-  group_by(K, phi, m, H, r) %>% 
-  filter(mean == max(mean)) %>%
-  group_by(sampstrat) %>%
-  summarize(count = n())
-
-lfmm_ind %>% 
-  group_by(K, phi, m, H, r, sampstrat) %>% 
-  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
-  group_by(K, phi, m, H, r) %>% 
-  filter(mean == min(mean)) %>%
-  group_by(sampstrat) %>%
-  summarize(count = n())
-
-lfmm_site %>% 
-  group_by(K, phi, m, H, r, sampstrat) %>% 
-  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
-  group_by(K, phi, m, H, r) %>% 
-  filter(mean == min(mean)) %>%
-  group_by(sampstrat) %>%
-  summarize(count = n())
-
-
-lfmm_site %>% 
-  group_by(K, phi, m, H, r, sampstrat, nsamp) %>% 
-  summarize(mean = mean(TPRCOMBO_allFALSE, na.rm = TRUE)) %>% 
-  group_by(K, phi, m, H, r) %>% 
-  filter(mean == max(mean)) %>%
-  group_by(sampstrat) %>%
-  summarize(count = n())
 
 ```
 
