@@ -567,15 +567,12 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
     names(permVarDev) <- varNames.x
     nullDev <- fullGDM$nulldeviance
     
-    # CHANGE 4: create vector to store warnings
-    warnings <- c()
-    
     for(var in varNames.x){
       grepper <- grep(paste0("^",var,"$"), names(permVarDev))
       varDevTab <- permVarDev[[grepper]]
       
       # number of perms for which GDM converged
-      # CHANGE 5: only count cases where varDevTab is not NA 
+      # CHANGE 4: only count cases where varDevTab is not NA 
       #nConv <- length(varDevTab)
       nConv <- length(na.omit(varDevTab))
       nModsConverge[which(rownames(varImpTable) == var),v] <- nConv
@@ -601,27 +598,15 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       }
       
       # calculate p-Value
-      # CHANGE 6: if all varDevTab is NA or noVarGDM deviance is NULL, p-values are NA
+      # CHANGE 5: if all varDevTab is NA, p-values are NA
       #permDevReduct <- noVarGDM$gdmdeviance - varDevTab	
       #pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
       if (is.null(noVarGDM$gdmdeviance) | all(is.na(varDevTab))){
         pValues[which(rownames(pValues) == var),v] <- NA
-        if (is.null(noVarGDM$gdmdeviance)) {
-          warning("noVarGDM for variable ", var, " is NULL")
-          warnings[var] <- "NULL noVarGDM"
-        }
-        if (all(is.na(varDevTab))) {
-          warning("all varDevTab is NA for ", var)
-          warnings[var] <- "NA varDevTab"
-        }
-        
       } else {
         permDevReduct <- noVarGDM$gdmdeviance - varDevTab
         pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
-        warnings[var] <- NA
-        print(pValues)
       }
-      
     }
     
     if(max(na.omit(pValues[,v]))<pValue){
@@ -696,7 +681,6 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   if(is.null(outFile)==FALSE){
     save(outObject, file=outFile)
   }
-  
   return(outObject)
 }
 
