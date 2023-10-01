@@ -53,7 +53,10 @@ run_gdm <- function(gendist, gsd_df){
                           ratio = NA,
                           env1_p = NA,
                           env2_p = NA,
-                          geo_p = NA)
+                          geo_p = NA,
+                          env1_NULLnoVarGDM = NA,
+                          env2_NULLnoVarGDM = NA,
+                          geo_NULLnoVarGDM = NA)
   } else {
     predictors <- coeffs(gdm.model)
     
@@ -70,21 +73,34 @@ run_gdm <- function(gendist, gsd_df){
     do_modTest <- !(results$env1_coeff == 0 & results$env2_coeff == 0)
       
     # get pvalues
-    if (do_modTest) modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) else modTest <- NULL
+    gdm.varImp_custom_qs<- quietly(safely(gdm.varImp_custom))
+    if (do_modTest) modTest <- gdm.varImp_custom_qs(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) else modTest <- NULL
     
     if (!is.null(modTest)) {
+      # format NULL noVarGDM warnings into df
+      warnings <- clean_warnings(modTest)
+      
+      # get modTest results from safe object
+      modTest <- modTest$result$result
+      
+      # add pvalues
       pvals <- modTest$`Predictor p-values`
       pvals$var <- row.names(pvals)
       pvals <- left_join(data.frame(var = c("env1", "env2", "Geographic")), pvals, by = "var")
+      
       results <- data.frame(results,
                             env1_p = pvals[pvals$var == "env1", 2],
                             env2_p = pvals[pvals$var == "env2", 2],
-                            geo_p = pvals[pvals$var == "Geographic", 2])
+                            geo_p = pvals[pvals$var == "Geographic", 2],
+                            warnings)
     } else {
       results <- data.frame(results,
                             env1_p = NA,
                             env2_p = NA,
-                            geo_p = NA)
+                            geo_p = NA,
+                            env1_NULLnoVarGDM = NA,
+                            env2_NULLnoVarGDM = NA,
+                            geo_NULLnoVarGDM = NA)
     }
   }
   
@@ -92,6 +108,20 @@ run_gdm <- function(gendist, gsd_df){
   rownames(results) <- NULL
   
   return(results)
+}
+
+# convert warnings from safe modTest into a variable
+clean_warnings <- function(modTest){
+  warnings <- unique(modTest$warnings)
+  noVar_warnings <- grepl("noVarGDM", warnings)
+  warning_vec <- c(env1 = FALSE, env2 = FALSE, geo = FALSE)
+  if (any(noVar_warnings)) {
+    noVar_warnings <- warnings[noVar_warnings]
+    vars <- map_chr(noVar_warnings, ~gsub("noVarGDM is NULL for variable ", "", .x))
+    warning_vec[vars] <- TRUE
+  }
+  names(warning_vec) <- paste0(names(warning_vec), "_NULLnoVarGDM")
+  return(t(warning_vec))
 }
 
 # Customized variable importance function (changed code so that if null models pop up they don't result in an error, they just aren't counted)
@@ -598,15 +628,19 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       }
       
       # calculate p-Value
-      # CHANGE 5: if all varDevTab is NA, p-values are NA
+      # CHANGE 5: if all varDevTab is NA or noVarGDM deviance is NULL, p-values are NA
       #permDevReduct <- noVarGDM$gdmdeviance - varDevTab	
       #pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
       if (is.null(noVarGDM$gdmdeviance) | all(is.na(varDevTab))){
         pValues[which(rownames(pValues) == var),v] <- NA
+        if (is.null(noVarGDM$gdmdeviance)) warning("noVarGDM is NULL for variable ", var)
+        if (all(is.na(varDevTab))) warning("all varDevTab is NA for ", var)
       } else {
         permDevReduct <- noVarGDM$gdmdeviance - varDevTab
         pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
+        print(pValues)
       }
+      
     }
     
     if(max(na.omit(pValues[,v]))<pValue){
@@ -681,6 +715,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
   if(is.null(outFile)==FALSE){
     save(outObject, file=outFile)
   }
+  
   return(outObject)
 }
 
@@ -911,7 +946,7 @@ stat_ibdibe <- function(sub, full, sig = 0.05){
   p_cols <- colnames(full)[grepl("_p", colnames(full))]
   
   # replace NA pvalue with 1 for calculations because NA values means the coefficient was zero so the significance test  should treat it as a negative
-  sub[,p_cols] <- purrr::map_dbl(sub[,p_cols], ~ifelse(is.na(.x), 1, .x))
+  sub <- sub %>% mutate_at(p_cols,~ifelse(is.na(.x), 1, .x))
   
   # True positive rate
   TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
