@@ -436,13 +436,14 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
     # As variables are eliminated the "full" site-pair table will
     # contain fewer variables
     fullGDM <- gdm(currSitePair, geo=geo, splines=splines, knots=knots)
-    message(paste0("Percent deviance explained by the full model =  ", round(fullGDM$explained,3)))
-    
     if(is.null(fullGDM)==TRUE){
       warning(paste("The model did not converge when testing variable: ", varNames.x[v],
                     ". Terminating analysis and returning output completed up to this point.", sep=""))
       break
     }
+    # CHANGE 3 (trivial): moved this down because you will get an error if full GDM is null
+    message(paste0("Percent deviance explained by the full model =  ", round(fullGDM$explained,3)))
+    
     
     # fit gdm to each permuted site-pair table
     message("Fitting GDMs to the permuted site-pair tables...")
@@ -464,6 +465,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
     
     ##begins to fill in the output table with data from fully fitted model
     modelTestValues[1,v] <- round(fullGDM$gdmdeviance,3)
+    
     modelTestValues[2,v] <- round(fullGDM$explained,3)
     #p-value
     modelTestValues[3,v] <- round(sum(permModelDev<=fullGDM$gdmdeviance)/(nPerm-modPerms),3)
@@ -556,7 +558,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
           try(gdm(x, geo=geo, splines=splines, knots=knots))
         })
         
-        # CHANGE 3 (major): if the result is NULL replace it with a vector of NA values the same length as nPerm
+        # CHANGE 4 (major): if the result is NULL replace it with a vector of NA values the same length as nPerm
         ##extracts deviance of permuted gdms
         result <-  unlist(sapply(gdmPermVar, function(mod){mod$gdmdeviance}))
         if (is.null(result)) result <- rep(NA, nPerm)
@@ -572,7 +574,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       varDevTab <- permVarDev[[grepper]]
       
       # number of perms for which GDM converged
-      # CHANGE 4: only count cases where varDevTab is not NA 
+      # CHANGE 5: only count cases where varDevTab is not NA 
       #nConv <- length(varDevTab)
       nConv <- length(na.omit(varDevTab))
       nModsConverge[which(rownames(varImpTable) == var),v] <- nConv
@@ -598,7 +600,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
       }
       
       # calculate p-Value
-      # CHANGE 5: if all varDevTab is NA, p-values are NA
+      # CHANGE 6: if all varDevTab is NA, p-values are NA
       #permDevReduct <- noVarGDM$gdmdeviance - varDevTab	
       #pValues[which(rownames(pValues) == var),v] <- sum(permDevReduct>=(varDevTab - fullGDM$gdmdeviance))/(nConv)
       if (is.null(noVarGDM$gdmdeviance) | all(is.na(varDevTab))){
@@ -611,6 +613,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
     
     if(max(na.omit(pValues[,v]))<pValue){
       message("All remaining predictors are significant, ceasing assessment.")
+      
       message(paste0("Percent deviance explained by final model = ", round(fullGDM$explained,3)))
       message("Final set of predictors returned: ")
       for(vvv in 1:length(fullGDM$predictors)){
@@ -645,6 +648,7 @@ gdm.varImp_custom <- function(spTable, geo, splines=NULL, knots=NULL, predSelect
     
     if(v==1 & predSelect==F){
       message("Backwards elimination not selected by user (predSelect=F). Ceasing assessment.")
+      
       message(paste0("Percent deviance explained by final model = ", round(fullGDM$explained,3)))
       message("Final set of predictors returned: ")
       for(vvv in 1:length(fullGDM$predictors)){
