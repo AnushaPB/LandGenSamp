@@ -5,10 +5,10 @@ library("foreach")
 library("doParallel")
 
 #read in general functions and objects
-source("general_functions.R")
+source(here("general_functions.R"))
 
 #register cores
-cores <- 1
+cores <- 10
 cl <- makeCluster(cores)
 #not to overload your computer
 registerDoParallel(cl)
@@ -50,5 +50,5 @@ res_popsize <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_popsize, "p3_methods/outputs/popsize_results.csv", row.names = FALSE)
+write.csv(res_popsize, here("p3_methods/outputs/popsize_results.csv"), row.names = FALSE)
 
