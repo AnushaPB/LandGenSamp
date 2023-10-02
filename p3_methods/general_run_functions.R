@@ -167,7 +167,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
     K <- get_K_tess(gen, coords = gsd_df[,c("x", "y")], Kvals = 1:9)
     result <- data.frame(K_factor = K)
   } else {
-    run_method <- get_method(method, type = "run")
+    run_method <- get_method(method)
     result <- run_method(gen, gsd_df)
   }
   
@@ -189,7 +189,6 @@ run_full_helper <- function(i, params, method, n = 1000) {
     filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
     write.csv(full_result, filepath, row.names = FALSE)
   }
-  
   
   return(full_result)
 }
@@ -216,25 +215,14 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
   } else {
     # Convert gen to genetic distance
     # subgen/2 so that the distances are calculated based on allele frequencies (comparable to site-based sampling)
-    # this is also important for gdm so that the scaling from 0 to 1 by dividing by 100 works
     if (method %in% c("mmrr", "gdm")) subgen <- calc_dist(subgen/2, distmeasure = "euc") 
   }
   
   # Run model on sub data set
-  run_method <- get_method(method, type = "run")
+  run_method <- get_method(method)
   
-  if (method %in% c("mmrr", "gdm")) {
-    sub_stats <- run_method(subgen, subgsd_df)
-    # Calculate stats
-    full_stats <- full_result %>% dplyr::select(-K, -m, -phi, -H, -r, -sampstrat, -nsamp, -seed, -it)
-    method_stat <- get_method(method, type = "stat")
-    stats <- method_stat(sub_stats, full_stats)
-    stats <- dplyr::bind_cols(sub_stats, stats)
-  } 
-  
-  if (method == "lfmm_fullK") stats <- run_lfmm(subgen, subgsd_df, K = full_result$K_factor, lfmm_method = "ridge")
-  
-  if (method == "lfmm" | method == "rda")  stats <- run_method(subgen, subgsd_df)
+  # Run method
+  stats <- run_method(subgen, subgsd_df)
     
   # Save and format new result
   sub_result <- data.frame(params[i,], 
@@ -247,18 +235,11 @@ run_subsampled <- function(i, params, n, strat, gen, gsd_df, full_result, method
 }
 
 # get method function 
-get_method <- function(method, type = "run"){
-  if (type == "run") {
-    if (method == "mmrr") return(run_mmrr)
-    if (method == "gdm") return(run_gdm)
-    if (method == "lfmm" | method == "lfmm_fullK") return(run_lfmm)
-    if (method == "rda") return(run_rda)
-  }
-  
-  if (type == "stat") {
-    if (method %in% c("mmrr", "gdm")) return(stat_ibdibe)
-  }
-  
+get_method <- function(method){
+  if (method == "mmrr") return(run_mmrr)
+  if (method == "gdm") return(run_gdm)
+  if (method == "lfmm" | method == "lfmm_fullK") return(run_lfmm)
+  if (method == "rda") return(run_rda)
   stop("invalid method input")
 }
 
