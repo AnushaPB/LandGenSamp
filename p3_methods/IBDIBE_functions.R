@@ -900,29 +900,3 @@ calc_dist <- function(gen, distmeasure = "euc"){
   return(gendist)
 }
 
-# calculate statistics for MMRR and GDM
-stat_ibdibe <- function(sub, full, sig = 0.05){
-  err_cols <- colnames(sub)[grepl("coeff", colnames(full)) | grepl("ratio", colnames(full))]
-  err <- map(err_cols, ~err_coeff(full[.x], sub[.x])) %>% bind_cols()
-  ae <- abs(err)
-  colnames(err) <- paste0(colnames(err), "_", "err")
-  colnames(ae) <- paste0(colnames(err), "_", "ae")
-  
-  p_cols <- colnames(full)[grepl("_p", colnames(full))]
-  
-  # replace NA pvalue with 1 for calculations because NA values means the coefficient was zero so the significance test  should treat it as a negative
-  sub <- sub %>% mutate_at(p_cols,~ifelse(is.na(.x), 1, .x))
-  
-  # True positive rate
-  TPR <- ((sub[,p_cols] < sig) & (full[,p_cols] < sig))/(full[,p_cols] < sig)
-  colnames(TPR) <- paste0(colnames(TPR), "_", "TPR")
-  
-  # False discovery rate
-  FDR <- ((sub[,p_cols] < sig) & !(full[,p_cols] < sig))/(sub[,p_cols] < sig)
-  # replace NA with 0 because NA occurs when denominator is 0 (in which case numerator would also be 0 for this calc)
-  FDR <- ifelse(is.na(FDR), 0, FDR)
-  colnames(FDR) <- paste0(colnames(FDR), "_", "FDR")
-  
-  df <- data.frame(err, ae, TPR, FDR)
-  return(df)
-}

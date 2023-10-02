@@ -427,5 +427,26 @@ ggplot(df, aes(x = ratio_mmrr, y = ratio_gdm, col = K, pch = m)) +
   theme_classic()
 ```
 
+```{r, fig.width = 12, fig.height = 4}
+df2 <-
+  bind_rows(data.frame(a, method = "mmrr"), data.frame(b, method = "gdm")) %>% 
+  pivot_longer(c(K, phi, m, H, r), names_to = "params", values_to = "param_level") %>%
+  group_by(method) %>%
+  mutate(geo_coeff_scale = geo_coeff/max(geo_coeff, na.rm = TRUE),
+         env1_coeff_scale = env1_coeff/max(env1_coeff, na.rm = TRUE),
+         env2_coeff_scale = env2_coeff/max(env2_coeff, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(params) %>%
+  mutate(level = factor(case_when(param_level == min(param_level) ~ "low", TRUE ~"high"))) %>%
+  pivot_longer(c(env1_coeff_scale, env2_coeff_scale), values_to = "env_coeff_scale")
+
+ggplot(df2, aes(x = method, y = geo_coeff_scale, fill = level)) +
+  geom_boxplot() +
+  facet_wrap(~params, nrow = 1)
+
+ggplot(df2, aes(x = method, y = env_coeff_scale, fill = level)) +
+  geom_boxplot() +
+  facet_wrap(~params, nrow = 1)
+```
 
 
