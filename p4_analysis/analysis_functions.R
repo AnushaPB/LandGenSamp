@@ -54,6 +54,9 @@ make_pretty_names <- function(stat_name) {
     if (stat_name == "TPRCOMBO") new_name <- "TPR"
     if (stat_name == "FDRCOMBO") new_name <- "FDR"
     if (stat_name == "FDRCOMBO") new_name <- "FDR"
+    if (grepl("*neg", stat_name)) new_name <- "Proportion of negative coefficients"
+    if (grepl("*signeg", stat_name)) new_name <- "Proportion of negative & significant coefficients"
+    if (grepl("*null", stat_name)) new_name <- "Proportion NA"
     if (grepl("*coeff", stat_name) | grepl("*coeff", stat_name)) new_name <- "Coefficient"
     if (grepl("*_coeff_err", stat_name) | grepl("*coefferr", stat_name)) new_name <- "ME"
     if (grepl("*_coeff_err_ae", stat_name) | grepl("*coefferrae", stat_name)) new_name <- "MAE"
@@ -79,10 +82,11 @@ get_colpal <- function(stat_name){
   if (is.null(stat_name)) return(rev(purplecols(100)))
   if (stat_name == "K_factor" | stat_name == "TOTALN") return(rev(purplecols(100)))
   if (grepl("*_coeff_err_ae", stat_name) | grepl("MAE", stat_name)) return(rev(orangecols(100)))
-  if (grepl("*FDR*", stat_name)) return(rev(redcols(100)))
   if (grepl("*_coeff_err", stat_name) | grepl("ME", stat_name)) return("divergent")
   if (grepl("*TPR*", stat_name)) return(cyancols(100))
   if (grepl("geo_coeff", stat_name) | grepl("env_coeff", stat_name) | grepl("Coefficient", stat_name)) return(rev(purplecols(100)))
+  if (grepl("*FDR*", stat_name) | grepl("*NA*", stat_name) | grepl("*null*", stat_name) | grepl("*neg*", stat_name) | grepl("*Neg*", stat_name)) return(rev(redcols(100)))
+  
   return(rev(purplecols(100)))
 }
 
@@ -329,21 +333,26 @@ format_mmrr <- function(path, full = FALSE){
     var_to_fact() 
   
   # make combos
-  if (any(colnames(df2) == "env1_coeff")) {
-    df2 <- 
-      df2 %>%  
-      # make combo variables
-      mutate(comboenv_coeff_err = (env1_coeff_err + env2_coeff_err)/2,
-             comboenv_coeff = (env1_coeff + env2_coeff)/2,
-             env_coeff_err = comboenv_coeff_err,
-             env_coeff_err_ae = abs(comboenv_coeff_err),
-             # needs to be row means to remove NAs
-             env_p_TPR = rowMeans(.[,c("env1_p_TPR", "env2_p_TPR")], na.rm = TRUE),
-             env1_TPR_propNA = is.na(env1_p_TPR),
-             env2_TPR_propNA = is.na(env2_p_TPR),
-             env_TPR_propNA = (env1_TPR_propNA + env2_TPR_propNA)/2)
-
-  }
+  df2 <- 
+    df2 %>%  
+    # make combo variables
+    mutate(comboenv_coeff_err = (env1_coeff_err + env2_coeff_err)/2,
+           comboenv_coeff = (env1_coeff + env2_coeff)/2,
+           env_coeff_err = comboenv_coeff_err,
+           env_coeff_err_ae = abs(comboenv_coeff_err),
+           # needs to be row means to remove NAs
+           env_p_TPR = rowMeans(.[,c("env1_p_TPR", "env2_p_TPR")], na.rm = TRUE),
+           env1_TPR_propNA = is.na(env1_p_TPR),
+           env2_TPR_propNA = is.na(env2_p_TPR),
+           env_TPR_propNA = (env1_TPR_propNA + env2_TPR_propNA)/2)
+  
+  # calculate proportion of negative coeffs
+  df2 <- df2 %>%
+    mutate(env_neg = ((env1_coeff < 0) + (env2_coeff < 0)) / 2,
+           env_signeg = ((env1_coeff < 0 & env1_p < 0.05) +
+                       (env2_coeff < 0 & env2_p < 0.05)) / 2,
+           geo_neg = geo_coeff < 0,
+           geo_signeg = geo_coeff < 0 & geo_p < 0.05) 
   
   # check number of rows
   if ("trans" %in% df2$sampstrat) stopifnot(nrow(df) %% (960 * 4 * 4) == 0)
@@ -358,15 +367,18 @@ format_gdm <- function(path, full = FALSE){
   
   # calculate scaled coeffs
   scale_max <- max(c(max(df$env1_coeff, na.rm = TRUE), max(df$env2_coeff, na.rm = TRUE), max(df$geo_coeff, na.rm = TRUE)))
-  df$env1_coeff_scale <- df$env1_coeff/scale_max
-  df$env2_coeff_scale <- df$env2_coeff/scale_max
-  df$geo_coeff_scale <- df$geo_coeff/scale_max
-  df$env_coeff <- df$env1_coeff + df$env2_coeff
-  df$env_coeff_scale <- df$env1_coeff_scale + df$env2_coeff_scale
+  df <- df %>%
+    mutate(
+      env1_coeff_scale = env1_coeff / scale_max,
+      env2_coeff_scale = env2_coeff / scale_max,
+      geo_coeff_scale = geo_coeff / scale_max,
+      env_coeff = env1_coeff + env2_coeff,
+      env_coeff_scale = env1_coeff_scale + env2_coeff_scale
+    )
   
   # check that NA for p-vals are only present when coeffs are 0 or NA
-  stopifnot(sum(is.na(df$env1_p) & (df$env1_coeff == 0 | is.na(df$env1_coeff)))/sum(is.na(df$env1_p)) == 1)
-  stopifnot(sum(is.na(df$env2_p) & (df$env2_coeff == 0 | is.na(df$env2_coeff)))/sum(is.na(df$env2_p)) == 1)
+  #stopifnot(sum(is.na(df$env1_p) & (df$env1_coeff == 0 | is.na(df$env1_coeff)))/sum(is.na(df$env1_p)) == 1)
+  #stopifnot(sum(is.na(df$env2_p) & (df$env2_coeff == 0 | is.na(df$env2_coeff)))/sum(is.na(df$env2_p)) == 1)
   
   # get extra IBE/IBD stats
   df <- extra_ibeibd_stats(df)
@@ -390,11 +402,14 @@ format_gdm <- function(path, full = FALSE){
     # convert to factors
     var_to_fact() %>%
     
-    # create NULL column (using geo_coeff, but env_coeff cols will also be NULL)
-    mutate(null_geo_coeff = case_when(is.na(geo_coeff) ~ 1, TRUE ~ 0),
-           null_geo_p = case_when(is.na(geo_p) ~ 1, TRUE ~ 0),
-           null_env1_p = case_when(is.na(env1_p) ~ 1, TRUE ~ 0),
-           null_env2_p = case_when(is.na(env2_p) ~ 1, TRUE ~ 0),
+    # create NULL columns (using geo_coeff, but env_coeff cols will also be NULL)
+    # keep track of NAs that are not caused by the coefficient being zero 
+    # (i.e., caused by the variable importance procedure failing due to either the other model coeffs being zero
+    # OR there being a NULL model during the varImp procedure)
+    mutate(null_geo_coeff = case_when(is.na(geo_coeff) & (geo_coeff != 0) ~ 1, TRUE ~ 0),
+           null_geo_p = case_when(is.na(geo_p) & (geo_coeff != 0) ~ 1, TRUE ~ 0),
+           null_env1_p = case_when(is.na(env1_p) & (env1_coeff != 0) ~ 1, TRUE ~ 0),
+           null_env2_p = case_when(is.na(env2_p) & (env2_coeff != 0) ~ 1, TRUE ~ 0),
            null_env_p = null_env1_p + null_env2_p
            )
 
@@ -469,11 +484,11 @@ format_lfmm <- function(path, p_filter = TRUE){
     mutate(all = case_when(all == TRUE ~ "relaxed", all == FALSE ~ "strict")) %>%
     
     # select stats for analysis
-    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, K_method, lfmm_method, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN, K_factor) %>%
+    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, K_method, lfmm_method, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, FPRCOMBO, TOTALN, K_factor) %>%
 
     # widen stats
     pivot_wider(names_from = all, 
-                values_from = c("TPRCOMBO", "FDRCOMBO", "TOTALN"), 
+                values_from = c("TPRCOMBO", "FDRCOMBO", "FPRCOMBO", "TOTALN"), 
                 names_glue = "{.value}_{all}") %>%
     
     # TEMPORARY: TOTALN for all = FALSE/strict was incorrectly calculated (didn't use unique loci)
@@ -555,11 +570,11 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
     mutate(all = case_when(all == TRUE ~ "relaxed", all == FALSE ~ "strict")) %>%
     
     # select stats for analysis
-    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, correctPC, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, TOTALN) %>%
+    dplyr::select(K, phi, m, seed, H, r, it, sampstrat, nsamp, correctPC, maf, sig, padj, all, TPRCOMBO, FDRCOMBO, FPRCOMBO, TOTALN) %>%
     
     # widen stats
     pivot_wider(names_from = all, 
-                values_from = c("TPRCOMBO", "FDRCOMBO"), 
+                values_from = c("TPRCOMBO", "FDRCOMBO", "FPRCOMBO"), 
                 names_glue = "{.value}_{all}") 
   
   if (p_filter) {
@@ -604,12 +619,12 @@ run_lmer <- function(df, stat, filepath = NULL){
   moddf$stat <- moddf[, stat]
   
   # check for unique values
-  if (length(unique(moddf$stat)) == 1) {
+  if (length(unique(na.omit(moddf$stat))) == 1) {
     aov_df <- data.frame(Variable = NA, FixedEffects = NA, Sum.Sq = NA, Mean.Sq = NA, NumDF = NA, DenDF = NA, F.value = NA, Pr..F. = NA)
     if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
     em_df <- data.frame(contrast = NA, estimate = NA, SE = NA, df = NA, z.ratio = NA, p.value = NA)
     if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
-    warning(paste("\nAll values of", stat, "are NA for one set of parameters; no model is returned"))
+    warning(paste("\nAll values of", stat, "are fixed or NA; no model is returned"))
     return()
   }
   
@@ -827,9 +842,12 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   # first, create a column to keep track of NA values that are the result of 2/3 coeffs being 0 (because then p-values can't be calculated with varImp)
   # these values should ultimately be kept NA
   subdf <- subdf %>% mutate(trueNA = rowSums(select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
-  # Remaining NA values are the result of just one coefficient being zero (but p-values were still calculated for other vars)
-  # replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
-  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(is.na(.x), 100, .x))
+  # Replace NA p values that are the result of  one coefficient being zero (but p-values were still calculated for other vars)
+  # Replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
+  subdf <- subdf %>% mutate(env1_p = case_when(env1_coeff == 0 ~ 100, TRUE ~ env1_p),
+                            env2_p = case_when(env2_coeff == 0 ~ 100, TRUE ~ env2_p),
+                            geo_p = case_when(geo_coeff == 0 ~ 100, TRUE ~ geo_p),)
+  # Note that NA values resulting from the variable permutation procedure failing for one var stay NA (i.e., when there is a null model fit when the variable is removed)
   # finally, switch true NA values back and drop the column
   subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% select(!trueNA)
   
@@ -837,31 +855,30 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   full <- subdf[subdf$sampstrat == "full",]
   sub <- subdf[subdf$sampstrat != "full",]
   
-  # calculate FDR
-  sub$env1_p_FDR <-
-    (!(full$env1_p < 0.05) & sub$env1_p < 0.05) / (sub$env1_p < 0.05)
-  sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0
-  sub$env2_p_FDR <-
-    (!(full$env2_p < 0.05) & sub$env2_p < 0.05) / (sub$env2_p < 0.05)
-  sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0
-  sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR) / 2
-  sub$geo_p_FDR <-
-    (!(full$geo_p < 0.05) & sub$geo_p < 0.05) / (sub$geo_p < 0.05)
-  sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0
+  # calculate TPR and FDR
+  # note: recall that FALSE/FALSE = NaN not Inf
+  sub <- sub %>%
+    mutate(
+      # FDR
+      env1_p_FDR = (!(full$env1_p < 0.05) & env1_p < 0.05) / (env1_p < 0.05),
+      env2_p_FDR = (!(full$env2_p < 0.05) & env2_p < 0.05) / (env2_p < 0.05),
+      geo_p_FDR = (!(full$geo_p < 0.05) & geo_p < 0.05) / (geo_p < 0.05),
+      ## In cases where there were no sig values detected, 
+      ## change FDR from NA (which results from FALSE/FALSE) to 0
+      env1_p_FDR = case_when(!(env1_p < 0.05) ~ 0, TRUE ~ env1_p_FDR),
+      env2_p_FDR = case_when(!(env2_p < 0.05) ~ 0, TRUE ~ env2_p_FDR),
+      geo_p_FDR = case_when(!(geo_p < 0.05) ~ 0, TRUE ~ geo_p_FDR),
+      # Calculate join env FDR
+      env_p_FDR = (env1_p_FDR + env2_p_FDR) / 2,
+      
+      # TPR
+      env1_p_TPR = ((full$env1_p < 0.05) & env1_p < 0.05) / (full$env1_p < 0.05),
+      env2_p_TPR = ((full$env2_p < 0.05) & env2_p < 0.05) / (full$env2_p < 0.05),
+      env_p_TPR = (env1_p_TPR + env2_p_TPR) / 2,
+      geo_p_TPR = ((full$geo_p < 0.05) & geo_p < 0.05) / (full$geo_p < 0.05)
+    )
   
-  # calculate TPR
-  sub$env1_p_FDR <-
-    (!(full$env1_p < 0.05) & sub$env1_p < 0.05) / (sub$env1_p < 0.05)
-  sub$env1_p_FDR[is.na(sub$env1_p_FDR)] <- 0
-  sub$env2_p_FDR <-
-    (!(full$env2_p < 0.05) & sub$env2_p < 0.05) / (sub$env2_p < 0.05)
-  sub$env2_p_FDR[is.na(sub$env2_p_FDR)] <- 0
-  sub$env_p_FDR <- (sub$env1_p_FDR + sub$env2_p_FDR) / 2
-  sub$geo_p_FDR <-
-    (!(full$geo_p < 0.05) & sub$geo_p < 0.05) / (sub$geo_p < 0.05)
-  sub$geo_p_FDR[is.na(sub$geo_p_FDR)] <- 0
-  
-  # convert back to NA
+  # convert back true NAs
   sub <-
     sub %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ ifelse(.x == 100, NA, .x))
   full <-
@@ -873,43 +890,38 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   sub$IBE_err_ae <- abs(full$IBE - sub$IBE)
   sub$IBE_percerr <- abs(full$IBE - sub$IBE) / abs(full$IBE)
   
-  # calculate TNR
-  sub$env1_p_TNR <-
-    (!(full$env1_p < 0.05) &
-       !(sub$env1_p < 0.05)) / !(full$env1_p < 0.05)
-  sub$env1_p_TNR[is.na(sub$env1_p_TNR)] <- 1
-  sub$env2_p_TNR <-
-    (!(full$env2_p < 0.05) &
-       !(sub$env2_p < 0.05)) / !(full$env2_p < 0.05)
-  sub$env2_p_TNR[is.na(sub$env2_p_TNR)] <- 1
-  sub$env_p_TNR <- (sub$env1_p_TNR + sub$env2_p_TNR) / 2
-  sub$geo_p_TNR <-
-    (!(full$geo_p < 0.05) & !(sub$geo_p < 0.05)) / !(full$geo_p < 0.05)
-  sub$geo_p_TNR[is.na(sub$geo_p_TNR)] <- 1
-  
   # calculate agreement
-  sub$env1_agree <- (full$env1_p < 0.05) == (sub$env1_p < 0.05)
-  sub$env2_agree <- (full$env2_p < 0.05) == (sub$env2_p < 0.05)
-  sub$env_agree <- (sub$env1_agree + sub$env2_agree) / 2
-  sub$geo_agree <- (full$geo_p < 0.05) == (sub$geo_p < 0.05)
+  sub <- sub %>%
+    mutate(
+      env1_agree = (full$env1_p < 0.05) == (sub$env1_p < 0.05),
+      env2_agree = (full$env2_p < 0.05) == (sub$env2_p < 0.05),
+      env_agree = (env1_agree + env2_agree) / 2,
+      geo_agree = (full$geo_p < 0.05) == (sub$geo_p < 0.05)
+    )
   
-  # calculate scaled error
-  if (any(colnames(df) == "env1_coeff_scale")) {
-    sub$env1_coeff_err_scale <-
-      sub$env1_coeff_scale - full$env1_coeff_scale
-    sub$env2_coeff_err_scale <-
-      sub$env2_coeff_scale - full$env2_coeff_scale
-    sub$geo_coeff_err_scale <-
-      sub$geo_coeff_scale - full$geo_coeff_scale
-    sub$env_coeff_err_scale <-
-      (sub$env1_coeff_scale + sub$env2_coeff_scale) / 2
-    
-    sub$env1_coeff_err_ae_scale <- abs(sub$env1_coeff_err_scale)
-    sub$env2_coeff_err_ae_scale <- abs(sub$env2_coeff_err_scale)
-    sub$geo_coeff_err_ae_scale <- abs(sub$geo_coeff_err_scale)
-    sub$env_coeff_err_ae_scale <-
-      (sub$env1_coeff_err_ae_scale + sub$env2_coeff_err_ae_scale) / 2
-  }
+  # calculate error
+  sub <- sub %>%
+    mutate(
+      # scaled
+      env1_coeff_err_scale = env1_coeff_scale - full$env1_coeff_scale,
+      env2_coeff_err_scale = env2_coeff_scale - full$env2_coeff_scale,
+      geo_coeff_err_scale = geo_coeff_scale - full$geo_coeff_scale,
+      env_coeff_err_scale = (env1_coeff_scale + env2_coeff_scale) / 2,
+      env1_coeff_err_ae_scale = abs(env1_coeff_err_scale),
+      env2_coeff_err_ae_scale = abs(env2_coeff_err_scale),
+      geo_coeff_err_ae_scale = abs(geo_coeff_err_scale),
+      env_coeff_err_ae_scale = (env1_coeff_err_ae_scale + env2_coeff_err_ae_scale) / 2,
+      
+      # not scaled
+      env1_coeff_err = env1_coeff - full$env1_coeff,
+      env2_coeff_err = env2_coeff - full$env2_coeff,
+      geo_coeff_err = geo_coeff - full$geo_coeff,
+      env_coeff_err = (env1_coeff + env2_coeff) / 2,
+      env1_coeff_err_ae = abs(env1_coeff_err),
+      env2_coeff_err_ae = abs(env2_coeff_err),
+      geo_coeff_err_ae = abs(geo_coeff_err),
+      env_coeff_err_ae = (env1_coeff_err_ae + env2_coeff_err_ae) / 2
+    )
   
   new_df <- bind_rows(sub, full)
   stopifnot(nrow(new_df) == nrow(subdf))
