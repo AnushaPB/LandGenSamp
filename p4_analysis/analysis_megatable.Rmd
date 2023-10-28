@@ -336,7 +336,7 @@ table_df %>%
     suffixing = TRUE
     ) %>%
   gtExtras::gt_hulk_col_numeric(
-    c(3:11), 
+    c(3:11),
     trim = TRUE, 
     domain = c(-0.18,0.18),
     na.color = "white"
