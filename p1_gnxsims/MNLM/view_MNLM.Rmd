@@ -12,6 +12,7 @@ library(viridisLite)
 library(viridis)
 library(spatialEco)
 library(raster)
+library(purrr)
 
 wdir <- here("p1_gnxsims", "MNLM")
 ```
@@ -44,18 +45,12 @@ view_mnlm <- function(seed, H, r){
 combos <- expand.grid(seed = c(1,2,3), H = c(0.05, 0.5), r = c(0.3, 0.6))
 
 par(mfrow=c(6,4), mar=rep(3,4), oma=rep(0,4))
-pmap(combos, view_mnlm)
+pmap(combos[1:12], view_mnlm)
 
 ```
 
 
-```{r}
-f <- matrix(c(0,1,0,1,0,1,0,1,0), nrow=3)
-
-dim <- 100
-n <- 3
-d <- (n^2-1)/2
-f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
+```{CHUNK TO CALC STATS r}
 
 par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
 for(seed in c(1, 2, 3)){
@@ -63,14 +58,26 @@ for(seed in c(1, 2, 3)){
     for(r in c(0.3, 0.6)){
       set.seed(seed)
       
-      nlm.s <- mnlm(101, 101, H = H, sd = 1, r = r)
+      env1 <- read.csv(here(wdir, "layers", paste0("seed",seed,
+                                      "_env1",
+                                      "_H", gsub("\\.", "", as.character(H*100)),
+                                      "_r", gsub("\\.", "", as.character(r*100)),
+                                      ".csv"
+                                      )), header=FALSE)
+  
+      env2 <- read.csv(here(wdir, "layers", paste0("seed",seed,
+                                          "_env2",
+                                          "_H", gsub("\\.", "", as.character(H*100)),
+                                          "_r", gsub("\\.", "", as.character(r*100)),
+                                          ".csv"
+                                          )), header=FALSE)
+      env1 <- raster(as.matrix(env1))
+      env2 <- raster(as.matrix(env2))
       
-      env1 <- nlm.s[[1]]
       #crop from 101x101 to 100x100 so that it is easier to partition the landscape for grid sampling later
       env1 <- crop(env1, c(0,100,0,100))
       MI1 <- round(Moran(env1, w=f),2)
       
-      env2 <- nlm.s[[2]]
       env2 <- crop(env2, c(0,100,0,100))
       MI2 <- round(Moran(env2,  w=f),2)
       

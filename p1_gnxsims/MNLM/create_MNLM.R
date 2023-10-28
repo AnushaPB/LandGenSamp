@@ -8,7 +8,7 @@ library(NLMR)
 #  jeffreyevans = 'https://jeffreyevans.r-universe.dev',
 #  CRAN = 'https://cloud.r-project.org'))
 # Download and install spatialEco in R
-install.packages('spatialEco')
+# install.packages('spatialEco')
 library(spatialEco)
 library(viridis)
 library(terra)
