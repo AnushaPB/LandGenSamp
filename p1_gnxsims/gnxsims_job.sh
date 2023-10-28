@@ -1,4 +1,5 @@
 # Create MNLMs
+cd ..
 Rscript MNLM/create_MNLM.R
 # The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
 
