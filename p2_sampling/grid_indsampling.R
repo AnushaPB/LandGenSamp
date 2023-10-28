@@ -8,7 +8,7 @@ source(here("p2_sampling", "sampling_functions.R"))
 set.seed(42)
 
 #register cores
-cl <- makeCluster(5) 
+cl <- makeCluster(25) 
 registerDoParallel(cl)
 
 for(n in nsamps){
@@ -30,7 +30,7 @@ for(n in nsamps){
       gsd_df <- get_gsd(gsd_filepath)
       pts <- gsd_df[,c("idx","x","y")]
       set.seed(7)
-      samples <- grid_sitesamp(pts, npts = n, ldim = ldim)
+      samples <- grid_indsamp(pts, npts = n, ldim = ldim)
     }
     
     #return vector of sample IDs
