@@ -4,7 +4,14 @@ library(here)
 #install.packages("devtools")
 #devtools::install_github("ropensci/NLMR")
 library(NLMR)
+#options(repos = c(
+#  jeffreyevans = 'https://jeffreyevans.r-universe.dev',
+#  CRAN = 'https://cloud.r-project.org'))
+# Download and install spatialEco in R
+install.packages('spatialEco')
 library(spatialEco)
+library(viridis)
+library(terra)
 
 wdir <- here("p1_gnxsims", "MNLM")
 
