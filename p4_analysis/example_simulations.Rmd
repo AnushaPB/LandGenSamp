@@ -186,28 +186,32 @@ site_samples <-
   mutate(sampstrat = factor(sampstrat, levels = c("R", "EQ", "EG")))
 
 
-ggplot(ind_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.5) + 
-  geom_point(aes(fill = env1), colour = rgb(0,0,0,0.5), pch = 21, size = 2) +
+(plt1 <-
+  ggplot(ind_samples, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
+  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 1, stroke = 0.5) +
   coord_equal() +
   theme_void() + 
   scale_color_viridis_c(option = "mako") + 
   scale_fill_viridis_c(option = "mako") +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
         strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both")
+  facet_grid(sampstrat ~ nsamp, switch = "both"))
 
-ggplot(site_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.5) + 
-  geom_point(aes(fill = env1), colour = rgb(0,0,0,0.5), pch = 21, size = 2) +
+(plt2 <-
+  ggplot(site_samples, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
+  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 0.7, stroke = 0.5) +
   coord_equal() +
   theme_void() + 
   scale_color_viridis_c(option = "mako") + 
   scale_fill_viridis_c(option = "mako") +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
         strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both")
+  facet_grid(sampstrat ~ nsamp, switch = "both"))
 
+ggsave(here("plots", "indsampling.pdf"), plot = plt1)
+ggsave(here("plots", "sitesampling.pdf"), plot = plt2)
 ```
  ```{r, fig.height = 7, fig.width = 11}
 grid.arrange(ind,site)
