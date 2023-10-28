@@ -1,4 +1,5 @@
-# You must be in p3_methods to run this file
+cd p3_methods
+
 # Create folder for outputs
 mkdir -p outputs
 
@@ -8,3 +9,5 @@ Rscript phenotype_mismatch.R
 
 # Run landscape genomic methods
 Rscript run_methods.R
+
+cd ..

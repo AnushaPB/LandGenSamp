@@ -1,3 +1,5 @@
+cd p2_gnxsims
+
 # You must be in p2_sampling to run this file
 # Create folder for outputs
 mkdir -p outputs
@@ -12,4 +14,6 @@ Rscript transect_indsampling.R
 Rscript envgeo_sitesampling.R
 Rscript equi_sitesampling.R
 Rscript random_sitesampling.R
+
+cd ..
 

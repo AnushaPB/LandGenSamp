@@ -138,6 +138,7 @@ walk(summary_plots, ~walk(.x, grid.arrange))
 lfmm_ind <- 
   lfmm_ind %>% 
   filter(lfmm_method == "ridge") 
+
 ```
 
 ```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
@@ -307,11 +308,61 @@ results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
 filt_results_good <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3))
 sub_results_good <- map(filt_results_good, ~ summarize_stats(.x, stats = stats))
 
-filt_results_bad <- map(results,  ~filter(.x, H != 0.5, m != 1, K != 2, phi != 1, r != 0.3))
+filt_results_bad <- map(results,  ~filter(.x, H == 0.5, m != 1, K != 2, phi != 1, r != 0.3))
 sub_results_bad <- map(filt_results_bad, ~ summarize_stats(.x, stats = stats))
 
 make_gea_figs(sub_results_good, stats = stats, fileprefix = "good")
 make_gea_figs(sub_results_bad, stats = stats, fileprefix = "bad")
+```
+
+```{r, fig.width = 10, fig.height = 5}
+good_lfmm <- filter(lfmm_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "lfmm")
+good_rda <- filter(rda_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "rda")
+good <- bind_rows(good_lfmm, good_rda)
+good_group <- good %>% group_by(TPRCOMBO_strict, FPRCOMBO_strict, sampstrat, nsamp, method)  %>% summarize(count = n())
+
+ggplot() +
+  geom_smooth(data = good, aes(x = FPRCOMBO_strict, y = TPRCOMBO_strict), method = "lm") +
+  geom_point(data = good_group, aes(x = FPRCOMBO_strict, y = TPRCOMBO_strict, col = nsamp))+ 
+  facet_grid(method~sampstrat) +
+  #coord_equal() +
+  scale_color_viridis_d(option = "plasma", end = 0.9) +
+  theme(panel.background = element_rect(color = "gray", fill = NA),
+        strip.background = element_rect(color = "gray", fill = "gray"))
+
+```
+
+```{r, fig.width = 10, fig.height = 5}
+good_lfmm <- filter(lfmm_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "lfmm")
+good_rda <- filter(rda_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "rda")
+good <- bind_rows(good_lfmm, good_rda)
+good_group <- good %>% group_by(TPRCOMBO_strict, FDRCOMBO_strict, sampstrat, nsamp, method) %>% summarize(count = n())
+ggplot() +
+  geom_smooth(data = good, aes(x = FDRCOMBO_strict, y = TPRCOMBO_strict), method = "lm") +
+  geom_point(data = good_group, aes(x = FDRCOMBO_strict, y = TPRCOMBO_strict, col = nsamp))+ 
+  facet_grid(method~sampstrat) +
+  coord_equal() +
+  scale_color_viridis_d(option = "plasma", end = 0.9) +
+  theme(panel.background = element_rect(color = "gray", fill = NA),
+        strip.background = element_rect(color = "gray", fill = "gray"))
+
+```
+```{r, fig.width = 11, fig.height = 5}
+good_long <-
+  bind_rows(good_lfmm, good_rda) %>% 
+  pivot_longer(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), names_to = "Statistic", values_to = "values") %>%
+  mutate(Statistic = make_pretty_names(Statistic))
+
+ggplot() +
+  geom_point(data = good_long, aes(x = as.numeric(as.character(nsamp)), y = values, col = Statistic), alpha = 0.5) + 
+  facet_grid(method~sampstrat) +
+  geom_smooth(data = good_long, aes(x = as.numeric(as.character(nsamp)), y = values, col = Statistic), method = "lm") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "gray", fill = "gray"),
+    panel.background = element_rect(color = "gray", fill = NA),
+    axis.line = element_blank()) +
+  ylab("Statistic") +
+  xlab("Sample Size")
 ```
 
 
