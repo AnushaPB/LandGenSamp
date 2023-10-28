@@ -5,6 +5,7 @@ import pandas as pd
 import multiprocessing as mp
 import sys
 import matplotlib.pyplot as plt
+import os
 from functools import partial
 from os.path import exists
 
@@ -475,7 +476,7 @@ params = {
 
 # define parameters to vary
 K_array = [1, 2]
-phi_array = [0.1]
+phi_array = [0.5, 1]
 m_array = [0.25, 1]
 seed_array = [1, 2, 3]
 H_array = [0.05, 0.5]
@@ -490,10 +491,7 @@ sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
 sim_array = np.append(sim_array, sim_seeds, 1)
 
 # directory where input/output data will be stored
-#FIX THIS SO IT ISN'T A HARD PATH
-#dir = "/mnt/c/Users/Anusha/Documents/GitHub/LandGenSamp/p1_gnxsims/"
-#dir = "/home/wanglab/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
-dir = "/media/wanglab/DataDrive/Anusha/GitHub/LandGenSamp/p1_gnxsims/"
+dir = os.path.dirname(os.getcwd())
 # note: currently gnx dumps most output files in a folder where the script is run
 
 def run_sims(sim_list, params):
@@ -518,9 +516,9 @@ def run_sims(sim_list, params):
         print(mod_name + " starting")
        
         # get env layers
-        env1 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
+        env1 = np.genfromtxt(dir + "/MNLM/layers/seed" + str(int(seed)) + "_env1_H" + str(int(H * 100)) + "_r" + str(
                 int(r * 100)) + ".csv", delimiter=',')
-        env2 = np.genfromtxt(dir + "MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
+        env2 = np.genfromtxt(dir + "/MNLM/layers/seed" + str(int(seed)) + "_env2_H" + str(int(H * 100)) + "_r" + str(
                 int(r * 100)) + ".csv", delimiter=',')
 
         # redefine params
