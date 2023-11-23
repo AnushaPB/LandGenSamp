@@ -12,4 +12,4 @@ pip3 install geonomics geopandas rasterio matplotlib scipy bitarray tskit scikit
 conda env export > gnx.yml
 
 # to create based on yml
-#conda env create -f gnx.yml
+#conda env create -f gnx.yml -n gnx

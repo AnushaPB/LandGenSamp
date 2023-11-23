@@ -505,12 +505,15 @@ def run_sims(sim_list, params):
     simseed = float(sim_list[6])
 
     #create mod name
-    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(
-        int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
-    path_to_file = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
-    if exists(path_to_file):
+    # file1 = pre running data_cleaning.sh
+    path_to_file1 = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+    # file2 = post running data_cleaning.sh
+    path_to_file2 = "LGS_data/" +  "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+
+    if exists(path_to_file1) or exists(path_to_file2):
         print(mod_name + " exists, skipping")
     else:
         print(mod_name + " starting")
