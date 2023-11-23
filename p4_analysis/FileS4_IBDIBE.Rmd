@@ -80,15 +80,17 @@ plots <-
 do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
 ```
 
-**TPR** - True Positive Rate
+**TPR** - True Positive Rate. The proportion of times there was a positive detection in both the sub-sampled model and the full model. Note that in the case of GDM TPR is frequently NA because there was no detection in the full model.
 
-**FDR** - False Discovery Rate
+**FDR** - False Discovery Rate. The proportion of times there was a detection in the sub-sampled model that was not shared with the full model. 
 
 **ME** - mean error was calculated by taking the mean difference between the observed and expected coefficients, because the absolute value is not taken this measurement is used to determine whether over- or underestimation is occurring. For IBE ME the two environmental coefficient errors were averaged.
 
 **MAE** - mean absolute error calculated as the difference between the observed and expected coefficients. For IBE MAE the two environmental coefficient errors were averaged.
 
+*Proportion of negative & significant coefficients* - this only applies to MMRR and IBE and is the proportion of coefficients that were negative & significant. 
 
+*Proportion NA* - this only applies to GDM and IBE and is the proportion of NA p-values due to the variable significance procedure note being able to be carried out because more than two variable coefficients in the model were zero or because one of the models used in the calculation could not be fit. Note that p-values would also be NA in the case of the variable coefficient was zero, but we treated these as cases of no detection in our calculation of TPR/FDR, whereas the other NA values were excluded.
 
 ***
 
@@ -123,7 +125,7 @@ plot_stats <-
 ```{r, fig.width=14, fig.height=6}
 mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
 
-walk(plot_stats, ~ ibdibe_plot(mmrr_ind, stat = .x))
+walk(c(plot_stats, "env_signeg"), ~ ibdibe_plot(mmrr_ind, stat = .x))
 ```
 
 ### 1.1.2 Linear mixed effects models
@@ -136,7 +138,7 @@ walk(stats, ~run_lmer(mmrr_ind, .x,
 ### 1.1.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(plot_stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
+walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 ```
 
 ## 1.2 Site sampling
@@ -146,7 +148,7 @@ walk(plot_stats, ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 ```{r, fig.width=14, fig.height=6}
 mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
 
-walk(plot_stats, ~ ibdibe_plot(mmrr_site, stat = .x))
+walk(c(plot_stats, "env_signeg"), ~ ibdibe_plot(mmrr_site, stat = .x))
 ```
 
 ### 1.2.2 Linear mixed effects models
@@ -159,7 +161,7 @@ walk(stats, ~run_lmer(mmrr_site, .x,
 ### 1.2.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(plot_stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
+walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_site, stat = .x)))
 ```
 
 # 2. GDM
@@ -171,7 +173,7 @@ walk(plot_stats, ~print(MEGAPLOT(mmrr_site, stat = .x)))
 ```{r, fig.width=14, fig.height=6}
 gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
 
-walk(plot_stats, ~ ibdibe_plot(gdm_ind, stat = .x))
+walk(c(plot_stats, "null_env_p"), ~ ibdibe_plot(gdm_ind, stat = .x))
 ```
 
 ### 2.1.2 Linear mixed effects models
@@ -184,7 +186,7 @@ walk(stats, ~run_lmer(gdm_ind, .x,
 ### 2.1.3 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
-walk(plot_stats, ~print(MEGAPLOT(gdm_ind, stat = .x)))
+walk(c(plot_stats, "null_env_p"), ~print(MEGAPLOT(gdm_ind, stat = .x)))
 ```
 
 ### 2.1.4 Failed fits
@@ -204,7 +206,7 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 ```{r, fig.width=14, fig.height=6}
 gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
 
-walk(plot_stats, ~ ibdibe_plot(gdm_site, stat = .x))
+walk(c(plot_stats, "null_env_p"), ~ ibdibe_plot(gdm_site, stat = .x))
 ```
 
 ### 2.2.2 Linear mixed effects models
@@ -216,7 +218,7 @@ walk(stats, ~run_lmer(gdm_site, .x,
 
 ### 2.2.3 Full plots
 ```{r, fig.width = 21, fig.height = 13}
-walk(plot_stats, ~print(MEGAPLOT(gdm_site, stat = .x)))
+walk(c(plot_stats, "null_env_p"), ~print(MEGAPLOT(gdm_site, stat = .x)))
 ```
 
 ### 2.2.4 Failed fits
@@ -231,7 +233,12 @@ MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 
 ---
 
-```{r, fig.width = 6, fig.height = 9, include = FALSE}
+```{r, fig.width = 13, fig.height = 8, include = FALSE}
+df <- 
+  bind_rows(data.frame(mmrr_ind, method = "MMRR", sampling = "individual"),
+            data.frame(gdm_ind, method = "GDM", sampling = "individual"),
+            data.frame(mmrr_site, method = "MMRR", sampling = "site"),
+            data.frame(gdm_site, method = "GDM", sampling = "site"))
 
 stats <- c(
     "geo_p_TPR",
@@ -242,84 +249,84 @@ stats <- c(
     "env_coeff_err_ae_scale"
   )
 
-results <- list(mmrr_ind, mmrr_site, gdm_ind, gdm_site)
-
-filt_results_good <- map(results,  ~filter(.x, K == 1, phi == 1, H == 0.5, r == 0.3, m == 0.25))
-sub_results_good <- map(filt_results_good, ~ summarize_stats(.x, stats = stats))
-
-filt_results_bad <- map(results,  ~filter(.x, K != 1, phi != 1, H != 0.5, r != 0.3, m != 0.25))
-sub_results_bad <- map(filt_results_bad, ~ summarize_stats(.x, stats = stats))
-
-minmax <-
-  map(c("min", "max"), \(f) {
-    map(c(sub_results_good, sub_results_bad), \(x, cols = colnames(x)[-c(1:2)]) {
-      x %>%
-        ungroup() %>%
-        dplyr::select(all_of(cols)) %>%
-        summarize_all(f, na.rm = TRUE)
-    }) %>%
-      bind_rows() %>%
-      summarize_all(f) %>%
-      pivot_longer(everything(), names_to = "pretty_names", values_to = f)
-  }) %>%
-  do.call(what = left_join) %>%
-  separate_wider_delim(pretty_names, " ", names = c("IBDIBE", "stat"), cols_remove = FALSE)  
-
-minmax_stats <- 
-  minmax %>%
-  group_by(stat) %>%
-  summarise(min = min(min), max = max(max)) %>%
-  right_join(dplyr::select(minmax, -min, -max)) %>%
-  mutate(max = case_when(stat == "FDR" ~ 1, .default = max))
-
-ibdibe_stats <- list(IBD = stats[grepl("geo", stats)], IBE = stats[grepl("env", stats)])
-
-iwalk(
-  ibdibe_stats,
-  ~ make_ibdibe_figs(
-    sub_results_good,
-    substats = .x,
-    minmax_stats = minmax_stats,
-    fileprefix = paste0(.y, "_good")
-  )
-)  
-
-iwalk(
-  ibdibe_stats,
-  ~ make_ibdibe_figs(
-    sub_results_bad,
-    substats = .x,
-    minmax_stats = minmax_stats,
-    fileprefix = paste0(.y, "_bad")
-  )
-)  
-```
-
-```{r, fig.width = 14, fig.height = 14, include = FALSE}
-df <- bind_rows(data.frame(mmrr_ind, method = "MMRR", sampling = "individual"),
-                data.frame(gdm_ind, method = "GDM", sampling = "individual"),
-                data.frame(mmrr_site, method = "MMRR", sampling = "site"),
-                data.frame(gdm_site, method = "GDM", sampling = "site"))
 ggdf <- 
   df %>%
-  filter(sampstrat == "R") %>%
-  select(nsamp, sampling, method, all_of(stats)) %>%
-  pivot_longer(all_of(stats)) %>%
-  group_by(method, name, sampling, nsamp) %>%
-  summarise(
-    mean_value = mean(value, na.rm = TRUE),
-    lower1 = mean(value, na.rm = TRUE) - sd(value, na.rm = TRUE),
-    upper1 = mean(value, na.rm = TRUE) + sd(value, na.rm = TRUE),
-    lower2 = mean(value, na.rm = TRUE) - 2*sd(value, na.rm = TRUE),
-    upper2 = mean(value, na.rm = TRUE) + 2*sd(value, na.rm = TRUE)) %>%
-  mutate(lower1 = case_when(lower1 < 0 ~ 0, TRUE ~ lower1),
-         upper1 = case_when(upper1 > 1 ~ 1, TRUE ~ upper1),
-         lower2 = case_when(lower2 < 0 ~ 0, TRUE ~ lower2),
-         upper2 = case_when(upper2 > 1 ~ 1, TRUE ~ upper2)) %>%
-  mutate(name = factor(make_pretty_names(name), levels = make_pretty_names(stats)),
-         method = factor(method, levels = c("MMRR", "GDM")))
+  mutate(scenario = case_when(K == 1 & m == 0.25 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 2 & m == 1 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(method, sampstrat, nsamp, sampling, scenario) %>%
+  summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
+  pivot_longer(stats, names_to = "Statistic", values_to = "values") %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
+  mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE")) %>%
+  rename(Scheme = sampstrat) %>%
+  mutate(method = factor(method, levels = c("MMRR", "GDM")))
 
-sampling_plot(ggdf)
+  
+fake_point <- 
+    data.frame(nsamp = 20, values = c(rep(c(0,0,NA), 2), rep(c(1,1,NA), 2)),
+               name = stats) %>%
+    mutate(Statistic = factor(make_pretty_names(name), levels = make_pretty_names(stats)))
+
+
+ind_plts <-
+  ggdf %>%
+  filter(sampling == "individual") %>%
+  group_by(scenario, IB) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_point(data = fake_point[fake_point$Statistic %in% .x[["Statistic"]], ], col = "white") +
+      geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
+      geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+      ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
+      xlab("Number of samples") +
+      ylab("Statistic") +
+      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+            strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+            panel.background = element_blank(),
+            strip.text = element_text(size = 12),
+            title = element_text(size = 12),
+            panel.spacing = unit(0.5, "lines"),
+            legend.position = "right") +
+      scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_shape_manual(values = c(21:24)) +
+      ggtitle("A. Individual-based sampling")
+  }) 
+  
+
+site_plts <-
+  ggdf %>%
+  filter(sampling == "site") %>%
+  group_by(scenario, IB) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
+      geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
+      geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+      ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
+      xlab("Number of samples") +
+      ylab("Statistic") +
+      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+            strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+            panel.background = element_blank(),
+            strip.text = element_text(size = 12),
+            title = element_text(size = 12),
+            panel.spacing = unit(0.5, "lines"),
+            legend.position = "right") +
+      scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+      scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+      scale_shape_manual(values = c(21:23)) +
+      ggtitle("B. Site-based sampling")
+  })
+
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
+grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
 ```
 
 
@@ -388,7 +395,7 @@ ggarrange(geo, env1, env2, nrow = 1)
 ```
 
 
-```{r, fig.width = 8, fig.height = 6}
+```{r, fig.width = 8, fig.height = 6, include = FALSE}
 ggplot(df, aes(x = geo_coeff_mmrr, y = geo_coeff_gdm, col = `Migration rate`, pch = `Population size`)) +
   geom_point(cex = 2, alpha = 0.5) +
   xlab("MMRR Coefficient") +
@@ -399,7 +406,7 @@ ggplot(df, aes(x = geo_coeff_mmrr, y = geo_coeff_gdm, col = `Migration rate`, pc
   theme(strip.text = element_blank()) 
 ```
 
-```{r, fig.width = 6, fig.height = 3}
+```{r, fig.width = 6, fig.height = 3, include = FALSE}
 ggplot(df, aes(x = env1_coeff_mmrr, y = env1_coeff_gdm, col = H)) +
   geom_point(cex = 2, alpha = 0.3, pch = 16) +
   xlab("MMRR Coefficient") +
@@ -420,33 +427,7 @@ ggplot(df, aes(x = env2_coeff_mmrr, y = env2_coeff_gdm, col = H)) +
 ```
 
 
-```{r, fig.width = 10, fig.height = 3}
-ggplot(df, aes(x = ratio_mmrr, y = ratio_gdm, col = K, pch = m)) +
-  geom_point() +
-  facet_wrap(~group3, scales = "free", nrow = 1) +
-  theme_classic()
-```
 
-```{r, fig.width = 12, fig.height = 4}
-df2 <-
-  bind_rows(data.frame(a, method = "mmrr"), data.frame(b, method = "gdm")) %>% 
-  pivot_longer(c(K, phi, m, H, r), names_to = "params", values_to = "param_level") %>%
-  group_by(method) %>%
-  mutate(geo_coeff_scale = geo_coeff/max(geo_coeff, na.rm = TRUE),
-         env1_coeff_scale = env1_coeff/max(env1_coeff, na.rm = TRUE),
-         env2_coeff_scale = env2_coeff/max(env2_coeff, na.rm = TRUE)) %>%
-  ungroup() %>%
-  group_by(params) %>%
-  mutate(level = factor(case_when(param_level == min(param_level) ~ "low", TRUE ~"high"))) %>%
-  pivot_longer(c(env1_coeff_scale, env2_coeff_scale), values_to = "env_coeff_scale")
 
-ggplot(df2, aes(x = method, y = geo_coeff_scale, fill = level)) +
-  geom_boxplot() +
-  facet_wrap(~params, nrow = 1)
-
-ggplot(df2, aes(x = method, y = env_coeff_scale, fill = level)) +
-  geom_boxplot() +
-  facet_wrap(~params, nrow = 1)
-```
 
 

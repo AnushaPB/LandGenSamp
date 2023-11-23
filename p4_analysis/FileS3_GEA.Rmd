@@ -300,97 +300,82 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 
 ---
 
-```{r, fig.width = 6, fig.height = 6, include = FALSE}
-# Code used to create main figures:
-stats <- c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed")
-results <- list(lfmm_ind, lfmm_site, rda_ind, rda_site)
-
-filt_results_good <- map(results,  ~filter(.x, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3))
-sub_results_good <- map(filt_results_good, ~ summarize_stats(.x, stats = stats))
-
-filt_results_bad <- map(results,  ~filter(.x, H == 0.5, m != 1, K != 2, phi != 1, r != 0.3))
-sub_results_bad <- map(filt_results_bad, ~ summarize_stats(.x, stats = stats))
-
-make_gea_figs(sub_results_good, stats = stats, fileprefix = "good")
-make_gea_figs(sub_results_bad, stats = stats, fileprefix = "bad")
-```
-
-```{r, fig.width = 10, fig.height = 5}
-good_lfmm <- filter(lfmm_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "lfmm")
-good_rda <- filter(rda_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "rda")
-good <- bind_rows(good_lfmm, good_rda)
-good_group <- good %>% group_by(TPRCOMBO_strict, FPRCOMBO_strict, sampstrat, nsamp, method)  %>% summarize(count = n())
-
-ggplot() +
-  geom_smooth(data = good, aes(x = FPRCOMBO_strict, y = TPRCOMBO_strict), method = "lm") +
-  geom_point(data = good_group, aes(x = FPRCOMBO_strict, y = TPRCOMBO_strict, col = nsamp))+ 
-  facet_grid(method~sampstrat) +
-  #coord_equal() +
-  scale_color_viridis_d(option = "plasma", end = 0.9) +
-  theme(panel.background = element_rect(color = "gray", fill = NA),
-        strip.background = element_rect(color = "gray", fill = "gray"))
-
-```
-
-```{r, fig.width = 10, fig.height = 5}
-good_lfmm <- filter(lfmm_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "lfmm")
-good_rda <- filter(rda_ind, H == 0.5, m == 1, K == 2, phi == 1, r == 0.3) %>% mutate(method = "rda")
-good <- bind_rows(good_lfmm, good_rda)
-good_group <- good %>% group_by(TPRCOMBO_strict, FDRCOMBO_strict, sampstrat, nsamp, method) %>% summarize(count = n())
-ggplot() +
-  geom_smooth(data = good, aes(x = FDRCOMBO_strict, y = TPRCOMBO_strict), method = "lm") +
-  geom_point(data = good_group, aes(x = FDRCOMBO_strict, y = TPRCOMBO_strict, col = nsamp))+ 
-  facet_grid(method~sampstrat) +
-  coord_equal() +
-  scale_color_viridis_d(option = "plasma", end = 0.9) +
-  theme(panel.background = element_rect(color = "gray", fill = NA),
-        strip.background = element_rect(color = "gray", fill = "gray"))
-
-```
-```{r, fig.width = 11, fig.height = 5}
-good_long <-
-  bind_rows(good_lfmm, good_rda) %>% 
-  pivot_longer(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), names_to = "Statistic", values_to = "values") %>%
-  mutate(Statistic = make_pretty_names(Statistic))
-
-ggplot() +
-  geom_point(data = good_long, aes(x = as.numeric(as.character(nsamp)), y = values, col = Statistic), alpha = 0.5) + 
-  facet_grid(method~sampstrat) +
-  geom_smooth(data = good_long, aes(x = as.numeric(as.character(nsamp)), y = values, col = Statistic), method = "lm") +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "gray", fill = "gray"),
-    panel.background = element_rect(color = "gray", fill = NA),
-    axis.line = element_blank()) +
-  ylab("Statistic") +
-  xlab("Sample Size")
-```
-
-
-```{r, fig.width = 14, fig.height = 6, include = FALSE}
-# Code used to create sample number figures:
-df <- bind_rows(data.frame(lfmm_ind, method = "LFMM", sampling = "individual"),
-                data.frame(rda_ind, method = "RDA", sampling = "individual"),
-                data.frame(lfmm_site, method = "LFMM", sampling = "site"),
-                data.frame(rda_site, method = "RDA", sampling = "site"))
+```{r, fig.width = 13, fig.height = 8, include = FALSE}
+df <- 
+  bind_rows(data.frame(lfmm_ind, method = "LFMM", sampling = "individual"),
+            data.frame(rda_ind, method = "RDA", sampling = "individual"),
+            data.frame(lfmm_site, method = "LFMM", sampling = "site"),
+            data.frame(rda_site, method = "RDA", sampling = "site"))
 
 ggdf <- 
   df %>%
-  filter(sampstrat == "R") %>%
-  select(nsamp, sampling, method, all_of(stats)) %>%
-  pivot_longer(all_of(stats)) %>%
-  group_by(method, name, sampling, nsamp) %>%
-  summarise(
-    mean_value = mean(value, na.rm = TRUE),
-    lower1 = mean(value, na.rm = TRUE) - sd(value, na.rm = TRUE),
-    upper1 = mean(value, na.rm = TRUE) + sd(value, na.rm = TRUE),
-    lower2 = mean(value, na.rm = TRUE) - 2*sd(value, na.rm = TRUE),
-    upper2 = mean(value, na.rm = TRUE) + 2*sd(value, na.rm = TRUE)) %>%
-  mutate(lower1 = case_when(lower1 < 0 ~ 0, TRUE ~ lower1),
-         upper1 = case_when(upper1 > 1 ~ 1, TRUE ~ upper1),
-         lower2 = case_when(lower2 < 0 ~ 0, TRUE ~ lower2),
-         upper2 = case_when(upper2 > 1 ~ 1, TRUE ~ upper2)) %>%
-  mutate(name = factor(make_pretty_names(name), levels = c("TPR relaxed", "FDR relaxed")))
+  mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              !(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5) ~ "worst",
+                              .default = NA)) %>%
+  group_by(method, sampstrat, nsamp, sampling, scenario) %>%
+  summarise_at(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), mean, na.rm = TRUE) %>%
+  pivot_longer(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), names_to = "Statistic", values_to = "values") %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = c("TPR relaxed", "FDR relaxed"))) %>%
+  rename(Scheme = sampstrat)
 
-sampling_plot(ggdf)
+ind_plts <-
+  ggdf %>%
+  filter(sampling == "individual") %>%
+  group_by(scenario) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+    geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
+    geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
+    xlab("Number of samples") +
+    ylab("Statistic") +
+    ylim(0,1) +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right") +
+    scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    scale_shape_manual(values = c(21:24)) +
+    ggtitle("A. Individual-based sampling")
+    
+  }) 
+  
+
+site_plts <-
+  ggdf %>%
+  filter(sampling == "site") %>%
+  group_by(scenario) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+    geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
+    geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
+    xlab("Number of samples") +
+    ylab("Statistic") +
+    ylim(0,1) +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right") +
+    scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+    scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+    scale_shape_manual(values = c(21:23)) +
+    ggtitle("B. Site-based sampling")
+  })
+
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 ```
+
 
