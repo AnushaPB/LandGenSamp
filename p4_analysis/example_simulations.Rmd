@@ -65,20 +65,20 @@ dfs_all <- purrr::map(list.files(here("p4_analysis/example_data/example_combos")
 names(dfs_all) <- c("phi10", "H5", "r30", "D", "m25", "phi50", "K2")
 dfs <- dfs_all[-6]
 
-df <- bind_rows(new_cols(dfs[["phi10"]], "low", "selection\nstrength"),
-          new_cols(dfs[["D"]], "high", "selection\nstrength"),
-          new_cols(dfs[["H5"]], "low", "spatial\nautocorrelation"),
-          new_cols(dfs[["D"]], "high", "spatial\nautocorrelation"),
-          new_cols(dfs[["r30"]], "low", "environmental\ncorrelation"),
-          new_cols(dfs[["D"]], "high", "environmental\ncorrelation"),
-          new_cols(dfs[["D"]], "low", "population size"),
-          new_cols(dfs[["K2"]], "high", "population size"),
-          new_cols(dfs[["m25"]], "low", "migration"),
-          new_cols(dfs[["D"]], "high", "migration")) %>%
+df <- bind_rows(new_cols(dfs[["phi10"]], "Low", "Selection\nstrength"),
+          new_cols(dfs[["D"]], "High", "Selection\nstrength"),
+          new_cols(dfs[["H5"]], "Low", "Spatial\nautocorrelation"),
+          new_cols(dfs[["D"]], "High", "Spatial\nautocorrelation"),
+          new_cols(dfs[["r30"]], "Low", "Environmental\ncorrelation"),
+          new_cols(dfs[["D"]], "High", "Environmental\ncorrelation"),
+          new_cols(dfs[["D"]], "Low", "Population size"),
+          new_cols(dfs[["K2"]], "High", "Population size"),
+          new_cols(dfs[["m25"]], "Low", "Migration"),
+          new_cols(dfs[["D"]], "High", "Migration")) %>%
   mutate(param = factor(param, 
-                        levels = c("population size", "migration", "selection\nstrength", 
-                        "spatial\nautocorrelation", "environmental\ncorrelation"))) %>%
-  mutate(level = factor(level, levels = c("low", "high")))
+                        levels = c("Population size", "Migration", "Selection\nstrength", 
+                        "Spatial\nautocorrelation", "Environmental\ncorrelation"))) %>%
+  mutate(level = factor(level, levels = c("Low", "High")))
 
 ```
 
@@ -86,21 +86,21 @@ df <- bind_rows(new_cols(dfs[["phi10"]], "low", "selection\nstrength"),
 # create dfs with scaled coords so that you can plot faceted plots
 df1 <- data.frame(df, zw = df$z1, 
                   xw = scales::rescale(df$x, to=c(0,0.48)), yw = scales::rescale(df$y, to=c(0,0.48)))
-df2 <- data.frame(df, zw = df$z2, 
+df2 <- data.frame(df, zw = df$env1, 
                   xw = scales::rescale(df$x, to=c(0.52,1)), yw = scales::rescale(df$y, to=c(0,0.48)))
 dfw <- bind_rows(df1, df2)
 
 ggplot(dfw, aes(x = xw, y = yw, col = zw)) + 
-  geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
-  geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
+  geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
+  geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
   geom_point(pch = 16, size = 0.9) +
-  geom_rect(xmin = 0, xmax = 0.10, ymin = 0.42, ymax = 0.48, 
+  geom_rect(xmin = 0, xmax = 0.13, ymin = 0.42, ymax = 0.48, 
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
-  geom_rect(xmin = 0.52, xmax = 0.62, ymin = 0.42, ymax = 0.48,
+  geom_rect(xmin = 0.52, xmax = 0.65, ymin = 0.42, ymax = 0.48,
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
-  annotate("text", x = 0.05, y = 0.45, label = "T1", col = "darkgray", size = 6) +
-  annotate("text", x = 0.57, y = 0.45, label = "T2", col = "darkgray", size = 6) +
-  facet_grid(param ~ level, switch = "both") +
+  annotate("text", x = 0.05, y = 0.45, label = "Trait 1", col = "darkgray", size = 6) +
+  annotate("text", x = 0.57, y = 0.45, label = "Env 1", col = "darkgray", size = 6) +
+  facet_grid(param ~ level, switch = "y") +
   theme_bw() +
   scale_color_viridis_c(option = "mako", alpha = 0.8)+
   theme(panel.grid.major = element_blank(), 
@@ -119,7 +119,9 @@ ggplot(dfw, aes(x = xw, y = yw, col = zw)) +
         panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1)) +
   coord_fixed() 
 
+
 ```
+
 ```{r}
 phidf <- 
   bind_rows(data.frame(dfs_all$phi10, phi = 0.1), data.frame(dfs_all$D, phi = 1.0), data.frame(dfs_all$phi50, phi = 0.5)) %>%
