@@ -16,10 +16,31 @@ df <- read.csv(here("p3_methods", "outputs", "popsize_results.csv"))
 df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max = max(popsize))
 ```
 
-# Mismatch
+# Phenotype-environment association 
 ```{r fig.width=10, fig.height=4}
-df <- read.csv(here("p3_methods", "outputs", "mismatch_results.csv"))
+df <- 
+  read.csv(here("p3_methods", "outputs", "mismatch_results.csv")) %>%
+  filter(sampstrat == "full")
 
+df %>%
+  # calculate the proportion of times the phenotype ~ environment models were significant
+  # mod_sig is 0 if neither model (e.g., env1/z1 or env2/z2) was significant, 0.5 if one model was, and 1 if both models were
+  summarize(mean(mod_sig == 1))
+  # result 99.9% of the time phenotype and environment are correlated
+
+# pull out the one simulation that is not significant
+df %>%
+  filter(mod_sig < 1)
+# This makes sense: small pop size, weak selection, high migration, low spatial autocorrelation
+# and even then one of the models is still significant!
+
+df <-
+  df %>%
+  mutate(mod_coeff = (mod1_coeff + mod2_coeff)/2) 
+```
+
+# Phenotype-environment mismatch
+```{r fig.width=10, fig.height=4}
 df$eff_mismatch <- df$phi * df$mismatch_mean
 
 ggplot(df[df$sampstrat == "full", ], aes(x = eff_mismatch, fill = factor(phi))) +
