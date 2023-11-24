@@ -14,6 +14,6 @@ source activate gnx
 
 ## Run (note: this takes several weeks and is parallelized)
 ## Contact anusha.bishop@berkeley.edu if you would like the simulation results
-python3 run_gnx.py
+python3 run_gnx.py > run_gnx.pyout
 
 cd ..
