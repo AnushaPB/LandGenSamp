@@ -9,7 +9,7 @@ Rscript create_genomic_architecture.R
 
 ## Create and activate conda env
 ## This conda env was created with the p1_gnxsims/gnx/conda_create.sh script
-conda env create -f gnx.yml
+conda env create -f gnx.yml -n gnx
 source activate gnx
 
 ## Run (note: this takes several weeks and is parallelized)
