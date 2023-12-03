@@ -94,15 +94,15 @@ ggplot(dfw, aes(x = xw, y = yw, col = zw)) +
   geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
   geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
   geom_point(pch = 16, size = 0.9) +
-  geom_rect(xmin = 0, xmax = 0.13, ymin = 0.42, ymax = 0.48, 
+  geom_rect(xmin = 0, xmax = 0.16, ymin = 0.42, ymax = 0.48, 
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
-  geom_rect(xmin = 0.52, xmax = 0.65, ymin = 0.42, ymax = 0.48,
+  geom_rect(xmin = 0.52, xmax = 0.68, ymin = 0.42, ymax = 0.48,
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
-  annotate("text", x = 0.05, y = 0.45, label = "Trait 1", col = "darkgray", size = 6) +
-  annotate("text", x = 0.57, y = 0.45, label = "Env 1", col = "darkgray", size = 6) +
+  annotate("text", x = 0.08, y = 0.45, label = "Trait 1", col = "darkgray", size = 6) +
+  annotate("text", x = 0.59, y = 0.45, label = "Env 1", col = "darkgray", size = 6) +
   facet_grid(param ~ level, switch = "y") +
   theme_bw() +
-  scale_color_viridis_c(option = "mako", alpha = 0.8)+
+  scale_color_viridis_c(option = "mako", alpha = 0.9)+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), legend.position = "none",
         axis.title.x=element_blank(), axis.ticks.x=element_blank(),
