@@ -1,5 +1,6 @@
 ---
-title: "Supplementary File 3: GEA Results"
+title: "Optimizing sampling design for landscape genomics: GEA results"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: 
   html_document:
     toc: true
@@ -27,9 +28,9 @@ p3path <- here("p3_methods", "outputs")
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
 
-***
+------------------------------------------------------------------------
 
-<font size="4"> **Plots:** </font> 
+<font size="4"> **Plots:** </font>
 
 **Summary plots** - For the summary plots, each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. Sample strategy is on the y-axis and number of sites is on the x-axis.Note that each average encompasses all of the other varying simulation parameters.
 
@@ -80,11 +81,11 @@ plots <-
 do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
 ```
 
-<font size="4"> **Methods:** </font> 
+<font size="4"> **Methods:** </font>
 
 **K** - number of latent factors used in LFMM
 
-**TPR** - True Positive Rate 
+**TPR** - True Positive Rate
 
 **FDR** - False Discovery Rate
 
@@ -94,8 +95,7 @@ do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
 
 **lasso vs ridge**- "lasso" and "ridge" are different methods utilized by LFMM that have different penalization functions (Caye et al., 2019)
 
-***
-
+------------------------------------------------------------------------
 
 ```{r}
 stats <- c("TPRCOMBO_relaxed", "TPRCOMBO_strict", "FDRCOMBO_relaxed", "FDRCOMBO_strict")
@@ -224,7 +224,6 @@ summary_plots <-
       ))
 ```
 
-
 ```{r, fig.width=14, fig.height=7}
 walk(summary_plots, ~walk(.x, grid.arrange))
 ```
@@ -298,9 +297,11 @@ walk(stats, ~run_lmer(rda_site, .x,
 walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 ```
 
----
+------------------------------------------------------------------------
 
-```{r, fig.width = 13, fig.height = 8, include = FALSE}
+# Figures:
+
+```{r, fig.width = 11, fig.height = 4.5}
 df <- 
   bind_rows(data.frame(lfmm_ind, method = "LFMM", sampling = "individual"),
             data.frame(rda_ind, method = "RDA", sampling = "individual"),
@@ -317,7 +318,7 @@ ggdf <-
   pivot_longer(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), names_to = "Statistic", values_to = "values") %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = c("TPR relaxed", "FDR relaxed"))) %>%
-  rename(Scheme = sampstrat)
+  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "EG")))
 
 ind_plts <-
   ggdf %>%
@@ -325,9 +326,15 @@ ind_plts <-
   group_by(scenario) %>%
   group_split() %>%
   map(~{
-    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-    geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
-    geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, col = Scheme, fill = Scheme, pch = Scheme)) +
+    geom_line(data = filter(.x, Scheme == "T"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "T"), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "G"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "G"), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "R"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "R"), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "EG"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "EG"), cex = 2, alpha = 0.8) +
     ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
     xlab("Number of samples") +
     ylab("Statistic") +
@@ -335,17 +342,19 @@ ind_plts <-
     theme(panel.border = element_rect(colour = "lightgray", fill = NA),
           strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
           panel.background = element_blank(),
+          
+          axis.text = element_text(size = 11),
           strip.text = element_text(size = 12),
           title = element_text(size = 12),
           panel.spacing = unit(0.5, "lines"),
           legend.position = "right") +
-    scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-    scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
     scale_shape_manual(values = c(21:24)) +
     ggtitle("A. Individual-based sampling")
     
   }) 
-  
+
 
 site_plts <-
   ggdf %>%
@@ -353,29 +362,36 @@ site_plts <-
   group_by(scenario) %>%
   group_split() %>%
   map(~{
-    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-    geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
-    geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, col = Scheme, fill = Scheme, pch = Scheme)) +
+    geom_line(data = filter(.x, Scheme == "EQ"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "EQ"), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "R"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "R"), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "EG"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "EG"), cex = 2, alpha = 0.8) +
     ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
-    xlab("Number of samples") +
+    xlab("Number of sites") +
     ylab("Statistic") +
     ylim(0,1) +
     theme(panel.border = element_rect(colour = "lightgray", fill = NA),
           strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
           panel.background = element_blank(),
+          axis.text = element_text(size = 11),
           strip.text = element_text(size = 12),
           title = element_text(size = 12),
           panel.spacing = unit(0.5, "lines"),
           legend.position = "right") +
-    scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
-    scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
+    scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
     scale_shape_manual(values = c(21:23)) +
     ggtitle("B. Site-based sampling")
   })
 
+pdf(here("plots/GEA_plots.pdf"), width = 11, height = 4.5)
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+dev.off()
 
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 ```
-
-
