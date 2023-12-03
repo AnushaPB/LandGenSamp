@@ -1,5 +1,6 @@
 ---
-title: "Supplementary File 4: IBD and IBE Results"
+title: "Optimizing sampling design for landscape genomics: IBD and IBE results"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: 
   html_document:
     toc: true
@@ -233,7 +234,8 @@ MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 
 ---
 
-```{r, fig.width = 13, fig.height = 8, include = FALSE}
+# Figures: 
+```{r, fig.width = 11, fig.height = 6.75}
 df <- 
   bind_rows(data.frame(mmrr_ind, method = "MMRR", sampling = "individual"),
             data.frame(gdm_ind, method = "GDM", sampling = "individual"),
@@ -259,8 +261,8 @@ ggdf <-
   pivot_longer(stats, names_to = "Statistic", values_to = "values") %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
-  mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE")) %>%
-  rename(Scheme = sampstrat) %>%
+  mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
+  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "EG"))) %>%
   mutate(method = factor(method, levels = c("MMRR", "GDM")))
 
   
@@ -277,9 +279,15 @@ ind_plts <-
   group_split() %>%
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-      geom_point(data = fake_point[fake_point$Statistic %in% .x[["Statistic"]], ], col = "white") +
-      geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
-      geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
+      geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "EG"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "EG"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
       xlab("Number of samples") +
       ylab("Statistic") +
@@ -287,11 +295,12 @@ ind_plts <-
             strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
             panel.background = element_blank(),
             strip.text = element_text(size = 12),
+            axis.text = element_text(size = 11),
             title = element_text(size = 12),
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right") +
-      scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
       scale_shape_manual(values = c(21:24)) +
       ggtitle("A. Individual-based sampling")
   }) 
@@ -305,23 +314,35 @@ site_plts <-
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
       geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
-      geom_line(lwd = 1, aes(col = Scheme), alpha = 0.8) +
-      geom_point(cex = 2, aes(col = Scheme, pch = Scheme, fill = Scheme), alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "EG"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "EG"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       ggh4x::facet_grid2(Statistic~method, scales = "free_y") +
-      xlab("Number of samples") +
+      xlab("Number of sites") +
       ylab("Statistic") +
       theme(panel.border = element_rect(colour = "lightgray", fill = NA),
             strip.background = element_rect(fill = "lightgray", colour = "lightgray"),
             panel.background = element_blank(),
             strip.text = element_text(size = 12),
+            axis.text = element_text(size = 11),
             title = element_text(size = 12),
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right") +
-      scale_color_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
-      scale_fill_manual(values = c( "#0D0887FF", "#17c3b2", "#ED7953FF")) +
+      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
+      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
       scale_shape_manual(values = c(21:23)) +
       ggtitle("B. Site-based sampling")
   })
+
+pdf(here("plots/IBDIBE_plots.pdf"), width = 11, height = 6.75)
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
+grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
+dev.off()
 
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
