@@ -13,6 +13,7 @@ library(viridis)
 library(spatialEco)
 library(raster)
 library(purrr)
+library(terra)
 
 wdir <- here("p1_gnxsims", "MNLM")
 ```
@@ -44,56 +45,66 @@ view_mnlm <- function(seed, H, r){
 
 combos <- expand.grid(seed = c(1,2,3), H = c(0.05, 0.5), r = c(0.3, 0.6))
 
-par(mfrow=c(6,4), mar=rep(3,4), oma=rep(0,4))
-pmap(combos[1:24,], view_mnlm)
+par(mfrow = c(6,4), mar = rep(3,4), oma = rep(0,4))
+pmap(combos, view_mnlm)
 
 ```
 
 
-```{CHUNK TO CALC STATS r}
+```{r CHUNK TO CALC STATS}
+n <- 3
+d <- (n^2 - 1)/2
+f <- matrix(c(rep(1,d),0,rep(1,d)), n, n)
 
-par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
-for(seed in c(1, 2, 3)){
-  for(H in c(0.05,0.5)){
-    for(r in c(0.3, 0.6)){
-      set.seed(seed)
-      
-      env1 <- read.csv(here(wdir, "layers", paste0("seed",seed,
-                                      "_env1",
-                                      "_H", gsub("\\.", "", as.character(H*100)),
-                                      "_r", gsub("\\.", "", as.character(r*100)),
-                                      ".csv"
-                                      )), header=FALSE)
+library(purrr)
+library(raster)
+# Other necessary libraries
+
+n <- 3
+d <- (n^2 - 1) / 2
+f <- matrix(c(rep(1, d), 0, rep(1, d)), n, n)
+
+# Define a function to process each combination of seed, H, and r
+process_combination <- function(seed, H, r) {
+  set.seed(seed)
   
-      env2 <- read.csv(here(wdir, "layers", paste0("seed",seed,
-                                          "_env2",
-                                          "_H", gsub("\\.", "", as.character(H*100)),
-                                          "_r", gsub("\\.", "", as.character(r*100)),
-                                          ".csv"
-                                          )), header=FALSE)
-      env1 <- raster(as.matrix(env1))
-      env2 <- raster(as.matrix(env2))
-      
-      #crop from 101x101 to 100x100 so that it is easier to partition the landscape for grid sampling later
-      env1 <- crop(env1, c(0,100,0,100))
-      MI1 <- round(Moran(env1, w=f),2)
-      
-      env2 <- crop(env2, c(0,100,0,100))
-      MI2 <- round(Moran(env2,  w=f),2)
-      
-      pearcor <- round(layerStats(stack(env1,env2),"pearson")$`pearson correlation coefficient`,1)[1,2]
-      
-      plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env1 (Moran's I = ",MI1,")"))
-      plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env2 (Moran's I = ",MI2,")"))
-      
-      rascor <- rasterCorrelation(rast(env1),rast(env2),5)
-      MIr <- round(Moran(raster(rascor)),2)
-      plot(rascor, col=inferno(100), box=FALSE, axes=FALSE, zlim = c(-1,1), 
-           main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
-      
-    }
-  }
+  env1_file <- paste0("seed", seed, "_env1", "_H", gsub("\\.", "", as.character(H * 100)), "_r", gsub("\\.", "", as.character(r * 100)), ".csv")
+  env2_file <- paste0("seed", seed, "_env2", "_H", gsub("\\.", "", as.character(H * 100)), "_r", gsub("\\.", "", as.character(r * 100)), ".csv")
+  
+  env1 <- raster(as.matrix(read.csv(file.path(wdir, "layers", env1_file), header = FALSE)))
+  env2 <- raster(as.matrix(read.csv(file.path(wdir, "layers", env2_file), header = FALSE)))
+  
+  env1 <- crop(env1, c(0, 100, 0, 100))
+  env2 <- crop(env2, c(0, 100, 0, 100))
+  
+  MI1 <- round(Moran(env1, w = f), 2)
+  MI2 <- round(Moran(env2, w = f), 2)
+  
+  pearcor <- round(layerStats(stack(env1, env2), "pearson")$`pearson correlation coefficient`, 1)[1, 2]
+  
+  rascor <- rasterCorrelation(rast(env1), rast(env2), 5)
+  MIr <- round(Moran(raster(rascor)), 2)
+  
+  
+  plot(env1, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env1 (Moran's I = ",MI1,")"))
+  plot(env2, box=FALSE, axes=FALSE, col=inferno(100), legend.width = 2, main = paste0("env2 (Moran's I = ",MI2,")"))
+  plot(rascor, col=inferno(100), box=FALSE, axes=FALSE, zlim = c(-1,1), main = paste0("H = ",H," | r = ",pearcor,"\n(Moran's I = ",MIr,")"), legend.width=2)
+  
+  list(MI1 = MI1, MI2 = MI2, pearcor = pearcor, MIr = MIr, seed = seed, H = H, r = r)
 }
 
+# Create combinations of seed, H, and r
+combinations <- crossing(seed = c(1, 2, 3), H = c(0.05, 0.5), r = c(0.3, 0.6))
+
+# Apply the function to each combination
+par(mfrow=c(4,3), mar=rep(2,4), oma=rep(1,4))
+results <- pmap(combinations, process_combination)
+
+df <- bind_rows(results)
+
+df %>%
+  mutate(avgMI = (MI1 + MI2)/2) %>%
+  group_by(H) %>%
+  summarize(mean = mean(avgMI))
 ```
 
