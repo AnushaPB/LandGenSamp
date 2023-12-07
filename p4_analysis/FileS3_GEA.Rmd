@@ -311,7 +311,7 @@ df <-
 ggdf <- 
   df %>%
   mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
-                              !(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5) ~ "worst",
+                              K == 1 & m == 0.25 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
                               .default = NA)) %>%
   group_by(method, sampstrat, nsamp, sampling, scenario) %>%
   summarise_at(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), mean, na.rm = TRUE) %>%
