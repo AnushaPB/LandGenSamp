@@ -4,9 +4,8 @@ Optimizing sampling design for landscape genomics
 ## 1. Files
 
 I have tried to create a complete list of files in all of the
-directories and what they are for, but I am a fallible human being, so
-shoot me an email if I have missed anything or you have questions
-(<anusha.bishop@berkeley.edu>).
+directories and what they are for, but shoot me an email if I have
+missed anything or you have questions (<anusha.bishop@berkeley.edu>).
 
 Software versions:
 
