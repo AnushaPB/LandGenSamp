@@ -1,5 +1,5 @@
 ---
-title: "Landscape genomic sampling project"
+title: "Optimizing sampling design for landscape genomics"
 output: github_document
 ---
 
@@ -89,14 +89,18 @@ Analyze and visualize landscape genomic results
 # 2. Running everything
 
 ```bash
+# clone repo
+git clone https://github.com/AnushaPB/LandGenSamp.git
+cd LandGenSamp
+
 # Run gnx simulations
 bash p1_gnxsims_job.sh
 
 # Create subsampled datasets
-bash o2_sampling_job.sh
+bash p2_sampling_job.sh
 
 # Run landscape genomic methods
 bash p3_methods_job.sh
 
-# Results can be visualized with the Rmd notebooks in the p4_analysis folder
+# Results can be visualized with the .Rmd notebooks in the p4_analysis folder
 ```

@@ -1,4 +1,4 @@
-Landscape genomic sampling project
+Optimizing sampling design for landscape genomics
 ================
 
 ## 1. Files
@@ -91,25 +91,18 @@ Analyze and visualize landscape genomic results
 # 2. Running everything
 
 ``` bash
-# Create MNLMs
-Rscript p1_gnxims/MNLM/create_MNLM.R
-# The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
+# clone repo
+git clone https://github.com/AnushaPB/LandGenSamp.git
+cd LandGenSamp
 
 # Run gnx simulations
-cd p1_gnxsims/gnx
-## Create genomic architecture for gnx simulations
-Rscript create_genomic_architecture.R
-## Run simulations (note: this takes several weeks and is parallelized)
-## contact anusha.bishop@berkeley.edu if you would like the simulation results
-python3 run_gnx.py
+bash p1_gnxsims_job.sh
 
 # Create subsampled datasets
-cd ../p2_gnxsims
-bash sampling_job.sh
+bash p2_sampling_job.sh
 
 # Run landscape genomic methods
-cd ../p3_methods
-bash methods_job.sh
+bash p3_methods_job.sh
 
-# Results can be visualized with the Rmd notebooks in the p4_analysis folder
+# Results can be visualized with the .Rmd notebooks in the p4_analysis folder
 ```
