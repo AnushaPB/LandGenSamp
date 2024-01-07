@@ -149,9 +149,8 @@ ggplot(phidf, aes(x = x, y = y, col = value)) +
   coord_fixed() 
 ```
 
-```{r, fig.width = 7, fig.height = 7}
+```{r, fig.width = 11, fig.height = 6.5}
 df <- get_gsd(here("p4_analysis/example_data/example_combos/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
-
 env1 <- format_env(env = 1, H = 0.5, r = 0.6, seed = 1)
 
 param_set <- data.frame(K = 1, phi = 1, m = 1, seed = 1, H = 0.50, r = 0.60, it = 0)
@@ -173,7 +172,7 @@ ind_samples <-
                            sampstrat == "grid" ~ "G",
                            sampstrat == "envgeo" ~ "EG",
                            sampstrat == "trans" ~ "T")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = c("T", "R", "G", "EG")))
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("T", "R", "G", "EG"))))
 
 site_samples <-
   expand.grid(sampstrat = c("rand", "equi", "envgeo"), 
@@ -183,34 +182,55 @@ site_samples <-
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
                            sampstrat == "equi" ~ "EQ",
                            sampstrat == "envgeo" ~ "EG")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = c("R", "EQ", "EG")))
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "EQ", "EG"))))
 
 
 (plt1 <-
-  ggplot(ind_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
-  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 1, stroke = 0.5) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis_c(option = "mako") + 
-  scale_fill_viridis_c(option = "mako") +
-  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
-        strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both"))
+  ggplot(ind_samples, aes(x = x, y = y, col = sampstrat)) +
+    ggtitle("A. Individual-based sampling") +
+    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    coord_equal() +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    xlab("Number of samples") +
+    ylab("Scheme") +
+    theme(panel.border = element_rect(colour = "gray", fill = NA),
+          strip.background = element_rect(fill = "gray", colour = "gray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          axis.title.x = element_text(hjust = 0.5, size = 14),
+          axis.title.y = element_text(hjust = 0.5, size = 14, angle = 90),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none") +
+    facet_grid(sampstrat ~ nsamp, switch = "both"))
 
 (plt2 <-
-  ggplot(site_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
-  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 0.7, stroke = 0.5) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis_c(option = "mako") + 
-  scale_fill_viridis_c(option = "mako") +
-  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
-        strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both"))
+  ggplot(site_samples, aes(x = x, y = y, col = sampstrat)) +
+    ggtitle("B. Site-based sampling") +
+    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    coord_equal() +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
+    xlab("Number of sites") +
+    ylab("Scheme") +
+    theme(panel.border = element_rect(colour = "gray", fill = NA),
+          strip.background = element_rect(fill = "gray", colour = "gray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          axis.title.x = element_text(hjust = 0.5, size = 14),
+          axis.title.y = element_text(hjust = 0.5, size = 14, angle = 90),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none") +
+    facet_grid(sampstrat ~ nsamp, switch = "both"))
 
-ggsave(here("plots", "indsampling.pdf"), plot = plt1)
-ggsave(here("plots", "sitesampling.pdf"), plot = plt2)
+
+pdf(here("figures", "sampling_plots.pdf"), width = 11, height = 6.5)
+grid.arrange(plt1, plt2, nrow = 1)
+dev.off()
+
 ```
 
