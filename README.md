@@ -26,8 +26,12 @@ Software versions:
 [renv](https://rstudio.github.io/renv/articles/renv.html) was used to
 manage R package dependencies. If you clone this repository and open the
 project (i.e., the .Rproj file), renv will automatically start up and
-ask you if you want to install all the required packages by running
-`renv::restore()`.
+ask you if you want to install all the required packages. The packages
+can also be installed by running `renv::restore()`.
+
+[conda](https://docs.conda.io/en/latest/) was used to manage the python
+package dependencies. The conda environment can be recreated using the
+p1_gnxsims/gnx/gnx.yml file (`conda env create -f gnx.yml -n gnx`).
 
 *Note: most of the scripts are parallelized and written to run on 10-25
 processors with 126 GB RAM*
@@ -47,11 +51,11 @@ Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
     │   └───[layers] - directory with NLM csvs (used to create landscapes for gnx simulations)
     |   
     └───[gnx]
-        │   conda_create.sh - create conda environment for gnx simulations from gnx.yml (run by p1_gnxsims_job.sh)
+        │   conda_create.sh - create conda environment for gnx simulations (used to create the gnx.yml file)
         │   create_genomic_architecture.R - create genomic architecture file for gnx simulations (run by p1_gnxsims_job.sh)
         │   FileS3_gnx_parameters.py - supplementary file of gnx parameters
         │   genomic_architecture.csv - genomic architecture file created by create_genomic_architecture.R
-        │   gnx.yml - conda yml used to create conda environment (see conda_create.sh)
+        │   gnx.yml - conda yml used to create conda environment (created by conda_create.sh)
         │   run_gnx.py - run geonomics simulations (run by p1_gnxsims_job.sh)
         │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files (run by p1_gnxsims_job.sh)
         │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files (run by p1_gnxsims_job.sh)
