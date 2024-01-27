@@ -4,7 +4,7 @@ output: html_document
 date: "2022-09-27"
 ---
 
-This notebook was used to create plots for Figure 1
+This notebook was used to create plots for Figures 1, S1 and S2
 
 ```{r}
 library("raster")
@@ -86,24 +86,23 @@ df <- bind_rows(new_cols(dfs[["phi10"]], "Low", "Selection\nstrength"),
 # create dfs with scaled coords so that you can plot faceted plots
 df1 <- data.frame(df, zw = df$z1, 
                   xw = scales::rescale(df$x, to=c(0,0.48)), yw = scales::rescale(df$y, to=c(0,0.48)))
-df2 <- data.frame(df, zw = df$env1, 
+df2 <- data.frame(df, zw = df$z2,  
                   xw = scales::rescale(df$x, to=c(0.52,1)), yw = scales::rescale(df$y, to=c(0,0.48)))
 dfw <- bind_rows(df1, df2)
-
 ggplot(dfw, aes(x = xw, y = yw, col = zw)) + 
-  geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
-  geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3") +
+  geom_rect(xmin = 0, xmax = 0.48, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
+  geom_rect(xmin = 0.52, xmax = 1, ymin = 0, ymax = 0.48, fill = "#D3D3D3", col = "#D3D3D3") +
   geom_point(pch = 16, size = 0.9) +
-  geom_rect(xmin = 0, xmax = 0.13, ymin = 0.42, ymax = 0.48, 
+  geom_rect(xmin = 0, xmax = 0.10, ymin = 0.42, ymax = 0.48, 
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
   geom_rect(xmin = 0.52, xmax = 0.65, ymin = 0.42, ymax = 0.48,
             fill = "white", col = "white", lwd = 2, alpha = 0.2) +
-  annotate("text", x = 0.05, y = 0.45, label = "Trait 1", col = "darkgray", size = 6) +
-  annotate("text", x = 0.57, y = 0.45, label = "Env 1", col = "darkgray", size = 6) +
-  facet_grid(param ~ level, switch = "y") +
+  annotate("text", x = 0.05, y = 0.45, label = "T1", col = "darkgray", size = 6) +
+  annotate("text", x = 0.57, y = 0.45, label = "T2", col = "darkgray", size = 6) +
+  facet_grid(param ~ level, switch = "both") +
   theme_bw() +
   scale_color_viridis_c(option = "mako", alpha = 0.8)+
-  theme(panel.grid.major = element_blank(), 
+   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), legend.position = "none",
         axis.title.x=element_blank(), axis.ticks.x=element_blank(),
         axis.title.y=element_blank(), axis.ticks.y=element_blank(),
@@ -118,7 +117,6 @@ ggplot(dfw, aes(x = xw, y = yw, col = zw)) +
         legend.key.size = unit(1, 'cm'), 
         panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1)) +
   coord_fixed() 
-
 
 ```
 
@@ -151,9 +149,8 @@ ggplot(phidf, aes(x = x, y = y, col = value)) +
   coord_fixed() 
 ```
 
-```{r, fig.width = 7, fig.height = 7}
+```{r, fig.width = 11, fig.height = 6.5}
 df <- get_gsd(here("p4_analysis/example_data/example_combos/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
-
 env1 <- format_env(env = 1, H = 0.5, r = 0.6, seed = 1)
 
 param_set <- data.frame(K = 1, phi = 1, m = 1, seed = 1, H = 0.50, r = 0.60, it = 0)
@@ -173,9 +170,9 @@ ind_samples <-
   bind_rows() %>%
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
                            sampstrat == "grid" ~ "G",
-                           sampstrat == "envgeo" ~ "EG",
+                           sampstrat == "envgeo" ~ "ES",
                            sampstrat == "trans" ~ "T")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = c("T", "R", "G", "EG")))
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("T", "R", "G", "ES"))))
 
 site_samples <-
   expand.grid(sampstrat = c("rand", "equi", "envgeo"), 
@@ -184,37 +181,56 @@ site_samples <-
   bind_rows() %>%
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
                            sampstrat == "equi" ~ "EQ",
-                           sampstrat == "envgeo" ~ "EG")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = c("R", "EQ", "EG")))
+                           sampstrat == "envgeo" ~ "ES")) %>%
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "EQ", "ES"))))
 
 
 (plt1 <-
-  ggplot(ind_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
-  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 1, stroke = 0.5) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis_c(option = "mako") + 
-  scale_fill_viridis_c(option = "mako") +
-  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
-        strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both"))
+  ggplot(ind_samples, aes(x = x, y = y, col = sampstrat)) +
+    ggtitle("A. Individual-based sampling") +
+    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    coord_equal() +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+    xlab("Number of samples") +
+    ylab("Scheme") +
+    theme(panel.border = element_rect(colour = "gray", fill = NA),
+          strip.background = element_rect(fill = "gray", colour = "gray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          axis.title.x = element_text(hjust = 0.5, size = 14),
+          axis.title.y = element_text(hjust = 0.5, size = 14, angle = 90),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none") +
+    facet_grid(sampstrat ~ nsamp, switch = "both"))
 
 (plt2 <-
-  ggplot(site_samples, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env1, xy = TRUE), aes(fill = layer), alpha = 0.9) + 
-  geom_point(colour = "black", pch = 3, size = 1.5, alpha = 0.7, stroke = 0.5) +
-  coord_equal() +
-  theme_void() + 
-  scale_color_viridis_c(option = "mako") + 
-  scale_fill_viridis_c(option = "mako") +
-  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size = 20),
-        strip.text = element_text(size = 20))+
-  facet_grid(sampstrat ~ nsamp, switch = "both"))
+  ggplot(site_samples, aes(x = x, y = y, col = sampstrat)) +
+    ggtitle("B. Site-based sampling") +
+    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    coord_equal() +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
+    xlab("Number of sites") +
+    ylab("Scheme") +
+    theme(panel.border = element_rect(colour = "gray", fill = NA),
+          strip.background = element_rect(fill = "gray", colour = "gray"),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          axis.title.x = element_text(hjust = 0.5, size = 14),
+          axis.title.y = element_text(hjust = 0.5, size = 14, angle = 90),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none") +
+    facet_grid(sampstrat ~ nsamp, switch = "both"))
 
-ggsave(here("plots", "indsampling.pdf"), plot = plt1)
-ggsave(here("plots", "sitesampling.pdf"), plot = plt2)
+
+pdf(here("figures", "Figure_1.pdf"), width = 11, height = 6.5)
+grid.arrange(plt1, plt2, nrow = 1)
+dev.off()
+
 ```
- ```{r, fig.height = 7, fig.width = 11}
-grid.arrange(ind,site)
-```
+

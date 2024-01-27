@@ -321,7 +321,7 @@ format_mmrr <- function(path, full = FALSE){
     
     # rename sampstrats
     mutate(sampstrat = case_when(
-      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "envgeo" ~ "ES",
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
@@ -391,7 +391,7 @@ format_gdm <- function(path, full = FALSE){
     
     # rename sampstrats
     mutate(sampstrat = case_when(
-      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "envgeo" ~ "ES",
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
@@ -460,7 +460,7 @@ format_lfmm <- function(path, p_filter = TRUE){
 
     # rename sampstrats
     mutate(sampstrat = case_when(
-      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "envgeo" ~ "ES",
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
@@ -538,7 +538,7 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
     
     # rename sampstrats
     mutate(sampstrat = case_when(
-      sampstrat == "envgeo" ~ "EG",
+      sampstrat == "envgeo" ~ "ES",
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
@@ -624,7 +624,7 @@ run_lmer <- function(df, stat, filepath = NULL){
     if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
     em_df <- data.frame(contrast = NA, estimate = NA, SE = NA, df = NA, z.ratio = NA, p.value = NA)
     if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
-    warning(paste("\nAll values of", stat, "are fixed or NA; no model is returned"))
+    warning(paste("\nAll values of", make_pretty_names(stat), "are fixed or NA; no model is returned"))
     return()
   }
   

@@ -3,4 +3,4 @@ get_app_data <- function(method, sampling) {
   # convert parameters to factors
   df <- var_to_fact(df) 
   return(df)
-}
+}r
