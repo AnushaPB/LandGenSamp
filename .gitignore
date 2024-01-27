@@ -1,4 +1,4 @@
-#Ignore files 
+# Ignore files 
 *.vcf
 *.csv
 *.fasta
@@ -9,23 +9,27 @@
 *.pyout
 *.tif
 
-#Ignore data. envs and outputs
+# Ignore data. envs and outputs
 p1_gnxsim/LGS_data
-p2_sampling/outputs
 p3_methods/outputs
+p2_sampling/outputs
 /venv
 /pyout
 
-#ignore GNX outputs
+# KEEP COMPRESSED OUTPUTS 
+!p3_methods/outputs.zip
+!p2_sampling/outputs.zip
+
+# Ignore GNX outputs
 /GNX*
 
-#KEEP ENV CSVs (these are small and necessary for stuff to run)
+# KEEP ENV CSVs (these are small and necessary for stuff to run)
 !/p1_gnxsims/MNLM/layers/*.csv
 
-#Dstore
+# Dstore
 .DS_Store
 
-#checkpoints
+# Checkpoints
 .ipynb_checkpoints
 
 # History files
