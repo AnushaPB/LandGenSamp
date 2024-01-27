@@ -19,8 +19,6 @@ Software versions:
 
 [conda](https://docs.conda.io/en/latest/) was used to manage the python package dependencies. The conda environment can be recreated using the p1_gnxsims/gnx/gnx.yml file (`conda env create -f gnx.yml -n gnx`). 
 
-*Note: most of the scripts are parallelized and were written to run on 10-25 processors with 126 GB RAM on Ubuntu 20.04.6* 
-
 ## 2. Files
 
 I have tried to create a complete list of files in all of the directories and what they are for, but shoot me an email if I have missed anything or you have questions (anusha.bishop@berkeley.edu).
@@ -98,6 +96,8 @@ Analyze and visualize landscape genomic results
 ```
 
 # 3. Running everything
+
+**Note: most of the scripts are parallelized and were written to run on 10-25 processors with 126 GB RAM**
 
 ```bash
 # Clone repo

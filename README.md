@@ -28,9 +28,6 @@ can also be installed by running `renv::restore()`.
 package dependencies. The conda environment can be recreated using the
 p1_gnxsims/gnx/gnx.yml file (`conda env create -f gnx.yml -n gnx`).
 
-*Note: most of the scripts are parallelized and were written to run on
-10-25 processors with 126 GB RAM on Ubuntu 20.04.6*
-
 ## 2. Files
 
 I have tried to create a complete list of files in all of the
@@ -106,6 +103,9 @@ Analyze and visualize landscape genomic results
     └───[example_data] - directory for storing example data used by example_simulations.Rmd
 
 # 3. Running everything
+
+**Note: most of the scripts are parallelized and were written to run on
+10-25 processors with 126 GB RAM**
 
 ``` bash
 # Clone repo
