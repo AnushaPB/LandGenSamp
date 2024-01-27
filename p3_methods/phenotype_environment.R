@@ -97,5 +97,5 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_mismatch, here("p3_methods", "outputs" , "mismatch_results.csv"), row.names = FALSE)
+write.csv(res_mismatch, here("p3_methods", "outputs" , "phenotype_environment_results.csv"), row.names = FALSE)
 

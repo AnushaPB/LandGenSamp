@@ -19,7 +19,7 @@ df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max =
 # Phenotype-environment association 
 ```{r fig.width=10, fig.height=4}
 df <- 
-  read.csv(here("p3_methods", "outputs", "mismatch_results.csv")) %>%
+  read.csv(here("p3_methods", "outputs", "phenotype_environment_results.csv")) %>%
   filter(sampstrat == "full")
 
 df %>%
