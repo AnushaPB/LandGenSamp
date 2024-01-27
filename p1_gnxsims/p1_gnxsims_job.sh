@@ -1,3 +1,6 @@
+# Render File S2 (environmental correlations)
+Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2.Rmd')"
+
 # Create MNLMs
 Rscript p1_gnxsims/MNLM/create_MNLM.R
 # The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
