@@ -16,4 +16,13 @@ source activate gnx
 ## Contact anusha.bishop@berkeley.edu if you would like the simulation results
 python3 run_gnx.py > run_gnx.pyout
 
+# Create folder with simulation results for archive
+mkdir -p LGS_simulation_archive
+## This only contains the raw csv and vcf mod outputs from geonomics
+cp LGS_data/mod* LGS_simulation_archive
+## Compress the archive
+tar -czvf LGS_simulation_archive.tar.gz LGS_simulation_archive/
+## Create directory for dryad data
+mkdir -p dryad
+
 cd ..
