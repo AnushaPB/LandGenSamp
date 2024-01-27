@@ -29,19 +29,24 @@ processors with 126 GB RAM*
 Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
 
     [p1_gnxsims]
+    |   p1_gnxsims_job.sh - bash script to create MNLMs and run geonomics simulations
     |
     └───[MNLM]
-    │   │   create_MNLM.R - create NLMs for gnx simulations
+    │   │   create_MNLM.R - create NLMs for gnx simulations (run by p1_gnxsims_job.sh)
     │   │   view_MNLM.Rmd - view NLMs created by create_MNLM.R
+    │   │   File_S2.Rmd - generate environmental correlation distributions, rendered as .html and converted to PDF (rendered by p1_gnxsims_job.sh)
     |   |   
     │   └───[layers] - directory with NLM csvs (used to create landscapes for gnx simulations)
     |   
     └───[gnx]
-        │   create_genomic_architecture.R - create genomic architecture file for gnx simulations
+        │   conda_create.sh - create conda environment for gnx simulations from gnx.yml (run by p1_gnxsims_job.sh)
+        │   create_genomic_architecture.R - create genomic architecture file for gnx simulations (run by p1_gnxsims_job.sh)
+        │   FileS3_gnx_parameters.py - supplementary file of gnx parameters
         │   genomic_architecture.csv - genomic architecture file created by create_genomic_architecture.R
-        │   run_gnx.py - run geonomics simulations
-        │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files
-        │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files
+        │   gnx.yml - conda yml used to create conda environment (see conda_create.sh)
+        │   run_gnx.py - run geonomics simulations (run by p1_gnxsims_job.sh)
+        │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files (run by p1_gnxsims_job.sh)
+        │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files (run by p1_gnxsims_job.sh)
         │   
         └───[LGS data] - directory created by data_cleanup.sh and filled with simulation results from parallel_LGS.py
 
@@ -54,7 +59,7 @@ Generate datasets for different sampling strategies
     |   sampling_functions.R - functions used to create different sampling schemes
     |   {sampling scheme}_{ind/sitesampling}.R - all files following this pattern are used to create sampling datasets 
     |   
-    └───[outputs] - directory for storing sampling outputs
+    └───outputs.zip - compressed folder of p2_sampling outputs
 
 ### 1.3 [p3_methods](https://github.com/AnushaPB/LandGenSamp/tree/main/p3_methods)
 
@@ -67,9 +72,9 @@ Test different landscape genomic analyses
     |   IBDIBE_functions.R - functions used to run IBD/IBE analyses
     |   run_methods.R - script to run all analyses (run by methods_job.sh)
     |   popsize_counts.R - script to calculate population size for all simulations (run by methods_job.sh)
-    |   phenotype_mismatch.R - script to calculate phenotypic mismatch (run by methods_job.sh)
+    |   phenotype_environment.R - script to calculate phenotypic mismatch and phenotype-environment associations (run by methods_job.sh)
     |  
-    └───[outputs] - directory for storing methods outputs
+    └───outputs.zip - compressed folder of p3_methods outputs
 
 ### 1.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
 
@@ -77,8 +82,8 @@ Analyze and visualize landscape genomic results
 
     [p4_analysis]
     |   analysis_functions.R - functions used for running summary analyses
-    |   analysis_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods (File S2)
-    |   analysis_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods (File S3)
+    |   analysis_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods (File S4; rendered by p4_analysis.job)
+    |   analysis_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods (File S5; rendered by p4_analysis.job)
     |   analysis_simulations.Rmd - notebook for visualizing summary statistics for simulations
     |   analysis_megatable.Rmd - notebook for creating giant tables of mixed model results
     |   example_simulations.Rmd - notebook used to visualize example simulations for Figure 1
@@ -90,7 +95,7 @@ Analyze and visualize landscape genomic results
 # 2. Running everything
 
 ``` bash
-# clone repo
+# Clone repo
 git clone https://github.com/AnushaPB/LandGenSamp.git
 cd LandGenSamp
 
@@ -103,5 +108,7 @@ bash p2_sampling_job.sh
 # Run landscape genomic methods
 bash p3_methods_job.sh
 
-# Results can be visualized with the .Rmd notebooks in the p4_analysis folder
+# Run final analyses and generate figures/supplemental files
+# Note: see job file for additional information about code notebooks
+bash p4_analysis_job.sh
 ```
