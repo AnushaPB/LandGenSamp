@@ -1,5 +1,6 @@
 ---
 title: "Optimizing sampling design for landscape genomics"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: github_document
 ---
 

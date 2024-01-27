@@ -1,5 +1,6 @@
 Optimizing sampling design for landscape genomics
 ================
+Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang
 
 ## 1. Files
 
