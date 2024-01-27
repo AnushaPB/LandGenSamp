@@ -4,6 +4,7 @@ library("here") #paths
 library("foreach")
 library("doParallel")
 library("dplyr")
+library("tidyr")
 #read in general functions and objects
 source(here("general_functions.R"))
 
@@ -11,9 +12,8 @@ source(here("general_functions.R"))
 #  MISMATCH  #
 ##############
 
-
 #register cores
-cl <- makeCluster(3)
+cl <- makeCluster(20)
 registerDoParallel(cl)
 
 system.time(
@@ -45,8 +45,26 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     z1mis <- abs(gsd_df$z1 - gsd_df$env1)
     z2mis <- abs(gsd_df$z2 - gsd_df$env2)
     mis <- z1mis + z2mis
-    
-    result <- data.frame(params[i,], sampstrat = "full", nsamp = nrow(gsd_df), mismatch_mean = mean(mis), mismatch_max = max(mis))
+
+    #calculate phenotype-env correlation
+    mod1 <- summary(lm(gsd_df$z1 ~ gsd_df$env1))
+    mod2 <- summary(lm(gsd_df$z2 ~ gsd_df$env2))
+    p1 <- mod1$coefficients[-1,"Pr(>|t|)"]
+    p2 <- mod2$coefficients[-1,"Pr(>|t|)"]
+    coeff1 <- mod1$coefficients[-1,"Estimate"]
+    coeff2 <- mod2$coefficients[-1,"Estimate"]
+
+    result <- 
+      data.frame(params[i,], 
+      sampstrat = "full", 
+      nsamp = nrow(gsd_df), 
+      mismatch_mean = mean(mis), 
+      mismatch_max = max(mis),
+      mod1_p = p1,
+      mod2_p = p2,
+      mod1_coeff = coeff1,
+      mod2_coeff = coeff2)
+
     for(nsamp in nsamps){
       for(sampstrat in sampstrats){
         #subsample from data based on sampling strategy and number of samples
@@ -61,10 +79,13 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         sub_result <- data.frame(params[i,],  sampstrat = sampstrat, nsamp = nsamp, mismatch_mean = mean(mis), mismatch_max = max(mis))
         
         #bind results
-        result <- rbind.data.frame(result, sub_result)
+        result <- bind_rows(result, sub_result)
       }
     }
     
+    result <-
+      result %>%
+      mutate(mod1_sig = mod1_p < 0.05, mod2_sig = mod2_p < 0.05, mod_sig = (mod1_sig + mod2_sig)/2)
   }
   
   return(result)
@@ -76,5 +97,5 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 #stop cluster
 stopCluster(cl)
 
-write.csv(res_mismatch, "outputs/mismatch_results.csv", row.names = FALSE)
+write.csv(res_mismatch, here("p3_methods", "outputs" , "mismatch_results.csv"), row.names = FALSE)
 
