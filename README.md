@@ -2,6 +2,13 @@ Optimizing sampling design for landscape genomics
 ================
 Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang
 
+- [1. Files](#1-files)
+  - [1.1 p1_simulations](#11-p1_simulations)
+  - [1.2 p2_sampling](#12-p2_sampling)
+  - [1.3 p3_methods](#13-p3_methods)
+  - [1.4 p4_analysis](#14-p4_analysis)
+- [2. Running everything](#2-running-everything)
+
 ## 1. Files
 
 I have tried to create a complete list of files in all of the
