@@ -2,22 +2,17 @@ Optimizing sampling design for landscape genomics
 ================
 Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang
 
-- [1. Files](#1-files)
-  - [1.1 p1_simulations](#11-p1_simulations)
-  - [1.2 p2_sampling](#12-p2_sampling)
-  - [1.3 p3_methods](#13-p3_methods)
-  - [1.4 p4_analysis](#14-p4_analysis)
-- [2. Running everything](#2-running-everything)
+- [1. Dependencies](#1-dependencies)
+- [2. Files](#2-files)
+  - [2.1 p1_simulations](#21-p1_simulations)
+  - [2.2 p2_sampling](#22-p2_sampling)
+  - [2.3 p3_methods](#23-p3_methods)
+  - [2.4 p4_analysis](#24-p4_analysis)
+- [3. Running everything](#3-running-everything)
 
-## 1. Files
-
-I have tried to create a complete list of files in all of the
-directories and what they are for, but shoot me an email if I have
-missed anything or you have questions (<anusha.bishop@berkeley.edu>).
+## 1. Dependencies
 
 Software versions:
-
-- Ubuntu 20.04.6
 
 - R 4.3.0
 
@@ -33,10 +28,16 @@ can also be installed by running `renv::restore()`.
 package dependencies. The conda environment can be recreated using the
 p1_gnxsims/gnx/gnx.yml file (`conda env create -f gnx.yml -n gnx`).
 
-*Note: most of the scripts are parallelized and written to run on 10-25
-processors with 126 GB RAM*
+*Note: most of the scripts are parallelized and were written to run on
+10-25 processors with 126 GB RAM on Ubuntu 20.04.6*
 
-### 1.1 [p1_simulations](https://github.com/AnushaPB/LandGenSamp/tree/main/p1_gnxsims)
+## 2. Files
+
+I have tried to create a complete list of files in all of the
+directories and what they are for, but shoot me an email if I have
+missed anything or you have questions (<anusha.bishop@berkeley.edu>).
+
+### 2.1 [p1_simulations](https://github.com/AnushaPB/LandGenSamp/tree/main/p1_gnxsims)
 
 Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
 
@@ -60,9 +61,9 @@ Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
         │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files (run by p1_gnxsims_job.sh)
         │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files (run by p1_gnxsims_job.sh)
         │   
-        └───[LGS data] - directory created by data_cleanup.sh and filled with simulation results from parallel_LGS.py
+        └───[LGS data] - directory created by data_cleanup.sh and filled with simulation results from parallel_LGS.py.
 
-### 1.2 [p2_sampling](https://github.com/AnushaPB/LandGenSamp/tree/main/p2_sampling)
+### 2.2 [p2_sampling](https://github.com/AnushaPB/LandGenSamp/tree/main/p2_sampling)
 
 Generate datasets for different sampling strategies
 
@@ -73,7 +74,7 @@ Generate datasets for different sampling strategies
     |   
     └───outputs.zip - compressed folder of p2_sampling outputs
 
-### 1.3 [p3_methods](https://github.com/AnushaPB/LandGenSamp/tree/main/p3_methods)
+### 2.3 [p3_methods](https://github.com/AnushaPB/LandGenSamp/tree/main/p3_methods)
 
 Test different landscape genomic analyses
 
@@ -88,7 +89,7 @@ Test different landscape genomic analyses
     |  
     └───outputs.zip - compressed folder of p3_methods outputs
 
-### 1.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
+### 2.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
 
 Analyze and visualize landscape genomic results
 
@@ -104,7 +105,7 @@ Analyze and visualize landscape genomic results
     |  
     └───[example_data] - directory for storing example data used by example_simulations.Rmd
 
-# 2. Running everything
+# 3. Running everything
 
 ``` bash
 # Clone repo
