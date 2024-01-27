@@ -15,5 +15,9 @@ Rscript envgeo_sitesampling.R
 Rscript equi_sitesampling.R
 Rscript random_sitesampling.R
 
+# Compress outputs for git
+zip -r outputs.zip outputs
+# to decompress: unzip outputs
+
 cd ..
 
