@@ -231,6 +231,18 @@ walk(summary_plots, ~walk(.x, grid.arrange))
 ### 2.1.2 Linear mixed effects models
 
 *Only results from the standard RDA (not the partial RDA) are used from here on out*
+```{r, result = TRUE, message = TRUE}
+# calculate average reduction in TPR from PC correction
+tpr_avg <- 
+  rda_ind %>% 
+  select(correctPC, TPRCOMBO_relaxed, K, phi, m, seed, H, r, it, sampstrat, nsamp) %>%
+  pivot_wider(names_from = correctPC, values_from = TPRCOMBO_relaxed) %>%
+  mutate(dif = `TRUE` - `FALSE`) %>% 
+  summarize(avgdif = mean(dif, na.rm = TRUE)) 
+
+print(paste("Average reduction in relaxed TPR by using partial RDA:", round(tpr_avg, 2)))
+```
+
 
 ```{r}
 rda_ind <- 
@@ -303,22 +315,22 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 
 ```{r, fig.width = 11, fig.height = 4.75}
 df <- 
-  bind_rows(data.frame(lfmm_ind, method = "LFMM", sampling = "individual"),
-            data.frame(rda_ind, method = "RDA", sampling = "individual"),
-            data.frame(lfmm_site, method = "LFMM", sampling = "site"),
-            data.frame(rda_site, method = "RDA", sampling = "site"))
+  bind_rows(data.frame(lfmm_ind, Method = "LFMM", sampling = "individual"),
+            data.frame(rda_ind, Method = "RDA", sampling = "individual"),
+            data.frame(lfmm_site, Method = "LFMM", sampling = "site"),
+            data.frame(rda_site, Method = "RDA", sampling = "site"))
 
 ggdf <- 
   df %>%
   mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
                               K == 1 & m == 0.25 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
                               .default = NA)) %>%
-  group_by(method, sampstrat, nsamp, sampling, scenario) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
   summarise_at(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), mean, na.rm = TRUE) %>%
   pivot_longer(c("TPRCOMBO_relaxed", "FDRCOMBO_relaxed"), names_to = "Statistic", values_to = "values") %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = c("TPR relaxed", "FDR relaxed"))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "EG")))
+  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES")))
 
 ind_plts <-
   ggdf %>%
@@ -333,9 +345,9 @@ ind_plts <-
     geom_point(data = filter(.x, Scheme == "G"), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "R"), lwd = 1, alpha = 0.8) +
     geom_point(data = filter(.x, Scheme == "R"), cex = 2, alpha = 0.8) +
-    geom_line(data = filter(.x, Scheme == "EG"), lwd = 1, alpha = 0.8) +
-    geom_point(data = filter(.x, Scheme == "EG"), cex = 2, alpha = 0.8) +
-    ggh4x::facet_grid2(Statistic~method, scales = "free_y", switch = "y") +
+    geom_line(data = filter(.x, Scheme == "ES"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "ES"), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
     xlab("Number of samples") +
     ylab("") +
     ylim(0,1) +
@@ -367,9 +379,9 @@ site_plts <-
     geom_point(data = filter(.x, Scheme == "EQ"), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "R"), lwd = 1, alpha = 0.8) +
     geom_point(data = filter(.x, Scheme == "R"), cex = 2, alpha = 0.8) +
-    geom_line(data = filter(.x, Scheme == "EG"), lwd = 1, alpha = 0.8) +
-    geom_point(data = filter(.x, Scheme == "EG"), cex = 2, alpha = 0.8) +
-    ggh4x::facet_grid2(Statistic~method, scales = "free_y", switch = "y") +
+    geom_line(data = filter(.x, Scheme == "ES"), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "ES"), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
     xlab("Number of sites") +
     ylab("") +
     ylim(0,1) +
@@ -382,17 +394,168 @@ site_plts <-
           panel.spacing = unit(0.5, "lines"),
           legend.position = "right",
           strip.placement = "outside") +
-    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
-    scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
-    scale_shape_manual(values = c(21:23)) +
+    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
+    scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
+    scale_shape_manual(values = c(21:23), breaks = c("ES", "EQ", "R")) +
     ggtitle("B. Site-based sampling")
   })
 
-pdf(here("figures", "GEA_plots.pdf"), width = 11, height = 4.5)
+pdf(here("figures", "Figure_2.pdf"), width = 11, height = 4.5)
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
-grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 dev.off()
 
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 ```
+
+```{r, include = FALSE}
+# calculate reduction in performance with transect sampling
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(sampling == "individual") %>%
+  select(K, phi, m, seed, H, r, it, TPRCOMBO_relaxed, sampstrat, Method, nsamp) %>%
+  pivot_wider(names_from = sampstrat, values_from = TPRCOMBO_relaxed) %>%
+  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
+  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
+  group_by(Method) %>%
+  summarize(round(mean(T_dif),3))
+
+# calculate reduction in TPR for strict vs relaxed
+# across methods:
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual", H == 1, m == 1, phi == 1, ) %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method) %>%
+  summarize(round(mean(dif),3))
+
+# across methods + r: 
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method, r) %>%
+  summarize(round(mean(dif),3))
+
+# across all simulations:
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method, K, phi, m, H, r) %>%
+  summarize(dif = round(mean(dif),3)) %>%
+  arrange(-dif)
+
+# repeat but checking for simulation where TPR is highest
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual", H == 0.5, m == 1, phi == 1, K == 2) %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method) %>%
+  summarize(round(mean(dif),3))
+
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual", H == 0.5, m == 1, phi == 1, K == 2) %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method, r) %>%
+  summarize(round(mean(dif),3))
+
+```
+
+```{r, fig.height=5.5, fig.width=13}
+ggdf <- 
+  df %>%
+  filter(K == 2 & phi == 1 & r == 0.3) %>%
+  group_by(Method, sampstrat, nsamp, sampling, H, m) %>%
+  summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
+  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Method = factor(Method, levels = c("LFMM", "RDA"))) %>%
+  filter(Statistic == "TPR relaxed") %>%
+  mutate(m = case_when(m == 0.25 ~ "Low migration", TRUE ~ "High migration"),
+         H = case_when(H == 0.05 ~ "Low spatial autocorrelation", TRUE ~ "High spatial autocorrelation")) %>%
+  mutate(H = factor(H, levels = c("Low spatial autocorrelation", "High spatial autocorrelation")),
+         m = factor(m, levels = c("Low migration", "High migration")))
+  
+
+ind <- filter(ggdf, sampling == "individual")
+site <- filter(ggdf, sampling == "site")
+
+ind_plts <-
+  ggplot(ind, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_line(data = filter(ind, Scheme == "T"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(ind, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(ind, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(ind, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(ind, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(ind, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(ind, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(ind, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+      ylim(0,1)+
+      xlab("Number of samples") +
+      ylab("TPR relaxed") +
+      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+            strip.background = element_blank(),
+            panel.background = element_blank(),
+            strip.text = element_text(size = 12),
+            axis.text = element_text(size = 11),
+            axis.title = element_text(size = 13),
+            title = element_text(size = 12),
+            panel.spacing = unit(0.5, "lines"),
+            legend.position = "right",
+            strip.placement = "outside") +
+      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
+      scale_shape_manual(values = c(21:24)) +
+      ggtitle("A. Individual-based sampling")
+  
+
+site_plts <-
+  ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_line(data = filter(site, Scheme == "EQ"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(site, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(site, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+      ylim(0,1)+
+      xlab("Number of sites") +
+      ylab("TPR relaxed") +
+      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+            strip.background = element_blank(),
+            panel.background = element_blank(),
+            strip.text = element_text(size = 12),
+            axis.text = element_text(size = 11),
+            axis.title = element_text(size = 13),
+            title = element_text(size = 12),
+            panel.spacing = unit(0.5, "lines"),
+            legend.position = "right",
+            strip.placement = "outside") +
+      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
+      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
+      scale_shape_manual(values = c(21:23), breaks = c("ES", "EQ", "R")) +
+      ggtitle("B. Site-based sampling")
+
+
+pdf(here("figures", "GEA_plots2.pdf"), width = 13, height = 5.5)
+grid.arrange(ind_plts, site_plts, nrow = 1)
+dev.off()
+
+grid.arrange(ind_plts, site_plts, nrow = 1)
+```
+
+
+
+
+
+
+
+
+
+
