@@ -170,9 +170,9 @@ ind_samples <-
   bind_rows() %>%
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
                            sampstrat == "grid" ~ "G",
-                           sampstrat == "envgeo" ~ "EG",
+                           sampstrat == "envgeo" ~ "ES",
                            sampstrat == "trans" ~ "T")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = rev(c("T", "R", "G", "EG"))))
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("T", "R", "G", "ES"))))
 
 site_samples <-
   expand.grid(sampstrat = c("rand", "equi", "envgeo"), 
@@ -181,8 +181,8 @@ site_samples <-
   bind_rows() %>%
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
                            sampstrat == "equi" ~ "EQ",
-                           sampstrat == "envgeo" ~ "EG")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "EQ", "EG"))))
+                           sampstrat == "envgeo" ~ "ES")) %>%
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "EQ", "ES"))))
 
 
 (plt1 <-
@@ -228,7 +228,7 @@ site_samples <-
     facet_grid(sampstrat ~ nsamp, switch = "both"))
 
 
-pdf(here("figures", "sampling_plots.pdf"), width = 11, height = 6.5)
+pdf(here("figures", "Figure_1.pdf"), width = 11, height = 6.5)
 grid.arrange(plt1, plt2, nrow = 1)
 dev.off()
 
