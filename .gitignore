@@ -8,6 +8,7 @@
 *.Robj
 *.pyout
 *.tif
+*.tar.gz
 
 # Ignore data. envs and outputs
 p1_gnxsim/LGS_data
@@ -19,6 +20,10 @@ p2_sampling/outputs
 # KEEP COMPRESSED OUTPUTS 
 !p3_methods/outputs.zip
 !p2_sampling/outputs.zip
+
+# KEEP FILE STRUCTURE
+!p1_gnxsim/LGS_data
+!p1_gnxsim/LGS_data/.gitkeep
 
 # Ignore GNX outputs
 /GNX*
