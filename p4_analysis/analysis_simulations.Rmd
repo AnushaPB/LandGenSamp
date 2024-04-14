@@ -23,20 +23,20 @@ df <-
   filter(sampstrat == "full")
 
 df %>%
-  # calculate the proportion of times the phenotype ~ environment models were significant
-  # mod_sig is 0 if neither model (e.g., env1/z1 or env2/z2) was significant, 0.5 if one model was, and 1 if both models were
-  summarize(mean(mod_sig == 1))
+  # calculate the proportion of times the phenotype ~ environment correlations were significant
+  # cor_sig is 0 if neither correlation (e.g., env1/z1 or env2/z2) was significant, 0.5 if one correlation was, and 1 if both correlations were
+  summarize(mean(cor_sig == 1))
   # result 99.9% of the time phenotype and environment are correlated
 
 # pull out the one simulation that is not significant
 df %>%
-  filter(mod_sig < 1)
+  filter(cor_sig < 1)
 # This makes sense: small pop size, weak selection, high migration, low spatial autocorrelation
-# and even then one of the models is still significant!
+# and even then one of the correlations is still significant!
 
 ggdf <-
   df %>%
-  mutate(mod_coeff = (mod1_coeff + mod2_coeff)/2) %>%
+  mutate(cor_coeff = (cor1_coeff + cor2_coeff)/2) %>%
   # mutate to numeric
     mutate_at(c("K", "phi", "m", "H", "r"), ~as.numeric(as.character(.))) %>%
   # mutate params to get low and high
@@ -50,7 +50,7 @@ ggdf <-
   pivot_longer(c(K, m, phi, H, r))
 
 ggplot(ggdf) +
-geom_boxplot(aes(x = value, y = mod_coeff)) +
+geom_boxplot(aes(x = value, y = cor_coeff)) +
 facet_wrap(~name)
 ```
 
@@ -88,3 +88,14 @@ ggplot(df_long, aes(y = abs(mismatch_mean), fill = level)) +
 ```
 
 
+# Genotype-environment association
+
+```{r}
+df <- read.csv(here("p3_methods", "outputs", "genotype_environment_results.csv"))
+df <- df %>% mutate(adaptive = c(rep(TRUE, 8), rep(FALSE, 10000 - 8)))
+
+cor_summary <- 
+  df %>%
+  group_by(adaptive, m) %>% 
+  summarize(r = mean(c(cor1, cor2)), p = mean(cor_sig))
+```

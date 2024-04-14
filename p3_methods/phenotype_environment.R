@@ -8,9 +8,9 @@ library("tidyr")
 #read in general functions and objects
 source(here("general_functions.R"))
 
-##############
-#  MISMATCH  #
-##############
+##################################################
+#  Phenotype-Environment Correlations & Mismatch #
+##################################################
 
 #register cores
 cl <- makeCluster(20)
@@ -18,8 +18,10 @@ registerDoParallel(cl)
 
 system.time(
 res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
+  
   library("here")
   library("dplyr")
+  
   #set of parameter names in filepath form (for creating temp files)
   paramset <- paste0("K",params[i,"K"],
                      "_phi",params[i,"phi"]*100,
@@ -41,18 +43,18 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
   if(skip_to_next == FALSE){
     gsd_df <- get_data(i, params = params, "gsd")
     
-    #calculate phenotypic mistmatch
+    #calculate phenotypic mismatch
     z1mis <- abs(gsd_df$z1 - gsd_df$env1)
     z2mis <- abs(gsd_df$z2 - gsd_df$env2)
     mis <- z1mis + z2mis
 
     #calculate phenotype-env correlation
-    mod1 <- summary(lm(gsd_df$z1 ~ gsd_df$env1))
-    mod2 <- summary(lm(gsd_df$z2 ~ gsd_df$env2))
-    p1 <- mod1$coefficients[-1,"Pr(>|t|)"]
-    p2 <- mod2$coefficients[-1,"Pr(>|t|)"]
-    coeff1 <- mod1$coefficients[-1,"Estimate"]
-    coeff2 <- mod2$coefficients[-1,"Estimate"]
+    cor1 <- cor.test(gsd_df$z1, gsd_df$env1)
+    cor2 <- cor.test(gsd_df$z2, gsd_df$env2)
+    p1 <- cor1$p.value
+    p2 <- cor2$p.value
+    r1 <- cor1$statistic
+    r2 <- cor2$statistic
 
     result <- 
       data.frame(params[i,], 
@@ -60,10 +62,10 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       nsamp = nrow(gsd_df), 
       mismatch_mean = mean(mis), 
       mismatch_max = max(mis),
-      mod1_p = p1,
-      mod2_p = p2,
-      mod1_coeff = coeff1,
-      mod2_coeff = coeff2)
+      cor1_p = p1,
+      cor2_p = p2,
+      cor1_coeff = r1,
+      cor2_coeff = r2)
 
     for(nsamp in nsamps){
       for(sampstrat in sampstrats){
@@ -71,7 +73,7 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subIDs <- get_samples(params[i,], sampstrat, nsamp)
         subgsd_df <- gsd_df[subIDs,]
         
-        #calculate phenotypic mistmatch
+        #calculate phenotypic mistmatchq
         z1mis <- abs(subgsd_df$z1 - subgsd_df$env1)
         z2mis <- abs(subgsd_df$z2 - subgsd_df$env2)
         mis <- z1mis + z2mis
@@ -85,7 +87,7 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     
     result <-
       result %>%
-      mutate(mod1_sig = mod1_p < 0.05, mod2_sig = mod2_p < 0.05, mod_sig = (mod1_sig + mod2_sig)/2)
+      mutate(cor1_sig = cor1_p < 0.05, cor2_sig = cor2_p < 0.05, cor_sig = (cor1_sig + cor2_sig)/2)
   }
   
   return(result)
