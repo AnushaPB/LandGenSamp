@@ -14,6 +14,7 @@ library("ggplot2")
 library("lme4")
 library("lmerTest")
 
+source(here("p4_analysis", "analysis_functions.R"))
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = TRUE, message = FALSE)
 ```
 
@@ -25,81 +26,31 @@ df <- read.csv(here("p3_methods", "outputs", "popsize_results.csv"))
 df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max = max(popsize))
 ```
 
-# Phenotype-environment association 
-
-
-```{r fig.width=10, fig.height=4, results = TRUE}
-df <- 
-  read.csv(here("p3_methods", "outputs", "phenotype_environment_results.csv")) %>%
-  filter(sampstrat == "full")
-
-# Calculate the proportion of times the phenotype and environment are correlated
-df %>%
-  # replace NA with 0, the NA is due to there being no variation
-  # (there is one simulation where this occurs for one trait, which has a constant intermediate value of 0.5 across all individuals) 
-  # The simulation makes sense: small pop size, weak selection, high migration, low spatial autocorrelation
-  # and even then one of the correlations is still significant!
-  mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) %>%
-  # calculate the proportion of times the phenotype ~ environment correlations were significant
-  summarize(mean(cor_sig == 1, na.rm = TRUE))
-  # result: 99.9% of the time phenotype and environment are correlated
-
-df <- 
-  df %>%
-    # take the mean of cor1_r and cor2_r
-    mutate(cor_r = (cor1_r + cor2_r)/2) %>%
-    # replace NA with 0, the NA is due to there being no variation (as described above)
-    mutate(cor_r = case_when(is.na(cor_r) ~ 0, TRUE ~ cor_r))
-
-# Run linear model
-lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = df) %>% summary()
-
-# Calculate the magnitude of the phenotype-environment correlation across different parameter values
-df %>% 
-  group_by(H) %>%
-  summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
-
-df %>% 
-  group_by(m) %>%
-  summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
-
-df %>% 
-  group_by(phi) %>%
-  summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
-
-ggdf <-
-  df %>%
-  # mutate to numeric
-  mutate_at(c("K", "phi", "m", "H", "r"), ~as.numeric(as.character(.))) %>%
-  # mutate params to get low and high
-    mutate(
-      K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
-      m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
-      phi = case_when(phi == min(.[["phi"]]) ~ "L", phi == max(.[["phi"]]) ~ "H"),
-      H = case_when(H == min(.[["H"]]) ~ "L", H == max(.[["H"]]) ~ "H"),
-      r = case_when(r == min(.[["r"]]) ~ "L", r == max(.[["r"]]) ~ "H"),
-    ) %>%
-  pivot_longer(c(K, m, phi, H, r))
-
-ggplot(ggdf) +
-  geom_boxplot(aes(x = value, y = cor_r)) +
-  facet_wrap(~name)
-```
-
 # Phenotype-environment mismatch
-```{r fig.width=10, fig.height=4}
-df$eff_mismatch <- df$phi * df$mismatch_mean
 
-ggplot(df[df$sampstrat == "full", ], aes(x = eff_mismatch, fill = factor(phi))) +
-  geom_boxplot()
+
+```{r fig.width=10, fig.height=4, include = FALSE}
+df$eff_mismatch <- as.numeric(as.character(df$phi)) * df$mismatch_mean
 
 df %>% filter(sampstrat == "full") %>% group_by(phi, K, m, r, H) %>% summarise(mean(abs(mismatch_mean)))
-df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(mean(abs(mismatch_mean)))
-df %>% filter(sampstrat == "full") %>% group_by(H) %>% summarise(mean(abs(mismatch_mean)))
 
+```
+
+Average phenotype-environment mismatch under low and high selection strength (phi):
+```{r}
+df %>% filter(sampstrat == "full") %>% group_by(phi) %>% summarise(`Mean mismatch` = mean(abs(mismatch_mean)))
+```
+
+Average phenotype-environment mismatch under low and high spatial autocorrelation (H):
+```{r}
+df %>% filter(sampstrat == "full") %>% group_by(H) %>% summarise(`Mean mismatch` = mean(abs(mismatch_mean)))
+```
+
+```{r, include = FALSE}
 df_long <-
   df %>%
   filter(sampstrat == "full") %>%
+  mutate(across(c(phi, K, m, H, r), ~as.numeric(as.character(.x)))) %>%
   pivot_longer(c(phi, K, m, H, r)) %>%
   group_by(name) %>%
   mutate(value = case_when(
@@ -120,7 +71,80 @@ ggplot(df_long, aes(y = abs(mismatch_mean), fill = level)) +
 ```
 
 
-# Genotype-environment correlation
+# Phenotype-environment associations
+
+```{r}
+df <- 
+  read.csv(here("p3_methods", "outputs", "phenotype_environment_results.csv")) %>%
+  filter(sampstrat == "full") %>%
+  mutate(across(c(K, m, phi, H, r, seed), factor))
+```
+
+Phenotype-environment associations are significant in all but one of the 960 simulation runs:
+```{r fig.width=10, fig.height=4, results = TRUE}
+# Calculate the proportion of times the phenotype and environment are correlated
+df %>%
+  # replace NA with 0, the NA is due to there being no variation
+  # (there is one simulation where this occurs for one trait, which has a constant intermediate value of 0.5 across all individuals) 
+  # The simulation makes sense: small pop size, weak selection, high migration, low spatial autocorrelation
+  # and even then one of the correlations is still significant!
+  mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) %>%
+  # calculate the proportion of times the phenotype ~ environment correlations were significant
+  summarize(mean = mean(cor_sig == 1, na.rm = TRUE), count = sum(cor_sig == 1, na.rm = TRUE))
+  # result: 99.9% of the time phenotype and environment are correlated
+```
+
+Linear mixed effect model for phenotype-environment correlations:
+```{r, results = 'asis'}
+df <- 
+  df %>%
+    # take the mean of cor1_r and cor2_r
+    mutate(cor_r = (cor1_r + cor2_r)/2) %>%
+    # replace NA with 0, the NA is due to there being no variation (as described above)
+    mutate(cor_r = case_when(is.na(cor_r) ~ 0, TRUE ~ cor_r))
+
+# Run linear model
+mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = df)
+pretty_anova(mod, stat = "Phenotype-environment correlation")
+```
+
+Mean and standard deviation of phenotype-environment correlation across low and high spatial autocorrelation (H):
+```{r}
+# Calculate the magnitude of the phenotype-environment correlation across different parameter values
+df %>% 
+  group_by(H) %>%
+  summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
+```
+Mean and standard deviation of  phenotype-environment correlation across low and high migration (m):
+```{r}
+df %>% 
+  group_by(m) %>%
+  summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
+```
+
+
+```{r fig.width=10, fig.height=4, include = FALSE}
+ggdf <-
+  df %>%
+  # mutate to numeric
+  mutate_at(c("K", "phi", "m", "H", "r"), ~as.numeric(as.character(.))) %>%
+  # mutate params to get low and high
+    mutate(
+      K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
+      m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
+      phi = case_when(phi == min(.[["phi"]]) ~ "L", phi == max(.[["phi"]]) ~ "H"),
+      H = case_when(H == min(.[["H"]]) ~ "L", H == max(.[["H"]]) ~ "H"),
+      r = case_when(r == min(.[["r"]]) ~ "L", r == max(.[["r"]]) ~ "H"),
+    ) %>%
+  pivot_longer(c(K, m, phi, H, r))
+
+ggplot(ggdf) +
+  geom_boxplot(aes(x = value, y = cor_r)) +
+  facet_wrap(~name, nrow = 1) +
+  ylab("Phenotype-environment correlation")
+```
+
+# Genotype-environment correlations
 
 ```{r}
 ge_df <- read.csv(here("p3_methods", "outputs", "genotype_environment_results.csv"))
@@ -132,11 +156,18 @@ df <-
   mutate(cor2_rNA = case_when(is.na(cor2_r) ~ 0, TRUE ~ cor2_r)) %>%
   mutate(cor_sigNA = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) 
 
+```
+
+Genotype-environment correlations at adaptive loci are significant 80% of the time across all simulations and both environmental variables:
+```{r}
 # calculate proportion of times gea is significant
 df %>% 
   filter(adaptive == TRUE) %>%
   summarize(mean((cor_sigNA == 0.5 | cor_sigNA == 1), na.rm = TRUE))
+```
 
+Linear mixed effect model for genotype-environment correlations at adaptive loci:
+```{r, results = "asis"}
 # combine r
 ggdf <-
   df %>%
@@ -144,12 +175,11 @@ ggdf <-
   mutate(cor_r = abs(value)) 
 
 # run linear model on adaptive loci only
-lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = filter(ggdf, adaptive == TRUE)) %>% summary()
+mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = filter(ggdf, adaptive == TRUE)) %>% summary()
+pretty_anova(mod)
+```
 
-ggplot(ggdf) +
-  geom_density(aes(fill = adaptive, y = cor_r), alpha = 0.5) +
-  facet_wrap(~factor(m))
-
+```{r}
 # no groups
 df %>%
   group_by(adaptive) %>%
