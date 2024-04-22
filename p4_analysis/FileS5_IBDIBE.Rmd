@@ -251,14 +251,14 @@ stats <- c(
     "env_coeff_err_ae_scale"
   )
 
-ggdf <- 
+meandf <- 
   df %>%
   mutate(scenario = case_when(K == 1 & m == 0.25 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
                               K == 2 & m == 1 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
                               .default = NA)) %>%
   group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
   summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
-  pivot_longer(stats, names_to = "Statistic", values_to = "values") %>%
+  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
   mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
@@ -266,6 +266,22 @@ ggdf <-
   mutate(Method = factor(Method, levels = c("MMRR", "GDM")))
 
   
+ggdf <- 
+  df %>%
+  mutate(scenario = case_when(K == 1 & m == 0.25 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 2 & m == 1 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
+  summarise_at(all_of(stats), sd, na.rm = TRUE) %>%
+  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
+  mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
+  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Method = factor(Method, levels = c("MMRR", "GDM"))) %>%
+  rename(sd = values) %>%
+  left_join(meandf)
+
 fake_point <- 
     data.frame(nsamp = 20, values = c(rep(c(0,0,NA), 2), rep(c(1,1,NA), 2)),
                name = stats) %>%
@@ -278,16 +294,18 @@ ind_plts <-
   group_by(scenario, IB) %>%
   group_split() %>%
   map(~{
-    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
-      geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)))) +
+      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white", aes(y = values)) +
+      #geom_ribbon(data = .x, aes(fill = Scheme, ymin = values - sd, ymax = values + sd), lwd = 1, alpha = 0.15
+      geom_errorbar(data = .x, aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
       xlab("Number of samples") +
       ylab("") +
@@ -300,13 +318,52 @@ ind_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_shape_manual(values = c(21:24)) +
+      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
+      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)) +
       ggtitle("A. Individual-based sampling")
   }) 
-  
 
+ind_plts <-
+  ggdf %>%
+  filter(sampling == "individual") %>%
+  group_by(scenario, IB) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)))) +
+      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white", aes(y = values)) +
+      geom_errorbar(data = filter(.x, Scheme == "T"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_errorbar(data = filter(.x, Scheme == "G"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_errorbar(data = filter(.x, Scheme == "R"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_errorbar(data = filter(.x, Scheme == "ES"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
+      xlab("Number of samples") +
+      ylab("") +
+      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+            strip.background = element_blank(),
+            panel.background = element_blank(),
+            strip.text = element_text(size = 12),
+            axis.text = element_text(size = 11),
+            title = element_text(size = 12),
+            panel.spacing = unit(0.5, "lines"),
+            legend.position = "right",
+            strip.placement = "outside") +
+      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
+      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)) +
+      ggtitle("A. Individual-based sampling")
+  }) 
+ind_plts[[1]]
+```
+```{r}
 site_plts <-
   ggdf %>%
   filter(sampling == "site") %>%
@@ -351,6 +408,8 @@ grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
 grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
+
+ind_plts[[1]]
 ```
 
 ```{r, include = FALSE}
