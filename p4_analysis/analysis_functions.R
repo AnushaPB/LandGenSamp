@@ -49,6 +49,7 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
 make_pretty_names <- function(stat_name) {
   map_chr(stat_name, \(stat_name){
     new_name <- ""
+    if (grepl("phenotype-environment", stat_name) | grepl("genotype-environment", stat_name)) return(stat_name)
     if (stat_name == "K_factor") new_name <- "Number of latent factors"
     if (stat_name == "TOTALN") new_name <- "Total number of loci"
     if (stat_name == "TPRCOMBO") new_name <- "TPR"
@@ -718,16 +719,21 @@ pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
 # make pretty anova table
 pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
   
+  # Run ANOVA
   aov <- anova(mod)
   
+  # Get effects
   effects <- fixef(mod)
-  effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "nsamp", "K2", "m1", "phi1", "H0.5", "r0.6"))]))
+  effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "(Intercept)", "nsamp", "K2", "m1", "phi1", "H0.5", "r0.6"))]))
   effects <- c(effects["nsamp"], sampstrat = effects_sampstrat, effects[c("K2", "m1", "phi1", "H0.5", "r0.6")])
   effects <- na.omit(effects)
+  if (!("sampstrat" %in% rownames(aov))) effects <- effects[names(effects) != "sampstrat"]
   aov_df <- data.frame(Variable = rownames(aov), FixedEffects = effects, aov)
   
+  # Round p values
   aov_df$Pr..F. <- signif(aov_df$Pr..F., 2)
   
+  # Get domain for color scale
   d <- max(abs(c(min(aov_df$FixedEffects), max(aov_df$FixedEffects))))
   
   aov_df <- 
@@ -740,7 +746,8 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
                                 Variable == "H" ~ "Spatial autocorrelation",
                                 Variable == "r" ~ "Environmental correlation"))
   
-  aov_tb <- aov_df %>%
+  aov_tb <-
+    aov_df %>%
     filter(Variable != "Sampling strategy") %>%
     gt::gt() %>%
     cols_label(
@@ -809,7 +816,7 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
     ) %>%
     tab_header(
       title = md("Linear mixed effect model"),
-      subtitle = md(paste0(make_pretty_names(stat), " ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)"))
+      subtitle = md(paste0(make_pretty_names(stat), " ~ ", paste0(tolower(aov_df$Variable), collapse = " + "), " + (1 | seed)"))
     )
   
   if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
