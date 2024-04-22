@@ -819,7 +819,7 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
       subtitle = md(paste0(make_pretty_names(stat), " ~ ", paste0(tolower(aov_df$Variable), collapse = " + "), " + (1 | seed)"))
     )
   
-  if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
+  if (!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
   return(aov_tb)
 }
 
