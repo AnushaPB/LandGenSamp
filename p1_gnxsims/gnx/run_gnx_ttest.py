@@ -379,7 +379,7 @@ params = {
     # -------------#
     'model': {
         # total Model runtime (in timesteps)
-        'T': 3001,
+        'T': 4001,
         # min burn-in runtime (in timesteps)
         'burn_T': 100,
         # seed number
@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 3000,
+                'when': 4000,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
