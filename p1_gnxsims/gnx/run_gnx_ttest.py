@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 2000,
+                'when': 3000,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
