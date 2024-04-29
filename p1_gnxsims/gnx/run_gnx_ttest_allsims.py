@@ -398,7 +398,7 @@ params = {
             # whether to burn in each iteration
             'repeat_burn': False,
             #whether to randomize GenomicArchitectures each iteration
-            'rand_genarch':     True,
+            'rand_genarch': True,
         },  # <END> 'iterations'
 
         # -----------------------------------#
@@ -505,7 +505,7 @@ def run_sims(sim_list, params):
     simseed = float(sim_list[6])
 
     #create mod name
-    mod_name = "ttest_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "ttestall_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
     # file1 = pre running data_cleaning.sh
@@ -561,7 +561,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 15
+    ncpu = 20
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')
