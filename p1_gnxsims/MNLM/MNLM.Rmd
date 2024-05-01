@@ -1,0 +1,57 @@
+---
+title: "Optimizing sampling design for landscape genomics: Visualize simulated Landscapes"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r}
+library(raster)
+library(here)
+#install.packages("devtools")
+#devtools::install_github("ropensci/NLMR")
+library(NLMR)
+#options(repos = c(
+#  jeffreyevans = 'https://jeffreyevans.r-universe.dev',
+#  CRAN = 'https://cloud.r-project.org'))
+# Download and install spatialEco in R
+# install.packages('spatialEco')
+library(spatialEco)
+library(viridis)
+library(terra)
+library(tidyverse)
+
+source(here("p1_gnxsims", "MNLM", "MNLM_functions.R"))
+
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
+```
+
+
+```{r}
+# Read in and format MNLMs
+# MNLMs were created with this script: create_MNLM.R
+mnlms <- pmap(combos, mnlm_read)
+
+# Calculate Moran's I and raster correlations
+stats <- map(mnlms, mnlm_stats) %>% bind_rows()
+
+# Convert to dataframe for plotting
+mnlm_df <- 
+  map(mnlms, ~as.data.frame(.x, xy = TRUE, ID = FALSE)) %>%
+  map(~pivot_longer(.x, -c(x, y), names_to = "env")) %>%
+  bind_rows() %>%
+  left_join(stats) %>%
+  mutate(name = paste0(env, "\nM = ", M, " | r = ", r))
+```
+
+```{r, fig.width = 8, fig.height = 13}
+ggplot(mnlm_df) +
+  geom_raster(aes(x = x, y = y, fill = value)) +
+  facet_wrap(~name, ncol = 4) +
+  theme_void() +
+  scale_fill_viridis_c(option = "mako") +
+  theme(legend.position = "none") +
+  coord_fixed()
+```
+
