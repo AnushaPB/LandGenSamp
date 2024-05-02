@@ -125,7 +125,13 @@ mnlm_write <- function(x){
     ))
 }
 
-# Read in MNLMs
+# Get all MNLMs
+mnlm_get <- function(){
+  combos <- expand.grid(seed = c(1, 2, 3), H = c(0.05, 0.5), r = c(0.3, 0.6))
+  pmap(combos, mnlm_read)
+}
+
+# Read in a pair of MNLMs
 mnlm_read <- function(seed, H, r){
   folder_path <- here("p1_gnxsims", "MNLM", "layers")
   file_paths <- paste0("seed", seed, "_", c("env1", "env2"), "_H", gsub("\\.", "", as.character(H*100)), "_r", gsub("\\.", "", as.character(r*100)), ".csv")
