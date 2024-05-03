@@ -464,9 +464,9 @@ params = {
             # linkage disequilibirum
             'ld': {
                 # whether to calculate
-                'calc': False,
+                'calc': True,
                 # calculation frequency (in timesteps)
-                'freq': 100,
+                'freq': 4000,
             },
         },  # <END> 'stats'
 
@@ -556,8 +556,27 @@ def run_sims(sim_list, params):
             # Empty dataframe to store pi values
             pi_df = pd.DataFrame(columns=['t', 'pi'])
 
+            # Run for one time step to get to t = 0
+            mod.walk(T=1, mode='main', verbose=True)
+            
+            # Calculate pi at first time point
+            spp = mod.comm[0]
+            spp._sort_simplify_table_collection()
+            ts = spp._tc.tree_sequence()
+            pi = ts.diversity()
+
+            # Add pi to the dataframe
+            new_row = pd.DataFrame({'t': [mod.t], 'pi': [pi]})
+            pi_df = pd.concat([pi_df, new_row], ignore_index = True)
+                
+            # write out the dataframe
+            pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it" + str(it) + ".csv", index=False)
+
             # Run model for 100 timesteps at a time until 4000 timesteps
             for step in range(40):
+                # Run for 100 steps
+                mod.walk(T = 100, mode = 'main', verbose=True)
+                
                 # Calculate pi
                 spp = mod.comm[0]
                 spp._sort_simplify_table_collection()
@@ -568,12 +587,9 @@ def run_sims(sim_list, params):
                 new_row = pd.DataFrame({'t': [mod.t], 'pi': [pi]})
                 pi_df = pd.concat([pi_df, new_row], ignore_index = True)
                 
-                # write out the final dataframe
-                pi_df.to_csv(dir + "parallel/pi/pi_iter" + str(it) + ".csv", index=False)
-                
-                # Run for 100 steps
-                mod.walk(T=1, mode='main', verbose=True)
-
+                # write out the dataframe
+                pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it" + str(it) + ".csv", index=False)
+            mod.walk(T = 1, mode = 'main', verbose = True)
 
 
 #multiprocessing
