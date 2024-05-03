@@ -1,5 +1,5 @@
 ---
-title: "Simulation results"
+title: "Optimizing sampling design for landscape genomics: Simulation summary results"
 author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: 
   html_document:
@@ -13,6 +13,7 @@ library("here")
 library("ggplot2")
 library("lme4")
 library("lmerTest")
+library("gt")
 
 source(here("p4_analysis", "analysis_functions.R"))
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = TRUE, message = FALSE)
@@ -26,8 +27,13 @@ df <- read.csv(here("p3_methods", "outputs", "popsize_results.csv"))
 df %>% group_by(K) %>% summarize(mean = mean(popsize), min = min(popsize), max = max(popsize))
 ```
 
-# Phenotype-environment mismatch
-
+# 2. Phenotype-environment mismatch
+```{r}
+df <- 
+  read.csv(here("p3_methods", "outputs", "phenotype_environment_results.csv")) %>%
+  filter(sampstrat == "full") %>%
+  mutate(across(c(K, m, phi, H, r, seed), factor))
+```
 
 ```{r fig.width=10, fig.height=4, include = FALSE}
 df$eff_mismatch <- as.numeric(as.character(df$phi)) * df$mismatch_mean
@@ -71,20 +77,13 @@ ggplot(df_long, aes(y = abs(mismatch_mean), fill = level)) +
 ```
 
 
-# Phenotype-environment associations
+# 3. Phenotype-environment correlations
 
-```{r}
-df <- 
-  read.csv(here("p3_methods", "outputs", "phenotype_environment_results.csv")) %>%
-  filter(sampstrat == "full") %>%
-  mutate(across(c(K, m, phi, H, r, seed), factor))
-```
-
-Phenotype-environment associations are significant in all but one of the 960 simulation runs:
+Phenotype-environment correlations are significant in all but one of the 960 simulation runs:
 ```{r fig.width=10, fig.height=4, results = TRUE}
 # Calculate the proportion of times the phenotype and environment are correlated
 df %>%
-  # replace NA with 0, the NA is due to there being no variation
+  # replace NA r with 0, the NA is due to there being no variation
   # (there is one simulation where this occurs for one trait, which has a constant intermediate value of 0.5 across all individuals) 
   # The simulation makes sense: small pop size, weak selection, high migration, low spatial autocorrelation
   # and even then one of the correlations is still significant!
@@ -101,21 +100,23 @@ df <-
     # take the mean of cor1_r and cor2_r
     mutate(cor_r = (cor1_r + cor2_r)/2) %>%
     # replace NA with 0, the NA is due to there being no variation (as described above)
-    mutate(cor_r = case_when(is.na(cor_r) ~ 0, TRUE ~ cor_r))
+    mutate(cor_r = case_when(is.na(cor_r) ~ 0, TRUE ~ cor_r)) %>%
+    mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) 
 
 # Run linear model
 mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = df)
 pretty_anova(mod, stat = "Phenotype-environment correlation")
 ```
 
-Mean and standard deviation of phenotype-environment correlation across low and high spatial autocorrelation (H):
+Mean and standard deviation of phenotype-environment correlations across low and high spatial autocorrelation (H):
 ```{r}
 # Calculate the magnitude of the phenotype-environment correlation across different parameter values
 df %>% 
   group_by(H) %>%
   summarize(mean = mean(abs(cor_r), na.rm = TRUE), sd = sd(abs(cor_r), na.rm = TRUE))
 ```
-Mean and standard deviation of  phenotype-environment correlation across low and high migration (m):
+
+Mean and standard deviation of phenotype-environment correlations across low and high migration (m):
 ```{r}
 df %>% 
   group_by(m) %>%
@@ -144,87 +145,40 @@ ggplot(ggdf) +
   ylab("Phenotype-environment correlation")
 ```
 
-# Genotype-environment correlations
+# 4. Genotype-environment correlations
 
 ```{r}
 ge_df <- read.csv(here("p3_methods", "outputs", "genotype_environment_results.csv"))
 df <- 
   ge_df %>%
-  # note NA values occur because there is no genetic variance, we are treating this as a cor of 0 and a sig (count of significant cors) of 0
+  mutate(across(c(K, m, phi, H, r, seed), factor)) %>%
+  # note NA values occur because there is no genetic variance, we are treating this as a cor of 0 and a p of 1
   # only a very small amount are NAs (less than 0.01%)
   mutate(cor1_rNA = case_when(is.na(cor1_r) ~ 0, TRUE ~ cor1_r)) %>%
   mutate(cor2_rNA = case_when(is.na(cor2_r) ~ 0, TRUE ~ cor2_r)) %>%
-  mutate(cor_sigNA = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) 
+  mutate(cor1_pNA = case_when(is.na(cor1_p) ~ 1, TRUE ~ cor2_p)) %>%
+  mutate(cor2_pNA = case_when(is.na(cor2_p) ~ 1, TRUE ~ cor2_p)) 
 
-```
-
-Genotype-environment correlations at adaptive loci are significant 80% of the time across all simulations and both environmental variables:
-```{r}
-# calculate proportion of times gea is significant
-df %>% 
-  filter(adaptive == TRUE) %>%
-  summarize(mean((cor_sigNA == 0.5 | cor_sigNA == 1), na.rm = TRUE))
-```
-
-Linear mixed effect model for genotype-environment correlations at adaptive loci:
-```{r, results = "asis"}
-# combine r
-ggdf <-
-  df %>%
-  pivot_longer(c(cor1_rNA, cor2_rNA)) %>%
-  mutate(cor_r = abs(value)) 
-
-# run linear model on adaptive loci only
-mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = filter(ggdf, adaptive == TRUE)) %>% summary()
-pretty_anova(mod)
-```
-
-```{r}
-# no groups
-df %>%
-  group_by(adaptive) %>%
-  summarize(
-    cor_r = mean(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE), 
-    cor_sd = sd(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE),
-    sig = mean(cor_sigNA, na.rm = TRUE), 
-    sd_sig = sd(cor_sigNA, na.rm = TRUE)
-    )
-
-# grouped by H
-df %>%
-  group_by(adaptive, H) %>% 
-  # cor_r is the mean absolute value of all correlations
-  # cor_sig is the mean number of significant associations at the 0.5 level
-  summarize(
-    cor_r = mean(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE), 
-    cor_sd = sd(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE),
-    sig = mean(cor_sigNA, na.rm = TRUE), 
-    sd_sig = sd(cor_sigNA, na.rm = TRUE)
-    )
-
-# grouped by H and gene flow
-df %>%
-  group_by(adaptive, H, m) %>% 
-  # cor_r is the mean absolute value of all correlations
-  # cor_sig is the mean number of significant associations at the 0.5 level
-  summarize(
-    cor_r = mean(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE), 
-    cor_sd = sd(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE),
-    sig = mean(cor_sigNA, na.rm = TRUE), 
-    sd_sig = sd(cor_sigNA, na.rm = TRUE)
-    )
-```
-
-```{r}
-# calculate the proportion of times the neutral snps have a greater correlation with the environment than the adaptive snps
+# calculate:
+# 1. When a genotype-environment correlation is significant for the correct genotype-environment combintaiton
+# 2. the proportion of times the neutral snps have a greater correlation with the environment than the adaptive snps
 calc_empp <- function(sub_df){
-  env1_adaptive <- sub_df[1:4, "cor1_r"]
-  env2_adaptive <- sub_df[5:8, "cor2_r"]
-  env1_neutral <- sub_df[-c(1:8), "cor1_r"]
-  env2_neutral <- sub_df[-c(1:8), "cor2_r"] 
+  # subset out adaptive and neutral loci
+  env1_adaptive <- sub_df[1:4, c("cor1_rNA", "cor1_pNA")]
+  env2_adaptive <- sub_df[5:8, c("cor2_rNA", "cor2_pNA")]
+  env1_neutral <- sub_df[-c(1:8), c("cor1_rNA", "cor1_pNA")]
+  env2_neutral <- sub_df[-c(1:8), c("cor2_rNA", "cor2_pNA")]
 
-  env1_empp <- mean(unlist(map(env1_adaptive, ~abs(.x) <= abs(env1_neutral))), na.rm = TRUE)
-  env2_empp <- mean(unlist(map(env2_adaptive, ~abs(.x) <= abs(env1_neutral))), na.rm = TRUE)
+  # Calculate the proportion of times the neutral snps have a greater correlation with the environment than the adaptive snps
+  env1_empp <- mean(unlist(map(env1_adaptive$cor1_rNA, ~abs(.x) <= abs(env1_neutral$cor1_rNA))), na.rm = TRUE)
+  env2_empp <- mean(unlist(map(env2_adaptive$cor2_rNA, ~abs(.x) <= abs(env2_neutral$cor2_rNA))), na.rm = TRUE)
+
+  # Calculate the proportion of times the genotype-environment correlation is significant
+  gea_sig <- 
+    mean(c(
+      map_lgl(env1_adaptive$cor1_pNA, ~.x <= 0.05), 
+      map_lgl(env1_adaptive$cor1_pNA, ~.x <= 0.05)
+    ), na.rm = TRUE)
   
   ls <-
     list(
@@ -236,7 +190,8 @@ calc_empp <- function(sub_df){
       seed = unique(sub_df$seed),
       env1_empp = env1_empp, 
       env2_empp = env2_empp, 
-      env_empp = mean(c(env1_empp, env2_empp))
+      env_empp = mean(c(env1_empp, env2_empp)),
+      gea_sig = gea_sig
       )
 
   return(ls)
@@ -246,17 +201,74 @@ df_split <- df %>% group_by(K, phi, m, seed, H, r, it) %>% group_split()
 empp <- map(df_split, ~calc_empp(.x), .progress = TRUE)
 empp_df <- empp %>% bind_rows()
 
-# run linear model
-lmer(env_empp ~ K + m + phi + H + r + (1|seed), data = empp_df) %>% summary()
+```
 
-# grouped by gene flow
+Genotype-environment correlations at adaptive loci are significant 79% of the time across all simulations and both environmental variables:
+```{r}
+# calculate proportion of times gea is significant
 empp_df %>% 
+  summarize(mean = mean(gea_sig, na.rm = TRUE))
+```
+
+Linear mixed effect model for genotype-environment correlations at adaptive loci with their corresponding environmental variable:
+```{r, results = "asis"}
+# combine r
+moddf <-
+  df %>%
+  filter(adaptive == TRUE) %>%
+  # add adaptive loci IDs (1-8, loci are in order; repeat 960 times for 960 simulations)
+  mutate(id = rep(1:8, 960)) %>%
+  pivot_longer(c(cor1_rNA, cor2_rNA)) %>%
+  mutate(cor_r = abs(value)) %>%
+  # filter to only include correlations for the adaptive genotypes and their corresponding environment
+  filter((id %in% c(1:4) & name == "cor1_rNA") | (id %in% c(5:8) & name == "cor2_rNA")) 
+
+# run linear model on adaptive loci only
+mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = moddf)
+pretty_anova(mod, stat = "genotype-environment correlation at adaptive loci")
+```
+
+```{r, include = FALSE}
+# no groups
+df %>%
+  group_by(adaptive) %>%
+  summarize(
+    cor_r = mean(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE), 
+    cor_sd = sd(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE)
+    )
+```
+
+Mean and standard deviation of genotype-environment correlations at adaptive loci across low and high spatial autocorrelation (H):
+```{r}
+# grouped by H
+moddf %>%
+  group_by(H) %>% 
+  summarize(
+    mean = mean(cor_r, na.rm = TRUE), 
+    sd = sd(cor_r, na.rm = TRUE)
+    )
+```
+
+Mean and standard deviation of genotype-environment correlations across low and high migration (m):
+```{r}
+# grouped by migration
+moddf %>%
   group_by(m) %>% 
   summarize(
-    mean = mean(env_empp, na.rm = TRUE),
-    sd = sd(env_empp, na.rm = TRUE)
+    mean = mean(cor_r, na.rm = TRUE), 
+    sd = sd(cor_r, na.rm = TRUE)
     )
+```
 
+Linear mixed effect model of the proportion of times the neutral loci have a greater correlation with the environment than the adaptive loci (an estimate of the confounding effect of neutral structure):
+```{r}
+# run linear model
+mod <- lmer(env_empp ~ K + m + phi + H + r + (1|seed), data = empp_df) 
+pretty_anova(mod, stat = "proportion")
+```
+
+Mean and standard deviation of the proportion across low and high spatial autocorrelation (H):
+```{r}
 # grouped by H
 empp_df %>% 
   group_by(H) %>% 
@@ -264,10 +276,13 @@ empp_df %>%
     mean = mean(env_empp, na.rm = TRUE),
     sd = sd(env_empp, na.rm = TRUE)
     )
+```
 
-# grouped by H and m
+Mean and standard deviation of the proportion across low and high migration (m):
+```{r}
+# grouped by migration
 empp_df %>% 
-  group_by(H, m) %>% 
+  group_by(m) %>% 
   summarize(
     mean = mean(env_empp, na.rm = TRUE),
     sd = sd(env_empp, na.rm = TRUE)
