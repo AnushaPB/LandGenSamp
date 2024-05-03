@@ -19,7 +19,7 @@ source(here("p4_analysis", "analysis_functions.R"))
 ```
 
 ```{r, fig.height = 4, fig.width = 8}
-format_env <- function(env = 1, H = 0.5, r = 0.6, seed = 1){
+format_env <- function(env = 1, H = 0.5, r = 0.6, seed = 2){
   # read in data 
   path <- here("p1_gnxsims/MNLM/layers")
   envfile <- paste0("seed", seed, "_env", env, "_H", H*100, "_r", r*100, ".csv")
@@ -28,35 +28,44 @@ format_env <- function(env = 1, H = 0.5, r = 0.6, seed = 1){
   return(env)
 }
 
-get_env <- function(H = 0.5, r = 0.6){
+get_env <- function(H = 0.5, r = 0.6, seed = 1){
   # read in data 
-  envstk <- map(c(1,2), ~format_env(env = .x, H = H, r = r)) %>% stack()
+  envstk <- map(c(1,2), ~format_env(env = .x, H = H, r = r, seed = seed)) %>% stack()
   names(envstk) <- c("env1", "env2")
   
   # format as df  
   env <- 
-    data.frame(raster::rasterToPoints(envstk), H = H, r = r) %>%
+    data.frame(raster::rasterToPoints(envstk), H = H, r = r, seed = seed) %>%
     pivot_longer(c(env1, env2), names_to = "env", values_to = "layer")
   
   return(env)
 }
 
 env <- 
-  expand.grid(H = c(0.05, 0.50), r = c(0.3, 0.6)) %>%
+  expand.grid(H = c(0.05, 0.50), r = c(0.3, 0.6), seed = c(1,2,3)) %>%
   pmap(get_env) %>% 
   bind_rows() %>%
   mutate(group = case_when(H == 0.5 ~ "High H", TRUE ~ "Low H")) %>%
   mutate(group = case_when(r == 0.6 ~ paste0(group, " & high r"), TRUE ~ paste0(group, " & low r"))) %>%
   mutate(env = case_when(env == "env1" ~ "Env 1", env == "env2" ~ "Env 2"))
 
-ggplot(env) +
+env_split <- 
+  env %>% 
+  group_by(seed) %>% 
+  group_split()
+
+map(1:3, ~{
+  ggplot(env_split[[.x]]) +
   geom_tile(aes(x = x, y = y, fill = layer)) +
   coord_equal() +
   theme_void() + 
   scale_fill_viridis_c(option = "mako") + 
   facet_grid(env ~ group, switch = "y") + 
   theme(legend.position = "none",
-        strip.text = element_text(size = 12, margin = margin(0.1,0,0.1,0, "cm")))
+        strip.text = element_text(size = 12, margin = margin(0.1,0,0.1,0, "cm"))) +
+  ggtitle(paste("Seed", .x))
+}) 
+
 
 ```
 
@@ -149,9 +158,10 @@ ggplot(phidf, aes(x = x, y = y, col = value)) +
   coord_fixed() 
 ```
 
-```{r, fig.width = 11, fig.height = 6.5}
+```{r, fig.width = 11, fig.height = 6}
 df <- get_gsd(here("p4_analysis/example_data/example_combos/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
 env1 <- format_env(env = 1, H = 0.5, r = 0.6, seed = 1)
+env1_df <- as.data.frame(env1, xy = TRUE)
 
 param_set <- data.frame(K = 1, phi = 1, m = 1, seed = 1, H = 0.50, r = 0.60, it = 0)
 
@@ -186,11 +196,12 @@ site_samples <-
 
 
 (plt1 <-
-  ggplot(ind_samples, aes(x = x, y = y, col = sampstrat)) +
+  ggplot(ind_samples, aes(x = x, y = y)) +
     ggtitle("A. Individual-based sampling") +
-    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    geom_raster(data = env1_df, aes(x = x, y = y, fill = layer)) +
+    geom_point(pch = 16, size = 0.6, alpha = 1, stroke = 0.5, col = "black") +
+    scale_fill_viridis_c(option = "mako") +
     coord_equal() +
-    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
     xlab("Number of samples") +
     ylab("Scheme") +
     theme(panel.border = element_rect(colour = "gray", fill = NA),
@@ -206,12 +217,14 @@ site_samples <-
           legend.position = "none") +
     facet_grid(sampstrat ~ nsamp, switch = "both"))
 
+
 (plt2 <-
-  ggplot(site_samples, aes(x = x, y = y, col = sampstrat)) +
+  ggplot(site_samples, aes(x = x, y = y)) +
     ggtitle("B. Site-based sampling") +
-    geom_point(pch = 3, size = 1, alpha = 0.7, stroke = 0.5) +
+    geom_raster(data = env1_df, aes(x = x, y = y, fill = layer)) +
+    geom_point(pch = 1, size = 1, alpha = 1, stroke = 0.5, col = "black") +
+    scale_fill_viridis_c(option = "mako") +
     coord_equal() +
-    scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed")) +
     xlab("Number of sites") +
     ylab("Scheme") +
     theme(panel.border = element_rect(colour = "gray", fill = NA),
@@ -228,8 +241,8 @@ site_samples <-
     facet_grid(sampstrat ~ nsamp, switch = "both"))
 
 
-pdf(here("figures", "Figure_1.pdf"), width = 11, height = 6.5)
-grid.arrange(plt1, plt2, nrow = 1)
+pdf(here("figures", "Figure_1.pdf"), width = 11, height = 6)
+(grid.arrange(plt1, plt2, nrow = 1))
 dev.off()
 
 ```
