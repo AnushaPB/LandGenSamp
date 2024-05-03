@@ -2,60 +2,10 @@ library(here)
 library(tidyverse)
 source(here("general_functions.R"))
 
-# Test of one simulation for many iterations
-path_maker <- function(seed, it){
-  wdir <- here("p1_gnxsims", "gnx")
-  name <- paste0("GNX_mod-ttest_K1_phi50_m100_seed", seed, "_H5_r30/it-", it, "/spp-spp_0/mod-ttest_K1_phi50_m100_seed", seed, "_H5_r30_it-", it, "_spp-spp_0_OTHER_STATS.csv")
-  here(wdir, name)
-}
-combos <- expand.grid(seed = 1:3, it = 0:4)
-safe_read <- possibly(read_csv, otherwise = data.frame())
-
-ls <- 
-  pmap(combos, \(seed, it) safe_read(path_maker(seed, it)) %>% 
-  mutate(seed = seed, it = it, K = 1, phi = 0.5, m = 1, H = 0.05, r = 0.3))
-
-# drop members of list with one row (NULL)
-ls <- ls[map_lgl(ls, \(x) nrow(x) > 1)]
-
-adf <- 
-  map(ls, adf_test, nsteps = 1000) %>%
-  bind_rows() %>%
-  mutate(nsteps = as.character(nsteps))
-
-count_st <-
-  adf %>%
-  mutate(stationarity = p < 0.05) %>%
-  group_by(t_start, t_end, nsteps) %>%
-  summarize(stationarity = sum(stationarity)/n() * 100) %>%
-  drop_na()
-
-df <- 
-  ls %>% 
-  bind_rows() %>%
-  mutate(group = paste0("seed", seed, "_it", it))
-
-length(unique(df$group))
-
-mean_df <-
-  df %>%
-  group_by(t) %>%
-  drop_na(mean_fit) %>%
-  summarise(mean_fit = mean(mean_fit, na.rm = TRUE), .groups = "drop")
-
-ggplot() +
-  geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.2) +
-  geom_line(data = mean_df, aes(x = t, y = mean_fit), lwd = 1) +
-  theme_classic() +
-  theme(panel.grid.major.x = element_line(linetype ="dashed", color = "gray"))
-
-
 # Test of many simulations for one iteration
-library(tidyverse)
-library(here)
 get_stats <- function(K, phi, m, H, r){
   wdir <- here("p1_gnxsims", "gnx")
-  folder_name <- paste0("GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
+  folder_name <- paste0("ttestall_may2/GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
   file_name <- paste0("mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
   path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
   if (!file.exists(path)) {warning(paste0("File does not exist: ", path)); return(NULL)}
@@ -109,10 +59,7 @@ adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
 
 # Test for stationarity in mean fitness
 st_df <-
-  bind_rows(
-    map(ls, adf_test, nsteps = 500), 
-    map(ls, adf_test, nsteps = 1000),
-    map(ls, adf_test, timepoints = list(1:500, 500:4000), nsteps = "custom")) %>% 
+  map(ls, adf_test, nsteps = 1000) %>% 
   bind_rows() %>%
   mutate(nsteps = as.character(nsteps)) %>%
   mutate(stationarity = p < 0.05) 
@@ -129,41 +76,9 @@ ggplot() +
   geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
   geom_line(data = mean_df, aes(x = t, y = mean_fit), lwd = 1) +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
-  facet_wrap(~nsteps, ncol = 1) +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0, direction = -1, limits = c(15, 100)) +
   theme_classic() +
   theme(strip.background = element_blank())
-
-
-bad_sims <- 
-  st_df %>%
-  filter(t_end == 3000 & !stationarity & nsteps == 1000) 
-
-bad_df <-
-  bad_sims %>%
-  mutate(sims = "bad :(") %>%
-  right_join(df) %>%
-  mutate(sims = case_when(is.na(sims) ~ "good :)", TRUE ~ sims)) %>%
-  drop_na(mean_fit) 
-
-ggplot(bad_df) +
-  geom_line(aes(x = t, y = mean_fit, group = group)) +
-  labs(x = "Timepoint", y = "Mean fitness") +
-  facet_wrap(~sims, ncol = 1) +
-  theme_classic() 
-
-grouped_df <-
-  bad_df %>%
-  mutate(across(c(K, phi, m, H, r), ~case_when(. == max(.) ~ "High", . == min(.)  ~ "Low"))) %>%
-  pivot_longer(c(K, phi, m, H, r)) %>%
-  group_by(name, value, sims) %>%
-  count()
-
-ggplot(grouped_df) +
-  geom_col(aes(x = value, y = n, fill = sims), position = "dodge") +
-  facet_wrap(~name, ncol = 1) +
-  theme_classic() 
-
 
 # Test with population size
 st_df <-
@@ -187,6 +102,7 @@ ggplot() +
   theme_classic() +
   theme(strip.background = element_blank())
 
+# JP test
 
 library(nlraa)
 library(minpack.lm)
