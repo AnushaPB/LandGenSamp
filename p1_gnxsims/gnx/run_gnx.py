@@ -268,7 +268,7 @@ params = {
                     # found here /p1_gnxsims/gnx/
                     'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
-                    'L': 10000,
+                    'L': 10008,
                     # num of chromosomes (doesn't matter when there is no linkage)
                     'l_c': [1],
                     # starting allele frequency (None to draw freqs randomly)
