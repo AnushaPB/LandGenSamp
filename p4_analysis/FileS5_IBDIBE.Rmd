@@ -258,13 +258,7 @@ meandf <-
                               .default = NA)) %>%
   group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
   summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
-  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
-  mutate(Statistic = make_pretty_names(Statistic)) %>%
-  mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
-  mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
-  mutate(Method = factor(Method, levels = c("MMRR", "GDM")))
-
+  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values")
   
 ggdf <- 
   df %>%
@@ -273,14 +267,31 @@ ggdf <-
                               .default = NA)) %>%
   group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
   summarise_at(all_of(stats), sd, na.rm = TRUE) %>%
-  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
+  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "sd") %>%
+  left_join(meandf) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
   mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
   mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
   mutate(Method = factor(Method, levels = c("MMRR", "GDM"))) %>%
-  rename(sd = values) %>%
-  left_join(meandf)
+  mutate(ymin = values - sd, ymax = values + sd) %>%
+  mutate(
+    ymin = case_when(ymin < 0 & (grepl("FDR", Statistic) | grepl("TPR", Statistic)) ~ 0, TRUE ~ ymin),
+    ymax = case_when(ymax > 1 & (grepl("FDR", Statistic) | grepl("TPR", Statistic)) ~ 1, TRUE ~ ymax)
+    )
+
+# check to make sure the expected number of scenarios are included
+# there should be 30 for each simulation (3 seeds x 10 iterations)
+nscenario <- 
+  df %>%
+  mutate(scenario = case_when(K == 1 & m == 0.25 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 2 & m == 1 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>% 
+  count() %>% 
+  filter(!is.na(scenario)) %>% 
+  pull(n)
+stopifnot(all(nscenario == 30))
 
 fake_point <- 
     data.frame(nsamp = 20, values = c(rep(c(0,0,NA), 2), rep(c(1,1,NA), 2)),
@@ -296,8 +307,7 @@ ind_plts <-
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)))) +
       geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white", aes(y = values)) +
-      #geom_ribbon(data = .x, aes(fill = Scheme, ymin = values - sd, ymax = values + sd), lwd = 1, alpha = 0.15
-      geom_errorbar(data = .x, aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
+      geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
       geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
@@ -319,51 +329,12 @@ ind_plts <-
             legend.position = "right",
             strip.placement = "outside") +
       scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = FALSE) +
+      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = FALSE) +
       ggtitle("A. Individual-based sampling")
   }) 
 
-ind_plts <-
-  ggdf %>%
-  filter(sampling == "individual") %>%
-  group_by(scenario, IB) %>%
-  group_split() %>%
-  map(~{
-    ggplot(.x, aes(x = as.numeric(as.character(nsamp)))) +
-      geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white", aes(y = values)) +
-      geom_errorbar(data = filter(.x, Scheme == "T"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
-      geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_errorbar(data = filter(.x, Scheme == "G"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
-      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_errorbar(data = filter(.x, Scheme == "R"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
-      geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_errorbar(data = filter(.x, Scheme == "ES"), aes(col = Scheme, ymin = values - sd, ymax = values + sd), width = 5, lwd = 0.8) +
-      geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme, y = values, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
-      xlab("Number of samples") +
-      ylab("") +
-      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
-            strip.background = element_blank(),
-            panel.background = element_blank(),
-            strip.text = element_text(size = 12),
-            axis.text = element_text(size = 11),
-            title = element_text(size = 12),
-            panel.spacing = unit(0.5, "lines"),
-            legend.position = "right",
-            strip.placement = "outside") +
-      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)) +
-      ggtitle("A. Individual-based sampling")
-  }) 
-ind_plts[[1]]
-```
-```{r}
+
 site_plts <-
   ggdf %>%
   filter(sampling == "site") %>%
@@ -372,6 +343,7 @@ site_plts <-
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
       geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
+      geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
       geom_line(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(.x, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
@@ -390,9 +362,9 @@ site_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_shape_manual(values = c(21:23), breaks = c("ES", "EQ", "R")) +
+      scale_color_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R")) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = FALSE) +
+      scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = FALSE) +
       ggtitle("B. Site-based sampling")
   })
 
@@ -408,8 +380,6 @@ grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
 grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
-
-ind_plts[[1]]
 ```
 
 ```{r, include = FALSE}
@@ -552,7 +522,8 @@ geoall <-
             p = cor.test(geo_coeff_gdm, geo_coeff_mmrr)$p.value,
             y = max(c(geo_coeff_gdm, geo_coeff_gdm)),
             x = max(c(geo_coeff_mmrr, geo_coeff_mmrr))) %>%
-  mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2)))
+  mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2))) %>%
+  mutate(p = paste0("p = ", signif(p, 2)))
 
 envall <- 
   df %>%
@@ -560,12 +531,14 @@ envall <-
             p = cor.test(c(env1_coeff_mmrr, env2_coeff_mmrr), c(env1_coeff_gdm, env2_coeff_gdm))$p.value,
             y = max(c(env1_coeff_gdm, env2_coeff_gdm)),
             x = max(c(env1_coeff_mmrr, env2_coeff_mmrr))) %>%
-  mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2)))
+  mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2))) %>%
+  mutate(p = paste0("p = ", signif(p, 2)))
 
 geo <-
   ggplot(df) +
   geom_point(aes(x = geo_coeff_mmrr, y = geo_coeff_gdm, shape = `Population size`, col =  `Migration rate`), cex = 1.5, alpha = 0.5) +
   geom_text(data = geoall, aes(label = r, x = x, y = y), hjust = 1, col = "black") +
+  geom_text(data = geoall, aes(label = p, x = x, y = y - y*0.06), hjust = 1, col = "black") +
   theme_classic()+
   xlab("MMRR Coefficient") +
   ylab("GDM Coefficient") +
@@ -577,6 +550,7 @@ env <-
   geom_point(aes(x = env1_coeff_mmrr, y = env1_coeff_gdm, col = `Migration rate`, shape = H), cex = 1.5, alpha = 0.2) +
   geom_point(aes(x = env2_coeff_mmrr, y = env2_coeff_gdm, col = `Migration rate`, shape = H), cex = 1.5, alpha = 0.5) +
   geom_text(data = envall, aes(label = r, x = x, y = y), hjust = 1, col = "black") +
+  geom_text(data = envall, aes(label = p, x = x, y = y - y*0.07), hjust = 1, col = "black") +
   theme_classic() +
   xlab("MMRR Coefficient") +
   ylab("GDM Coefficient") +
@@ -596,11 +570,13 @@ geocor <-
             y = max(c(geo_coeff_gdm, geo_coeff_gdm)),
             x = max(c(geo_coeff_mmrr, geo_coeff_mmrr))) %>%
   mutate(signif = case_when(p < 0.05 ~ "*", TRUE ~ "")) %>%
+  mutate(p = paste0("p = ", signif(p, 2))) %>%
   mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2)))
 
 ggplot(df, aes(x = geo_coeff_mmrr, y = geo_coeff_gdm, col = `Migration rate`, pch = `Population size`)) +
   geom_point(cex = 2, alpha = 0.5) +
   geom_text(data = geocor, aes(label = r, x = x, y = y), hjust = 1, col = "black") +
+  geom_text(data = geocor, aes(label = p, x = x, y = y - y*0.04), hjust = 1, col = "black") +
   xlab("MMRR Coefficient") +
   ylab("GDM Coefficient") +
   ggtitle("IBD") +
@@ -619,12 +595,14 @@ envcor <-
             y = max(c(env1_coeff_gdm, env2_coeff_gdm)),
             x = max(c(env1_coeff_mmrr, env2_coeff_mmrr))) %>%
   mutate(signif = case_when(p < 0.05 ~ "*", TRUE ~ "")) %>%
+  mutate(p = paste0("p = ", signif(p, 2))) %>%
   mutate(r = paste0("r = ", format(round(r, 2), 2, nsmall = 2)))
 
 ggplot(df) +
   geom_point(aes(x = env2_coeff_mmrr, y = env2_coeff_gdm, col = `Migration rate`, pch = H), cex = 2, alpha = 0.3) +
   geom_point(aes(x = env1_coeff_mmrr, y = env1_coeff_gdm, col = `Migration rate`, pch = H), cex = 2, alpha = 0.3) +
   geom_text(data = envcor, aes(label = r, x = x, y = y), hjust = 1) +
+  geom_text(data = envcor, aes(label = p, x = x, y = y - y*0.06), hjust = 1, col = "black") +
   xlab("MMRR Coefficient") +
   ylab("GDM Coefficient") +
   ggtitle("IBE") +
@@ -643,5 +621,103 @@ print(paste0("MMRR average IBE error: ", round(mmrr,2)))
 print(paste0("GDM average IBE error: ", round(gdm,2)))
 ```
 
+# Confirmation of appropriate sample size for full models
 
+To confirm that 1000 samples was appropriate for estimating the "full" model coefficients, we plotted the number of samples versus the coefficient to see when the value leveled off. All samples were collected randomly using individual-based sampling. We grouped the IBE coefficients for both environmental variables. Each line represents the result of a simulation, with the thick line representing the mean across simulations. We calculated the mean while grouping by migration and autocorrelation scenario, since these variables had the strongest effects on the value of the coefficients. We also grouped and summarize the GDM coefficients by population size, because population size had a strong effect on GDM coefficients, but not MMRR coefficients. These plots show that coefficient value for both IBD and IBE does not appear to change much with increasing sample size (though a slight decrease in the coefficient values can be observed in GDM). However, variance shrinks substantially with increasing sample size and seems to stabilize after a few hundred samples. Altogether, this supports our use of 1000 samples to represent our full models.
+
+```{r, fig.height = 5, fig.width = 5.6}
+mmrr_ind <- read.csv(here(p3path, "mmrr_indsampling_results.csv"))
+
+mmrr_df <- 
+  mmrr_ind %>% 
+  mutate(group = paste0(K,phi,m,H,r,seed,it)) %>% 
+  mutate(m = case_when(m == 0.25 ~ "Low migration", m == 1 ~ "High migration")) %>%
+  mutate(H = case_when(H == 0.05 ~ "Low H", H == 0.5 ~ "High H")) %>%
+  filter(sampstrat == "rand" | sampstrat == "full") %>%
+  mutate(nsamp = as.numeric(as.character(nsamp))) %>%
+  pivot_longer(c(geo_coeff, env1_coeff, env2_coeff)) %>%
+  mutate(group = paste0(group, name)) %>%
+  mutate(name = case_when(name == "geo_coeff" ~ "IBD", TRUE ~ "IBE")) 
+
+mmrr_meandf <- 
+  mmrr_df %>% 
+  group_by(nsamp, name, m, H) %>%
+  summarise(value = mean(value, na.rm = TRUE)) 
+
+ggplot() +
+  geom_line(data = mmrr_df, aes(x = nsamp, y = value, group = group, col = name), alpha = 0.1) +
+  geom_line(data = mmrr_meandf, aes(x = nsamp, y = value, col = name), lwd = 1) +
+  facet_grid(H ~ m) +
+  xlab("Number of samples") +
+  ylab("Coefficient") +
+  labs(col = "Type") +
+  theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12),
+        axis.text = element_text(size = 11),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.6, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") +
+  ggtitle("MMRR")
+```
+```{r, fig.height = 5, fig.width = 6.4}
+gdm_ind <- read.csv(here(p3path, "gdm_indsampling_results.csv"))
+
+gdm_df <- 
+  gdm_ind %>% 
+  mutate(group = paste0(K,phi,m,H,r,seed,it)) %>% 
+  mutate(m = case_when(m == 0.25 ~ "Low migration", m == 1 ~ "High migration")) %>%
+  mutate(H = case_when(H == 0.05 ~ "Low H", H == 0.5 ~ "High H")) %>%
+  mutate(K = case_when(K == 1 ~ "Small", K == 2 ~ "Large")) %>%
+  filter(sampstrat == "rand" | sampstrat == "full") %>%
+  mutate(nsamp = as.numeric(as.character(nsamp))) %>%
+  pivot_longer(c(geo_coeff, env1_coeff, env2_coeff)) %>%
+  mutate(group = paste0(group, name)) %>%
+  mutate(name = case_when(name == "geo_coeff" ~ "IBD", TRUE ~ "IBE")) 
+gdm_meandf <- 
+  gdm_df %>% 
+  group_by(nsamp, name, m, K, H) %>%
+  summarise(value = mean(value, na.rm = TRUE)) 
+
+ggplot() +
+  geom_line(data = gdm_df, aes(x = nsamp, y = value, group = group, col = name, lty = K), alpha = 0.1) +
+  geom_line(data = gdm_meandf, aes(x = nsamp, y = value, col = name, lty = K), lwd = 1) +
+  facet_grid(H ~ m) +
+  xlab("Number of samples") +
+  ylab("Coefficient") +
+  labs(col = "Type", lty = "Population size") +
+  theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12),
+        axis.text = element_text(size = 11),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.6, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") +
+  ggtitle("GDM")
+```
+
+# Test of the proportion of times IBE and IBD develops
+
+To confirm that IBD and IBE had time to develop in our simulations, we calculated the proportion of times IBD and IBE were detected as significant by MMRR using the full model. MMRR was used instead of GDM, because GDM was too conservative in detecting IBE. We calculated the proportions for different levels of spatial autocorrelation and migration, since these factors had the potential greatest effect on IBD and IBE. IBD was detected 100% of the time across all scenarios. IBE was detected over ~70% of the time as long as either migration was low or autocorrelation was high. When both autocorrelation was low and migration was high, IBE was detected only 13% of the time; this makes sense since IBE is not expected to develop in scenarios where migration is high and autocorrelation is low.
+
+```{r, results = TRUE}
+mmrr_ind <- read.csv(here(p3path, "mmrr_indsampling_results.csv"))
+gdm_ind <- read.csv(here(p3path, "gdm_indsampling_results.csv"))
+# Calculating how many times IBD is detected as significant 
+mmrr_ind %>%
+  filter(sampstrat == "full") %>% 
+  group_by(m, H) %>%
+  summarize(`IBD proportion` = mean(geo_p < 0.05), .groups = "drop") 
+
+# Calculating how many times IBE is detected as significant 
+mmrr_ind %>%
+  filter(sampstrat == "full") %>% 
+  group_by(m, H) %>%
+  summarize(`IBE proportion` = c(mean(env1_p < 0.05) + mean(env2_p < 0.05))/2, .groups = "drop") 
+
+```
 
