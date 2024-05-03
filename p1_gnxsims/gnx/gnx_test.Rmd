@@ -14,8 +14,7 @@ library(minpack.lm)
 source(here("general_functions.R"))
 ```
 
-# 1. Simulation tests
-```{r get initial test simulation results}
+```{r functions}
 get_stats <- function(K, phi, m, H, r){
   wdir <- here("p1_gnxsims", "gnx")
   folder_name <- paste0("ttestall_may2/GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
@@ -27,7 +26,32 @@ get_stats <- function(K, phi, m, H, r){
     mutate(K = K, phi = phi, m = m, H = H, r = r)
   return(df)
 }
+
+adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  if (is.null(timepoints)) timepoints <- map(seq(0, 3500, nsteps), function(x) x:(x+nsteps))
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = map_dbl(timepoints, 1), t_end = map_dbl(timepoints, ~.x[length(.x)]), p = p_value)
+  
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
 ```
+
+# 1. Simulation tests
+
 
 ```{r format simulation stats}
 combos <- expand.grid(K = c(1, 2), phi = c(0.5, 1), m = c(0.25, 1), H = c(0.05, 0.5), r = c(0.3, 0.6))
@@ -77,28 +101,6 @@ ggplot() +
 
 # 3.1 Stationarity test
 ```{r}
-adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
-  # Creating a time series object
-  ts <- 
-    subdf %>% 
-    pull(.data[[var]]) %>%
-    ts()
-
-  # Testing for stationarity of different time points
-  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
-  # and the time points would not line up correctly
-  if (is.null(timepoints)) timepoints <- map(seq(0, 3500, nsteps), function(x) x:(x+nsteps))
-  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
-  p_df <- data.frame(t_start = map_dbl(timepoints, 1), t_end = map_dbl(timepoints, ~.x[length(.x)]), p = p_value)
-  
-  ts_df <- 
-    p_df %>%
-    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
-    mutate(nsteps = as.character(nsteps))
-
-  return(ts_df)
-}
-
 # Test for stationarity in mean fitness
 st_df <-
   map(ls, adf_test, nsteps = 1000) %>% 
