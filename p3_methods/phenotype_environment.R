@@ -49,23 +49,19 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     mis <- z1mis + z2mis
 
     #calculate phenotype-env correlation
-    cor1 <- cor.test(gsd_df$z1, gsd_df$env1)
-    cor2 <- cor.test(gsd_df$z2, gsd_df$env2)
-    p1 <- cor1$p.value
-    p2 <- cor2$p.value
-    r1 <- cor1$statistic
-    r2 <- cor2$statistic
-
+    cor1 <- cor.test(gsd_df$env1, gsd_df$z1)
+    cor2 <- cor.test(gsd_df$env2, gsd_df$z2)
+    
     result <- 
       data.frame(params[i,], 
       sampstrat = "full", 
       nsamp = nrow(gsd_df), 
       mismatch_mean = mean(mis), 
       mismatch_max = max(mis),
-      cor1_p = p1,
-      cor2_p = p2,
-      cor1_coeff = r1,
-      cor2_coeff = r2)
+      cor1_p = cor1$p.value,
+      cor2_p = cor2$p.value,
+      cor1_coeff = cor1$statistic,
+      cor2_coeff = cor2$statistic)
 
     for(nsamp in nsamps){
       for(sampstrat in sampstrats){
