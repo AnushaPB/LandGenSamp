@@ -206,4 +206,22 @@ ggplot(pi_df) +
   geom_line(aes(x = t, y = pi, group = group)) +
   theme_classic() +
   labs(x = "Timepoint", y =  expression(pi))
+
+
+# filter out rows where the group does not have a t = 3000 row
+complete_groups <- 
+  pi_df %>% 
+  group_by(group) %>% 
+  filter(t == 3000) %>% 
+  ungroup() %>%
+  pull(group)
+
+pi_df_complete <- 
+  pi_df %>% 
+  filter(group %in% complete_groups)
+
+ggplot(pi_df_complete) + 
+  geom_line(aes(x = t, y = pi, group = group)) +
+  theme_classic() +
+  labs(x = "Timepoint", y =  expression(pi))
 ```
