@@ -21,7 +21,7 @@ range01 <- function(x){(x - min(x))/(max(x) - min(x))}
 
 
 # run GDM with each environmental variable treated separately
-run_gdm <- function(gendist, gsd_df){
+run_gdm <- function(gendist, gsd_df, varImp = TRUE){
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
@@ -70,7 +70,11 @@ run_gdm <- function(gendist, gsd_df){
     do_modTest <- !(results$env1_coeff == 0 & results$env2_coeff == 0)
       
     # get pvalues
-    if (do_modTest) modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) else modTest <- NULL
+    if (do_modTest & varImp) {
+      modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) 
+    } else {
+      modTest <- NULL
+    }
     
     if (!is.null(modTest)) {
       pvals <- modTest$`Predictor p-values`
