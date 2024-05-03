@@ -266,9 +266,9 @@ params = {
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
                     # found here /p1_gnxsims/gnx/
-                    'gen_arch_file': "genomic_architecture.csv",
+                    'gen_arch_file': "genomic_architecture_test.csv",
                     # num of loci
-                    'L': 10000,
+                    'L': 1008,
                     # num of chromosomes (doesn't matter when there is no linkage)
                     'l_c': [1],
                     # starting allele frequency (None to draw freqs randomly)
@@ -494,6 +494,7 @@ sim_array = np.append(sim_array, sim_seeds, 1)
 dir = os.path.dirname(os.getcwd())
 # note: currently gnx dumps most output files in a folder where the script is run
 
+# to test: sim_list = sim_array[0]
 def run_sims(sim_list, params):
     # !ORDER MATTERS! must match order of params from before
     K = float(sim_list[0])
@@ -542,7 +543,10 @@ def run_sims(sim_list, params):
         # make our params dict into a proper Geonomics ParamsDict object
         params = gnx.make_params_dict(params, mod_name)
 
-        for iteration in range(0, 10):
+        for it in range(0, 10):
+            # creates a unique random seed for every it set
+            params['model']['num'] = int(simseed + it*100)
+            
             # Make model
             mod = gnx.make_model(parameters=params, verbose=True)
             
@@ -550,29 +554,25 @@ def run_sims(sim_list, params):
             mod.walk(T=1e6, mode='burn', verbose=True)
             
             # Empty dataframe to store pi values
-            pi_df = pd.DataFrame(columns=['Step', 'Pi'])
+            pi_df = pd.DataFrame(columns=['t', 'pi'])
 
-            for step in range(1, 4001):
+            # Run model for 100 timesteps at a time until 4000 timesteps
+            for step in range(40):
                 # Calculate pi
                 spp = mod.comm[0]
                 spp._sort_simplify_table_collection()
                 ts = spp._tc.tree_sequence()
                 pi = ts.diversity()
 
+                # Add pi to the dataframe
+                new_row = pd.DataFrame({'t': [mod.t], 'pi': [pi]})
+                pi_df = pd.concat([pi_df, new_row], ignore_index = True)
+                
+                # write out the final dataframe
+                pi_df.to_csv(dir + "parallel/pi/pi_iter" + str(it) + ".csv", index=False)
+                
                 # Run for 100 steps
                 mod.walk(T=1, mode='main', verbose=True)
-
-                # Add pi to the dataframe
-                pi_df = pi_df.append({'t': step, 'pi': pi}, ignore_index=True)
-
-                # Write out the dataframe
-                pi_df.to_csv("pi/" + mod_name + "_iter" + str(iteration) + "_pi.csv", index=False)
-
-                # print the current pi value
-                print(f"\nπ={np.round(pi, 3)}")
-
-                # write out the final dataframe
-                pi_df.to_csv(dir + "parallel/pi/pi_iter" + str(iteration) + ".csv", index=False)
 
 
 
