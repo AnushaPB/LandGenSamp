@@ -438,7 +438,7 @@ params = {
                 # calculation frequency (in timesteps)
                 'freq': 1,
             },
-            # heterozgosity
+            # heterozgositysp
             'het': {
                 # whether to calculate
                 'calc': True,
