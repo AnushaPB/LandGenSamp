@@ -53,8 +53,8 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     cor2 <- cor.test(gsd_df$z2, gsd_df$env2)
     p1 <- cor1$p.value
     p2 <- cor2$p.value
-    r1 <- cor1$statistic
-    r2 <- cor2$statistic
+    r1 <- cor1$estimate
+    r2 <- cor2$estimate
 
     result <- 
       data.frame(params[i,], 
@@ -64,8 +64,8 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       mismatch_max = max(mis),
       cor1_p = p1,
       cor2_p = p2,
-      cor1_coeff = r1,
-      cor2_coeff = r2)
+      cor1_r = r1,
+      cor2_r = r2)
 
     for(nsamp in nsamps){
       for(sampstrat in sampstrats){
