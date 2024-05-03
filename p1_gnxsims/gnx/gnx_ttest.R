@@ -56,7 +56,7 @@ library(tidyverse)
 library(here)
 get_stats <- function(K, phi, m, H, r){
   wdir <- here("p1_gnxsims", "gnx")
-  folder_name <- paste0("ttestall_april30/GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
+  folder_name <- paste0("GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
   file_name <- paste0("mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
   path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
   if (!file.exists(path)) {warning(paste0("File does not exist: ", path)); return(NULL)}
@@ -192,7 +192,7 @@ ggplot() +
 library(nlraa)
 library(minpack.lm)
 
-# test for stationarity
+# test for https://gradcylinder.org/post/linear-plateau/
 jp_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
 
   subdf <- subdf %>% drop_na(mean_fit)
@@ -205,7 +205,7 @@ jp_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
     pull(Estimate) 
   
   jp_df <- 
-    data.frame(jp = jp, pred = predict(fit), obs = subdf$mean_fit, t = subdf$t) %>%
+    data.frame(jp = jp, pred = predict(fit), obs = subdf$mean_fit, resids = residuals(fit), t = subdf$t) %>%
     bind_cols(unique(select(subdf, K, phi, m, H, r))) 
 
   return(jp_df)
@@ -226,5 +226,13 @@ ggplot() +
   #geom_line(data =jp_df, aes(x = t, y = pred, group = group), alpha = 0.3, col = "red") +
   geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "red") +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+
+ggplot() +
+  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "red") +
+  geom_point(data =jp_df, aes(x = t, y = resids, group = group), alpha = 0.1, cex = 0.3) +
+  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "red") +
+  labs(x = "Timepoint", y = "Model residuals", fill = "% at\nstationarity") +
   theme_classic() +
   theme(strip.background = element_blank())
