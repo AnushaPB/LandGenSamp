@@ -259,7 +259,7 @@ params = {
 
                 'gen_arch': {
                     # whether to use tskit (to record full spatial pedigree)
-                    'use_tskit': False,
+                    'use_tskit': True,
                     # time step interval for simplication of tskit tables
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
@@ -541,47 +541,38 @@ def run_sims(sim_list, params):
 
         # make our params dict into a proper Geonomics ParamsDict object
         params = gnx.make_params_dict(params, mod_name)
-        # then use it to make a model
-        mod = gnx.make_model(parameters=params, verbose=True)
 
-        # run the model
-        #mod.run(verbose = True)
-        
-        # Burn-in the modle
-        mod.walk(T=10000, mode='burn', verbose = True)
-
-        # Empty dataframe to store pi values
-        pi_df = pd.DataFrame(columns=['Step', 'Pi'])
-
-        for step in range(1, 4001):
-            # Run for 100 steps
-            mod.walk(T=100, mode='main', verbose=True)
+        for iteration in range(0, 10):
+            # Make model
+            mod = gnx.make_model(parameters=params, verbose=True)
             
-            # Calculate pi
-            spp = mod.comm[0]
-            spp._sort_simplify_table_collection()
-            ts = spp._tc.tree_sequence()
-            pi = ts.diversity()
+            # Burn-in model
+            mod.walk(T=1e6, mode='burn', verbose=True)
             
-            # Add pi to the dataframe
-            pi_df = pi_df.append({'t': step, 'pi': pi}, ignore_index=True)
-            
-            # Write out the dataframe
-            pi_df.to_csv("pi/" + mod_name + "_pi.csv", index=False)
-            
-            # print the current pi value
-            print(f"\nπ={np.round(pi, 3)}")
+            # Empty dataframe to store pi values
+            pi_df = pd.DataFrame(columns=['Step', 'Pi'])
 
-            # write out the final dataframe
-            pi_df.to_csv(dir + "parallel/pi/pi.csv", index=False)
+            for step in range(1, 4001):
+                # Calculate pi
+                spp = mod.comm[0]
+                spp._sort_simplify_table_collection()
+                ts = spp._tc.tree_sequence()
+                pi = ts.diversity()
 
-        # save and print all of the non-neutral loci
-        loci_df = pd.DataFrame()
-        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-        print("\nNON-NEUTRAL LOCI:")
-        print(mod.comm[0].gen_arch.nonneut_loci)
+                # Run for 100 steps
+                mod.walk(T=1, mode='main', verbose=True)
+
+                # Add pi to the dataframe
+                pi_df = pi_df.append({'t': step, 'pi': pi}, ignore_index=True)
+
+                # Write out the dataframe
+                pi_df.to_csv("pi/" + mod_name + "_iter" + str(iteration) + "_pi.csv", index=False)
+
+                # print the current pi value
+                print(f"\nπ={np.round(pi, 3)}")
+
+                # write out the final dataframe
+                pi_df.to_csv(dir + "parallel/pi/pi_iter" + str(iteration) + ".csv", index=False)
 
 
 
