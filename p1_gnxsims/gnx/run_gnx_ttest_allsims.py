@@ -543,23 +543,38 @@ def run_sims(sim_list, params):
         # make our params dict into a proper Geonomics ParamsDict object
         params = gnx.make_params_dict(params, mod_name)
 
-        for it in range(0, 10):
-            # creates a unique random seed for every it set
-            params['model']['num'] = int(simseed + it*100)
+        # creates a unique random seed for every it set
+        params['model']['num'] = int(simseed + it*100)
             
-            # Make model
-            mod = gnx.make_model(parameters=params, verbose=True)
+        # Make model
+        mod = gnx.make_model(parameters=params, verbose=True)
             
-            # Burn-in model
-            mod.walk(T=1e6, mode='burn', verbose=True)
+        # Burn-in model
+        mod.walk(T=1e6, mode='burn', verbose=True)
+        
+        # Run for one time step to get to t = 0
+        mod.walk(T=1, mode='main', verbose=True)
             
-            # Empty dataframe to store pi values
-            pi_df = pd.DataFrame(columns=['t', 'pi'])
+        # Calculate pi at first time point
+        pi_df = pd.DataFrame(columns=['t', 'pi'])
+        spp = mod.comm[0]
+        spp._sort_simplify_table_collection()
+        ts = spp._tc.tree_sequence()
+        pi = ts.diversity()
 
-            # Run for one time step to get to t = 0
-            mod.walk(T=1, mode='main', verbose=True)
-            
-            # Calculate pi at first time point
+        # Add pi to the dataframe
+        new_row = pd.DataFrame({'t': [mod.t], 'pi': [pi]})
+        pi_df = pd.concat([pi_df, new_row], ignore_index = True)
+                
+        # write out the dataframe
+        pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it0.csv", index=False)
+
+        # Run model for 100 timesteps at a time until 10000 timesteps
+        for step in range(100):
+            # Run for 100 steps
+            mod.walk(T = 100, mode = 'main', verbose=True)
+                
+            # Calculate pi
             spp = mod.comm[0]
             spp._sort_simplify_table_collection()
             ts = spp._tc.tree_sequence()
@@ -570,26 +585,8 @@ def run_sims(sim_list, params):
             pi_df = pd.concat([pi_df, new_row], ignore_index = True)
                 
             # write out the dataframe
-            pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it" + str(it) + ".csv", index=False)
-
-            # Run model for 100 timesteps at a time until 4000 timesteps
-            for step in range(40):
-                # Run for 100 steps
-                mod.walk(T = 100, mode = 'main', verbose=True)
-                
-                # Calculate pi
-                spp = mod.comm[0]
-                spp._sort_simplify_table_collection()
-                ts = spp._tc.tree_sequence()
-                pi = ts.diversity()
-
-                # Add pi to the dataframe
-                new_row = pd.DataFrame({'t': [mod.t], 'pi': [pi]})
-                pi_df = pd.concat([pi_df, new_row], ignore_index = True)
-                
-                # write out the dataframe
-                pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it" + str(it) + ".csv", index=False)
-            mod.walk(T = 1, mode = 'main', verbose = True)
+            pi_df.to_csv(dir + "/gnx/pi/" + mod_name + "_it0.csv", index=False)
+        mod.walk(T = 1, mode = 'main', verbose = True)
 
 
 #multiprocessing

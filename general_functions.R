@@ -69,11 +69,13 @@ get_gsd <- function(filepath) {
     tidyr::extract(e, into = c("env0", "env1", "env2"), regex = "\\[(.*), (.*), (.*)\\]", remove = FALSE) %>%
     dplyr::mutate(across(c(z1, z2, env0, env1, env2), as.numeric))
   
-  #if there is only one trait value get the number from the z column
+  # if there is only one trait value get the number from the z column
+  # (not relevent for our main simulations)
   if (all(is.na(gsd_df$z1))) gsd_df <- gsd_df %>% mutate(z1 = parse_number(z))
 
   # correct coordinates
   gsd_df$y <- -gsd_df$y
+
   return(gsd_df)
 }
 

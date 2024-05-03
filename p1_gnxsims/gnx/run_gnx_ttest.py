@@ -547,7 +547,7 @@ def run_sims(sim_list, params):
 
         # run the model
         mod.run(verbose = True)
-
+        
         # save and print all of the non-neutral loci
         loci_df = pd.DataFrame()
         loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci

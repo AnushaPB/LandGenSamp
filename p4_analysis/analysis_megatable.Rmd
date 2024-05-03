@@ -7,6 +7,7 @@ date: "2022-10-18"
 library(tidyverse)
 library(here)
 library(gt)
+library(stringr)
 
 source(here("p4_analysis", "analysis_functions.R"))
 source(here("general_functions.R"))
@@ -55,8 +56,7 @@ table_df <-
    mutate(method = toupper(method),
          sampling = case_when(grepl("ind", sampling) ~ "individual",
                               grepl("site", sampling) ~ "site",
-                              TRUE ~ sampling),
-         stat = map_chr(stat, make_pretty_names)) %>%
+                              TRUE ~ sampling)) %>%
   mutate()
   
 write.csv(table_df, here("p4_analysis", "megatable.csv"), row.names = FALSE)
