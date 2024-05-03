@@ -3,7 +3,6 @@ library(tidyverse)
 source(here("general_functions.R"))
 
 # Test of one simulation for many iterations
-
 path_maker <- function(seed, it){
   wdir <- here("p1_gnxsims", "gnx")
   name <- paste0("GNX_mod-ttest_K1_phi50_m100_seed", seed, "_H5_r30/it-", it, "/spp-spp_0/mod-ttest_K1_phi50_m100_seed", seed, "_H5_r30_it-", it, "_spp-spp_0_OTHER_STATS.csv")
@@ -236,3 +235,42 @@ ggplot() +
   labs(x = "Timepoint", y = "Model residuals", fill = "% at\nstationarity") +
   theme_classic() +
   theme(strip.background = element_blank())
+
+
+# Pi test
+get_pi <- function(){
+  pi_df <- 
+    map(
+      list.files(here("p1_gnxsims", "gnx", "pi")), 
+      ~read_csv(here("p1_gnxsims", "gnx", "pi", .x)) %>% 
+      mutate(file = .x, t = as.numeric(t), pi = as.numeric(pi))
+      ) %>%
+    bind_rows() %>%
+    separate(
+      file, 
+      into = c("ttestall", "K", "phi", "m", "seed", "H", "r", "it", "csv"), 
+      sep = "_", 
+      extra = "merge", 
+      fill = "right"
+    ) %>%
+    mutate(
+      K = parse_number(K),
+      phi = parse_number(phi) / 100,
+      m = parse_number(m) / 100,
+      seed = parse_number(seed),
+      H = parse_number(H) / 100,
+      r = parse_number(r) / 100,
+      it = parse_number(it)
+    ) %>%
+    select(-ttestall, -csv) %>%
+    mutate(group = paste0("K", K, "_phi", phi, "_m", m, "_H", H, "_r", r, "_seed", seed, "_it", it)) 
+
+  return(pi_df)
+}
+
+pi_df <- get_pi()
+
+ggplot(pi_df) + 
+  geom_line(aes(x = t, y = pi, group = group)) +
+  theme_classic() +
+  labs(x = "Timepoint", y =  expression(pi))
