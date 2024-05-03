@@ -49,20 +49,21 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     cor2 <- map(gen, ~cor.test(.x, gsd_df$env2))
     p1 <- map_dbl(cor1, "p.value")
     p2 <- map_dbl(cor2, "p.value")
-    r1 <- map_dbl(cor1, "statistic")
-    r2 <- map_dbl(cor2, "statistic")
+    r1 <- map_dbl(cor1, "estimate")
+    r2 <- map_dbl(cor2, "estimate")
 
     result <- 
       data.frame(params[i,], 
       sampstrat = "full", 
       cor1_p = p1,
       cor2_p = p2,
-      cor1_coeff = r1,
-      cor2_coeff = r2)
+      cor1_r = r1,
+      cor2_r = r2,
+      adaptive = c(rep(TRUE, 8), rep(FALSE, 10000 - 8)))
 
     result <-
       result %>%
-      mutate(cor1_sig = cor1_p < 0.05, cor2_sig = cor2_p < 0.05, cor_sig = (cor1_sig +cor2_sig)/2)
+      mutate(cor1_sig = cor1_p < 0.05, cor2_sig = cor2_p < 0.05, cor_sig = (cor1_sig + cor2_sig)/2)
   }
   
   return(result)
