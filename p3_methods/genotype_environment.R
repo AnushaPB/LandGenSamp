@@ -32,7 +32,7 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
                      "_it",params[i,"it"])
   
   
-  #skip iteration if files do not exist
+  # Skip iteration if files do not exist
   gsd_filepath <- create_filepath(i, params = params, "gsd")
   skip_to_next <- FALSE
   if(file.exists(gsd_filepath) == FALSE){skip_to_next <- TRUE}
@@ -44,7 +44,7 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     gen <- get_data(i, params = params, "dos")
     
-    #calculate phenotype-env correlation
+    # Calculate ghenotype-env correlation
     cor1 <- map(gen, ~cor.test(.x, gsd_df$env1))
     cor2 <- map(gen, ~cor.test(.x, gsd_df$env2))
     p1 <- map_dbl(cor1, "p.value")
@@ -59,7 +59,7 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       cor2_p = p2,
       cor1_r = r1,
       cor2_r = r2,
-      adaptive = c(rep(TRUE, 8), rep(FALSE, 10000 - 8)))
+      adaptive = c(rep(TRUE, 8), rep(FALSE, 10000)))
 
     result <-
       result %>%
@@ -72,7 +72,7 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 }
 )
 
-#stop cluster
+# Stop cluster
 stopCluster(cl)
 
 write.csv(results, here("p3_methods", "outputs", "genotype_environment_results.csv"), row.names = FALSE)
