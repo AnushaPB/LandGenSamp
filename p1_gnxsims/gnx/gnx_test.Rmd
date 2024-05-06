@@ -6,12 +6,14 @@ output:
     toc: true
 ---
 
-```{r}
+```{r, include = FALSE, warning = FALSE, message = FALSE, results = FALSE}
 library(here)
 library(tidyverse)
 library(nlraa)
 library(minpack.lm)
 source(here("general_functions.R"))
+
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
 
 ```{r functions}
@@ -73,7 +75,7 @@ mean_df <-
 ```
 
 # 2. Testing for equilibrium in population size
-```{r}
+```{r, fig.width = 10, fig.height = 5}
 # Test with population size
 st_df <-
   bind_rows(map(ls, adf_test, nsteps = 1000, var = "Nt")) %>% 
@@ -91,16 +93,16 @@ ggplot() +
   geom_vline(data = count_st, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
   geom_line(data = drop_na(df, Nt), aes(x = t, y = Nt, group = group), alpha = 0.3) +
   labs(x = "Timepoint", y = "Nt", fill = "% at\nstationarity") +
-  facet_wrap(~nsteps, ncol = 1) +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0.1, direction = -1, limits = c(15, 100)) +
   theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) +
   theme(strip.background = element_blank())
 ```
 
 # 3. Testing for equilibrium in fitness
 
-# 3.1 Stationarity test
-```{r}
+## 3.1 Stationarity test
+```{r, fig.width = 10, fig.height = 5}
 # Test for stationarity in mean fitness
 st_df <-
   map(ls, adf_test, nsteps = 1000) %>% 
@@ -122,12 +124,13 @@ ggplot() +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0, direction = -1, limits = c(15, 100)) +
   theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) +
   theme(strip.background = element_blank())
 ```
 
-# 3.2 Linear-plateau model test
+## 3.2 Plateau test
 
-```{r}
+```{r, fig.width = 10, fig.height = 5}
 # Adapted from: https://gradcylinder.org/post/linear-plateau/
 jp_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
 
@@ -157,26 +160,28 @@ mean_jp <-
   summarize(mean = mean(jp, na.rm = TRUE))
 
 ggplot() +
-  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "red") +
+  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "tomato") +
   geom_line(data =jp_df, aes(x = t, y = obs, group = group), alpha = 0.3) +
   #geom_line(data =jp_df, aes(x = t, y = pred, group = group), alpha = 0.3, col = "red") +
-  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "red") +
+  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "tomato") +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
   theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) +
   theme(strip.background = element_blank())
 
 ggplot() +
-  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "red") +
+  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "tomato") +
   geom_point(data =jp_df, aes(x = t, y = resids, group = group), alpha = 0.1, cex = 0.3) +
-  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "red") +
+  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "tomato") +
   labs(x = "Timepoint", y = "Model residuals", fill = "% at\nstationarity") +
   theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) +
   theme(strip.background = element_blank())
 ```
 
 # 4. Testing for equilibrium in genetic diversity
 
-```{r}
+```{r, fig.width = 10, fig.height = 5}
 # Pi test
 pi_df <-
   map(
@@ -204,12 +209,6 @@ pi_df <-
   select(-ttestall, -csv) %>%
   mutate(group = paste0("K", K, "_phi", phi, "_m", m, "_H", H, "_r", r, "_seed", seed, "_it", it)) 
 
-ggplot(pi_df) + 
-  geom_line(aes(x = t, y = pi, group = group)) +
-  theme_classic() +
-  labs(x = "Timepoint", y =  expression(pi))
-
-
 # filter out rows where the group does not have a t = 3000 row
 complete_groups <- 
   pi_df %>% 
@@ -225,5 +224,6 @@ pi_df_complete <-
 ggplot(pi_df_complete) + 
   geom_line(aes(x = t, y = pi, group = group)) +
   theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) +
   labs(x = "Timepoint", y =  expression(pi))
 ```
