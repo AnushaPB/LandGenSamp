@@ -36,6 +36,9 @@ p1_gnxsim/test1
 p1_gnxsim/test2
 *LD.txt
 
+# Ignore %
+%
+
 # Dstore
 .DS_Store
 
