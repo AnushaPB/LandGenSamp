@@ -94,7 +94,7 @@ mnlm_create <- function(seed, H, r){
     MI1 <- Moran(NLMs[[1]])
     MI2 <- Moran(NLMs[[2]])
     
-    # Determine if difference in Moran's I 
+    # Determine difference in Moran's I 
     Hdif <- abs(MI1 - MI2) 
     
     print(paste("it:", it, "| H dif:", round(Hdif, 3)))
@@ -130,6 +130,7 @@ mnlm_get <- function(){
   combos <- expand.grid(seed = c(1, 2, 3), H = c(0.05, 0.5), r = c(0.3, 0.6))
   pmap(combos, mnlm_read)
 }
+
 
 # Read in a pair of MNLMs
 mnlm_read <- function(seed, H, r){
