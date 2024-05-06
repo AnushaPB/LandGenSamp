@@ -31,6 +31,11 @@ p2_sampling/outputs
 # KEEP ENV CSVs (these are small and necessary for stuff to run)
 !/p1_gnxsims/MNLM/layers/*.csv
 
+# Ignore test files
+p1_gnxsim/test1
+p1_gnxsim/test2
+*LD.txt
+
 # Dstore
 .DS_Store
 
