@@ -259,7 +259,7 @@ params = {
 
                 'gen_arch': {
                     # whether to use tskit (to record full spatial pedigree)
-                    'use_tskit': False,
+                    'use_tskit': True,
                     # time step interval for simplication of tskit tables
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 500,
+                'when': 4000,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
@@ -466,6 +466,8 @@ params = {
                 # whether to calculate
                 'calc': True,
                 # calculation frequency (in timesteps)
+                # NOTE: this number was set arbitrarily, LD stats are not used, but there is a bug where an error is thrown if this is not set
+                # (bug is fixed in later versions of Geonomics)
                 'freq': 4000,
             },
         },  # <END> 'stats'
@@ -474,25 +476,19 @@ params = {
 
 }  # <END> params
 
+# define parameters to vary
+K_array = [1, 2]
+phi_array = [0.5, 1]
+m_array = [0.25, 1]
+seed_array = [1]
+H_array = [0.05, 0.5]
+r_array = [0.3, 0.6]
 
-# define two combos of params
-# K, phi, m, seed, H, r
-# Strong structure:
-sim_list1_seed1 = [1, 1, 0.25, 1, 0.5, 0.3]
-sim_list1_seed2 = [1, 1, 0.25, 2, 0.5, 0.3]
-sim_list1_seed3 = [1, 1, 0.25, 3, 0.5, 0.3]
-
-# Weak structure:
-sim_list2_seed1 = [2, 0.5, 1, 1, 0.05, 0.6]
-sim_list2_seed2 = [2, 0.5, 1, 2, 0.05, 0.6]
-sim_list2_seed3 = [2, 0.5, 1, 3, 0.05, 0.6]
-
-# Combine all lists into an array
-sim_array = np.array([sim_list1_seed1, sim_list1_seed2, sim_list1_seed3, sim_list2_seed1, sim_list2_seed2, sim_list2_seed3])
-
+# create an array of all combinations of those parameters
+# (second argument of reshape should be the number of parameters being varied)
+sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
 # create a 2D array of seeds for simulations
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
-
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
 
@@ -510,9 +506,9 @@ def run_sims(sim_list, params):
     H = float(sim_list[4])
     r = float(sim_list[5])
     simseed = float(sim_list[6])
-    
+
     #create mod name
-    mod_name = "ttest500_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "test1_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
     # file1 = pre running data_cleaning.sh
@@ -557,8 +553,9 @@ def run_sims(sim_list, params):
 
 #multiprocessing
 if __name__ == '__main__':
-    #ser number of cores
-    ncpu = 2
+    #count number of cores
+    #only use a few so computer doesn't get overloaded (RAM cap)
+    ncpu = 20
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

@@ -13,19 +13,17 @@ library(here)
 library(tidyverse)
 library(nlraa)
 library(minpack.lm)
-source("general_functions.R")
+source(here("general_functions.R"))
 source(here("p3_methods", "IBDIBE_functions.R"))
-
-knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
 
 ```{r functions}
 get_stats <- function(K, phi, m, H, r){
-  wdir <- here("p1_gnxsims", "gnx")
-  folder_name <- paste0("ttestall_may2/GNX_mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
-  file_name <- paste0("mod-ttestall_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
+  wdir <- here("p1_gnxsims", "gnx", "test1")
+  folder_name <- paste0("GNX_mod-test1_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
+  file_name <- paste0("mod-test1_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
   path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
   if (!file.exists(path)) {warning(paste0("File does not exist: ", path)); return(NULL)}
   df <- 
@@ -33,6 +31,29 @@ get_stats <- function(K, phi, m, H, r){
     mutate(K = K, phi = phi, m = m, H = H, r = r)
   return(df)
 }
+
+adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  if (is.null(timepoints)) timepoints <- map(seq(0, 3500, nsteps), function(x) x:(x+nsteps))
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = map_dbl(timepoints, 1), t_end = map_dbl(timepoints, ~.x[length(.x)]), p = p_value)
+  
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
 ```
 
 # 1. Simulation tests
@@ -83,30 +104,8 @@ ggplot() +
 
 # 3. Testing for equilibrium in fitness
 
-# 3.1 Stationarity test
-```{r}
-adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
-  # Creating a time series object
-  ts <- 
-    subdf %>% 
-    pull(.data[[var]]) %>%
-    ts()
-
-  # Testing for stationarity of different time points
-  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
-  # and the time points would not line up correctly
-  if (is.null(timepoints)) timepoints <- map(seq(0, 3500, nsteps), function(x) x:(x+nsteps))
-  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
-  p_df <- data.frame(t_start = map_dbl(timepoints, 1), t_end = map_dbl(timepoints, ~.x[length(.x)]), p = p_value)
-  
-  ts_df <- 
-    p_df %>%
-    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
-    mutate(nsteps = as.character(nsteps))
-
-  return(ts_df)
-}
-
+## 3.1 Stationarity test
+```{r, fig.width = 10, fig.height = 5}
 # Test for stationarity in mean fitness
 st_df <-
   map(ls, adf_test, nsteps = 1000) %>% 
@@ -291,15 +290,15 @@ calc_gea <- function(gen, gsd_df){
 
 ```{r}
 # list folders in the gnx directory
-dirs <- list.dirs(here("p1_gnxsims", "gnx"), full.names = TRUE, recursive = FALSE)
+dirs <- list.dirs(here("p1_gnxsims", "gnx", "test2"), full.names = TRUE, recursive = FALSE)
 dirs <- dirs[grepl("GNX_mod-test2", dirs)]
 
 # get the stats for each folder across all time steps
 combos <- expand.grid(x = dirs, t = seq(0, 10000, 500))
 ```
 
-# 4.1 Gene flow test
-```{r}
+## 4.1 Gene flow test
+```{r, fig.width = 7, fig.height = 6}
 mantel_results <- 
   pmap(
     combos, \(x, t) calc_stats(x, t, stat = "mantel"),
@@ -341,8 +340,8 @@ ggplot(mantel_ggdf) +
         strip.placement = "outside") 
 ```
 
-# 4.1 Genotype-environment correlation test
-```{r}
+## 4.2 Genotype-environment correlation test
+```{r, fig.width = 10, fig.height = 5}
 gea_results <- 
   pmap(
     combos, \(x, t) calc_stats(x, t, stat = "gea"),

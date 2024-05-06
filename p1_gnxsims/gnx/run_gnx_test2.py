@@ -266,9 +266,9 @@ params = {
                     'jitter_breakpoints': False,
                     # file defining custom genomic arch
                     # found here /p1_gnxsims/gnx/
-                    'gen_arch_file': "genomic_architecture.csv",
+                    'gen_arch_file': "genomic_architecture_test.csv",
                     # num of loci
-                    'L': 10000,
+                    'L': 1008,
                     # num of chromosomes (doesn't matter when there is no linkage)
                     'l_c': [1],
                     # starting allele frequency (None to draw freqs randomly)
@@ -379,7 +379,7 @@ params = {
     # -------------#
     'model': {
         # total Model runtime (in timesteps)
-        'T': 4001,
+        'T': 10001,
         # min burn-in runtime (in timesteps)
         'burn_T': 100,
         # seed number
@@ -390,7 +390,7 @@ params = {
         # -----------------------------#
         'its': {
             # num iterations
-            'n_its': 5,
+            'n_its': 1,
             # whether to randomize Landscape each iteration
             'rand_landscape': False,
             # whether to randomize Community each iteration
@@ -398,7 +398,7 @@ params = {
             # whether to burn in each iteration
             'repeat_burn': False,
             #whether to randomize GenomicArchitectures each iteration
-            'rand_genarch':     True,
+            'rand_genarch': True,
         },  # <END> 'iterations'
 
         # -----------------------------------#
@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 4000,
+                'when': 500,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
@@ -438,7 +438,7 @@ params = {
                 # calculation frequency (in timesteps)
                 'freq': 1,
             },
-            # heterozgosity
+            # heterozgositysp
             'het': {
                 # whether to calculate
                 'calc': True,
@@ -464,9 +464,9 @@ params = {
             # linkage disequilibirum
             'ld': {
                 # whether to calculate
-                'calc': False,
+                'calc': True,
                 # calculation frequency (in timesteps)
-                'freq': 100,
+                'freq': 1000,
             },
         },  # <END> 'stats'
 
@@ -474,20 +474,25 @@ params = {
 
 }  # <END> params
 
-# define parameters to vary
-# Took the longest to reach eq: high r, high m, small K, high phi, and low H 
-K_array = [1]
-phi_array = [0.5]
-m_array = [1]
-seed_array = [1, 2, 3]
-H_array = [0.05]
-r_array = [0.3]
 
-# create an array of all combinations of those parameters
-# (second argument of reshape should be the number of parameters being varied)
-sim_array = np.array(np.meshgrid(K_array, phi_array, m_array, seed_array, H_array, r_array)).T.reshape(-1, 6)
+# define two combos of params
+# K, phi, m, seed, H, r
+# Strong structure:
+sim_list1_seed1 = [1, 1, 0.25, 1, 0.5, 0.3]
+sim_list1_seed2 = [1, 1, 0.25, 2, 0.5, 0.3]
+sim_list1_seed3 = [1, 1, 0.25, 3, 0.5, 0.3]
+
+# Weak structure:
+sim_list2_seed1 = [2, 0.5, 1, 1, 0.05, 0.6]
+sim_list2_seed2 = [2, 0.5, 1, 2, 0.05, 0.6]
+sim_list2_seed3 = [2, 0.5, 1, 3, 0.05, 0.6]
+
+# Combine all lists into an array
+sim_array = np.array([sim_list1_seed1, sim_list1_seed2, sim_list1_seed3, sim_list2_seed1, sim_list2_seed2, sim_list2_seed3])
+
 # create a 2D array of seeds for simulations
 sim_seeds = [[i + 1000] for i in np.array(range(sim_array.shape[0]))]
+
 # append simulation seeds to sim_array
 sim_array = np.append(sim_array, sim_seeds, 1)
 
@@ -495,6 +500,7 @@ sim_array = np.append(sim_array, sim_seeds, 1)
 dir = os.path.dirname(os.getcwd())
 # note: currently gnx dumps most output files in a folder where the script is run
 
+# to test: sim_list = sim_array[0]
 def run_sims(sim_list, params):
     # !ORDER MATTERS! must match order of params from before
     K = float(sim_list[0])
@@ -504,9 +510,9 @@ def run_sims(sim_list, params):
     H = float(sim_list[4])
     r = float(sim_list[5])
     simseed = float(sim_list[6])
-
+    
     #create mod name
-    mod_name = "ttest_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
+    mod_name = "test2_K" + str(int(K)) + "_phi" + str(int(phi * 100)) + "_m" + str(int(m * 100)) + "_seed" + str(int(seed)) + "_H" + str(int(H * 100)) + "_r" + str(int(r * 100))
     
     #check if file path to final iteration (it-9) already exists
     # file1 = pre running data_cleaning.sh
@@ -547,22 +553,12 @@ def run_sims(sim_list, params):
 
         # run the model
         mod.run(verbose = True)
-        
-        # save and print all of the non-neutral loci
-        loci_df = pd.DataFrame()
-        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-        print("\nNON-NEUTRAL LOCI:")
-        print(mod.comm[0].gen_arch.nonneut_loci)
-
 
 
 #multiprocessing
 if __name__ == '__main__':
-    #count number of cores
-    #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 3
+    #ser number of cores
+    ncpu = 6
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

@@ -1,11 +1,12 @@
-# Render File S2 (environmental correlations)
+# SIMULATED LANDSCAPES -------------------------------------------------------------------
+## Render File S2 (environmental correlations)
 Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2.Rmd')"
 
-# Create MNLMs
+## Create MNLMs
 Rscript p1_gnxsims/MNLM/run_MNLM.R
-# The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
+## The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
 
-# Run gnx simulations
+# GEONOMICS SIMULATIONS ------------------------------------------------------------------
 cd p1_gnxsims/gnx
 ## Create genomic architecture for gnx simulations
 Rscript create_genomic_architecture.R
@@ -15,7 +16,19 @@ Rscript create_genomic_architecture.R
 conda env create -f gnx.yml -n gnx
 source activate gnx
 
-## Run (note: this takes several weeks and is parallelized)
+## Run geonomics simulation tests (see File S# for more information)
+python3 run_gnx_test1.py > run_gnx_test1.pyout
+mkdir -p test1
+mv GNX_mod-test1* test1
+
+python3 run_gnx_test2.py > run_gnx_test2.pyout
+mkdir -p test2
+mv GNX_mod-test2* test2
+
+### Render File S# (results of simulation tests)
+Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'gnx', 'FileS#_gnx_test.Rmd')"
+
+## Run full simulations (note: this takes several weeks and is parallelized)
 ## Contact anusha.bishop@berkeley.edu if you would like the simulation results
 python3 run_gnx.py > run_gnx.pyout
 
