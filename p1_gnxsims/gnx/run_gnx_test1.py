@@ -379,7 +379,7 @@ params = {
     # -------------#
     'model': {
         # total Model runtime (in timesteps)
-        'T': 4001,
+        'T': 10001,
         # min burn-in runtime (in timesteps)
         'burn_T': 100,
         # seed number
@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 4000,
+                'when': 1000,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
@@ -468,7 +468,7 @@ params = {
                 # calculation frequency (in timesteps)
                 # NOTE: this number was set arbitrarily, LD stats are not used, but there is a bug where an error is thrown if this is not set
                 # (bug is fixed in later versions of Geonomics)
-                'freq': 4000,
+                'freq': 1000,
             },
         },  # <END> 'stats'
 
