@@ -827,7 +827,7 @@ unfold<-function(X){
 
 
 # Run MMRR with one enviornmental matrix of combined distances (not used in final analysis)
-run_mmrr <- function(gendist, gsd_df){
+run_mmrr <- function(gendist, gsd_df, nperm = 50){
   
   ##get env vars and coords
   env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
@@ -835,7 +835,7 @@ run_mmrr <- function(gendist, gsd_df){
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
   
   #Run  MMRR
-  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
+  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = nperm)
   
   #turn results into dataframe
   results <- mmrr_results_df(mmrr_res)
