@@ -39,7 +39,6 @@ df <-
 df$eff_mismatch <- as.numeric(as.character(df$phi)) * df$mismatch_mean
 
 df %>% filter(sampstrat == "full") %>% group_by(phi, K, m, r, H) %>% summarise(mean(abs(mismatch_mean)))
-
 ```
 
 Average phenotype-environment mismatch under low and high selection strength (phi):
