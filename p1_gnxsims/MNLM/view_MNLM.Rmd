@@ -27,7 +27,7 @@ source(here("p1_gnxsims", "MNLM", "MNLM_functions.R"))
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
 
-
+# Plot simulated landscapes
 ```{r}
 # Read in and format MNLMs
 # MNLMs were created with this script: create_MNLM.R
@@ -42,7 +42,12 @@ mnlm_df <-
   map(~pivot_longer(.x, -c(x, y), names_to = "env")) %>%
   bind_rows() %>%
   left_join(stats) %>%
-  mutate(name = paste0(env, "\nM = ", M, " | r = ", r))
+  mutate(Autocorrelation = case_when(grepl("H50", env) ~ "High autocorrelation", TRUE ~ "Low autocorrelation")) %>%
+  mutate(Correlation = case_when(grepl("r60", env) ~ "High correlation", TRUE ~ "Low correlation")) %>%
+  mutate(seed = case_when(grepl("seed1", env) ~ "seed1", grepl("seed2", env) ~ "seed2", TRUE ~ "seed3")) %>%
+  mutate(env = case_when(grepl("env1", env) ~ "env1", TRUE ~ "env2")) %>%
+  mutate(name = paste0(Autocorrelation, " (M = ", M, ")\n", seed, " | ", env, " | r = ", r))
+  
 ```
 
 ```{r, fig.width = 8, fig.height = 13}
@@ -53,5 +58,30 @@ ggplot(mnlm_df) +
   scale_fill_viridis_c(option = "mako") +
   theme(legend.position = "none") +
   coord_fixed()
+```
+
+# Summary statistics for simulated landscapes
+```{r}
+mnlm_df %>%
+  group_by(Correlation, Autocorrelation) %>%
+  summarize(`Mean Moran's I` = round(mean(M, na.rm = TRUE), 2), 
+            `SD Moran's I` = round(sd(M, na.rm = TRUE), 2), .groups = "drop")
+```
+```{r, fig.width = 6, fig.height = 5}
+# Confirm there is no unexpected bias in Moran's I values
+ggplot(mnlm_df) +
+  geom_col(aes(x = seed, y = M, fill = env), position = position_dodge()) +
+  facet_grid(Correlation ~ Autocorrelation) +
+  labs(x = "Landscape set", y = "Moran's I", fill = "Variable") +
+  theme_classic() +
+  theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12),
+        axis.text = element_text(size = 11),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.6, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") 
 ```
 
