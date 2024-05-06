@@ -37,11 +37,10 @@ create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx",
   return(filepath)
 }
 
-
 # Get gen data
 get_gen <- function(filepath) {
   # read vcf
-  vcf <- read.vcfR(filepath)
+  vcf <- vcfR::read.vcfR(filepath)
   # convert to genlight from vcf
   genmat <- vcf_to_dosage(vcf)
   return(genmat)
@@ -79,6 +78,10 @@ get_gsd <- function(filepath) {
   return(gsd_df)
 }
 
+get_dos <- function(filepath){
+  read.csv(filepath, row.names = 1)
+}
+
 # general function to get data
 get_data <- function(i, params, type) {
   # different file patterns for different data types
@@ -97,7 +100,7 @@ get_data <- function(i, params, type) {
   if (type == "dos") {
     filepath <- create_filepath(i, params, type)
     print(filepath)
-    df <- read.csv(filepath, row.names = 1)
+    df <- get_dos(filepath)
   }
 
   return(df)
@@ -282,9 +285,6 @@ get_packages <- function() {
 ######################################################
 # GENERAL OBJECTS (objects used in multiple scripts) #
 ######################################################
-
-# nloci
-nloci <- 10000
 # landscape dimensions (square)
 ldim <- 100
 # sampling strategies
