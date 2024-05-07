@@ -65,7 +65,7 @@ adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
 
 # 1. Simulation tests
 
-To determine how long to run our simulations we ran a series of tests to evaluate when population size, fitness, and genetic structure reached equilibrium. We ran each unique set of simulation parameters (i.e., varying population size, selection strength, migration, spatial autocorrelation, and correlation between environmental layers) for 10,000 timesteps. We simulated 1,000 neutral loci in the test simulations (in contrast to 10,000 in the full simulations) to decrease  computational time; the smaller number of loci should not notably influence the results of any of our equilibrium tests. We extracted population size every 1 timestep, mean fitness every 10 timesteps, and genetic data every 1,000 timesteps (the genetic data files are large and computationally expensive to process). Based on the results of our tests, described in detail below, the latest our simulations reached equilibrium was ~4,000-5,000 timesteps. Therefore, we decided to run our simulations for 6,000 timesteps to ensure they had enough time at equilibrium.
+To determine how long to run our simulations, we ran a series of tests to evaluate when population size, fitness, and genetic structure reached equilibrium. We ran each unique set of simulation parameters (i.e., varying population size, selection strength, migration, spatial autocorrelation, and correlation between environmental layers) for 10,000 timesteps. We simulated 1,000 neutral loci in the test simulations (in contrast to 10,000 in the full simulations) to decrease  computational time; the smaller number of loci should not notably influence the results of any of our equilibrium tests. We extracted population size every 1 timestep, mean fitness every 10 timesteps, and genetic data every 1,000 timesteps (the genetic data files are large and computationally expensive to process). Based on the results of our tests, described in detail below, the latest our simulations reached equilibrium was ~4,000-5,000 timesteps. Therefore, we decided to run our simulations for 6,000 timesteps to ensure they had enough time at equilibrium.
 
 ```{r format simulation stats}
 # Get all combinations of parameters
@@ -87,7 +87,7 @@ df <-
 # 2. Testing for equilibrium in population size
 
 We tested for equilibrium in population size using an Augmented Dickey-Fuller test for stationarity. We tested for stationarity in windows of 1,000 time points (e.g., 0-1,000, 1,000-2,000, etc.) for each unique set of simulation parameters. We calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05 (alternate hypothesis: stationarity). Population size acheived stationarity by 1,000 timesteps.
-```{r, fig.width = 10, fig.height = 5}
+```{r, fig.width = 7, fig.height = 6}
 # Test with population size
 Nt_df <-
   # Test for stationarity in population size
@@ -106,7 +106,7 @@ ggplot() +
   geom_rect(data = Nt_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
   geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
   geom_line(data = drop_na(df, Nt), aes(x = t, y = Nt, group = group), alpha = 0.3) +
-  labs(x = "Timepoint", y = "Nt", fill = "% at\nstationarity") +
+  labs(x = "Timepoint", y = "Population size", fill = "% at\nstationarity") +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
@@ -117,7 +117,7 @@ ggplot() +
 
 ## 3.1 Stationarity test
 
-We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test for stationarity. As before, we tested for stationarity in windows of 1,000 time points and calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05. The majority of the simulations were at stationarity by 2,000 timesteps, however the percent of simulations at stationarity didn't reach a maximum until the 9,000-10,000 timestep window (A). This is likely due to very slight variation in variance of fitness that is unlikely to affect our inferences about sampling strategy. We confirmed that all of the simulations had reached stationarity in at least one of the stationarity windows by 4,000 timesteps (B). 
+We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test for stationarity. As before, we tested for stationarity in windows of 1,000 time points and calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05. The majority of the simulations were at stationarity by 2,000 timesteps, however the percent of simulations at stationarity didn't reach a maximum until the 9,000-10,000 timestep window (A). This is likely due to very slight variation in the variance of fitness that is unlikely to affect our inferences about sampling strategy. We confirmed that all of the simulations had reached stationarity in at least one of the stationarity windows by 4,000 timesteps (B). 
 
 ```{r, fig.width = 10, fig.height = 5}
 fitness_df <-
@@ -173,7 +173,7 @@ ggplot() +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% reached\nstationarity") +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
   theme_classic() +
-  ggtitle("B. Percent of simulations that have reached stationarity in at least one window by that timepoint") +
+  ggtitle("B. Percent of simulations that have reached stationarity in at least one window") +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
   theme(strip.background = element_blank())
 ```
@@ -404,7 +404,7 @@ ggplot(mantel_ggdf) +
 
 ## 4.2 Genotype-environment association test
 
-To determine when genotype-environment associations reached equilibrium, we calculated genotype-environment correlations for both adaptive and neutral loci. We calculated these correlations every 1,000 timesteps for each unique set of simulation parameters. We calculated these correlations two seperate ways: (1) including fixed loci and counting them as a correlation of 0 and (2) excluding fixed loci. In the plots including fixed loci, correlation for neutral loci decreases overtime as more loci become fixed due to the loss of genetic diversity to drift overtime in the absence of mutation. This decrease is unlikely to affect our analyses because we simulated 10,000 loci, so many will still be variable, even at later timepoints. The adaptive loci plots show greater variation over time because they are averages across just 8 loci (compared to 1,000 neutral loci for the neutral loci plots). The plots are otherwise the same as described above; each line on the plot represents a unique simulation, colored by migration and spatial autocorrelation parameters. Overall, the correlations for the adaptive and neutral loci appear to be relatively stable by about 4,000 timesteps. 
+To determine when genotype-environment associations reached equilibrium, we calculated genotype-environment correlations for both adaptive and neutral loci. We calculated correlations every 1,000 timesteps for each unique set of simulation parameters. We calculated correlations two seperate ways: (1) including fixed loci and counting them as a correlation of 0 and (2) excluding fixed loci. In the plots including fixed loci, correlation for neutral loci decreases overtime as more loci become fixed due to the loss of genetic diversity to drift overtime in the absence of mutation (B). This decrease is unlikely to affect our analyses because we simulated 10,000 loci, so many will still be variable, even at later timepoints. The adaptive loci plots (A) show greater variation over time because they are averages across just 8 loci (compared to 1,000 neutral loci for the neutral loci plots). The plots are otherwise the same as described above; each line on the plot represents a unique simulation, colored by migration and spatial autocorrelation parameters. Overall, the correlations for the adaptive and neutral loci appear to be relatively stable by about 4,000 timesteps. 
 
 ```{r, fig.width = 10, fig.height = 5}
 gea_results <- 
@@ -415,7 +415,8 @@ gea_results <-
   compact() %>%
   bind_rows()
 
-gea_ggdf <- gea_results %>%
+gea_ggdf <- 
+  gea_results %>%
   # Group by the loci type (adaptive/neutral), timestep, and model (filepath) 
   group_by(adaptive, t, path) %>%
   # Replace r = NA values in 'cor1_r' and 'cor2_r' with r = 0
