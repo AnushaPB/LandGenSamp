@@ -2,7 +2,7 @@
 # GENERAL FUNCTIONS #
 #####################
 # create filepath based on params index and data type (e.g. genetic data = gen/dos, geospatial data = gsd, and adaptive loci = loci)
-create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx", "LGS_data")) {
+create_filepath <- function(i, params, type) {
   # set of parameter names in filepath form
   paramset <- paste0(
     "K", params[i, "K"],
@@ -13,27 +13,27 @@ create_filepath <- function(i, params, type, datadir = here("p1_gnxsims", "gnx",
     "_r", params[i, "r"] * 100
   )
 
-  # different file patterns for different data types
+  # Create data directory path
+  datadir = here::here("p1_gnxsims", "gnx", "LGS_data")
+
+  # Create model directory path
+  moddir <- here::here(datadir, paste0("GNX_mod-", paramset), paste0("it-", params[i, "it"]), "spp-spp_0")
+
+  # Different file patterns for different data types
   if (type == "gen") {
-    filepath <- paste0(
-      datadir, "/mod-", paramset,
-      "_it-", params[i, "it"], "_t-1000_spp-spp_0.vcf"
-    )
+    filepath <- paste0("/mod-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.vcf")
   }
   if (type == "gsd") {
-    filepath <- paste0(
-      datadir, "/mod-", paramset,
-      "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv"
-    )
+    filepath <- paste0("/mod-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv")
   }
   if (type == "dos") {
-    filepath <- paste0(
-      datadir, "/dos-", paramset,
-      "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv"
-    )
+    filepath <- paste0("/dos-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv")
   }
 
+  # return full filepath
+  filepath <- here::here(moddir, filepath)
   print(filepath)
+
   return(filepath)
 }
 
@@ -84,26 +84,16 @@ get_dos <- function(filepath){
 
 # general function to get data
 get_data <- function(i, params, type) {
+  # Create file path
+  filepath <- create_filepath(i, params, type)
+
   # different file patterns for different data types
-  if (type == "gen") {
-    filepath <- create_filepath(i, params, type)
-    print(filepath)
-    df <- get_gen(filepath)
-  }
+  if (type == "gen") return(get_gen(filepath))
 
-  if (type == "gsd") {
-    filepath <- create_filepath(i, params, type)
-    print(filepath)
-    df <- get_gsd(filepath)
-  }
-
-  if (type == "dos") {
-    filepath <- create_filepath(i, params, type)
-    print(filepath)
-    df <- get_dos(filepath)
-  }
-
-  return(df)
+  if (type == "gsd") return(get_gsd(filepath))
+  
+  if (type == "dos") return(get_dos(filepath))
+  
 }
 
 # get list of sampling IDs that correspond with parameter set, sampling strategy, and number of samples

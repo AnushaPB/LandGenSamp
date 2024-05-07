@@ -259,7 +259,7 @@ params = {
 
                 'gen_arch': {
                     # whether to use tskit (to record full spatial pedigree)
-                    'use_tskit': True,
+                    'use_tskit': False,
                     # time step interval for simplication of tskit tables
                     'tskit_simp_interval': 25,  # changed from 100
                     # whether to jitter recomb bps, only needed to correctly track num_trees
@@ -555,7 +555,7 @@ def run_sims(sim_list, params):
 if __name__ == '__main__':
     #count number of cores
     #only use a few so computer doesn't get overloaded (RAM cap)
-    ncpu = 20
+    ncpu = 25
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)
     #mp.set_start_method('spawn')

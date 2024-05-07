@@ -29,13 +29,14 @@ mv GNX_mod-test2* test2
 Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'gnx', 'FileS#_gnx_test.Rmd')"
 
 ## Run full simulations (note: this takes several weeks and is parallelized)
-## Contact anusha.bishop@berkeley.edu if you would like the simulation results
 python3 run_gnx.py > run_gnx.pyout
+mkdir -p LGS_data
+mv GNX_mod* LGS_data
 
 # Create folder with simulation results for archive
 mkdir -p LGS_simulation_archive
-## This only contains the raw csv and vcf mod outputs from geonomics
-cp LGS_data/mod* LGS_simulation_archive
+## This only contains the raw csv and vcf mod outputs  from geonomics from the final time step
+find LGS_data -name 'mod*t-6000*' -type f -exec cp --parents \{\} LGS_simulation_archive \;
 ## Compress the archive
 tar -czvf LGS_simulation_archive.tar.gz LGS_simulation_archive/
 ## Create directory for dryad data
