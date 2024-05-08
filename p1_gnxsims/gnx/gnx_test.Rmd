@@ -13,6 +13,7 @@ library(here)
 library(tidyverse)
 library(nlraa)
 library(minpack.lm)
+library(tseries)
 source(here("general_functions.R"))
 source(here("p3_methods", "IBDIBE_functions.R"))
 
@@ -22,7 +23,7 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 ```{r functions}
 get_stats <- function(K, phi, m, H, r){
   # Create paths to simulation files
-  wdir <- here("p1_gnxsims", "gnx")
+  wdir <- here("p1_gnxsims", "gnx", "test")
   folder_name <- paste0("GNX_mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
   file_name <- paste0("mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
   path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
@@ -221,7 +222,7 @@ ggplot() +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(5, 100)) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
-  ggtitle("A. Percent of simulations at stationarity in the preceding 1000 timesteps") +
+  ggtitle("A. Percent of simulations at stationarity in the 1000 timestep window") +
   theme(strip.background = element_blank())
 
 ggplot() +
@@ -401,7 +402,7 @@ calc_stats_possibly <- possibly(calc_stats)
 
 ```{r}
 # list folders in the gnx directory
-dirs <- list.dirs(here("p1_gnxsims", "gnx"), full.names = TRUE, recursive = FALSE)
+dirs <- list.dirs(here("p1_gnxsims", "gnx", "test"), full.names = TRUE, recursive = FALSE)
 dirs <- dirs[grepl("GNX_mod-test", dirs)]
 
 # get the stats for each folder across all time steps
