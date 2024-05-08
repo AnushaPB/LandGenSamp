@@ -23,8 +23,8 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 get_stats <- function(K, phi, m, H, r){
   # Create paths to simulation files
   wdir <- here("p1_gnxsims", "gnx")
-  folder_name <- paste0("GNX_mod-test1_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
-  file_name <- paste0("mod-test1_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
+  folder_name <- paste0("GNX_mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
+  file_name <- paste0("mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
   path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
 
   # Check if file exists
@@ -38,7 +38,8 @@ get_stats <- function(K, phi, m, H, r){
   return(df)
 }
 
-adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
+
+mw_adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
   # Creating a time series object
   ts <- 
     subdf %>% 
@@ -48,9 +49,65 @@ adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
   # Testing for stationarity of different time points
   # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
   # and the time points would not line up correctly
-  if (is.null(timepoints)) timepoints <- map(seq(0, 9500, nsteps), function(x) x:(x+nsteps))
+  # centered window: 
+  #moving_window_steps <- seq(nsteps/2, 10000 - nsteps/2, by = 10)
+  #timepoints <- map(moving_window_steps, function(x) (x-nsteps/2):(x+nsteps/2))
+  # trailing window: 
+  moving_window_steps <- seq(nsteps, 10000, by = 10)
+  timepoints <- map(moving_window_steps, function(x) (x-nsteps):x)
   p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
-  p_df <- data.frame(t_start = map_dbl(timepoints, 1), t_end = map_dbl(timepoints, ~.x[length(.x)]), p = p_value)
+  p_df <- data.frame(t_start = moving_window_steps, t_end = moving_window_steps+10, p = p_value)
+  
+  # Create final data frame
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
+adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  timepoints <- map(seq(0, 9500, nsteps), function(x) x:(x + nsteps))
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = map_dbl(timepoints, first), t_end = map_dbl(timepoints, last), p = p_value)
+  
+  # Create final data frame
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
+adf_mw_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  # centered window: 
+  #moving_window_steps <- seq(nsteps/2, 10000 - nsteps/2, by = 10)
+  #timepoints <- map(moving_window_steps, function(x) (x-nsteps/2):(x+nsteps/2))
+  # trailing window: 
+  moving_window_steps <- seq(nsteps, 10000, by = 10)
+  timepoints <- map(moving_window_steps, function(x) (x-nsteps):x)
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = moving_window_steps, t_end = moving_window_steps+10, p = p_value)
   
   # Create final data frame
   ts_df <- 
@@ -91,7 +148,7 @@ We tested for equilibrium in population size using an Augmented Dickey-Fuller te
 # Test with population size
 Nt_df <-
   # Test for stationarity in population size
-  bind_rows(map(ls, adf_test, nsteps = 1000, var = "Nt")) %>%
+  bind_rows(map(ls, adf_test, nsteps = 1000, var = "Nt", .progress = TRUE)) %>%
   mutate(nsteps = as.character(nsteps)) %>%
   mutate(stationarity = p < 0.05) 
 
@@ -104,7 +161,7 @@ Nt_mean <-
 
 ggplot() +
   geom_rect(data = Nt_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
+  #geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
   geom_line(data = drop_na(df, Nt), aes(x = t, y = Nt, group = group), alpha = 0.3) +
   labs(x = "Timepoint", y = "Population size", fill = "% at\nstationarity") +
   scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
@@ -122,7 +179,7 @@ We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test 
 ```{r, fig.width = 8, fig.height = 3.5}
 fitness_df <-
   # Test for stationarity in mean fitness
-  map(ls, adf_test, nsteps = 1000) %>% 
+  map(ls, adf_test, nsteps = 1000, .progress = TRUE) %>% 
   bind_rows() %>%
   mutate(stationarity = p < 0.05) 
 
@@ -137,11 +194,12 @@ fitness_mean <-
 # Calculate the percentage of simulations who have reached stationarity at least once by that time point
 fitness_addmean <- 
   fitness_df %>%
-  mutate(window = paste0(t_start, "-", t_end)) %>%
-  arrange(K, phi, m, H, r, window) %>%
+  # group by the parameters
   group_by(K, phi, m, H, r) %>%
-  mutate(first_stationary = min(window[stationarity])) %>%
-  mutate(reached_stationarity = window >= first_stationary) %>%
+  # find the first time point that is stationary 
+  mutate(first_stationary = min(t_start[stationarity])) %>%
+  # fill in everything after that time point with TRUE
+  mutate(reached_stationarity = t_start >= first_stationary) %>%
   ungroup() %>%
   group_by(t_start, t_end) %>%
   summarise(stationarity = sum(reached_stationarity)/n() * 100)
@@ -154,15 +212,16 @@ fitness_meanall <-
   summarise(mean_fit = mean(mean_fit, na.rm = TRUE), .groups = "drop")
 
 ggplot() +
+  geom_rect(aes(xmin = 0, xmax = 1000, ymin = -Inf, ymax = Inf), fill = "lightgray") +
   geom_rect(data = fitness_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
+  #geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
   geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
   geom_line(data = fitness_meanall, aes(x = t, y = mean_fit), lwd = 1) +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
-  scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
+  scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(5, 100)) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
-  ggtitle("A. Percent of simulations at stationarity within the window") +
+  ggtitle("A. Percent of simulations at stationarity in the preceding 1000 timesteps") +
   theme(strip.background = element_blank())
 
 ggplot() +
@@ -343,7 +402,7 @@ calc_stats_possibly <- possibly(calc_stats)
 ```{r}
 # list folders in the gnx directory
 dirs <- list.dirs(here("p1_gnxsims", "gnx"), full.names = TRUE, recursive = FALSE)
-dirs <- dirs[grepl("GNX_mod-test1", dirs)]
+dirs <- dirs[grepl("GNX_mod-test", dirs)]
 
 # get the stats for each folder across all time steps
 combos <- expand.grid(x = dirs, t = seq(0, 10000, 1000))

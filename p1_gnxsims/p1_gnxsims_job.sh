@@ -17,13 +17,9 @@ conda env create -f gnx.yml -n gnx
 source activate gnx
 
 ## Run geonomics simulation tests (see File S# for more information)
-python3 run_gnx_test1.py > run_gnx_test1.pyout
-mkdir -p test1
-mv GNX_mod-test1* test1
-
-python3 run_gnx_test2.py > run_gnx_test2.pyout
-mkdir -p test2
-mv GNX_mod-test2* test2
+python3 run_gnx_test.py > run_gnx_test.pyout
+mkdir -p test
+mv GNX_mod-test* test
 
 ### Render File S# (results of simulation tests)
 Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'gnx', 'FileS#_gnx_test.Rmd')"
