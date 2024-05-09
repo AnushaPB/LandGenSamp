@@ -144,7 +144,7 @@ df <-
 
 # 2. Testing for equilibrium in population size
 
-We tested for equilibrium in population size using an Augmented Dickey-Fuller test for stationarity. We tested for stationarity in windows of 1,000 time points (e.g., 0-1,000, 1,000-2,000, etc.) for each unique set of simulation parameters. We calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05 (alternate hypothesis: stationarity). Population size acheived stationarity by 1,000 timesteps.
+We tested for equilibrium in population size using an Augmented Dickey-Fuller test for stationarity. We tested for stationarity in windows of 2,000 time points (e.g., 0-2,000, 2,000-4,000, etc.) for each unique set of simulation parameters. We calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05 (alternate hypothesis: stationarity). All simulations achieved stationarity in population size by 2,000 timesteps.
 ```{r, fig.width = 8, fig.height = 3.5}
 # Test with population size
 Nt_df <-
@@ -162,10 +162,10 @@ Nt_mean <-
 
 ggplot() +
   geom_rect(data = Nt_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  #geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
+  geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
   geom_line(data = drop_na(df, Nt), aes(x = t, y = Nt, group = group), alpha = 0.3) +
   labs(x = "Timepoint", y = "Population size", fill = "% at\nstationarity") +
-  scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
+  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0, limit = c(20, 100)) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
   theme(strip.background = element_blank())
@@ -175,18 +175,12 @@ ggplot() +
 
 ## 3.1 Stationarity test
 
-We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test for stationarity. As before, we tested for stationarity in windows of 1,000 time points and calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05. The majority of the simulations were at stationarity by 2,000 timesteps, however the percent of simulations at stationarity didn't reach a maximum until the 9,000-10,000 timestep window (A). This is likely due to very slight variation in the variance of fitness that is unlikely to affect our inferences about sampling strategy. We confirmed that all of the simulations had reached stationarity in at least one of the stationarity windows by 4,000 timesteps (B). 
+We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test for stationarity. As before, we tested for stationarity in windows of 2,000 time points and calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05. All simulations acheived stationarity in mean fitness by 6000 timesteps.
 
 ```{r, fig.width = 8, fig.height = 3.5}
 fitness_df <-
   # Test for stationarity in mean fitness
   map(ls, adf_test, nsteps = 2000, .progress = TRUE) %>% 
-  bind_rows() %>%
-  mutate(stationarity = p < 0.05) 
-
-fitness_df <-
-  # Test for stationarity in mean fitness
-  map(ls, adf_mw_test, nsteps = 2000, .progress = TRUE) %>% 
   bind_rows() %>%
   mutate(stationarity = p < 0.05) 
 
@@ -198,19 +192,6 @@ fitness_mean <-
   summarize(stationarity = sum(stationarity)/n() * 100) %>%
   drop_na()
 
-# Calculate the percentage of simulations who have reached stationarity at least once by that time point
-fitness_addmean <- 
-  fitness_df %>%
-  # group by the parameters
-  group_by(K, phi, m, H, r) %>%
-  # find the first time point that is stationary 
-  mutate(first_stationary = min(t_start[stationarity])) %>%
-  # fill in everything after that time point with TRUE
-  mutate(reached_stationarity = t_start >= first_stationary) %>%
-  ungroup() %>%
-  group_by(t_start, t_end) %>%
-  summarise(stationarity = sum(reached_stationarity)/n() * 100)
-
 # Calculate the mean fitness for each timepoint for all simulations
 fitness_meanall <-
   df %>%
@@ -219,13 +200,12 @@ fitness_meanall <-
   summarise(mean_fit = mean(mean_fit, na.rm = TRUE), .groups = "drop")
 
 ggplot() +
-  #geom_rect(aes(xmin = 0, xmax = 2000, ymin = -Inf, ymax = Inf), fill = "lightgray") +
   geom_rect(data = fitness_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white", lwd = 0.5) +
+  geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white", lwd = 0.8) +
   geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
   geom_line(data = fitness_meanall, aes(x = t, y = mean_fit), lwd = 1) +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
-  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0.3) +
+  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0, limit = c(20, 100)) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
   ggtitle("A. Percent of simulations at stationarity in the 2000 timestep window") +
