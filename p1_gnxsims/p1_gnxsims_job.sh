@@ -1,10 +1,10 @@
 # SIMULATED LANDSCAPES -------------------------------------------------------------------
-## Render File S2 (environmental correlations)
-Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2.Rmd')"
-
 ## Create MNLMs
 Rscript p1_gnxsims/MNLM/run_MNLM.R
 ## The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
+
+## Render File S2 (MNLM parameterization)
+Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2.Rmd')"
 
 # GEONOMICS SIMULATIONS ------------------------------------------------------------------
 cd p1_gnxsims/gnx
@@ -37,5 +37,7 @@ find LGS_data -name 'mod*t-6000*' -type f -exec cp --parents \{\} LGS_simulation
 tar -czvf LGS_simulation_archive.tar.gz LGS_simulation_archive/
 ## Create directory for dryad data
 mkdir -p dryad
+## Move the archive to the dryad directory
+mv LGS_simulation_archive.tar.gz dryad/
 
 cd ..
