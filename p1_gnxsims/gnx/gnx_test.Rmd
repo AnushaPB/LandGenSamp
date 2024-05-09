@@ -68,7 +68,7 @@ mw_adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
   return(ts_df)
 }
 
-adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
+adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
   # Creating a time series object
   ts <- 
     subdf %>% 
@@ -78,7 +78,7 @@ adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
   # Testing for stationarity of different time points
   # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
   # and the time points would not line up correctly
-  timepoints <- map(seq(0, 9500, nsteps), function(x) x:(x + nsteps))
+  if (is.null(timepoints)) timepoints <- map(seq(0, 9500, nsteps), function(x) x:(x + nsteps))
   p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
   p_df <- data.frame(t_start = map_dbl(timepoints, first), t_end = map_dbl(timepoints, last), p = p_value)
   
@@ -180,7 +180,13 @@ We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test 
 ```{r, fig.width = 8, fig.height = 3.5}
 fitness_df <-
   # Test for stationarity in mean fitness
-  map(ls, adf_test, nsteps = 1000, .progress = TRUE) %>% 
+  map(ls, adf_test, nsteps = 2000, .progress = TRUE) %>% 
+  bind_rows() %>%
+  mutate(stationarity = p < 0.05) 
+
+fitness_df <-
+  # Test for stationarity in mean fitness
+  map(ls, adf_mw_test, nsteps = 2000, .progress = TRUE) %>% 
   bind_rows() %>%
   mutate(stationarity = p < 0.05) 
 
@@ -213,29 +219,18 @@ fitness_meanall <-
   summarise(mean_fit = mean(mean_fit, na.rm = TRUE), .groups = "drop")
 
 ggplot() +
-  geom_rect(aes(xmin = 0, xmax = 1000, ymin = -Inf, ymax = Inf), fill = "lightgray") +
+  #geom_rect(aes(xmin = 0, xmax = 2000, ymin = -Inf, ymax = Inf), fill = "lightgray") +
   geom_rect(data = fitness_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  #geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
+  geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white", lwd = 0.5) +
   geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
   geom_line(data = fitness_meanall, aes(x = t, y = mean_fit), lwd = 1) +
   labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
-  scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(5, 100)) +
+  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0.3) +
   theme_classic() +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
-  ggtitle("A. Percent of simulations at stationarity in the 1000 timestep window") +
+  ggtitle("A. Percent of simulations at stationarity in the 2000 timestep window") +
   theme(strip.background = element_blank())
 
-ggplot() +
-  geom_rect(data = fitness_addmean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
-  geom_vline(data = fitness_addmean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
-  geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
-  geom_line(data = fitness_meanall, aes(x = t, y = mean_fit), lwd = 1) +
-  labs(x = "Timepoint", y = "Mean fitness", fill = "% reached\nstationarity") +
-  scale_fill_viridis_c(option = "mako", end = 1, begin = 0.2, direction = -1, limits = c(15, 100)) +
-  theme_classic() +
-  ggtitle("B. Percent of simulations that have reached stationarity in at least one window") +
-  scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
-  theme(strip.background = element_blank())
 ```
 
 ## 3.2 Plateau test
