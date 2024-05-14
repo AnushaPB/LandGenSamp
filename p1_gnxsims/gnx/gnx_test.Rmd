@@ -498,3 +498,41 @@ ggplot(gea_ggdf) +
         strip.placement = "outside") 
 
 ```
+
+```{r, include = FALSE}
+# Confirm with tests that env1 and env2 (the landscape layers) don't have any systematic differences in genotype-enviornment association strength
+gea_ggdf2 <- 
+  gea_results %>%
+  # filter out the neutral loci
+  filter(adaptive) %>%
+  # Create new columns to define the color group
+  mutate(
+    m = case_when(grepl("_m25_", path) ~ "Low m", TRUE ~ "High m"),
+    H = case_when(grepl("_H5_", path) ~ "Low H", TRUE ~ "High H")
+    ) %>%
+  mutate(color_group = paste(H, "&", m)) %>%
+  # Reshape the data from wide to long format
+  pivot_longer(c(cor1_r, cor2_r)) %>%
+  mutate(name = case_when(name == "cor1_r" ~ "env1", name == "cor2_r" ~ "env2")) %>%
+  # Get magnitude of correlation
+  mutate(value = abs(value)) %>%
+  # Calculate average within simulations 
+  mutate(group = str_remove(path, "_t-\\d+")) %>%
+  group_by(group, color_group, name) %>%
+  summarize(value = mean(value, na.rm = TRUE)) 
+
+# confirm same number of points in each group
+check <- 
+  gea_ggdf2 %>%
+  group_by(color_group, name) %>%
+  count() %>%
+  pull(n) %>%
+  all(. == 8)
+stopifnot(check)
+
+ggplot(gea_ggdf2, aes(x = color_group, y = value, fill = name)) +
+  geom_boxplot() +
+  geom_dotplot(binaxis='y', stackdir='center', position=position_dodge(0.8), binwidth = 0.006, alpha = 0.8) +
+  labs(fill = "Env", y = "|Genotype-environment correlation|", x = "Simulation group") +
+  theme_classic() 
+```
