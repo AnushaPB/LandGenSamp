@@ -329,8 +329,8 @@ ind_plts <-
             legend.position = "right",
             strip.placement = "outside") +
       scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = FALSE) +
-      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = FALSE) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
+      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
       ggtitle("A. Individual-based sampling")
   }) 
 
