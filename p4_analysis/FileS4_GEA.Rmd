@@ -20,7 +20,7 @@ library("grid")
 library("gt")
 library("purrr")
 library("ggpubr")
-
+library("lme4")
 source(here("p4_analysis", "analysis_functions.R"))
 
 p4path <- here("p4_analysis", "outputs")
@@ -38,7 +38,7 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
 ```{r,fig.width = 9, fig.height = 4}
-df <- format_data("gdm2", "individual") 
+df <- format_data("lfmm", "individual") 
 
 ggdf <- make_ggdf(df, stat_name = "geo_p") 
 
@@ -139,7 +139,6 @@ walk(summary_plots, ~walk(.x, grid.arrange))
 lfmm_ind <- 
   lfmm_ind %>% 
   filter(lfmm_method == "ridge") 
-
 ```
 
 ```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
@@ -390,8 +389,8 @@ ind_plts <-
           legend.position = "right",
           strip.placement = "outside") +
     scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = FALSE) +
-    scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = FALSE) +
+    scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
+    scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
     ggtitle("A. Individual-based sampling")
     
   }) 
@@ -425,8 +424,8 @@ site_plts <-
           legend.position = "right",
           strip.placement = "outside") +
     scale_color_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = FALSE) +
-    scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = FALSE) +
+    scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = "none") +
+    scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = "none") +
     ggtitle("B. Site-based sampling")
   })
 

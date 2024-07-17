@@ -294,9 +294,7 @@ format_data <- function(method, sampling, p_filter = TRUE) {
   if (method == "lfmm") df <- format_lfmm(path, p_filter = p_filter)
   if (method == "rda") df <- format_rda(path, p_filter = p_filter)
   if (method == "mmrr") df <- format_mmrr(path)
-  if (method == "mmrr2") df <- format_mmrr(path)
   if (method == "gdm") df <- format_gdm(path)
-  if (method == "gdm2") df <- format_gdm(path)
   
   return(df)
 }
