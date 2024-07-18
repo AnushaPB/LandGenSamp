@@ -1,6 +1,6 @@
 
 # Plot every single unique simulation, averaged across all replicates for a given statistic
-MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, na.rm=TRUE, dig = 3, pretty_names = TRUE){
+MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, na.rm=TRUE, dig = 2, pretty_names = TRUE){
   stat_name <- stat
   agg <- make_ggdf(df, stat_name = stat_name, aggfunc = aggfunc, na.rm = na.rm)
   
@@ -133,7 +133,7 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
 }
 
 # create summary plot that groups simulation by parameter levels and summarizes over the stat
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig=3, aggfunc = mean, minv = NULL, maxv = NULL, title = NULL, full = FALSE, pretty_names = TRUE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig = 2, aggfunc = mean, minv = NULL, maxv = NULL, title = NULL, full = FALSE, pretty_names = TRUE){
  
   agg <- make_agg(df, stat_name = stat_name, na.rm = na.rm, dig = dig, aggfunc = aggfunc, minv = minv, maxv = maxv, full = full)
   
@@ -210,17 +210,21 @@ agg_mm <- function(x, stat){
   return(c(min = min(result$min, na.rm = TRUE), max = max(result$max, na.rm = TRUE)))
 }
 
-# create heat_plot from a df given a stat
+# Create heat_plot from a df given a stat
 heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NULL, facet = FALSE, dig = 2, 
                       colpal = NULL){
   
   if (!is.null(stat_name)) df$stat <- df[[stat_name]]
   
-  # define max and min for plotting
+  # Define max and min for plotting
   if (is.null(maxv)) maxv <- max(df$stat, na.rm = TRUE)
   if (is.null(minv)) minv <- min(df$stat, na.rm = TRUE)
+
+  # Round max/min
+  minv <- round(minv, dig)
+  maxv <- round(maxv, dig)
   
-  # plot results
+  # Plot results
   p <- ggplot(df, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
     geom_text(aes(label = round(stat, dig), hjust = 0.5), size = 5) +
@@ -665,6 +669,9 @@ pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
   em_df <- data.frame(em$contrasts)
   
   d <- max(abs(c(min(em_df$estimate), max(em_df$estimate))))
+
+  # Round p values
+  em_df$p <- signif(em_df$p, 2)
   
   em_tb <- em_df %>%
     dplyr::select(-df) %>%
