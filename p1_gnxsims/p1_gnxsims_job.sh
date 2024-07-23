@@ -29,6 +29,13 @@ python3 run_gnx.py > run_gnx.pyout
 mkdir -p LGS_data
 mv GNX_mod* LGS_data
 
+# Make everything in the LGS_data folder read-only
+sudo chmod -R 744 LGS_data
+
+# Create dosage files
+mkdir -p dosage
+Rscript run_make_dosage.R
+
 # Create folder with simulation results for archive
 mkdir -p LGS_simulation_archive
 ## This only contains the raw csv and vcf mod outputs  from geonomics from the final time step
