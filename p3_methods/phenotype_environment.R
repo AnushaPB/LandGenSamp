@@ -1,6 +1,6 @@
 set.seed(42)
 
-library("here") #paths
+library("here") 
 library("foreach")
 library("doParallel")
 library("dplyr")
@@ -73,7 +73,7 @@ res_mismatch <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
         subIDs <- get_samples(params[i,], sampstrat, nsamp)
         subgsd_df <- gsd_df[subIDs,]
         
-        #calculate phenotypic mistmatchq
+        #calculate phenotypic mistmatch
         z1mis <- abs(subgsd_df$z1 - subgsd_df$env1)
         z2mis <- abs(subgsd_df$z2 - subgsd_df$env2)
         mis <- z1mis + z2mis
