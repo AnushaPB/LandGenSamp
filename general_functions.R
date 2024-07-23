@@ -21,17 +21,22 @@ create_filepath <- function(i, params, type) {
 
   # Different file patterns for different data types
   if (type == "gen") {
-    filepath <- paste0("/mod-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.vcf")
+    filepath <- paste0("mod-", paramset, "_it-", params[i, "it"], "_t-6000_spp-spp_0.vcf")
   }
   if (type == "gsd") {
-    filepath <- paste0("/mod-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv")
+    filepath <- paste0("mod-", paramset, "_it-", params[i, "it"], "_t-6000_spp-spp_0.csv")
   }
   if (type == "dos") {
-    filepath <- paste0("/dos-", paramset, "_it-", params[i, "it"], "_t-1000_spp-spp_0.csv")
+    filepath <- paste0("dos-", paramset, "_it-", params[i, "it"], "_t-6000_spp-spp_0.csv")
   }
 
   # return full filepath
-  filepath <- here::here(moddir, filepath)
+  if (type != "dos"){
+    filepath <- here::here(moddir, filepath)
+  } else {
+    filepath <- here::here("p1_gnxsims", "gnx", "dosage", filepath)
+  }
+
   print(filepath)
 
   return(filepath)
@@ -268,8 +273,31 @@ which0 <- function(x) {
 }
 
 # get list of packages to provide when parallelizing
-get_packages <- function() {
-  c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat")
+get_packages <- function(install = FALSE, load = FALSE) {
+  packages <- c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat", "tess3r", "devtools", "PRROC")
+
+  # Install packages that you don't have
+  if (install) {
+    new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+    if ("qvalue" %in% new.packages) {
+      if ("devtools" %in% new.packages) install.packages("devtools")
+      devtools::install_github("jdstorey/qvalue")
+    }
+
+    if ("tess3r" %in% new.packages){
+      if ("devtools" %in% new.packages) install.packages("devtools")
+      devtools::install_github("bcm-uga/TESS3_encho_sen")
+    }
+
+    new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+    if (length(new.packages)) install.packages(new.packages)
+  }
+  
+  # Load every package
+  if (load)lapply(packages, require, character.only = TRUE)
+
+  # Return packages for parallel
+  return(packages)
 }
 
 ######################################################
