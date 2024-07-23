@@ -20,7 +20,7 @@ library("grid")
 library("gt")
 library("purrr")
 library("ggpubr")
-
+library("lme4")
 source(here("p4_analysis", "analysis_functions.R"))
 
 p4path <- here("p4_analysis", "outputs")
@@ -38,9 +38,9 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FAL
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
 ```{r,fig.width = 9, fig.height = 4}
-df <- format_data("gdm2", "individual") 
+df <- format_data("lfmm", "individual") 
 
-ggdf <- make_ggdf(df, stat_name = "geo_p") 
+ggdf <- make_ggdf(df, stat_name = "TPRCOMBO_strict") 
 
 plots <-
   map2(
@@ -139,10 +139,9 @@ walk(summary_plots, ~walk(.x, grid.arrange))
 lfmm_ind <- 
   lfmm_ind %>% 
   filter(lfmm_method == "ridge") 
-
 ```
 
-```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+```{r, message = FALSE, results = 'asis', echo = FALSE}
 walk(stats, ~run_lmer(lfmm_ind,  stat = .x, 
                       filepath = make_lmer_path("lfmm", "ind", .x)))
 ```
@@ -390,8 +389,8 @@ ind_plts <-
           legend.position = "right",
           strip.placement = "outside") +
     scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = FALSE) +
-    scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = FALSE) +
+    scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
+    scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
     ggtitle("A. Individual-based sampling")
     
   }) 
@@ -425,13 +424,17 @@ site_plts <-
           legend.position = "right",
           strip.placement = "outside") +
     scale_color_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = FALSE) +
-    scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = FALSE) +
+    scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = "none") +
+    scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = "none") +
     ggtitle("B. Site-based sampling")
   })
 
 pdf(here("figures", "Figure_2.pdf"), width = 11, height = 4.5)
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+dev.off()
+
+pdf(here("figures", "Figure_S4.pdf"), width = 11, height = 4.5)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 dev.off()
 
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
@@ -475,7 +478,7 @@ df %>%
   mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
   group_by(Method, K, phi, m, H, r) %>%
   summarize(mean = round(mean(dif),3), sd = round(sd(dif),3)) %>%
-  arrange(-dif)
+  arrange(-mean)
 
 # repeat but checking for simulation where TPR is highest
 df %>%
@@ -499,8 +502,13 @@ ggdf <-
   df %>%
   filter(K == 2 & phi == 1 & r == 0.3) %>%
   group_by(Method, sampstrat, nsamp, sampling, H, m) %>%
-  summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
-  pivot_longer(all_of(stats), names_to = "Statistic", values_to = "values") %>%
+  summarise(across(all_of(stats), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE)), .names = "{.col}-{.fn}")) %>%
+  pivot_longer(cols = -c(Method, sampstrat, nsamp, sampling, H, m), 
+               names_to = c("Statistic", ".value"), 
+               names_sep = "-") %>%
+  rename(values = mean) %>%
+  mutate(ymax = values + sd, ymin = values - sd) %>%
+  mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax)) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
   mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
@@ -517,6 +525,7 @@ site <- filter(ggdf, sampling == "site")
 
 ind_plts <-
   ggplot(ind, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method),  alpha = 0.1) +
       geom_line(data = filter(ind, Scheme == "T"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(ind, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(ind, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
@@ -539,14 +548,15 @@ ind_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_shape_manual(values = c(21:24)) +
+      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
+      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
+      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
       ggtitle("A. Individual-based sampling")
   
 
 site_plts <-
   ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+      geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method), alpha = 0.1) +
       geom_line(data = filter(site, Scheme == "EQ"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(site, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
