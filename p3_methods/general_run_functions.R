@@ -6,13 +6,16 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   source(here::here("p3_methods", "general_run_functions.R"))
   source(here::here("p3_methods", "GEA_functions.R"))
   source(here::here("p3_methods", "IBDIBE_functions.R"))
+
+  # Load doParallel (necessary to get %dopar%)
+  library(doParallel)
   
   # set cores
   if (is.null(ncores)) ncores <- 10
   
   # make cluster
   cl <- parallel::makeCluster(ncores) 
-  registerDoParallel(cl)
+  doParallel::registerDoParallel(cl)
   
   # Run common operations
   if (method %in% c("mmrr", "gdm", "lfmm_fullK"))
@@ -35,7 +38,7 @@ run_method <- function(method, sampling = c("individual", "site"), ncores = NULL
   }
   
   ## Shut down parallel workers
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   
 }
 
@@ -69,7 +72,7 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
 }
 
 # helper function for run analysis. Runs analysis for one simulation (i).
-run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE){
+run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE, cache = TRUE){
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
@@ -106,10 +109,20 @@ run_analysis_helper <- function(i, params, ns, strats, method, full_result = NUL
   # Combine with full result if mmrr/gdm
   if (!is.null(full_result_i)) results <- dplyr::bind_rows(results, full_result_i)
   
-  # remove large objects
+  # Remove large objects
   rm("gen")
   rm("gsd_df")
   gc()
+
+  # Export results
+  if (cache){
+    if (site){
+      path <- here::here("p3_methods", "outputs", paste0(method, "_", paste(paste0(colnames(params), params[i,]), collapse = "_"),"_sitesampling_results.csv"))
+    } else {
+      path <- here::here("p3_methods", "outputs", paste0(method, "_", paste(paste0(colnames(params), params[i,]), collapse = "_"),"_indsampling_results.csv"))
+    }
+    write.csv(results, path, row.names = FALSE)
+  }
   
   return(results)
 }
