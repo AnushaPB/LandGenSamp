@@ -125,9 +125,9 @@ get_K_elbow <- function(gen){
   # this is a crude way to determine the number of latent factors that is based on an arbitrary "low" value 
   K <- quick.elbow(eig, low = 0.08, max.pc = 0.7)
   
-  par(pty = "s",mfrow = c(1,1))
-  plot(eig, xlab = 'PC', ylab = "Variance explained")
-  abline(v = K, col = "red", lty = "dashed")
+  #par(pty = "s",mfrow = c(1,1))
+  #plot(eig, xlab = 'PC', ylab = "Variance explained")
+  #abline(v = K, col = "red", lty = "dashed")
   
   return(K)
 }
@@ -169,8 +169,8 @@ get_K_tw <- function(gen, maxK = NULL){
   # if none are significant, return 1
   if (K == 0) K <- 1
   
-  plot(eig)
-  abline(v = K)
+  #plot(eig)
+  #abline(v = K)
   
   return(K)
 }
@@ -184,9 +184,9 @@ get_K_tess <- function(gen, coords, Kvals = 1:9, tess_method = "projected.ls", p
   tess3_obj <- tess3r::tess3(X = gen, coord = coords, K = Kvals, method = tess_method, ploidy = ploidy)
   
   # Plot CV results and mark the K-value that is automatically selected
-  plot(tess3_obj, pch = 19, col = "blue",
-       xlab = "Number of ancestral populations",
-       ylab = "Cross-validation score")
+  #plot(tess3_obj, pch = 19, col = "blue",
+       #xlab = "Number of ancestral populations",
+       #ylab = "Cross-validation score")
   
   # Get best K value
   K <-  bestK(tess3_obj, Kvals)
