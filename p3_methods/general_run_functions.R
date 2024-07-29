@@ -154,7 +154,7 @@ run_full_helper <- function(i, params, method, n = 1000) {
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
   
-  if (method == "gdm_cache"){
+  if (method == "gdm"){
     paramset <- params[i,]
     paramset[,c("phi", "m", "r", "H")] <- paramset[,c("phi", "m", "r", "H")] * 100
     filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
