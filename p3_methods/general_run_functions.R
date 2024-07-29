@@ -158,8 +158,10 @@ run_full_helper <- function(i, params, method, n = 1000) {
     paramset <- params[i,]
     paramset[,c("phi", "m", "r", "H")] <- paramset[,c("phi", "m", "r", "H")] * 100
     filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
-    full_result <- read.csv(filepath)
-    return(full_result)
+    if (file.exists(filepath)) {
+      full_result <- read.csv(filepath)
+      return(full_result)
+    }
   }
 
   gen <- get_data(i, params = params, "dos")
@@ -197,9 +199,6 @@ run_full_helper <- function(i, params, method, n = 1000) {
   gc()
   
   if (method == "gdm"){
-    paramset <- params[i,]
-    paramset[,c("phi", "m", "r", "H")] <- paramset[,c("phi", "m", "r", "H")] * 100
-    filepath <- here("p3_methods", "outputs", paste0(paste(paste0(colnames(params), params[i,]), collapse = "_"),"_fullGDM.csv"))
     write.csv(full_result, filepath, row.names = FALSE)
   }
   
