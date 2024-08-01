@@ -122,7 +122,7 @@ df %>%
   # replace NA r with 0, the NA is due to there being no variation
   mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) %>%
   # calculate the proportion of times the phenotype ~ environment correlations were significant
-  summarize(mean = mean(cor_sig == 1, na.rm = TRUE), count = sum(cor_sig == 1, na.rm = TRUE))
+  summarize(mean = mean(cor_sig > 0, na.rm = TRUE), count = sum(cor_sig > 0, na.rm = TRUE))
 ```
 
 Linear mixed effect model for phenotype-environment correlations:
@@ -139,6 +139,7 @@ df <-
 mod <- lmer(cor_r ~ K + m + phi + H + r + (1|seed), data = df)
 pretty_anova(mod, stat = "Phenotype-environment correlation")
 ```
+
 ```{r, fig.width =5, fig.height = 5, include = FALSE}
 # Internal checks to make sure env 1 and env 2 have comparable correlations
 # (Not included in supplementary file)
@@ -207,9 +208,9 @@ ggplot(ggdf) +
 # 4. Genotype-environment correlations
 
 ```{r}
-ge_df <- read.csv(here("p3_methods", "outputs", "genotype_environment_results.csv"))
-df <- 
-  ge_df %>%
+full_ge_df <- read.csv(here("p3_methods", "outputs", "genotype_environment_results.csv"))
+ge_df <- 
+  full_ge_df %>%
   mutate(across(c(K, m, phi, H, r, seed), factor)) %>%
   # note NA values occur because there is no genetic variance, we are treating this as a cor of 0 and a p of 1
   # only a very small amount are NAs (less than 0.01%)
@@ -262,7 +263,7 @@ calc_empp <- function(sub_df){
   return(ls)
 }
 
-df_split <- df %>% group_by(K, phi, m, seed, H, r, it) %>% group_split()
+df_split <- ge_df %>% group_by(K, phi, m, seed, H, r, it) %>% group_split()
 empp <- map(df_split, ~calc_empp(.x), .progress = TRUE)
 empp_df <- empp %>% bind_rows()
 
@@ -279,7 +280,7 @@ Linear mixed effect model for genotype-environment correlations at adaptive loci
 ```{r, results = "asis"}
 # combine r
 moddf <-
-  df %>%
+  ge_df %>%
   filter(adaptive == TRUE) %>%
   # add adaptive loci IDs (1-8, loci are in order; repeat 960 times for 960 simulations)
   mutate(id = rep(1:8, 960)) %>%
@@ -296,7 +297,7 @@ pretty_anova(mod, stat = "Genotype-environment correlation at adaptive loci")
 ```{r, include = FALSE}
 # Test:
 df2 <-
-  df %>%
+  ge_df %>%
   group_by(K, m, phi, H, r, adaptive) %>%
   summarize(
     cor_r = mean(abs(c(cor1_rNA, cor2_rNA)), na.rm = TRUE), 
