@@ -388,9 +388,7 @@ ind_plts <-
           panel.spacing = unit(0.5, "lines"),
           legend.position = "right",
           strip.placement = "outside") +
-    scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
-    scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
+    scheme_cols("ind") +
     ggtitle("A. Individual-based sampling")
     
   }) 
@@ -423,9 +421,7 @@ site_plts <-
           panel.spacing = unit(0.5, "lines"),
           legend.position = "right",
           strip.placement = "outside") +
-    scale_color_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R")) +
-    scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = "none") +
-    scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = "none") +
+    scheme_cols("site") +
     ggtitle("B. Site-based sampling")
   })
 
@@ -433,7 +429,11 @@ pdf(here("figures", "Figure_2.pdf"), width = 11, height = 4.5)
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 dev.off()
 
-pdf(here("figures", "Figure_S4.pdf"), width = 11, height = 4.5)
+png(here("figures", "Figure_2.png"), width = 11, height = 4.5, units = "in", res = 200)
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+dev.off()
+
+png(here("figures", "Figure_S4.png"), width = 11, height = 4.5, units = "in", res = 200)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 dev.off()
 
@@ -441,61 +441,6 @@ grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 ```
 
-```{r, include = FALSE}
-# calculate reduction in performance with transect sampling
-df %>%
-  ungroup() %>%
-  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
-  filter(sampling == "individual") %>%
-  select(K, phi, m, seed, H, r, it, TPRCOMBO_strict, sampstrat, Method, nsamp) %>%
-  pivot_wider(names_from = sampstrat, values_from = TPRCOMBO_strict) %>%
-  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
-  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
-  group_by(Method) %>%
-  summarize(mean = round(mean(T_dif),3), sd = round(sd(T_dif),3))
-
-# calculate reduction in TPR for strict vs relaxed
-# across methods:
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual", H == 1, m == 1, phi == 1, ) %>%
-  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
-  group_by(Method) %>%
-  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
-
-# across methods + r: 
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual") %>%
-  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
-  group_by(Method, r) %>%
-  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
-
-# across all simulations:
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual") %>%
-  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
-  group_by(Method, K, phi, m, H, r) %>%
-  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3)) %>%
-  arrange(-mean)
-
-# repeat but checking for simulation where TPR is highest
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual", H == 0.5, m == 1, phi == 1, K == 2) %>%
-  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
-  group_by(Method) %>%
-  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
-
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual", H == 0.5, m == 1, phi == 1, K == 2) %>%
-  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
-  group_by(Method, r) %>%
-  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
-
-```
 
 ```{r, fig.height=5.5, fig.width=13}
 ggdf <- 
@@ -548,9 +493,7 @@ ind_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
-      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
+      scheme_cols("ind") +
       ggtitle("A. Individual-based sampling")
   
 
@@ -577,19 +520,75 @@ site_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_shape_manual(values = c(21:23), breaks = c("ES", "EQ", "R")) +
+      scheme_cols("site") +
       ggtitle("B. Site-based sampling")
 
 
-pdf(here("figures", "GEA_plots2.pdf"), width = 13, height = 5.5)
+png(here("figures", "GEA_plots2.png"), width = 13, height = 5.5, units = "in", res = 200)
 grid.arrange(ind_plts, site_plts, nrow = 1)
 dev.off()
 
 grid.arrange(ind_plts, site_plts, nrow = 1)
 ```
 
+# Statistics referenced in-text
+
+```{r, include = TRUE, echo = TRUE, results = TRUE}
+#  When migration and autocorrelation were both high (and other parameters are held constant), the strict true positive rate for LFMM was XXX for the E-space sampling scheme versus YYY for transect sampling with a sample size of 225 individuals
+lfmm_ind %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  group_by(nsamp, sampstrat) %>%
+  summarise(mean(TPRCOMBO_strict)) %>%
+  filter(nsamp == 225, sampstrat == "ES" | sampstrat == "T")
+
+
+# Reduction in performance with transect sampling
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(sampling == "individual") %>%
+  select(K, phi, m, seed, H, r, it, TPRCOMBO_strict, sampstrat, Method, nsamp) %>%
+  pivot_wider(names_from = sampstrat, values_from = TPRCOMBO_strict) %>%
+  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
+  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
+  group_by(Method) %>%
+  summarize(mean = round(mean(T_dif),3), sd = round(sd(T_dif),3))
+
+# Reduction in TPR for strict vs relaxed
+# Across methods:
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method) %>%
+  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
+
+# Across methods + r: 
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method, r) %>%
+  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
+
+# Average TPR at 255 samples:
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(nsamp == 225 | nsamp == 25) %>%
+  group_by(Method, sampling) %>%
+  summarise(mean = mean(TPRCOMBO_strict, na.rm = TRUE))
+
+# TPR and FDR for E-Space site-based sampling
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(sampling == "site", Method == "RDA") %>%
+  group_by(Method, sampstrat, nsamp) %>%
+  summarise(TPR = mean(TPRCOMBO_strict, na.rm = TRUE), FDR = mean(FDRCOMBO_strict, na.rm = TRUE)) %>%
+  arrange(nsamp)
+  
+```
 
 
 

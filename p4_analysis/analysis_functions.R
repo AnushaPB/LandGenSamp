@@ -1194,3 +1194,21 @@ sampling_plot <- function(ggdf){
             legend = "right")
 }
 
+scheme_cols <- function(x) {
+  if (x == "ind") {
+    cols <- c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")
+    shapes <- c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)
+  }
+  
+  if (x == "site") {
+    cols <- c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed")
+    shapes <-  c("ES" = 21, "EQ" = 22, "R" = 23)
+  }
+  
+  list(
+    scale_color_manual(values = cols, breaks = names(cols)),
+    scale_fill_manual(values = cols, breaks = names(cols)),
+    scale_shape_manual(values = shapes, breaks = names(shapes))
+  )
+}
+

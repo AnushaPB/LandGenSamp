@@ -382,18 +382,6 @@ grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
 grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
 ```
 
-```{r, include = FALSE}
-# calculate reduction in performance with transect sampling
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual") %>%
-  select(K, phi, m, seed, H, r, it, geo_coeff_err_ae_scale, sampstrat, Method, nsamp) %>%
-  pivot_wider(names_from = sampstrat, values_from = geo_coeff_err_ae_scale) %>%
-  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
-  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
-  group_by(Method) %>%
-  summarize(round(mean(T_dif, na.rm = TRUE),3))
-```
 
 ```{r, fig.height=5, fig.width=12}
 
@@ -473,6 +461,39 @@ site_plts <-
       ggtitle("B. Site-based sampling") 
 
 grid.arrange(ind_plts, site_plts, nrow = 1)
+```
+# Statistics referenced in-text
+
+Average increase in IBD error under high migration for individual-based sampling:
+```{r, include = TRUE, results=TRUE}
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  select(K, phi, m, seed, H, r, it, geo_coeff_err_ae_scale, sampstrat, Method, nsamp) %>%
+  pivot_wider(names_from = m, values_from = geo_coeff_err_ae_scale) %>%
+  group_by(K, phi, seed, H, r, it, nsamp, Method) %>%
+  mutate(dif = mean(`1` - `0.25`)) %>%
+  group_by(Method) %>%
+  summarize(
+    `Mean difference` = round(mean(dif, na.rm = TRUE),3), 
+    `SD difference` = round(mean(dif, na.rm = TRUE),3)
+    ) 
+```
+
+Average increase in IBD error from using transect sampling:
+```{r, include = TRUE, results=TRUE}
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  select(K, phi, m, seed, H, r, it, geo_coeff_err_ae_scale, sampstrat, Method, nsamp) %>%
+  pivot_wider(names_from = sampstrat, values_from = geo_coeff_err_ae_scale) %>%
+  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
+  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
+  group_by(Method) %>%
+  summarize(
+    `Mean difference` = round(mean(T_dif, na.rm = TRUE),3), 
+    `SD difference` = round(mean(T_dif, na.rm = TRUE),3)
+    ) 
 ```
 
 # Comparison of MMRR and GDM
