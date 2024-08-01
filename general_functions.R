@@ -272,12 +272,14 @@ which0 <- function(x) {
   }
 }
 
-# get list of packages to provide when parallelizing
+# Get list of packages (and optionally install them)
 get_packages <- function(install = FALSE, load = FALSE) {
   packages <- c("here", "vcfR", "adegenet", "stringr", "dplyr", "tidyr", "purrr", "lfmm", "AssocTests", "gdm", "vegan", "robust", "qvalue", "raster", "hierfstat", "tess3r", "devtools", "PRROC")
 
   # Install packages that you don't have
   if (install) {
+    # Add packages that aren't needed for parallel tasks, but are needed for other scripts
+    packages <- c(packages, "lme4", "lmerTest", "gt", "ggplot2")
     new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
     if ("qvalue" %in% new.packages) {
       if ("devtools" %in% new.packages) install.packages("devtools")

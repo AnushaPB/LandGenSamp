@@ -44,13 +44,20 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     gsd_df <- get_data(i, params = params, "gsd")
     gen <- get_data(i, params = params, "dos")
     
-    # Calculate ghenotype-env correlation
+    # Calculate genotype-env correlation
     cor1 <- map(gen, ~cor.test(.x, gsd_df$env1))
     cor2 <- map(gen, ~cor.test(.x, gsd_df$env2))
     p1 <- map_dbl(cor1, "p.value")
     p2 <- map_dbl(cor2, "p.value")
     r1 <- map_dbl(cor1, "estimate")
     r2 <- map_dbl(cor2, "estimate")
+
+    # Calculate correlation between environmental and neutral SNPs
+    r <- cor(gen[,1:8], gen[,-c(1:8)])
+    # There are NA values but I am dropping them because they represent fixed alleles. I could also count them as 1s theoretically since they are identical.
+    rgen <- mean(r, na.rm = TRUE)
+    r[is.na(r)] <- 1
+    rgen1 <- mean(r)
 
     result <- 
       data.frame(params[i,], 
@@ -59,6 +66,8 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       cor2_p = p2,
       cor1_r = r1,
       cor2_r = r2,
+      rgen = rgen,
+      rgen1 = rgen1,
       adaptive = c(rep(TRUE, 8), rep(FALSE, 10000)))
 
     result <-

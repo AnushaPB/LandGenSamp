@@ -13,11 +13,15 @@ Software versions:
 
 - R 4.3.0
 
-- Python 3.9.7
-
-[renv](https://rstudio.github.io/renv/articles/renv.html) was used to manage R package dependencies. If you clone this repository and open the project (i.e., the .Rproj file), renv will automatically start up and ask you if you want to install all the required packages. The packages can also be installed by running `renv::restore()`. 
+- Python 3.9.7 
 
 [conda](https://docs.conda.io/en/latest/) was used to manage the python package dependencies. The conda environment can be recreated using the p1_gnxsims/gnx/gnx.yml file (`conda env create -f gnx.yml -n gnx`). 
+
+To install all of the necessary R packages run the following:
+```{r}
+source("general_functions.R")
+get_packages(install = TRUE)
+```
 
 ## 2. Files
 
