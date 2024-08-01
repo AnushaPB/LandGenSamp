@@ -231,7 +231,7 @@ calc_empp <- function(sub_df){
   # Calculate the proportion of times the neutral snps have a greater correlation with the environment than the adaptive snps
   env1_empp <- mean(unlist(map(env1_adaptive$cor1_rNA, ~abs(.x) <= abs(env1_neutral$cor1_rNA))), na.rm = TRUE)
   env2_empp <- mean(unlist(map(env2_adaptive$cor2_rNA, ~abs(.x) <= abs(env2_neutral$cor2_rNA))), na.rm = TRUE)
-
+  
   env1_empp_dif <- mean(abs(env1_adaptive$cor1_rNA) - abs(env1_neutral$cor1_rNA), na.rm = TRUE)
   env2_empp_dif <- mean(abs(env2_adaptive$cor2_rNA) - abs(env2_neutral$cor2_rNA), na.rm = TRUE)
 
@@ -265,7 +265,6 @@ calc_empp <- function(sub_df){
 df_split <- df %>% group_by(K, phi, m, seed, H, r, it) %>% group_split()
 empp <- map(df_split, ~calc_empp(.x), .progress = TRUE)
 empp_df <- empp %>% bind_rows()
-
 ```
 
 Genotype-environment correlations at adaptive loci are significant 63% of the time across all simulations and both environmental variables:
