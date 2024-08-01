@@ -22,7 +22,7 @@ mkdir -p test
 mv GNX_mod-test* test
 
 ### Render File S# (results of simulation tests)
-Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'gnx', 'FileS#_gnx_test.Rmd')"
+Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'gnx', 'FileS4_simulation_equilibrium_tests.Rmd')"
 
 ## Run full simulations (note: this takes several weeks and is parallelized)
 python3 run_gnx.py > run_gnx.pyout
