@@ -1,5 +1,5 @@
 ---
-title: "File S2: Paramaterizing landscape correlation and autocorrelation"
+title: "File S2: Parameterizing landscape correlation and autocorrelation"
 author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: 
   html_document:
