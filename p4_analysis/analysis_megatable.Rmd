@@ -146,9 +146,9 @@ table_df <-
   #filter(Variable != "sampstrat") %>%
   spread(contrast, estimate) %>%
   dplyr::select(sampling, method, stat, 
-         "EG - G", "EG - R", "EG - T", 
+         "ES - G", "ES - R", "ES - T", 
          "G - R", "G - T", 
-         "EG - EQ", "EQ - R",
+         "G - ES", "G - R",
          "R - T") %>%
   mutate(method = factor(method, levels = c("LFMM", "RDA", "MMRR", "GDM")),
          stat = factor(stat, levels = c("TPR relaxed", "TPR strict",
@@ -159,9 +159,9 @@ table_df <-
   group_split() 
 
 table_df_ind <-
-  table_df[[1]] %>% dplyr::select(-"EG - EQ",-"EQ - R", -"sampling")
+  table_df[[1]] %>% dplyr::select(-"G - ES",-"G - R", -"sampling")
 table_df_site <-
-  table_df[[2]] %>% dplyr::select(-"EG - G",-"G - R",-"G - T",-"R - T",-"EG - T", -"sampling")
+  table_df[[2]] %>% dplyr::select(-"ES - G",-"G - R",-"G - T",-"R - T",-"ES - T", -"sampling")
 
 table_df <- left_join(table_df_ind, table_df_site, by = c("stat", "method"))
   
@@ -190,7 +190,7 @@ big_table <-
                    (grepl("FDR", stat) | grepl("MAE", stat)) & value < 0 ~ "better",
                    is.na(value) ~ "same",
                    .default = NA)) %>%
-  mutate(sampling = case_when((grepl(".y", name) | grepl("EQ", name)) ~ "site", TRUE ~ "individual")) %>%
+  mutate(sampling = case_when((grepl(".y", name) | grepl("G -", name)) ~ "site", TRUE ~ "individual")) %>%
   arrange(method, stat, name)
 
 big_table_ind <- 
@@ -215,7 +215,7 @@ big_table2 <-
   bind_rows(big_table_A, big_table_B) %>%
   mutate(name = paste0(V1, " - ", V2)) %>%
   select(-V1, -V2) %>%
-  mutate(sampling = case_when((grepl(".y", name) | grepl("EQ", name)) ~ "site", TRUE ~ "individual")) %>%
+  mutate(sampling = case_when((grepl(".y", name) | grepl("G -", name)) ~ "site", TRUE ~ "individual")) %>%
   arrange(method, stat, name) %>%
   mutate(value = as.character(round(value, 3))) %>%
   mutate(value = case_when(is.na(value) ~ "n.s.", TRUE ~ value)) 
@@ -238,82 +238,6 @@ big_table_combo2 <-
   mutate(stat = gsub(" relaxed", "", stat)) 
 
 write.csv(big_table_combo2, here("p4_analysis", "tukey.csv"), row.names = FALSE)
-```
-
-```{r}
-big_table_combo %>%
-  gt(
-    rowname_col = "stat",
-    groupname_col = "method"
-    ) %>%
-  row_group_order(
-    groups = c("LFMM", "RDA", "MMRR", "GDM")
-    ) %>%
-  cols_label(
-      method = "Method",
-      stat = "Statistic"
-    ) %>%
-  cols_width(
-    c(3:20) ~ px(70),
-    c(1)  ~ px(100)
-  ) %>%
-  cols_label(
-    ends_with("G") ~ "G",
-    ends_with("EG") ~ "EG",
-    ends_with("R") ~ "R",
-    ends_with("R.x") ~ "R",
-    ends_with("R.y") ~ "R",
-    ends_with("T") ~ "T",
-    ends_with("EQ") ~ "EQ"
-  ) %>%
-  data_color(
-    c(3:20),
-    palette = c("cornflowerblue", "gray", "orange")
-  ) %>%
-  tab_spanner(
-    label = "EG",
-    columns = c(2:5)
-  ) %>% 
-  tab_spanner(
-    label = "G",
-    columns = c(6:8)
-  ) %>% 
-  tab_spanner(
-    label = "R",
-    columns = c(9:11)
-  ) %>% 
-   tab_spanner(
-    label = "T",
-    columns = c(12:14)
-  ) %>%
-  tab_spanner(
-    label = "Individual-based sampling",
-    columns = c(2:14)
-  ) %>%
-  tab_spanner(
-    label = "EG ",
-    columns = c(15:16)
-  ) %>%
-  tab_spanner(
-    label = "EQ ",
-    columns = c(17:18)
-  ) %>%
-  tab_spanner(
-    label = "R ",
-    columns = c(19:20)
-  ) %>%
-  tab_spanner(
-    label = "Site-based sampling",
-    columns = c(15:20)
-  ) %>%
-  tab_style(
-    style = list(
-      cell_text(color = rgb(0,0,0,0))
-      ),
-    locations = cells_body(
-      columns = c(1:20)
-    )
-  ) 
 ```
 
 
@@ -350,8 +274,8 @@ table_df %>%
     c(3:11) ~ px(70)
   ) %>%
   cols_label(
-    `EG - R.x` = "EG - R",
-    `EG - R.y` = "EG - R"
+    `ES - R.x` = "ES - R",
+    `ES - R.y` = "ES - R"
   ) %>%
   tab_spanner(
     label = "Individual-based sampling",

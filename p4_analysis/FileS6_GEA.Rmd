@@ -341,7 +341,7 @@ ggdf <-
   left_join(meandf) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = c("TPR strict", "FDR strict"))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(ymin = values - sd, ymax = values + sd) %>%
   mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax))
 
@@ -402,8 +402,8 @@ site_plts <-
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, fill = Scheme, pch = Scheme)) +
     geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
-    geom_line(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-    geom_point(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
     geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
@@ -456,7 +456,7 @@ ggdf <-
   mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax)) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(Method = factor(Method, levels = c("LFMM", "RDA"))) %>%
   filter(Statistic == "TPR strict") %>%
   mutate(m = case_when(m == 0.25 ~ "Low migration", TRUE ~ "High migration"),
@@ -500,8 +500,8 @@ ind_plts <-
 site_plts <-
   ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
       geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method), alpha = 0.1) +
-      geom_line(data = filter(site, Scheme == "EQ"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(site, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(site, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(site, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
@@ -524,7 +524,7 @@ site_plts <-
       ggtitle("B. Site-based sampling")
 
 
-png(here("figures", "GEA_plots2.png"), width = 13, height = 5.5, units = "in", res = 200)
+png(here("figures", "Figure_S3.png"), width = 13, height = 5.5, units = "in", res = 200)
 grid.arrange(ind_plts, site_plts, nrow = 1)
 dev.off()
 

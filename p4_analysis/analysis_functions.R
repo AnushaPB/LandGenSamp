@@ -49,6 +49,7 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
 make_pretty_names <- function(stat_name) {
   map_chr(stat_name, \(stat_name){
     new_name <- ""
+    if (grepl("correlation", stat_name)) return("r")
     if (grepl("phenotype-environment", stat_name) | grepl("genotype-environment", stat_name)) return(stat_name)
     if (stat_name == "K_factor") new_name <- "Number of latent factors"
     if (stat_name == "TOTALN") new_name <- "Total number of loci"
@@ -328,7 +329,7 @@ format_mmrr <- function(path, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       sampstrat == "full" ~ "full",
       TRUE ~ "NA")) %>%
     
@@ -398,7 +399,7 @@ format_gdm <- function(path, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       sampstrat == "full" ~ "full",
       TRUE ~ "NA")) %>%
     
@@ -467,7 +468,7 @@ format_lfmm <- function(path, p_filter = TRUE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       TRUE ~ "NA")) %>%
     
     # convert to factors
@@ -512,7 +513,7 @@ format_lfmm <- function(path, p_filter = TRUE){
   
   # check number of rows
   if ("T" %in% df$sampstrat) stopifnot((nrow(df2) %% (96 * 4 * 4)) == 0)
-  if ("EQ" %in% df$sampstrat) stopifnot((nrow(df2) %% (96 * 3 * 3)) == 0)
+  if (25 %in% df$nsamp) stopifnot((nrow(df2) %% (96 * 3 * 3)) == 0)
   
   return(df)
 }
@@ -545,7 +546,7 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       TRUE ~ "NA")) %>%
     
     # convert to factors
@@ -1201,8 +1202,8 @@ scheme_cols <- function(x) {
   }
   
   if (x == "site") {
-    cols <- c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed")
-    shapes <-  c("ES" = 21, "EQ" = 22, "R" = 23)
+    cols <- c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed")
+    shapes <-  c("ES" = 21, "G" = 22, "R" = 23)
   }
   
   list(
