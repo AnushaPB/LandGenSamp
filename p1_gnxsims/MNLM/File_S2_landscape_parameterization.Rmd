@@ -1,5 +1,5 @@
 ---
-title: "File S2: Parameterizing landscape correlation and autocorrelation"
+title: "Optimizing sampling design for landscape genomics: Parameterizing landscape correlation and autocorrelation"
 author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
 output: 
   html_document:
@@ -7,7 +7,7 @@ output:
 ---
 
 # 1. Generating empirical distributions
-To determine how to set the levels of correlation between and the spatial autocorrelation of our environmental layers, we created distributions of correlation and autocorrelation from temperature and precipitation globally. We downloaded global average temperature and precipitation data for 1970-2000 at a resolution of 2.5 minutes of a degree from WorldClim using the "geodata" package (Hijmans et al., 2023). This data is monthly, so we took the mean across all months to get one raster layer representing temperature and one representing precipitation. To generate our distributions we randomly sampled one thousand 100 by 100 cell sections of each raster and calculated within these sections (1) the correlation between temperature and precipitation and (2) the autocorrelation, measured using Moran's I, of each variable. We took the absolute value of the correlations since for our simulations only the magnitude matters, not the direction. The code used to create these distributions can be found in the same notebook used to generate this file [here](https://github.com/AnushaPB/LandGenSamp/blob/main/p1_gnxsims/MNLM/File_S2.Rmd).
+To determine how to set the levels of between-layer correlation and within-layer spatial autocorrelation for our landscape layers, we created distributions of correlation and autocorrelation from temperature and precipitation globally. We downloaded global average temperature and precipitation data for 1970-2000 at a resolution of 2.5 minutes of a degree from WorldClim using the "geodata" package (Hijmans et al., 2023). This data is monthly, so we took the mean across all months to get one raster layer representing temperature and one representing precipitation. To generate our distributions we randomly sampled one thousand 100 by 100 cell sections of each raster and calculated within these sections (1) the correlation between temperature and precipitation and (2) the autocorrelation, measured using Moran's I, of each variable. We took the absolute value of the correlations since for our simulations only the magnitude matters, not the direction.
 
 ```{r, include = FALSE}
 library(terra)
