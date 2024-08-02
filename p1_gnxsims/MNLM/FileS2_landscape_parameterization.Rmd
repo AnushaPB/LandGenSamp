@@ -16,7 +16,7 @@ library(geodata)
 library(here)
 library(raster)
 library(NLMR)
-source(here("p1_gnxsims", "MNLM", "FileS2_functions.R"))
+source(here("p1_gnxsims", "MNLM", "File_S2_functions.R"))
 source(here("p1_gnxsims", "MNLM", "MNLM_functions.R"))
 ```
 
