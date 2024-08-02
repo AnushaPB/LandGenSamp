@@ -54,10 +54,10 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
 
     # Calculate correlation between environmental and neutral SNPs
     r <- cor(gen[,1:8], gen[,-c(1:8)])
-    # There are NA values but I am dropping them because they represent fixed alleles. I could also count them as 1s theoretically since they are identical.
+    # There are NA values but I am dropping them because they represent fixed alleles. 
+    # You can't count them as 1 because then you will just find strong correlations at higher m because more are getting fixed.
     rgen <- mean(r, na.rm = TRUE)
     r[is.na(r)] <- 1
-    rgen1 <- mean(r)
 
     result <- 
       data.frame(params[i,], 
@@ -67,7 +67,6 @@ results <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
       cor1_r = r1,
       cor2_r = r2,
       rgen = rgen,
-      rgen1 = rgen1,
       adaptive = c(rep(TRUE, 8), rep(FALSE, 10000)))
 
     result <-
