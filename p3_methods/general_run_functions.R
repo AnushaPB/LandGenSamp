@@ -72,7 +72,7 @@ run_analysis <- function(params, ns, strats, method, full_result = NULL, site = 
 }
 
 # helper function for run analysis. Runs analysis for one simulation (i).
-run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE, cache = TRUE){
+run_analysis_helper <- function(i, params, ns, strats, method, full_result = NULL, site = FALSE, cache = FALSE){
   # Skip iteration if files do not exist
   skip_to_next <- skip_check(i, params)
   if (skip_to_next) return(NA)
