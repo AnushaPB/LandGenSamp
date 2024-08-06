@@ -35,9 +35,11 @@ Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
 |   p1_gnxsims_job.sh - bash script to create MNLMs and run geonomics simulations
 |
 └───[MNLM]
-│   │   create_MNLM.R - create NLMs for gnx simulations (run by p1_gnxsims_job.sh)
+│   │   run_MNLM.R - create NLMs for gnx simulations (run by p1_gnxsims_job.sh)
+|   |   MNLM_functions.R - functions for creating and viewing MNLMs
 │   │   view_MNLM.Rmd - view NLMs created by create_MNLM.R
-│   │   File_S2.Rmd - generate environmental correlation distributions, rendered as .html and converted to PDF (rendered by p1_gnxsims_job.sh)
+│   │   FileS2_landscape_parameterization.Rmd - generate environmental correlation distributions, rendered as .html and converted to PDF (rendered by p1_gnxsims_job.sh)
+|   |   FileS2
 |   |   
 │   └───[layers] - directory with NLM csvs (used to create landscapes for gnx simulations)
 |   
@@ -48,10 +50,12 @@ Run [geonomics](https://geonomics.readthedocs.io/en/latest/) simulations
     │   genomic_architecture.csv - genomic architecture file created by create_genomic_architecture.R
     │   gnx.yml - conda yml used to create conda environment (created by conda_create.sh)
     │   run_gnx.py - run geonomics simulations (run by p1_gnxsims_job.sh)
+    │   run_gnx.py - run geonomics test simulations (run by p1_gnxsims_job.sh)
+    |   FileS4_simulation_equilibrium_tests.Rmd - visualize simulation equilibrium test results (run by p1_gnxsims_job.sh)
     │   data_cleanup.sh - run after parallel_LGS.py to clean up and reorganize the files (run by p1_gnxsims_job.sh)
     │   run_make_dosage.R - run after data_cleanup.sh to create dosage matrices from simulation vcf files (run by p1_gnxsims_job.sh)
     │   
-    └───[LGS data] - directory created by data_cleanup.sh and filled with simulation results from parallel_LGS.py.
+    └───[LGS data] - directory created by data_cleanup.sh and filled with simulation results from run_gnx.py
 ```
 
 ### 2.2 [p2_sampling](https://github.com/AnushaPB/LandGenSamp/tree/main/p2_sampling)
@@ -71,15 +75,16 @@ Test different landscape genomic analyses
 
 ```
 [p3_methods]
-|   methods_job.sh - bash script to run landscape genomic methods and calculate summary stats for simulation results
+|   p3_methods_job.sh - bash script to run landscape genomic methods and calculate summary stats for simulation results
 |   general_run_functions.R - functions used for running landscape genomic methods
 |   GEA_functions.R - functions used to run GEA analyses
 |   IBDIBE_functions.R - functions used to run IBD/IBE analyses
 |   run_methods.R - script to run all analyses (run by methods_job.sh)
-|   popsize_counts.R - script to calculate population size for all simulations (run by methods_job.sh)
+|   simulation_stats.R - script to summary statistics for all simulations (run by methods_job.sh)
 |   phenotype_environment.R - script to calculate phenotypic mismatch and phenotype-environment associations (run by methods_job.sh)
+|   genotype_environment.R - script to calculate genotype-environment associations (run by methods_job.sh)
 |  
-└───outputs.zip - compressed folder of p3_methods outputs
+└───outputs.zip - compressed folder of p3_methods outputs *except for results from genotype_environment.R because they are too large to be committed (these results can be reproduced using the original script and the Dryad data)
 ```
 
 ### 2.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
@@ -88,11 +93,11 @@ Analyze and visualize landscape genomic results
 ```
 [p4_analysis]
 |   analysis_functions.R - functions used for running summary analyses
-|   analysis_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods (File S4; rendered by p4_analysis.job)
-|   analysis_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods (File S5; rendered by p4_analysis.job)
-|   analysis_simulations.Rmd - notebook for visualizing summary statistics for simulations
+|   FileS6_GEA.Rmd - notebook for running and visualizing summary analyses for GEA methods (File S4; rendered by p4_analysis.job)
+|   FileS7_IBDIBE.Rmd - notebook for running and visualizing summary analyses for IBD/IBE methods (File S5; rendered by p4_analysis.job)
+|   FileS5_simulation_summary_statistics.Rmd - notebook for visualizing summary statistics for simulations
 |   analysis_megatable.Rmd - notebook for creating giant tables of mixed model results
-|   example_simulations.Rmd - notebook used to visualize example simulations for Figure 1
+|   example_simulations.Rmd - notebook used to visualize example simulations
 |  
 └───[outputs] - directory for storing analysis outputs
 |  
