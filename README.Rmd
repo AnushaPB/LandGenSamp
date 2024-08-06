@@ -101,7 +101,7 @@ Analyze and visualize landscape genomic results
 |  
 └───[outputs] - directory for storing analysis outputs
 |  
-└───[example_data] - directory for storing example data used by example_simulations.Rmd
+└───[example_data] - directory for storing example data used by example_simulations.Rmd (example data is moved here by p1_gnxsims_job.sh)
 ```
 
 # 3. Running everything
