@@ -6,7 +6,7 @@ output:
     toc: true
 ---
 
-```{r}
+```{r, include = FALSE}
 library("tidyverse")
 library("viridis")
 library("here")
@@ -21,7 +21,8 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = TRU
 
 # 1. Statistics over time
 
-Stability in mean fitness and population size over time across different parameter levels demonstrate that the simulations are at equilibrium by then end.
+Stability in mean fitness and population size over time across different parameter levels demonstrate that the simulations are at equilibrium by the end.
+
 ```{r, fig.width = 6, fig.height = 6}
 stats <- read_csv(here("p3_methods", "outputs", "simulation_stats.csv"))
 
@@ -43,15 +44,6 @@ ggplot(drop_na(stats, mean_Nt), aes(x = t, y = mean_Nt, col = level)) +
   theme(strip.background = element_blank()) +
   ggtitle("Mean population size over time")
 
-```
-
-# 1. Population size 
-
-Summary of population sizes between our low (K = 1) and high (K = 2) population size scenarios:
-```{r}
-stats %>% 
-  filter(t == 6000, param == "Population size") %>%
-  select(mean_Nt, min_Nt, max_Nt)
 ```
 
 # 2. Phenotype-environment mismatch
@@ -312,7 +304,8 @@ df2 %>%
   summarize(
     mean = mean(cor_r, na.rm = TRUE), 
     sd = sd(cor_r, na.rm = TRUE)
-    )
+    ) %>%
+  mutate_at(c("mean", "sd"), round, 2)
 ```
 
 Mean correlation between adaptive and non-adaptive loci:
@@ -320,4 +313,13 @@ Mean correlation between adaptive and non-adaptive loci:
 ge_df %>% 
   group_by(m, H) %>% 
   summarize(mean = mean(abs(rgen), na.rm = TRUE))
+```
+
+# 6. Population size 
+
+Summary of population sizes between our low (K = 1) and high (K = 2) population size scenarios:
+```{r}
+stats %>% 
+  filter(t == 6000, param == "Population size") %>%
+  select(mean_Nt, min_Nt, max_Nt)
 ```

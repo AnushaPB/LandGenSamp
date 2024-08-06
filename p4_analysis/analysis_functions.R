@@ -115,7 +115,7 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
     custom_agg(aggfunc, na.rm) %>%
     # mutate to numeric
     mutate_at(c("K", "phi", "m", "H", "r"), ~as.numeric(as.character(.))) %>%
-    # mutate params to get low and high (not sure why but mutate_at wasn't working)
+    # mutate params to get low and high 
     mutate(
       K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
       m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
@@ -854,7 +854,7 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   # Fix NA values for GDM (there are no NA values for MMRR, so this will not affect it):
   # first, create a column to keep track of NA values that are the result of 2/3 coeffs being 0 (because then p-values can't be calculated with varImp)
   # these values should ultimately be kept NA
-  subdf <- subdf %>% mutate(trueNA = rowSums(select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
+  subdf <- subdf %>% mutate(trueNA = rowSums(dplyr::select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
   # Replace NA p values that are the result of  one coefficient being zero (but p-values were still calculated for other vars)
   # Replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
   subdf <- subdf %>% mutate(env1_p = case_when(env1_coeff == 0 ~ 100, TRUE ~ env1_p),
@@ -862,7 +862,7 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
                             geo_p = case_when(geo_coeff == 0 ~ 100, TRUE ~ geo_p),)
   # Note that NA values resulting from the variable permutation procedure failing for one var stay NA (i.e., when there is a null model fit when the variable is removed)
   # finally, switch true NA values back and drop the column
-  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% select(!trueNA)
+  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% dplyr::select(!trueNA)
   
   # split into full and sub
   full <- subdf[subdf$sampstrat == "full",]
@@ -982,8 +982,8 @@ get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  if(!site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/samples_", sampstrat, nsamp, ".csv")))
-  if(site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/site_samples_", sampstrat, nsamp, ".csv")))
+  if(!site) subIDs <- read.csv(here("p2_sampling", "outputs", paste0("samples_", sampstrat, nsamp, ".csv")))
+  if(site) subIDs <- read.csv(here("p2_sampling", "outputs", paste0("site_samples_", sampstrat, nsamp, ".csv")))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -1211,5 +1211,52 @@ scheme_cols <- function(x) {
     scale_fill_manual(values = cols, breaks = names(cols)),
     scale_shape_manual(values = shapes, breaks = names(shapes))
   )
+}
+
+megalineplot <- function(df, stat, sampling){
+  gg_df <- 
+    df %>% 
+    group_by(K, phi, m, H, r, nsamp, sampstrat) %>% 
+    mutate(sampstrat = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
+    summarize(mean = mean(.data[[stat]], na.rm = TRUE), sd = sd(.data[[stat]], na.rm = TRUE)) %>%
+    mutate(ymin = mean - sd, ymax = mean + sd) %>%
+    mutate_at(c("K", "m", "phi", "H", "r"), ~as.character(as.numeric(.x))) %>%
+    mutate(
+      K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
+      m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
+      phi = case_when(phi == min(.[["phi"]]) ~ "L", phi == max(.[["phi"]]) ~ "H"),
+      H = case_when(H == min(.[["H"]]) ~ "L", H == max(.[["H"]]) ~ "H"),
+      r = case_when(r == min(.[["r"]]) ~ "L", r == max(.[["r"]]) ~ "H"),
+    ) %>%
+    mutate(group = paste0("K=", K,
+                          " phi=", phi,
+                          " m=", m,
+                          "\nH=", H,
+                          " r=", r))
+  
+  p <- ggplot(gg_df) +
+    geom_ribbon(aes(x = as.numeric(as.character(nsamp)), ymin = ymin, ymax = ymax, fill = sampstrat), col = NA, alpha = 0.2) +
+    geom_line(aes(x = as.numeric(as.character(nsamp)), y = mean, col = sampstrat), lwd = 2) +
+    facet_wrap(~ group) +
+    scheme_cols(sampling) +
+    facet_wrap( ~ group, nrow = 4) +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          legend.position = "right", legend.title = element_blank(),
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm"),
+          strip.text.x = element_text(size = 18),
+          strip.text.y = element_text(size = 18),
+          strip.background = element_blank(),
+          strip.text = element_text(color = "black"),
+          plot.title = element_text(size = 30, face = "bold"),
+          legend.text = element_text(size = 14), 
+          legend.key.size = unit(2, "lines") ) +
+    ggtitle(make_pretty_names(stat))
+  
+  return(p)
 }
 

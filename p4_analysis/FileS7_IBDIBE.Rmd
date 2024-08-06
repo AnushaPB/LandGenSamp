@@ -272,7 +272,7 @@ ggdf <-
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
   mutate(IB = case_when(grepl("IBD", Statistic) ~ "IBD", grepl("IBE", Statistic) ~ "IBE"))  %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(Method = factor(Method, levels = c("MMRR", "GDM"))) %>%
   mutate(ymin = values - sd, ymax = values + sd) %>%
   mutate(
@@ -328,9 +328,7 @@ ind_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF"), guide = "none") +
-      scale_shape_manual(values = c("ES" = 21, "G" = 22, "R" = 23, "T" = 24), guide = "none") +
+      scheme_cols("ind") +
       ggtitle("A. Individual-based sampling")
   }) 
 
@@ -344,8 +342,8 @@ site_plts <-
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values)) +
       geom_point(data = fake_point[(fake_point$Statistic %in% .x[["Statistic"]]), ], col = "white") +
       geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
-      geom_line(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(.x, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
@@ -362,9 +360,7 @@ site_plts <-
             panel.spacing = unit(0.5, "lines"),
             legend.position = "right",
             strip.placement = "outside") +
-      scale_color_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_fill_manual(values = c("ES" = "#0D0887FF", "EQ" = "#17c3b2", "R" = "#7678ed"), breaks = c("ES", "EQ", "R"), guide = FALSE) +
-      scale_shape_manual(values = c("ES" = 21, "EQ" = 22, "R" = 23), guide = FALSE) +
+      scheme_cols("site") +
       ggtitle("B. Site-based sampling")
   })
 
@@ -372,9 +368,26 @@ pdf(here("figures", "Figure_3.pdf"), width = 11, height = 6.75)
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 dev.off()
 
+png(here("figures", "Figure_3.png"), width = 11, height = 6.75, units = "in", res = 200)
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+dev.off()
+
 pdf(here("figures", "Figure_4.pdf"), width = 11, height = 6.75)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 dev.off()
+
+png(here("figures", "Figure_4.png"), width = 11, height = 6.75, units = "in", res = 200)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+dev.off()
+
+png(here("figures", "Figure_S7.png"), width = 11, height = 6.75, units = "in", res = 200)
+grid.arrange(ind_plts[[3]], site_plts[[3]], nrow = 1)
+dev.off()
+
+png(here("figures", "Figure_S9.png"), width = 11, height = 6.75, units = "in", res = 200)
+grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
+dev.off()
+
 
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
@@ -389,11 +402,16 @@ ggdf <-
   df %>%
   filter(K == 1 & phi == 1 & r == 0.3) %>%
   group_by(Method, sampstrat, nsamp, sampling, H, m) %>%
-  summarise_at(all_of(stats), mean, na.rm = TRUE) %>%
-  pivot_longer(stats, names_to = "Statistic", values_to = "values") %>%
+  summarise(across(all_of(stats), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE)), .names = "{.col}-{.fn}")) %>%
+  pivot_longer(cols = -c(Method, sampstrat, nsamp, sampling, H, m), 
+               names_to = c("Statistic", ".value"), 
+               names_sep = "-") %>%
+  rename(values = mean) %>%
+  mutate(ymax = values + sd, ymin = values - sd) %>%
+  mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax)) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(Method = factor(Method, levels = c("MMRR", "GDM"))) %>%
   filter(Statistic == "IBE TPR") %>%
   mutate(m = case_when(m == 0.25 ~ "Low migration", TRUE ~ "High migration"),
@@ -407,78 +425,102 @@ site <- filter(ggdf, sampling == "site")
 
 ind_plts <-
   ggplot(ind, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-      geom_line(data = filter(ind, Scheme == "T"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(ind, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(ind, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(ind, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(ind, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(ind, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(ind, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(ind, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
-      ylim(0,1)+
-      xlab("Number of samples") +
-      ylab("IBE TPR") +
-      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
-            strip.background = element_blank(),
-            panel.background = element_blank(),
-            strip.text = element_text(size = 12),
-            axis.text = element_text(size = 11),
-            title = element_text(size = 12),
-            panel.spacing = unit(0.5, "lines"),
-            legend.position = "right",
-            strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed", "#ED7953FF")) +
-      scale_shape_manual(values = c(21:24)) +
-      ggtitle("A. Individual-based sampling")
-  
+    geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method),  alpha = 0.1) +
+    geom_line(data = filter(ind, Scheme == "T"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(ind, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(ind, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(ind, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(ind, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(ind, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(ind, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(ind, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+    ylim(0,1)+
+    xlab("Number of samples") +
+    ylab("IBE TPR") +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_blank(),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          axis.text = element_text(size = 11),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right",
+          strip.placement = "outside") +
+    scheme_cols("ind") +
+    ggtitle("A. Individual-based sampling")
+
 
 site_plts <-
   ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
-      geom_line(data = filter(site, Scheme == "EQ"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(site, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(site, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
-      ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
-      ylim(0,1)+
-      xlab("Number of sites") +
-      ylab("IBE TPR") +
-      theme(panel.border = element_rect(colour = "lightgray", fill = NA),
-            strip.background = element_blank(),
-            panel.background = element_blank(),
-            strip.text = element_text(size = 12),
-            axis.text = element_text(size = 11),
-            title = element_text(size = 12),
-            panel.spacing = unit(0.5, "lines"),
-            legend.position = "right",
-            strip.placement = "outside") +
-      scale_color_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_fill_manual(values = c("#0D0887FF", "#17c3b2", "#7678ed"), breaks = c("ES", "EQ", "R")) +
-      scale_shape_manual(values = c(21:23), breaks = c("ES", "EQ", "R")) +
-      ggtitle("B. Site-based sampling") 
+    geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method),  alpha = 0.1) +
+    geom_line(data = filter(site, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(site, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(site, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+    ylim(0,1)+
+    xlab("Number of sites") +
+    ylab("IBE TPR") +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_blank(),
+          panel.background = element_blank(),
+          strip.text = element_text(size = 12),
+          axis.text = element_text(size = 11),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right",
+          strip.placement = "outside") +
+    scheme_cols("site") +
+    ggtitle("B. Site-based sampling") 
+
+
+png(here("figures", "Figure_S8.png"), width = 12, height = 5, units = "in", res = 200)
+grid.arrange(ind_plts, site_plts, nrow = 1)
+dev.off()
 
 grid.arrange(ind_plts, site_plts, nrow = 1)
-```
-# Statistics referenced in-text
 
-Average increase in IBD error under high migration for individual-based sampling:
-```{r, include = TRUE, results=TRUE}
-df %>%
-  ungroup() %>%
-  filter(sampling == "individual") %>%
-  select(K, phi, m, seed, H, r, it, geo_coeff_err_ae_scale, sampstrat, Method, nsamp) %>%
-  pivot_wider(names_from = m, values_from = geo_coeff_err_ae_scale) %>%
-  group_by(K, phi, seed, H, r, it, nsamp, Method) %>%
-  mutate(dif = mean(`1` - `0.25`)) %>%
-  group_by(Method) %>%
-  summarize(
-    `Mean difference` = round(mean(dif, na.rm = TRUE),3), 
-    `SD difference` = round(mean(dif, na.rm = TRUE),3)
-    ) 
 ```
+
+# Lineplots of key statistics across all parameters
+
+```{r}
+stats <- c(
+    "geo_p_TPR",
+    "geo_p_FDR",
+    "geo_coeff_err_ae_scale",
+    "env_p_TPR",
+    "env_p_FDR",
+    "env_coeff_err_ae_scale"
+  )
+combos <- expand.grid(stat = stats, sampling = c("ind", "site"))
+```
+
+## MMRR
+### Individual sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(mmrr_ind, stat = .x, sampling = "ind"))
+```
+
+### Site sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(mmrr_site, stat = .x, sampling = "site"))
+```
+## GDM
+### Individual sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(gdm_ind, stat = .x, sampling = "ind"))
+```
+
+### Site sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(gdm_site, stat = .x, sampling = "site"))
+```
+
+# Statistics referenced in-text
 
 Average increase in IBD error from using transect sampling:
 ```{r, include = TRUE, results=TRUE}
@@ -492,8 +534,27 @@ df %>%
   group_by(Method) %>%
   summarize(
     `Mean difference` = round(mean(T_dif, na.rm = TRUE),3), 
-    `SD difference` = round(mean(T_dif, na.rm = TRUE),3)
+    `SD difference` = round(sd(T_dif, na.rm = TRUE),3)
     ) 
+```
+
+Proportion of times a negative significant coefficient occurs for MMRR:
+```{r, results = TRUE}
+t1 <- 
+  mmrr_ind %>%
+  mutate(sampling = "individual") %>%
+  group_by(sampling) %>%
+  mutate(envsig_neg = (env1_coeff < 0 & env1_p < 0.05) | (env2_coeff < 0 & env2_p < 0.05)) %>%
+  summarize(proportion = round(mean(envsig_neg, na.rm = TRUE), 2), count = sum(envsig_neg, na.rm = TRUE))
+
+t2 <-
+  mmrr_site %>%
+  mutate(sampling = "site") %>%
+  group_by(sampling) %>%
+  mutate(envsig_neg = (env1_coeff < 0 & env1_p < 0.05) | (env2_coeff < 0 & env2_p < 0.05)) %>%
+  summarize(proportion = round(mean(envsig_neg, na.rm = TRUE), 2), count = sum(envsig_neg, na.rm = TRUE))
+
+bind_rows(t1, t2)
 ```
 
 # Comparison of MMRR and GDM
