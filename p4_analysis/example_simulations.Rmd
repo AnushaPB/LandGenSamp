@@ -21,7 +21,7 @@ source(here("p4_analysis", "analysis_functions.R"))
 ```{r, fig.height = 4, fig.width = 8}
 format_env <- function(env = 1, H = 0.5, r = 0.6, seed = 2){
   # read in data 
-  path <- here("p1_gnxsims/MNLM/layers")
+  path <- here("p1_gnxsims", "MNLM", "layers")
   envfile <- paste0("seed", seed, "_env", env, "_H", H*100, "_r", r*100, ".csv")
   env <- raster(as.matrix(read.csv(here(path, envfile), header = FALSE)))
   extent(env) <- c(0,100,-100,0)
@@ -67,14 +67,21 @@ map(1:3, ~{
 }) 
 
 
+ggplot(env_split[[1]]) +
+  geom_tile(aes(x = x, y = y, fill = layer)) +
+  coord_equal() +
+  theme_void() + 
+  scale_fill_viridis_c(option = "mako") + 
+  facet_grid(env ~ group, switch = "y") + 
+  theme(legend.position = "none",
+        strip.text = element_text(size = 12, margin = margin(0.1,0,0.1,0, "cm")))
 ```
 
 ```{r, include = false}
-dfs_all <- purrr::map(list.files(here("p4_analysis/example_data/example_combos"), full.names = TRUE), get_gsd)
-names(dfs_all) <- c("phi10", "H5", "r30", "D", "m25", "phi50", "K2")
-dfs <- dfs_all[-6]
+dfs <- purrr::map(list.files(here("p4_analysis", "example_data"), full.names = TRUE), get_gsd)
+names(dfs) <- c("H5", "r30", "D", "m25", "phi50", "K2")
 
-df <- bind_rows(new_cols(dfs[["phi10"]], "Low", "Selection\nstrength"),
+df <- bind_rows(new_cols(dfs[["phi50"]], "Low", "Selection\nstrength"),
           new_cols(dfs[["D"]], "High", "Selection\nstrength"),
           new_cols(dfs[["H5"]], "Low", "Spatial\nautocorrelation"),
           new_cols(dfs[["D"]], "High", "Spatial\nautocorrelation"),
@@ -129,37 +136,9 @@ ggplot(dfw, aes(x = xw, y = yw, col = zw)) +
 
 ```
 
-```{r}
-phidf <- 
-  bind_rows(data.frame(dfs_all$phi10, phi = 0.1), data.frame(dfs_all$D, phi = 1.0), data.frame(dfs_all$phi50, phi = 0.5)) %>%
-  pivot_longer(c(z1, z2))
-  
-
-ggplot(phidf, aes(x = x, y = y, col = value)) + 
-  geom_rect(xmin = 0, xmax = 100, ymin = -100, ymax = 0, fill = "#D3D3D3", col = "#D3D3D3") +
-  geom_point(pch = 16, size = 0.9) +
-  facet_grid(name ~ phi, switch = "both") +
-  theme_bw() +
-  xlab("phi") +
-  ylab("trait") +
-  scale_color_viridis_c(option = "mako", alpha = 0.8)+
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), legend.position = "none",
-        axis.ticks.x=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(), 
-        plot.margin=unit(rep(0.4,4),"cm"),
-        strip.background =element_blank(),
-        strip.text = element_text(color = "#282828", size = 11),
-        plot.title = element_text(size=20),
-        legend.key.size = unit(1, 'cm'), 
-        panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1)) +
-  coord_fixed() 
-```
 
 ```{r, fig.width = 11, fig.height = 6}
-df <- get_gsd(here("p4_analysis/example_data/example_combos/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-1000_spp-spp_0.csv"))
+df <- get_gsd(here("p4_analysis", "example_data", "mod-K1_phi100_m100_seed1_H50_r60_it-0_t-6000_spp-spp_0.csv"))
 env1 <- format_env(env = 1, H = 0.5, r = 0.6, seed = 1)
 env1_df <- as.data.frame(env1, xy = TRUE)
 
@@ -190,12 +169,12 @@ site_samples <-
   pmap(get_samples, site = TRUE, param_set = param_set, df = df) %>%
   bind_rows() %>%
   mutate(sampstrat = case_when(sampstrat == "rand" ~ "R", 
-                           sampstrat == "equi" ~ "EQ",
+                           sampstrat == "equi" ~ "G",
                            sampstrat == "envgeo" ~ "ES")) %>%
-  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "EQ", "ES"))))
+  mutate(sampstrat = factor(sampstrat, levels = rev(c("R", "G", "ES"))))
 
 
-(plt1 <-
+plt1 <-
   ggplot(ind_samples, aes(x = x, y = y)) +
     ggtitle("A. Individual-based sampling") +
     geom_raster(data = env1_df, aes(x = x, y = y, fill = layer)) +
@@ -204,8 +183,8 @@ site_samples <-
     coord_equal() +
     xlab("Number of samples") +
     ylab("Scheme") +
-    theme(panel.border = element_rect(colour = "gray", fill = NA),
-          strip.background = element_rect(fill = "gray", colour = "gray"),
+    theme(panel.border = element_rect(colour = NA, fill = NA),
+          strip.background = element_rect(fill = NA, colour = NA),
           panel.background = element_blank(),
           strip.text = element_text(size = 12),
           title = element_text(size = 12),
@@ -215,10 +194,10 @@ site_samples <-
           axis.text = element_blank(),
           axis.ticks = element_blank(),
           legend.position = "none") +
-    facet_grid(sampstrat ~ nsamp, switch = "both"))
+    facet_grid(sampstrat ~ nsamp, switch = "both")
 
 
-(plt2 <-
+plt2 <-
   ggplot(site_samples, aes(x = x, y = y)) +
     ggtitle("B. Site-based sampling") +
     geom_raster(data = env1_df, aes(x = x, y = y, fill = layer)) +
@@ -227,8 +206,8 @@ site_samples <-
     coord_equal() +
     xlab("Number of sites") +
     ylab("Scheme") +
-    theme(panel.border = element_rect(colour = "gray", fill = NA),
-          strip.background = element_rect(fill = "gray", colour = "gray"),
+    theme(panel.border = element_rect(colour = NA, fill = NA),
+          strip.background = element_rect(fill = NA, colour = NA),
           panel.background = element_blank(),
           strip.text = element_text(size = 12),
           title = element_text(size = 12),
@@ -238,11 +217,15 @@ site_samples <-
           axis.text = element_blank(),
           axis.ticks = element_blank(),
           legend.position = "none") +
-    facet_grid(sampstrat ~ nsamp, switch = "both"))
+    facet_grid(sampstrat ~ nsamp, switch = "both")
 
 
 pdf(here("figures", "Figure_1.pdf"), width = 11, height = 6)
 (grid.arrange(plt1, plt2, nrow = 1))
+dev.off()
+
+png(here("figures", "Figure_1.png"), width = 11, height = 6, units = "in", res = 200)
+grid.arrange(plt1, plt2, nrow = 1)
 dev.off()
 
 ```

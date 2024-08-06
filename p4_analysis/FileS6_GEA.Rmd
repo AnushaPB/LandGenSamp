@@ -311,7 +311,7 @@ walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
 
 ------------------------------------------------------------------------
 
-# Figures:
+# Figures
 
 ```{r, fig.width = 11, fig.height = 4.75}
 df <- 
@@ -340,8 +340,9 @@ ggdf <-
   pivot_longer(c("TPRCOMBO_strict", "FDRCOMBO_strict"), names_to = "Statistic", values_to = "sd") %>%
   left_join(meandf) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
-  mutate(Statistic = factor(Statistic, levels = c("TPR strict", "FDR strict"))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Statistic = gsub(" strict", "", Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = c("TPR", "FDR"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(ymin = values - sd, ymax = values + sd) %>%
   mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax))
 
@@ -402,8 +403,8 @@ site_plts <-
   map(~{
     ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, fill = Scheme, pch = Scheme)) +
     geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
-    geom_line(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
-    geom_point(data = filter(.x, Scheme == "EQ"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
     geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme), cex = 2, alpha = 0.8) +
     geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
@@ -433,7 +434,7 @@ png(here("figures", "Figure_2.png"), width = 11, height = 4.5, units = "in", res
 grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
 dev.off()
 
-png(here("figures", "Figure_S4.png"), width = 11, height = 4.5, units = "in", res = 200)
+png(here("figures", "Figure_S5.png"), width = 11, height = 4.5, units = "in", res = 200)
 grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
 dev.off()
 
@@ -456,7 +457,7 @@ ggdf <-
   mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax)) %>%
   mutate(Statistic = make_pretty_names(Statistic)) %>%
   mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
-  mutate(Scheme = factor(sampstrat, levels = c("EQ", "T", "R", "G", "ES"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
   mutate(Method = factor(Method, levels = c("LFMM", "RDA"))) %>%
   filter(Statistic == "TPR strict") %>%
   mutate(m = case_when(m == 0.25 ~ "Low migration", TRUE ~ "High migration"),
@@ -482,7 +483,7 @@ ind_plts <-
       ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
       ylim(0,1)+
       xlab("Number of samples") +
-      ylab("TPR strict") +
+      ylab("TPR") +
       theme(panel.border = element_rect(colour = "lightgray", fill = NA),
             strip.background = element_blank(),
             panel.background = element_blank(),
@@ -500,8 +501,8 @@ ind_plts <-
 site_plts <-
   ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
       geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method), alpha = 0.1) +
-      geom_line(data = filter(site, Scheme == "EQ"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
-      geom_point(data = filter(site, Scheme == "EQ"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+      geom_line(data = filter(site, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+      geom_point(data = filter(site, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
       geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
       geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
@@ -509,7 +510,7 @@ site_plts <-
       ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
       ylim(0,1)+
       xlab("Number of sites") +
-      ylab("TPR strict") +
+      ylab("TPR") +
       theme(panel.border = element_rect(colour = "lightgray", fill = NA),
             strip.background = element_blank(),
             panel.background = element_blank(),
@@ -524,11 +525,39 @@ site_plts <-
       ggtitle("B. Site-based sampling")
 
 
-png(here("figures", "GEA_plots2.png"), width = 13, height = 5.5, units = "in", res = 200)
+png(here("figures", "Figure_S4.png"), width = 13, height = 5.5, units = "in", res = 200)
 grid.arrange(ind_plts, site_plts, nrow = 1)
 dev.off()
 
 grid.arrange(ind_plts, site_plts, nrow = 1)
+```
+
+# Lineplots of key statistics across all parameters
+
+```{r}
+stats <- c("TPRCOMBO_strict", "FDRCOMBO_strict")
+```
+
+## LFMM
+### Individual sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(lfmm_ind, stat = .x, sampling = "ind"))
+```
+
+### Site sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(lfmm_site, stat = .x, sampling = "site"))
+```
+
+## RDA
+### Individual sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(rda_ind, stat = .x, sampling = "ind"))
+```
+
+### Site sampling
+```{r, fig.width = 25, fig.height = 15}
+map(stats, ~megalineplot(rda_site, stat = .x, sampling = "site"))
 ```
 
 # Statistics referenced in-text
@@ -579,15 +608,13 @@ df %>%
   group_by(Method, sampling) %>%
   summarise(mean = mean(TPRCOMBO_strict, na.rm = TRUE))
 
-# TPR and FDR for E-Space site-based sampling
+# Under the best conditions with 25 sites using RDA, E-space sampling had a true positive rate of XXX compared to YYY for random sampling and ZZZ for grid sampling
 df %>%
   ungroup() %>%
   filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
-  filter(sampling == "site", Method == "RDA") %>%
-  group_by(Method, sampstrat, nsamp) %>%
-  summarise(TPR = mean(TPRCOMBO_strict, na.rm = TRUE), FDR = mean(FDRCOMBO_strict, na.rm = TRUE)) %>%
-  arrange(nsamp)
-  
+  filter(nsamp == 25, sampling == "site", Method == "RDA") %>%
+  group_by(sampstrat) %>%
+  summarise(mean = mean(TPRCOMBO_strict, na.rm = TRUE))
 ```
 
 
