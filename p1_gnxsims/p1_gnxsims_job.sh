@@ -47,4 +47,22 @@ mkdir -p dryad
 ## Move the archive to the dryad directory
 mv LGS_simulation_archive.tar.gz dryad/
 
+# Copy example data into p4_analysis folder
+mkdir -p ../../p4_analysis/example_data
+## List of files to copy with their respective folder structures
+files=(
+  "GNX_mod-K2_phi100_m100_seed1_H50_r60/it-0/spp-spp_0/mod-K2_phi100_m100_seed1_H50_r60_it-0_t-6000_spp-spp_0.csv"
+  "GNX_mod-K1_phi50_m100_seed1_H50_r60/it-0/spp-spp_0/mod-K1_phi50_m100_seed1_H50_r60_it-0_t-6000_spp-spp_0.csv"
+  "GNX_mod-K1_phi100_m25_seed1_H50_r60/it-0/spp-spp_0/mod-K1_phi100_m25_seed1_H50_r60_it-0_t-6000_spp-spp_0.csv"
+  "GNX_mod-K1_phi100_m100_seed1_H5_r60/it-0/spp-spp_0/mod-K1_phi100_m100_seed1_H5_r60_it-0_t-6000_spp-spp_0.csv"
+  "GNX_mod-K1_phi100_m100_seed1_H50_r30/it-0/spp-spp_0/mod-K1_phi100_m100_seed1_H50_r30_it-0_t-6000_spp-spp_0.csv"
+  "GNX_mod-K1_phi100_m100_seed1_H50_r60/it-0/spp-spp_0/mod-K1_phi100_m100_seed1_H50_r60_it-0_t-6000_spp-spp_0.csv"
+)
+
+# Loop through each file and copy it
+for file in "${files[@]}"; do
+  # Copy the file to the analysis directory
+  cp LGS_data/"$file" "../../p4_analysis/example_data"
+done
+
 cd ..
