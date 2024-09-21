@@ -114,7 +114,30 @@ df %>%
   # replace NA r with 0, the NA is due to there being no variation
   mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) %>%
   # calculate the proportion of times the phenotype ~ environment correlations were significant
-  summarize(proportion = mean(cor_sig > 0, na.rm = TRUE), count = sum(cor_sig > 0, na.rm = TRUE))
+  summarize(proportion = mean(cor_sig == 1, na.rm = TRUE), count = sum(cor_sig == 1, na.rm = TRUE))
+```
+
+Of the 7% of simulations that were not significant, 100% of them occurred when spatial autocorrelation was low and correlation between layers was high and over 60% occurred when population size was small and selection was weak:
+```{r, results = TRUE}
+# Simulation conditions for simulations where correlations were not significant
+df %>%
+  # replace NA r with 0, the NA is due to there being no variation
+  mutate(cor_sig = case_when(is.na(cor_sig) ~ 0, TRUE ~ cor_sig)) %>%
+  # calculate the proportion of times the phenotype ~ environment correlations were significant
+  filter(cor_sig  == 0) %>%
+  select(K, phi, m, H, r) %>%
+  pivot_longer(everything(), names_to = "Parameter") %>%
+  mutate(value = as.numeric(as.character(value))) %>%
+  group_by(Parameter) %>%
+  mutate(value = case_when(value == min(value) ~ "low", value == max(value) ~ "high")) %>%
+  group_by(Parameter, value) %>%
+  count() %>%
+  group_by(Parameter) %>%
+  mutate(percentage = round(n/sum(n) * 100, 0)) %>%
+  select(-n) %>%
+  pivot_wider(names_from = value, values_from = percentage) %>%
+  rename(`% low` = low, `% high` = high)
+
 ```
 
 Linear mixed effect model for phenotype-environment correlations:

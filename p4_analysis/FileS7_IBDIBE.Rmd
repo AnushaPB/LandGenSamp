@@ -30,10 +30,9 @@ p3path <- here("p3_methods", "outputs")
 knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
 ```
 
-***
+------------------------------------------------------------------------
 
-**Summary plots** - Sample strategy is on the y-axis and number of sites is on the x-axis. Each plot is paired by parameter level vertically and the values in the cells are the mean value across all of the simulations for that parameter level. *Note that each average encompasses all of the other varying simulation parameters as seen in the Full plots*.
-
+<font size="4"> **Plots:** </font>
 
 **Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
 
@@ -121,22 +120,18 @@ plot_stats <-
 
 ## 1.1 Individual sampling
 
-### 1.1.1 Summary plots
-
 ```{r, fig.width=14, fig.height=6}
 mmrr_ind <- format_mmrr(here(p3path, "mmrr_indsampling_results.csv"))
-
-walk(c(plot_stats, "env_signeg"), ~ ibdibe_plot(mmrr_ind, stat = .x))
 ```
 
-### 1.1.2 Linear mixed effects models
+### 1.1.1 Linear mixed effects models
 
 ```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(mmrr_ind, .x, 
                       filepath = make_lmer_path("mmrr", "ind", .x)))
 ```
 
-### 1.1.3 Full plots
+### 1.1.2 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
 walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_ind, stat = .x)))
@@ -144,22 +139,18 @@ walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_ind, stat = .x)))
 
 ## 1.2 Site sampling
 
-### 1.2.1 Summary plots
-
 ```{r, fig.width=14, fig.height=6}
 mmrr_site <- format_mmrr(here(p3path, "mmrr_sitesampling_results.csv"))
-
-walk(c(plot_stats, "env_signeg"), ~ ibdibe_plot(mmrr_site, stat = .x))
 ```
 
-### 1.2.2 Linear mixed effects models
+### 1.2.1 Linear mixed effects models
 
 ```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(mmrr_site, .x, 
                       filepath = make_lmer_path("mmrr", "site", .x)))
 ```
 
-### 1.2.3 Full plots
+### 1.2.2 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
 walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_site, stat = .x)))
@@ -169,22 +160,18 @@ walk(c(plot_stats, "env_signeg"), ~print(MEGAPLOT(mmrr_site, stat = .x)))
 
 ## 2.1 Individual sampling
 
-### 2.1.1 Summary plots
-
 ```{r, fig.width=14, fig.height=6}
 gdm_ind <- format_gdm(here(p3path, "gdm_indsampling_results.csv"))
-
-walk(c(plot_stats, "null_env_p"), ~ ibdibe_plot(gdm_ind, stat = .x))
 ```
 
-### 2.1.2 Linear mixed effects models
+### 2.1.1 Linear mixed effects models
 
 ```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(gdm_ind, .x, 
                       filepath = make_lmer_path("gdm", "ind", .x)))
 ```
 
-### 2.1.3 Full plots
+### 2.1.2 Full plots
 
 ```{r, fig.width = 21, fig.height = 13}
 walk(c(plot_stats, "null_env_p"), ~print(MEGAPLOT(gdm_ind, stat = .x)))
@@ -202,22 +189,18 @@ MEGAPLOT(gdm_ind, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 
 ## 2.2 Site sampling
 
-### 2.2.1 Summary plots
-
 ```{r, fig.width=14, fig.height=6}
 gdm_site <- format_gdm(here(p3path, "gdm_sitesampling_results.csv"))
-
-walk(c(plot_stats, "null_env_p"), ~ ibdibe_plot(gdm_site, stat = .x))
 ```
 
-### 2.2.2 Linear mixed effects models
+### 2.2.1 Linear mixed effects models
 
 ```{r, message = FALSE, warning = TRUE, results = 'asis'}
 walk(stats, ~run_lmer(gdm_site, .x, 
                       filepath = make_lmer_path("gdm", "site", .x)))
 ```
 
-### 2.2.3 Full plots
+### 2.2.2 Full plots
 ```{r, fig.width = 21, fig.height = 13}
 walk(c(plot_stats, "null_env_p"), ~print(MEGAPLOT(gdm_site, stat = .x)))
 ```
@@ -234,8 +217,7 @@ MEGAPLOT(gdm_site, "geo_coeff", aggfunc = "prop_na", colpal = mako(100))
 
 ---
 
-# Figures
-```{r, fig.width = 11, fig.height = 6.75}
+```{r, fig.width = 11, fig.height = 6.75, include = FALSE}
 df <- 
   bind_rows(data.frame(mmrr_ind, Method = "MMRR", sampling = "individual"),
             data.frame(gdm_ind, Method = "GDM", sampling = "individual"),
@@ -396,7 +378,7 @@ grid.arrange(ind_plts[[4]], site_plts[[4]], nrow = 1)
 ```
 
 
-```{r, fig.height=5, fig.width=12}
+```{r, fig.height=5, fig.width=12, include = FALSE}
 
 ggdf <- 
   df %>%
@@ -485,8 +467,6 @@ grid.arrange(ind_plts, site_plts, nrow = 1)
 
 ```
 
-# Lineplots of key statistics across all parameters
-
 ```{r}
 stats <- c(
     "geo_p_TPR",
@@ -497,27 +477,6 @@ stats <- c(
     "env_coeff_err_ae_scale"
   )
 combos <- expand.grid(stat = stats, sampling = c("ind", "site"))
-```
-
-## MMRR
-### Individual sampling
-```{r, fig.width = 25, fig.height = 15}
-map(stats, ~megalineplot(mmrr_ind, stat = .x, sampling = "ind"))
-```
-
-### Site sampling
-```{r, fig.width = 25, fig.height = 15}
-map(stats, ~megalineplot(mmrr_site, stat = .x, sampling = "site"))
-```
-## GDM
-### Individual sampling
-```{r, fig.width = 25, fig.height = 15}
-map(stats, ~megalineplot(gdm_ind, stat = .x, sampling = "ind"))
-```
-
-### Site sampling
-```{r, fig.width = 25, fig.height = 15}
-map(stats, ~megalineplot(gdm_site, stat = .x, sampling = "site"))
 ```
 
 # Statistics referenced in-text
@@ -558,6 +517,8 @@ bind_rows(t1, t2)
 ```
 
 # Comparison of MMRR and GDM
+
+To determine whether MMRR and GDM results were concordant, we visualized the relationship between the coefficients of IBD and IBE between methods under different simulated conditions relevant to performance (i.e., migration and spatial autocorrelation). Overall, there was a strong correlation between the coefficients from the different methods across simulated conditions.
 
 ```{r, fig.width = 8, fig.height = 3}
 a <- read.csv(here("p3_methods/outputs/mmrr_indsampling_results.csv"))

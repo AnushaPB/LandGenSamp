@@ -628,7 +628,7 @@ run_lmer <- function(df, stat, filepath = NULL){
     if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
     em_df <- data.frame(contrast = NA, estimate = NA, SE = NA, df = NA, z.ratio = NA, p.value = NA)
     if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
-    warning(paste("\nAll values of", make_pretty_names(stat), "are fixed or NA; no model is returned"))
+    writeLines(paste("There is no model table for", make_pretty_names(stat), "because all values are fixed or NA"))
     return()
   }
   
