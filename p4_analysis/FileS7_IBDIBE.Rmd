@@ -108,9 +108,7 @@ stats <-
 plot_stats <- 
   c(
     "geo_coeff_scale", 
-    "geo_coeff_err_scale", 
     stats[grepl("geo",stats)], 
-    "env_coeff_err_scale", 
     "env_coeff_scale", 
     stats[grepl("env",stats)]
     )
