@@ -4,7 +4,7 @@ Rscript p1_gnxsims/MNLM/run_MNLM.R
 ## The generated MNLMs can be visualized with the p1_gnxsims/MNLM/view_MNLM.Rmd notebook
 
 ## Render File S2 (MNLM parameterization)
-Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2.Rmd')"
+Rscript -e "rmarkdown::render(here::here('p1_gnxsims', 'MNLM', 'FileS2_landscape_parameterization.Rmd')"
 
 # GEONOMICS SIMULATIONS ------------------------------------------------------------------
 cd p1_gnxsims/gnx
