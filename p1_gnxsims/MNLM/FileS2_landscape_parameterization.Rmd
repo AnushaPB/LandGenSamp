@@ -1,0 +1,189 @@
+---
+title: "Optimizing sampling design for landscape genomics: Parameterizing landscape correlation and autocorrelation"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
+output: 
+  html_document:
+    toc: true
+---
+
+# 1. Generating empirical distributions
+To determine how to set the levels of between-layer correlation and within-layer spatial autocorrelation for our landscape layers, we created distributions of correlation and autocorrelation from temperature and precipitation globally. We downloaded global average temperature and precipitation data for 1970-2000 at a resolution of 2.5 minutes of a degree from WorldClim using the "geodata" package (Hijmans et al., 2023). This data is monthly, so we took the mean across all months to get one raster layer representing temperature and one representing precipitation. To generate our distributions we randomly sampled one thousand 100 by 100 cell sections of each raster and calculated within these sections (1) the correlation between temperature and precipitation and (2) the autocorrelation, measured using Moran's I, of each variable. We took the absolute value of the correlations since for our simulations only the magnitude matters, not the direction.
+
+```{r, include = FALSE}
+library(terra)
+library(tidyverse)
+library(geodata)
+library(here)
+library(raster)
+library(NLMR)
+source(here("p1_gnxsims", "MNLM", "FileS2_functions.R"))
+source(here("p1_gnxsims", "MNLM", "MNLM_functions.R"))
+```
+
+```{r, run bioclim simulations, include = FALSE}
+path <- here("p1_gnxsims", "MNLM", "outputs", "bioclim_results.csv")
+if (!file.exists(path)){
+  # Download temperature and precipitation data (tavg) at 2.5 arc-min resolution
+  tavg <- worldclim_global(var = "tavg", res = 2.5, path = here("p1_gnxsims", "MNLM"))
+  prec <- worldclim_global(var = "prec", res = 2.5, path = here("p1_gnxsims", "MNLM"))
+  
+  # reproject to Equal Earth based on this https://learn.arcgis.com/en/projects/choose-the-right-projection/
+  #https://www.r-bloggers.com/2018/09/quick-hit-using-the-new-equal-earth-projection-in-r/
+  tavg <- mean(tavg)
+  prec <- mean(prec)
+  env <- c(tavg, prec)
+  env <- project(env, "+proj=eqearth")
+
+  set.seed(5)
+  results <- boot_rnM(env)
+  results_df <- bind_rows(results)
+  write_csv(results_df, path)
+} else {
+  results_df <- read_csv(path)
+}
+```
+
+# 2. Parameterizing correlations between environmental layers
+
+For our simulations, we chose r = 0.30 for our low level (orange line) and r = 0.60 for our high level (green line) of correlation between environmental layers (Figure 1). These values corresponded to approximately the first and second quartile (i.e., the median) of the distribution of correlations (Figure 1). We didn't select the third quartile value because when a pair of environmental variables has a correlation greater than 0.70 one of them is usually dropped in landscape genomic analyses. Therefore, we wanted our high level of correlation to still be below the threshold of being too correlated to be disentangled. 
+
+```{r, fig.width = 9, fig.height = 3, echo = FALSE}
+df <-  
+  results_df %>%
+  # get absolute value of r since we only care about magnitude
+  mutate(r = abs(r)) %>%
+  # get Moran stats into one column
+  pivot_longer(c(Moran_prec, Moran_tavg), names_to = "env", values_to = "Moran") %>%
+  mutate(env = case_when(env == "Moran_prec" ~ "prec", env == "Moran_tavg" ~ "tavg"))
+
+ggplot(df) +
+  geom_boxplot(aes(x = r), fill = "cornflowerblue", alpha = 0.5, lwd = 1) +
+  theme_classic() +
+  geom_vline(aes(xintercept = 0.3), col = "aquamarine2", lwd = 1.5, lty = "dashed") +
+  geom_vline(aes(xintercept = 0.6), col = "orange", lwd = 1.5, lty = "dashed") +
+  ylim(-1,1) +
+  theme(axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14)) +
+  xlab("|Correlation between Temperature and Precipitation|")
+```
+
+**Figure 1.** Distribution of the absolute value of correlations between global temperature and precipitation. Orange and green dashed lines represent the low and high levels of correlation used in our simulation.
+
+# 3. Parameterizing environmental layer autocorrelation 
+
+Since temperature and precipitation generally have very high levels of autocorrelation, we also calculated autocorrelation for tree canopy cover to account for environmental variables with lower autocorrelation (e.g., vegetation variables). We used NLCD tree canopy cover data at 30 m resolution for the conterminous United States (U.S. Geological Survey., 2023). We aggregated the tree canopy cover data to ~1 km resolution to make the calculations computationally tractable while still representing a realistic spatial scale. Autocorrelation was measured for all variables using Moran's I. Our simulated landscapes with high autocorrelation (Moran's I ~ 1; orange line; Figure 2) reflect the higher end of autocorrelation seen in temperature and precipitation. Our simulated low autocorrelation landscapes (Moran's I ~ 0.65; green line; Figure 2) reflect the median autocorrelation of tree canopy cover.
+
+```{r simulate NLMs, eval = FALSE, include = FALSE}
+# This code simulates 100 NLMs and then averages them
+# I didn't end up directly using this, but it confirms stability in Moran's I across different H values
+set.seed(334)
+nlm_M <- function(H){
+  nlm <-
+  nlm_mpd(
+    ncol = 103,
+    nrow = 103,
+    resolution = 1,
+    roughness = 1 - H,
+    rand_dev = 1,
+    rescale = TRUE,
+    verbose = FALSE
+  )
+ Moran(nlm)
+}
+
+M_H50 <- mean(map_dbl(1:100, ~nlm_M(H = 0.5)))
+M_H05 <- mean(map_dbl(1:100, ~nlm_M(H = 0.05)))
+```
+
+```{r generate NLMs, include = FALSE}
+mnlms <- mnlm_get()
+
+H05 <- mnlms[map_lgl(mnlms, ~any(grepl("H5_", names(.x))))] %>% stack() %>% as.list()
+H50 <- mnlms[map_lgl(mnlms, ~any(grepl("H50_", names(.x))))] %>% stack() %>% as.list()
+
+M_H05 <- mean(map_dbl(H05, Moran))
+M_H50 <- mean(map_dbl(H50, Moran))
+```
+
+```{r plot bioclim autocorrelation, include = FALSE}
+plt1 <-
+  ggplot(df) +
+  geom_boxplot(aes(x = Moran), alpha = 0.5, fill = "cornflowerblue") +
+  geom_vline(aes(xintercept = M_H05), col = "aquamarine2", lwd = 1.5, lty = "dashed") +
+  geom_vline(aes(xintercept = M_H50), col = "orange", lwd = 1.5, lty = "dashed") +
+  theme_classic() +
+  ylim(-1,1) +
+  labs(lty = "Simulated layer\nautocorrelation") +
+  #xlim(NA, 1.05) +
+  theme(axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        title = element_text(size = 14)) +
+  xlab("Moran's I") +
+  ggtitle("A. Temperature and precipitation") +
+  xlim(0, 1)
+```
+
+
+```{r run tree simulations, include = FALSE}
+path <- here("p1_gnxsims", "MNLM", "outputs", "tree_results.csv")
+if (file.exists(path)){
+  tree_df <- read_csv(path)
+} else {
+  nlcd_path <- here("p1_gnxsims", "MNLM", "nlcd_transformed.tif")
+  if (file.exists(nlcd_path)) {
+    tc <- rast(nlcd_path)
+  } else {
+    tc <- rast(here("p1_gnxsims", "MNLM", "nlcd_tcc_CONUS_2021_v2021-4", "nlcd_tcc_conus_2021_v2021-4.tif"))
+    tc <- aggregate(tc, 30)
+    # >100% is water
+    tc[tc > 100] <- NA 
+    writeRaster(tc, nlcd_path, overwrite =TRUE)
+  }
+  set.seed(3)
+  tree_results <- boot_tree(tc)
+  tree_df <- data.frame(Moran_tree = tree_results) 
+  write_csv(tree_df, path)
+}
+```
+```{r plot tree simulations, include = FALSE}
+plt2 <- 
+  ggplot(tree_df) +
+  geom_boxplot(aes(x = Moran_tree), fill = "cornflowerblue", alpha = 0.5) +
+  geom_vline(aes(xintercept = M_H05), col = "aquamarine2", lwd = 1.5, lty = "dashed") +
+  geom_vline(aes(xintercept = M_H50), col = "orange", lwd = 1.5, lty = "dashed") +
+  theme_classic() +
+  ylim(-1,1) +
+  labs(lty = "Simulated layer\nautocorrelation") +
+  #xlim(NA, 1.05) +
+  theme(axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        title = element_text(size = 14)) +
+  xlab("Moran's I") +
+  ggtitle("B. Tree canopy cover") +
+  xlim(0, 1)
+
+```
+
+```{r, fig.width = 9, fig.height = 6, echo = FALSE, warning = FALSE, message = FALSE}
+gridExtra::grid.arrange(plt1, plt2, ncol = 1)
+```
+**Figure 2.** Distribution of Moran's I for (A) global temperature and precipitation and (B) tree canopy cover. Orange and green dashed lines represent the low and high levels of autocorrelation used in our simulation.
+
+# References
+
+1.  Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
+
+2.  Hijmans RJ, Barbosa M, Ghosh A, Mandel A (2023). geodata: Download Geographic Data. R package version 0.5-8, <https://CRAN.R-project.org/package=geodata>.
+
+3. U.S. Geological Survey. (2023). NLCD CONUS 2021 Tree Canopy Cover (v2021-4) [Raster digital data]. Sioux Falls, SD
+
+

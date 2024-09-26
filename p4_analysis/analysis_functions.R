@@ -1,6 +1,6 @@
 
 # Plot every single unique simulation, averaged across all replicates for a given statistic
-MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, na.rm=TRUE, dig = 3, pretty_names = TRUE){
+MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal = NULL, na.rm=TRUE, dig = 2, pretty_names = TRUE){
   stat_name <- stat
   agg <- make_ggdf(df, stat_name = stat_name, aggfunc = aggfunc, na.rm = na.rm)
   
@@ -49,6 +49,8 @@ MEGAPLOT <- function(df, stat, minv = NULL, maxv = NULL, aggfunc = mean, colpal 
 make_pretty_names <- function(stat_name) {
   map_chr(stat_name, \(stat_name){
     new_name <- ""
+    if (grepl("correlation", stat_name)) return("r")
+    if (grepl("phenotype-environment", stat_name) | grepl("genotype-environment", stat_name)) return(stat_name)
     if (stat_name == "K_factor") new_name <- "Number of latent factors"
     if (stat_name == "TOTALN") new_name <- "Total number of loci"
     if (stat_name == "TPRCOMBO") new_name <- "TPR"
@@ -113,7 +115,7 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
     custom_agg(aggfunc, na.rm) %>%
     # mutate to numeric
     mutate_at(c("K", "phi", "m", "H", "r"), ~as.numeric(as.character(.))) %>%
-    # mutate params to get low and high (not sure why but mutate_at wasn't working)
+    # mutate params to get low and high 
     mutate(
       K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
       m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
@@ -132,7 +134,7 @@ make_ggdf <- function(df, stat_name, aggfunc = mean, na.rm = TRUE){
 }
 
 # create summary plot that groups simulation by parameter levels and summarizes over the stat
-summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig=3, aggfunc = mean, minv = NULL, maxv = NULL, title = NULL, full = FALSE, pretty_names = TRUE){
+summary_hplot <- function(df, stat_name = "stat", na.rm = TRUE, colpal = NULL, dig = 2, aggfunc = mean, minv = NULL, maxv = NULL, title = NULL, full = FALSE, pretty_names = TRUE){
  
   agg <- make_agg(df, stat_name = stat_name, na.rm = na.rm, dig = dig, aggfunc = aggfunc, minv = minv, maxv = maxv, full = full)
   
@@ -209,17 +211,21 @@ agg_mm <- function(x, stat){
   return(c(min = min(result$min, na.rm = TRUE), max = max(result$max, na.rm = TRUE)))
 }
 
-# create heat_plot from a df given a stat
+# Create heat_plot from a df given a stat
 heat_plot <- function(df, stat_name = NULL, minv = NULL, maxv = NULL, title = NULL, facet = FALSE, dig = 2, 
                       colpal = NULL){
   
   if (!is.null(stat_name)) df$stat <- df[[stat_name]]
   
-  # define max and min for plotting
+  # Define max and min for plotting
   if (is.null(maxv)) maxv <- max(df$stat, na.rm = TRUE)
   if (is.null(minv)) minv <- min(df$stat, na.rm = TRUE)
+
+  # Round max/min
+  minv <- round(minv, dig)
+  maxv <- round(maxv, dig)
   
-  # plot results
+  # Plot results
   p <- ggplot(df, aes(nsamp, sampstrat)) +
     geom_tile(aes(fill = stat)) + 
     geom_text(aes(label = round(stat, dig), hjust = 0.5), size = 5) +
@@ -293,9 +299,7 @@ format_data <- function(method, sampling, p_filter = TRUE) {
   if (method == "lfmm") df <- format_lfmm(path, p_filter = p_filter)
   if (method == "rda") df <- format_rda(path, p_filter = p_filter)
   if (method == "mmrr") df <- format_mmrr(path)
-  if (method == "mmrr2") df <- format_mmrr(path)
   if (method == "gdm") df <- format_gdm(path)
-  if (method == "gdm2") df <- format_gdm(path)
   
   return(df)
 }
@@ -325,7 +329,7 @@ format_mmrr <- function(path, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       sampstrat == "full" ~ "full",
       TRUE ~ "NA")) %>%
     
@@ -395,7 +399,7 @@ format_gdm <- function(path, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       sampstrat == "full" ~ "full",
       TRUE ~ "NA")) %>%
     
@@ -464,7 +468,7 @@ format_lfmm <- function(path, p_filter = TRUE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       TRUE ~ "NA")) %>%
     
     # convert to factors
@@ -509,7 +513,7 @@ format_lfmm <- function(path, p_filter = TRUE){
   
   # check number of rows
   if ("T" %in% df$sampstrat) stopifnot((nrow(df2) %% (96 * 4 * 4)) == 0)
-  if ("EQ" %in% df$sampstrat) stopifnot((nrow(df2) %% (96 * 3 * 3)) == 0)
+  if (25 %in% df$nsamp) stopifnot((nrow(df2) %% (96 * 3 * 3)) == 0)
   
   return(df)
 }
@@ -542,7 +546,7 @@ format_rda <- function(path, p_filter = TRUE, full = FALSE){
       sampstrat == "rand" ~ "R",
       sampstrat == "trans" ~ "T",
       sampstrat == "grid" ~ "G",
-      sampstrat == "equi" ~ "EQ",
+      sampstrat == "equi" ~ "G",
       TRUE ~ "NA")) %>%
     
     # convert to factors
@@ -624,7 +628,7 @@ run_lmer <- function(df, stat, filepath = NULL){
     if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
     em_df <- data.frame(contrast = NA, estimate = NA, SE = NA, df = NA, z.ratio = NA, p.value = NA)
     if(!is.null(filepath)) write.csv(em_df, gsub(".csv", "_tukey.csv", filepath), row.names = FALSE)
-    warning(paste("\nAll values of", make_pretty_names(stat), "are fixed or NA; no model is returned"))
+    writeLines(paste("There is no model table for", make_pretty_names(stat), "because all values are fixed or NA"))
     return()
   }
   
@@ -666,6 +670,9 @@ pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
   em_df <- data.frame(em$contrasts)
   
   d <- max(abs(c(min(em_df$estimate), max(em_df$estimate))))
+
+  # Round p values
+  em_df$p <- signif(em_df$p, 2)
   
   em_tb <- em_df %>%
     dplyr::select(-df) %>%
@@ -718,16 +725,21 @@ pretty_tukey <- function(mod, filepath = NULL, stat = "stat"){
 # make pretty anova table
 pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
   
+  # Run ANOVA
   aov <- anova(mod)
   
+  # Get effects
   effects <- fixef(mod)
-  effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "nsamp", "K2", "m1", "phi1", "H0.5", "r0.6"))]))
+  effects_sampstrat <- sum(abs(effects[-which(names(effects) %in% c("Intercept", "(Intercept)", "nsamp", "K2", "m1", "phi1", "H0.5", "r0.6"))]))
   effects <- c(effects["nsamp"], sampstrat = effects_sampstrat, effects[c("K2", "m1", "phi1", "H0.5", "r0.6")])
   effects <- na.omit(effects)
+  if (!("sampstrat" %in% rownames(aov))) effects <- effects[names(effects) != "sampstrat"]
   aov_df <- data.frame(Variable = rownames(aov), FixedEffects = effects, aov)
   
+  # Round p values
   aov_df$Pr..F. <- signif(aov_df$Pr..F., 2)
   
+  # Get domain for color scale
   d <- max(abs(c(min(aov_df$FixedEffects), max(aov_df$FixedEffects))))
   
   aov_df <- 
@@ -740,7 +752,8 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
                                 Variable == "H" ~ "Spatial autocorrelation",
                                 Variable == "r" ~ "Environmental correlation"))
   
-  aov_tb <- aov_df %>%
+  aov_tb <-
+    aov_df %>%
     filter(Variable != "Sampling strategy") %>%
     gt::gt() %>%
     cols_label(
@@ -809,10 +822,10 @@ pretty_anova <- function(mod, filepath = NULL, stat = "stat"){
     ) %>%
     tab_header(
       title = md("Linear mixed effect model"),
-      subtitle = md(paste0(make_pretty_names(stat), " ~ nsamp + sampstrat + K + m + phi + H + r + (1 | seed)"))
+      subtitle = md(paste0(make_pretty_names(stat), " ~ ", paste0(tolower(aov_df$Variable), collapse = " + "), " + (1 | seed)"))
     )
   
-  if(!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
+  if (!is.null(filepath)) write.csv(aov_df, gsub(".csv", "_lmer.csv", filepath), row.names = FALSE)
   return(aov_tb)
 }
 
@@ -841,7 +854,7 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
   # Fix NA values for GDM (there are no NA values for MMRR, so this will not affect it):
   # first, create a column to keep track of NA values that are the result of 2/3 coeffs being 0 (because then p-values can't be calculated with varImp)
   # these values should ultimately be kept NA
-  subdf <- subdf %>% mutate(trueNA = rowSums(select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
+  subdf <- subdf %>% mutate(trueNA = rowSums(dplyr::select(., env1_coeff, env2_coeff, geo_coeff) == 0)) %>% mutate(trueNA = trueNA >= 2)
   # Replace NA p values that are the result of  one coefficient being zero (but p-values were still calculated for other vars)
   # Replace NA p-values temporarily with an absurdly high number so they are counted as negatives and not NA
   subdf <- subdf %>% mutate(env1_p = case_when(env1_coeff == 0 ~ 100, TRUE ~ env1_p),
@@ -849,7 +862,7 @@ ibeibd_stats <- function(K, phi, m, seed, H, r, it, df){
                             geo_p = case_when(geo_coeff == 0 ~ 100, TRUE ~ geo_p),)
   # Note that NA values resulting from the variable permutation procedure failing for one var stay NA (i.e., when there is a null model fit when the variable is removed)
   # finally, switch true NA values back and drop the column
-  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% select(!trueNA)
+  subdf <- subdf %>% mutate_at(c("env1_p", "env2_p", "geo_p"), ~ifelse(trueNA, NA, .x)) %>% dplyr::select(!trueNA)
   
   # split into full and sub
   full <- subdf[subdf$sampstrat == "full",]
@@ -969,8 +982,8 @@ get_example_samples <- function(param_set, sampstrat, nsamp, site = FALSE){
   #sampstrat - sampling strategy (e.g. "rand", "grid", "trans", "envgeo")
   #nsamp - number of samples
   
-  if(!site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/samples_", sampstrat, nsamp, ".csv")))
-  if(site) subIDs <- read.csv(here("p4_analysis/example_data/samples", paste0("/site_samples_", sampstrat, nsamp, ".csv")))
+  if(!site) subIDs <- read.csv(here("p2_sampling", "outputs", paste0("samples_", sampstrat, nsamp, ".csv")))
+  if(site) subIDs <- read.csv(here("p2_sampling", "outputs", paste0("site_samples_", sampstrat, nsamp, ".csv")))
   
   subIDs <- subIDs[subIDs$K == param_set$K 
                    & subIDs$phi == param_set$phi
@@ -1180,5 +1193,70 @@ sampling_plot <- function(ggdf){
             site_plt + ggtitle("B. Site-based sampling"),
             common.legend = TRUE,
             legend = "right")
+}
+
+scheme_cols <- function(x) {
+  if (x == "ind") {
+    cols <- c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed", "T" = "#ED7953FF")
+    shapes <- c("ES" = 21, "G" = 22, "R" = 23, "T" = 24)
+  }
+  
+  if (x == "site") {
+    cols <- c("ES" = "#0D0887FF", "G" = "#17c3b2", "R" = "#7678ed")
+    shapes <-  c("ES" = 21, "G" = 22, "R" = 23)
+  }
+  
+  list(
+    scale_color_manual(values = cols, breaks = names(cols)),
+    scale_fill_manual(values = cols, breaks = names(cols)),
+    scale_shape_manual(values = shapes, breaks = names(shapes))
+  )
+}
+
+megalineplot <- function(df, stat, sampling){
+  gg_df <- 
+    df %>% 
+    group_by(K, phi, m, H, r, nsamp, sampstrat) %>% 
+    mutate(sampstrat = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
+    summarize(mean = mean(.data[[stat]], na.rm = TRUE), sd = sd(.data[[stat]], na.rm = TRUE)) %>%
+    mutate(ymin = mean - sd, ymax = mean + sd) %>%
+    mutate_at(c("K", "m", "phi", "H", "r"), ~as.character(as.numeric(.x))) %>%
+    mutate(
+      K = case_when(K == min(.[["K"]]) ~ "L", K == max(.[["K"]]) ~ "H"),
+      m = case_when(m == min(.[["m"]]) ~ "L", m == max(.[["m"]]) ~ "H"),
+      phi = case_when(phi == min(.[["phi"]]) ~ "L", phi == max(.[["phi"]]) ~ "H"),
+      H = case_when(H == min(.[["H"]]) ~ "L", H == max(.[["H"]]) ~ "H"),
+      r = case_when(r == min(.[["r"]]) ~ "L", r == max(.[["r"]]) ~ "H"),
+    ) %>%
+    mutate(group = paste0("K=", K,
+                          " phi=", phi,
+                          " m=", m,
+                          "\nH=", H,
+                          " r=", r))
+  
+  p <- ggplot(gg_df) +
+    geom_ribbon(aes(x = as.numeric(as.character(nsamp)), ymin = ymin, ymax = ymax, fill = sampstrat), col = NA, alpha = 0.2) +
+    geom_line(aes(x = as.numeric(as.character(nsamp)), y = mean, col = sampstrat), lwd = 2) +
+    facet_wrap(~ group) +
+    scheme_cols(sampling) +
+    facet_wrap( ~ group, nrow = 4) +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          legend.position = "right", legend.title = element_blank(),
+          axis.title.x=element_blank(), axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(), axis.ticks.y=element_blank(),
+          axis.text.x = element_text(color = "grey50", size = 14),
+          axis.text.y = element_text(color = "gray50", size = 14), 
+          plot.margin=unit(rep(0.4,4),"cm"),
+          strip.text.x = element_text(size = 18),
+          strip.text.y = element_text(size = 18),
+          strip.background = element_blank(),
+          strip.text = element_text(color = "black"),
+          plot.title = element_text(size = 30, face = "bold"),
+          legend.text = element_text(size = 14), 
+          legend.key.size = unit(2, "lines") ) +
+    ggtitle(make_pretty_names(stat))
+  
+  return(p)
 }
 

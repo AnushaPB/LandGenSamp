@@ -23,7 +23,7 @@ for (n in nsites){
   samples <- foreach(i=1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
-    library("rgeos")
+    library("sf")
     library("dplyr")
     
     source(here("p2_sampling", "sampling_functions.R"))

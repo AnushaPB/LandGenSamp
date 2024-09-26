@@ -3,9 +3,10 @@ cd p3_methods
 # Create folder for outputs
 mkdir -p outputs
 
-# Calculate population size and phenotypic mismatch for each simulation
-Rscript popsize_count.R
-Rscript phenotype_mismatch.R
+# Calculate genotype-environment/phenotype-environment and other stats for each simulation
+Rscript phenotype_environment.R
+Rscript genotype_environment.R
+Rscript simulation_stats.R
 
 # Run landscape genomic methods
 Rscript run_methods.R

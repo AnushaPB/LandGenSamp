@@ -268,7 +268,7 @@ params = {
                     # found here /p1_gnxsims/gnx/
                     'gen_arch_file': "genomic_architecture.csv",
                     # num of loci
-                    'L': 10000,
+                    'L': 10008,
                     # num of chromosomes (doesn't matter when there is no linkage)
                     'l_c': [1],
                     # starting allele frequency (None to draw freqs randomly)
@@ -379,7 +379,7 @@ params = {
     # -------------#
     'model': {
         # total Model runtime (in timesteps)
-        'T': 1001,
+        'T': 6001,
         # min burn-in runtime (in timesteps)
         'burn_T': 100,
         # seed number
@@ -409,7 +409,7 @@ params = {
                 # sampling scheme {'all', 'random', 'point', 'transect'}
                 'scheme': 'all',
                 # when to collect data
-                'when': 1000,
+                'when': 6000,
                 # whether to save current Layers when data is collected
                 'include_landscape': False,
                 # whether to include fixed loci in VCF files
@@ -511,7 +511,7 @@ def run_sims(sim_list, params):
     # file1 = pre running data_cleaning.sh
     path_to_file1 = "GNX_mod-" + mod_name + "/it-9/spp-spp_0/" + "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
     # file2 = post running data_cleaning.sh
-    path_to_file2 = "LGS_data/" +  "mod-"+ mod_name + "_it-9_t-1000_spp-spp_0.vcf"
+    path_to_file2 = "LGS_data/" + "GNX_mod-" + mod_name +  "/mod-" + mod_name + "_it-9_t-1000_spp-spp_0.vcf"
 
     if exists(path_to_file1) or exists(path_to_file2):
         print(mod_name + " exists, skipping")
@@ -547,20 +547,9 @@ def run_sims(sim_list, params):
         # run the model
         mod.run(verbose = True)
 
-        # save and print all of the non-neutral loci
-        loci_df = pd.DataFrame()
-        loci_df['trait1'] = mod.comm[0].gen_arch.traits[0].loci
-        loci_df['trait2'] = mod.comm[0].gen_arch.traits[1].loci
-        loci_df.to_csv(dir + "parallel/nnloci/nnloci_" + mod_name + ".csv")
-        print("\nNON-NEUTRAL LOCI:")
-        print(mod.comm[0].gen_arch.nonneut_loci)
-
-
-
 #multiprocessing
 if __name__ == '__main__':
-    #count number of cores
-    #only use a few so computer doesn't get overloaded (RAM cap)
+    #set number of cpus to use
     ncpu = 20
 
     #set start method to 'spawn' instead of 'fork' to avoid deadlock (for savio)

@@ -21,7 +21,7 @@ range01 <- function(x){(x - min(x))/(max(x) - min(x))}
 
 
 # run GDM with each environmental variable treated separately
-run_gdm <- function(gendist, gsd_df){
+run_gdm <- function(gendist, gsd_df, varImp = TRUE){
   #Format gdm dataframe
   site <- 1:nrow(gendist) #vector of sites
   gdmGen <- cbind(site, gendist) #bind vector of sites with gen distances
@@ -70,7 +70,11 @@ run_gdm <- function(gendist, gsd_df){
     do_modTest <- !(results$env1_coeff == 0 & results$env2_coeff == 0)
       
     # get pvalues
-    if (do_modTest) modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) else modTest <- NULL
+    if (do_modTest & varImp) {
+      modTest <- gdm.varImp_custom(gdmData, geo = TRUE, nPerm = 50, parallel = F, predSelect = F) 
+    } else {
+      modTest <- NULL
+    }
     
     if (!is.null(modTest)) {
       pvals <- modTest$`Predictor p-values`
@@ -823,7 +827,7 @@ unfold<-function(X){
 
 
 # Run MMRR with one enviornmental matrix of combined distances (not used in final analysis)
-run_mmrr <- function(gendist, gsd_df){
+run_mmrr <- function(gendist, gsd_df, nperm = 50){
   
   ##get env vars and coords
   env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
@@ -831,7 +835,7 @@ run_mmrr <- function(gendist, gsd_df){
   geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
   
   #Run  MMRR
-  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = 50)
+  mmrr_res <- mmrr(gendist, list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist), nperm = nperm)
   
   #turn results into dataframe
   results <- mmrr_results_df(mmrr_res)

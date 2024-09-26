@@ -1,0 +1,516 @@
+---
+title: "Optimizing sampling design for landscape genomics: GEA results"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r, warning = FALSE, message = FALSE, include = FALSE}
+library("here")
+library("sjPlot")
+library("tidyverse")
+library("dplyr")
+library("lme4")
+library("viridis")
+library("lmerTest")
+library("ggplot2")
+library("gridExtra")
+library("grid")
+library("gt")
+library("purrr")
+library("ggpubr")
+library("lme4")
+source(here("p4_analysis", "analysis_functions.R"))
+
+p4path <- here("p4_analysis", "outputs")
+p3path <- here("p3_methods", "outputs")
+
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
+```
+
+------------------------------------------------------------------------
+
+<font size="4"> **Plots:** </font>
+
+**Full plots** - For the full plots, Each plot represents a unique simulation and the values in the cells are the mean value across all of the 10 iterations of that simulation across all three unique landscape seeds (i.e., all three sets of Neutral Landscape Models) for a total of 30 replicates. Sample strategy is on the y-axis and number of sites is on the x-axis. Since there are a many simulations presented in the full plots, here is a handy key for how the different parameters are laid out within them (H = High, L = Low):
+
+```{r,fig.width = 9, fig.height = 4}
+df <- format_data("lfmm", "individual") 
+
+ggdf <- make_ggdf(df, stat_name = "TPRCOMBO_strict") 
+
+plots <-
+  map2(
+    c("K", "m", "phi", "H", "r"),
+    c(
+      "Population size (K)",
+      "Migration (m)",
+      "Selection strength (phi)",
+      "Spatial autocorrelation (H)",
+      "Environmental correlation (r)"
+    ),
+    ~ ggplot(ggdf, aes(x = nsamp, y = sampstrat)) +
+      geom_tile(aes(fill = .data[[.x]])) +
+      theme_bw() +
+      coord_fixed() +
+      facet_wrap(~ group, nrow = 4) +
+      theme(
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.margin = unit(rep(0.4, 4), "cm"),
+        strip.text.x = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(color = "black"),
+        plot.title = element_text(size = 12, face = "bold")
+      ) +
+      labs(fill = "Level") +
+      ggtitle(.y)
+  )
+
+do.call(ggarrange, c(plots, common.legend = TRUE, legend.position = "right"))
+```
+
+<font size="4"> **Methods:** </font>
+
+**K** - number of latent factors used in LFMM
+
+**TPR** - True Positive Rate
+
+**FDR** - False Discovery Rate
+
+**strict vs relaxed TPR/FDR** - "relaxed" means any adaptive loci identified was counted as a true positive and "strict" means only an adaptive loci identified with the correct environmental variable was counted as a true positive
+
+**pRDA** - partial RDA conditioning on two PC axes to control for population genetic structure
+
+**lasso vs ridge**- "lasso" and "ridge" are different methods utilized by LFMM that have different penalization functions (Caye et al., 2019)
+
+------------------------------------------------------------------------
+
+```{r}
+stats <- c("TPRCOMBO_relaxed", "TPRCOMBO_strict", "FDRCOMBO_relaxed", "FDRCOMBO_strict")
+```
+
+# 1. LFMM
+
+## 1.1 Individual sampling
+
+```{r, fig.width=14, fig.height=7, include = FALSE}
+lfmm_ind <- format_data("lfmm", "individual") 
+```
+
+### 1.1.1 Linear mixed effects models
+
+*Only results from the ridge method are used*
+
+```{r, include = FALSE}
+lfmm_ind <- 
+  lfmm_ind %>% 
+  filter(lfmm_method == "ridge") 
+```
+
+```{r, message = FALSE, results = 'asis', echo = FALSE}
+walk(stats, ~run_lmer(lfmm_ind,  stat = .x, 
+                      filepath = make_lmer_path("lfmm", "ind", .x)))
+```
+
+### 1.1.2 Full plots
+
+```{r,fig.width = 21, fig.height = 13}
+walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_ind, stat = .x)))
+```
+
+## 1.2 Site sampling
+
+```{r, fig.width=14, fig.height=7, include = FALSE}
+lfmm_site <- format_data("lfmm", "site") 
+```
+
+### 1.1.1 Linear mixed effects models
+
+*Only results from the ridge method are used*
+
+```{r}
+lfmm_site <- 
+  lfmm_site %>% 
+  filter(lfmm_method == "ridge") 
+```
+
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(lfmm_site, .x, 
+                      filepath = make_lmer_path("lfmm", "site", .x)))
+```
+
+### 1.2.2 Full plots
+
+```{r,fig.width = 21, fig.height = 13}
+walk(c(stats, "TOTALN", "K_factor"), ~print(MEGAPLOT(lfmm_site, stat = .x)))
+```
+
+# 2. RDA
+
+## 2.1 Individual sampling
+
+```{r, fig.width=14, fig.height=7, include = FALSE}
+rda_ind <- format_data("rda", "individual") 
+```
+
+### 2.1.1 Linear mixed effects models
+
+```{r, result = TRUE, message = TRUE}
+# calculate average reduction in TPR from PC correction
+tpr_avg <- 
+  rda_ind %>% 
+  select(correctPC, TPRCOMBO_relaxed, K, phi, m, seed, H, r, it, sampstrat, nsamp) %>%
+  pivot_wider(names_from = correctPC, values_from = TPRCOMBO_relaxed) %>%
+  mutate(dif = `TRUE` - `FALSE`) %>% 
+  summarize(avgdif = mean(dif, na.rm = TRUE)) 
+
+writeLines(paste("Average reduction in relaxed TPR by using partial RDA:", round(tpr_avg, 2)))
+```
+
+*Only results from the standard RDA (not the partial RDA) are used from here on out*
+
+```{r}
+rda_ind <- 
+  rda_ind %>% 
+  filter(correctPC == "FALSE") 
+```
+
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(rda_ind, .x, 
+                      filepath = make_lmer_path("rda", "ind", .x)))
+```
+
+### 2.1.2 Full plots
+
+```{r,fig.width = 21, fig.height = 13}
+walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_ind, stat = .x)))
+```
+
+## 2.2 Site sampling
+
+```{r, fig.width=14, fig.height=7, include = FALSE}
+rda_site <- format_data("rda", "site") 
+```
+
+### 2.2.1 Linear mixed effects models
+
+*Only results from the standard RDA (not the partial RDA) are used*
+
+```{r}
+rda_site <- 
+  rda_site %>% 
+  filter(correctPC == "FALSE") 
+```
+
+```{r, message = FALSE, results = 'asis', results='asis', echo = FALSE}
+walk(stats, ~run_lmer(rda_site, .x, 
+                     filepath = make_lmer_path("rda", "site", .x)))
+```
+
+### 2.2.2 Full plots
+
+```{r,fig.width = 21, fig.height = 13}
+walk(c(stats, "TOTALN"), ~print(MEGAPLOT(rda_site, stat = .x)))
+```
+
+------------------------------------------------------------------------
+
+```{r, fig.width = 11, fig.height = 4.75, include = FALSE}
+df <- 
+  bind_rows(data.frame(lfmm_ind, Method = "LFMM", sampling = "individual"),
+            data.frame(rda_ind, Method = "RDA", sampling = "individual"),
+            data.frame(lfmm_site, Method = "LFMM", sampling = "site"),
+            data.frame(rda_site, Method = "RDA", sampling = "site"))
+
+meandf <- 
+  df %>%
+  mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 1 & m == 0.25 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
+  summarise_at(c("TPRCOMBO_strict", "FDRCOMBO_strict"), mean, na.rm = TRUE) %>%
+  pivot_longer(c("TPRCOMBO_strict", "FDRCOMBO_strict"), names_to = "Statistic", values_to = "values") 
+
+  
+ggdf <- 
+  df %>%
+  mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 1 & m == 0.25 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>%
+  summarise_at(c("TPRCOMBO_strict", "FDRCOMBO_strict"), sd, na.rm = TRUE) %>%
+  pivot_longer(c("TPRCOMBO_strict", "FDRCOMBO_strict"), names_to = "Statistic", values_to = "sd") %>%
+  left_join(meandf) %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = gsub(" strict", "", Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = c("TPR", "FDR"))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
+  mutate(ymin = values - sd, ymax = values + sd) %>%
+  mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax))
+
+
+# check to make sure the expected number of scenarios are included
+# there should be 30 for each simulation (3 seeds x 10 iterations)
+nscenario <- 
+  df %>%
+  mutate(scenario = case_when(K == 2 & m == 1 & phi == 1 & r == 0.3 & H == 0.5 ~ "best",
+                              K == 1 & m == 0.25 & phi == 0.5 & r == 0.6 & H == 0.05 ~ "worst",
+                              .default = NA)) %>%
+  group_by(Method, sampstrat, nsamp, sampling, scenario) %>% 
+  count() %>% 
+  filter(!is.na(scenario)) %>% 
+  pull(n)
+stopifnot(all(nscenario == 30))
+
+ind_plts <-
+  ggdf %>%
+  filter(sampling == "individual") %>%
+  group_by(scenario) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, fill = Scheme, pch = Scheme)) +
+    geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
+    geom_line(data = filter(.x, Scheme == "T"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "T"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
+    xlab("Number of samples") +
+    ylab("") +
+    ylim(0,1) +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_text(size = 11),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right",
+          strip.placement = "outside") +
+    scheme_cols("ind") +
+    ggtitle("A. Individual-based sampling")
+    
+  }) 
+
+
+site_plts <-
+  ggdf %>%
+  filter(sampling == "site") %>%
+  group_by(scenario) %>%
+  group_split() %>%
+  map(~{
+    ggplot(.x, aes(x = as.numeric(as.character(nsamp)), y = values, fill = Scheme, pch = Scheme)) +
+    geom_ribbon(data = .x, aes(fill = Scheme, ymin = ymin, ymax = ymax), lwd = 1, alpha = 0.15) +
+    geom_line(data = filter(.x, Scheme == "G"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "G"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "R"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "R"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    geom_line(data = filter(.x, Scheme == "ES"), aes(col = Scheme), lwd = 1, alpha = 0.8) +
+    geom_point(data = filter(.x, Scheme == "ES"), aes(col = Scheme), cex = 2, alpha = 0.8) +
+    ggh4x::facet_grid2(Statistic~Method, scales = "free_y", switch = "y") +
+    xlab("Number of sites") +
+    ylab("") +
+    ylim(0,1) +
+    theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+          strip.background = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_text(size = 11),
+          strip.text = element_text(size = 12),
+          title = element_text(size = 12),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "right",
+          strip.placement = "outside") +
+    scheme_cols("site") +
+    ggtitle("B. Site-based sampling")
+  })
+
+pdf(here("figures", "Figure_2.pdf"), width = 11, height = 4.5)
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+dev.off()
+
+png(here("figures", "Figure_2.png"), width = 11, height = 4.5, units = "in", res = 200)
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+dev.off()
+
+png(here("figures", "Figure_S5.png"), width = 11, height = 4.5, units = "in", res = 200)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+dev.off()
+
+grid.arrange(ind_plts[[1]], site_plts[[1]], nrow = 1)
+grid.arrange(ind_plts[[2]], site_plts[[2]], nrow = 1)
+```
+
+
+```{r, fig.height=5.5, fig.width=13, include = FALSE}
+ggdf <- 
+  df %>%
+  filter(K == 2 & phi == 1 & r == 0.3) %>%
+  group_by(Method, sampstrat, nsamp, sampling, H, m) %>%
+  summarise(across(all_of(stats), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE)), .names = "{.col}-{.fn}")) %>%
+  pivot_longer(cols = -c(Method, sampstrat, nsamp, sampling, H, m), 
+               names_to = c("Statistic", ".value"), 
+               names_sep = "-") %>%
+  rename(values = mean) %>%
+  mutate(ymax = values + sd, ymin = values - sd) %>%
+  mutate(ymin = case_when(ymin < 0 ~ 0, TRUE ~ ymin), ymax = case_when(ymax > 1 ~ 1, TRUE ~ ymax)) %>%
+  mutate(Statistic = make_pretty_names(Statistic)) %>%
+  mutate(Statistic = factor(Statistic, levels = make_pretty_names(stats))) %>%
+  mutate(Scheme = factor(sampstrat, levels = c("T", "R", "G", "ES"))) %>%
+  mutate(Method = factor(Method, levels = c("LFMM", "RDA"))) %>%
+  filter(Statistic == "TPR strict") %>%
+  mutate(m = case_when(m == 0.25 ~ "Low migration", TRUE ~ "High migration"),
+         H = case_when(H == 0.05 ~ "Low spatial autocorrelation", TRUE ~ "High spatial autocorrelation")) %>%
+  mutate(H = factor(H, levels = c("Low spatial autocorrelation", "High spatial autocorrelation")),
+         m = factor(m, levels = c("Low migration", "High migration")))
+  
+
+ind <- filter(ggdf, sampling == "individual")
+site <- filter(ggdf, sampling == "site")
+
+ind_plts <- ggplot(ind, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+  geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method), alpha = 0.1) +
+  geom_line(data = filter(ind, Scheme == "T"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(ind, Scheme == "T"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  geom_line(data = filter(ind, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(ind, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  geom_line(data = filter(ind, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(ind, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  geom_line(data = filter(ind, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(ind, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+  ylim(0, 1) +
+  xlab("Number of samples") +
+  ylab("TPR") +
+  theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 13),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.5, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") +
+  scheme_cols("ind") +
+  ggtitle("A. Individual-based sampling") 
+
+site_plts <- ggplot(site, aes(x = as.numeric(as.character(nsamp)), y = values)) +
+  geom_ribbon(aes(fill = Scheme, ymin = ymin, ymax = ymax, lty = Method), alpha = 0.1) +
+  geom_line(data = filter(site, Scheme == "G"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(site, Scheme == "G"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  geom_line(data = filter(site, Scheme == "R"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(site, Scheme == "R"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  geom_line(data = filter(site, Scheme == "ES"), aes(col = Scheme, lty = Method), lwd = 1, alpha = 0.8) +
+  geom_point(data = filter(site, Scheme == "ES"), aes(col = Scheme, fill = Scheme, pch = Scheme), cex = 2, alpha = 0.8) +
+  ggh4x::facet_grid2(m ~ H, scales = "free_x", switch = "y") +
+  ylim(0, 1) +
+  xlab("Number of sites") +
+  ylab("TPR") +
+  theme(panel.border = element_rect(colour = "lightgray", fill = NA),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 13),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.5, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") +
+  scheme_cols("site") +
+  ggtitle("A. Site-based sampling")
+
+
+png(here("figures", "Figure_S4.png"), width = 13, height = 5.5, units = "in", res = 200)
+grid.arrange(ind_plts, site_plts, nrow = 1)
+dev.off()
+
+grid.arrange(ind_plts, site_plts, nrow = 1)
+```
+
+# Statistics referenced in-text
+
+When migration and autocorrelation were both high (and other parameters are held constant), the strict true positive rate for LFMM was 0.91 for the E-space sampling scheme versus 0.81 for transect sampling with a sample size of 225 individuals:
+```{r, results = TRUE}
+lfmm_ind %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  group_by(nsamp, sampstrat) %>%
+  summarise(mean(TPRCOMBO_strict)) %>%
+  filter(nsamp == 225, sampstrat == "ES" | sampstrat == "T")
+```
+
+Reduction in performance with transect sampling:
+```{r, results = TRUE}
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(sampling == "individual") %>%
+  select(K, phi, m, seed, H, r, it, TPRCOMBO_strict, sampstrat, Method, nsamp) %>%
+  pivot_wider(names_from = sampstrat, values_from = TPRCOMBO_strict) %>%
+  group_by(K, phi, m, seed, H, r, it, nsamp, Method) %>%
+  mutate(T_dif = mean(c(T - ES, T - G, T - R))) %>%
+  group_by(Method) %>%
+  summarize(mean = round(mean(T_dif),3), sd = round(sd(T_dif),3))
+```
+
+Reduction in TPR for strict vs relaxed calculations across methods and across methods and levels of environmental correlation:
+```{r, results = TRUE}
+# Across methods:
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method) %>%
+  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
+
+# Across methods + r: 
+df %>%
+  ungroup() %>%
+  filter(sampling == "individual") %>%
+  mutate(dif = TPRCOMBO_relaxed - TPRCOMBO_strict) %>%
+  group_by(Method, r) %>%
+  summarize(mean = round(mean(dif),3), sd = round(sd(dif),3))
+```
+
+Average TPR at 255 samples:
+```{r, results = TRUE}
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(nsamp == 225 | nsamp == 25) %>%
+  group_by(Method, sampling) %>%
+  summarise(mean = mean(TPRCOMBO_strict, na.rm = TRUE))
+```
+
+Under the best conditions with 25 sites using RDA, E-space sampling had a true positive rate of 0.62 compared to 0.60 for random sampling and 0.55 for grid sampling:
+```{r, results = TRUE}
+df %>%
+  ungroup() %>%
+  filter(K == 2, phi == 1, m == 1, H == 0.5, r == 0.3) %>%
+  filter(nsamp == 25, sampling == "site", Method == "RDA") %>%
+  group_by(sampstrat) %>%
+  summarise(mean = mean(TPRCOMBO_strict, na.rm = TRUE))
+```
+
+
+
+
+
+
+
+
+

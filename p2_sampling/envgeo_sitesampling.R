@@ -20,7 +20,7 @@ for(n in nsites){
     library("vegan")
     library("raster")
     library("dplyr")
-    library("rgeos")
+    library("sf")
     
     #create file path
     gsd_filepath <- create_filepath(i, params = params, "gsd")

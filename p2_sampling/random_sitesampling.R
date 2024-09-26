@@ -14,8 +14,7 @@ for (n in nsites) {
   samples <- foreach(i = 1:nrow(params), .combine=rbind) %dopar% {
     library("here")
     library("raster")
-    library("sp")
-    library("rgeos")
+    library("sf")
     library("dplyr")    
     
     #create file path

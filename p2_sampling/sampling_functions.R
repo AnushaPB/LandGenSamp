@@ -113,22 +113,23 @@ transect_indsamp <- function(pts, npts){
 # SITE SAMPLING ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 SiteSample <- function(gsd_df, nsite, npts, site_method, sample_method = "near",  buffer_size = NULL, edge_buffer = NULL, ldim = 100, Nreps = 1000){
-  # make coords
+  # Make coords
   coords <- gsd_df[,c("idx","x","y")]
-  # correct y coords if not corrected
+
+  # Correct y coords if not corrected
   if (all(gsd_df$y > 0)) gsd_df$y <- -gsd_df$y
   coords <- sf::st_as_sf(coords, coords = c("x","y"))
   
-  # sample sites
+  # Sample sites
   if (site_method == "rand") sample_sites <- rand_sitesamp(coords = coords, nsite = nsite, edge_buffer = edge_buffer, ldim = ldim)
   if (site_method == "envgeo") sample_sites <- envgeo_sitesamp(gsd_df, nsite = nsite, Nreps = Nreps, edge_buffer = global_edge_buffer, ldim = ldim)
   if (site_method == "equi") sample_sites <- equi_sitesamp(nsite = nsite, ldim = ldim)
   
-  # sample points around sites 
+  # Sample points around sites 
   if (sample_method == "near") site_samples <- SiteSampleNear(sample_sites, coords, npts = npts)
   if (sample_method == "buffer") site_samples <- SiteSampleBuffer(sample_sites, coords, npts = npts, buffer_size = buffer_size)
   
-  # make a vector
+  # Make a vector
   samples <- paste0(site_samples$idx, "_", site_samples$site)
   
   return(samples)
@@ -142,8 +143,8 @@ SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
   #buffer - buffer around site from which to draw samples randomly
   #edge_buffer - buffer from landscape edges to prevent sampling of sites
   
-  # convert coords to sp
-  coords <- sf::as_Spatial(coords)
+  # convert coords to sf
+  if (!inherits(coords, "sf")) coords <- sf::st_as_sf(coords, coords = c("x","y"))
   
   # make df
   site_samples <- data.frame()
@@ -152,20 +153,30 @@ SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
   nloop <- nrow(sample_sites)
   
   for(s in 1:nloop){
-    #create buffer around sites from which to sample points
-    site_buffers <- gBuffer(sample_sites[s,], width = buffer_size)
-    #subset out only coordinates falling within site buffers
-    buffer_samples <- coords[site_buffers,]
-    #check if there are enough samples
-    if(length(buffer_samples) < npts){stop(paste0("Less than npts found in buffer around site, try choosing a different site or increasing the buffer size"))}
-    #convert from SPDF to df
-    buffer_samples_df <- data.frame(buffer_samples)
-    #randomly sample samples from coordinates
+    # Create buffer around sites from which to sample points
+    site_buffers <- st_buffer(sample_sites[s,], dist = buffer_size)
+
+    # Subset out only coordinates falling within site buffers
+    # First, find which coords intersect with the site_buffers
+    intersects <- st_intersects(coords, site_buffers, sparse = FALSE)
+
+    # Then, subset coords based on the intersects matrix
+    buffer_samples <- coords[rowSums(intersects) > 0,]
+
+    # Check if there are enough samples
+    if(nrow(buffer_samples) < npts){stop(paste0("Less than npts found in buffer around site, try choosing a different site or increasing the buffer size"))}
+    
+    # Convert from sf to df
+    buffer_samples_df <- data.frame(st_drop_geometry(buffer_samples))
+    
+    # Randomly sample samples from coordinates
     randsamp <- sample(nrow(buffer_samples_df), npts)
-    #subset df
+
+    # Subset df (note this turns it into a vector of idx)
     buffer_samples_df <- buffer_samples_df[randsamp,]
-    #IMPORTANT: remove sample from coords so they are not sampled twice
-    coords <- coords[!coords$idx %in% buffer_samples_df$idx,]
+
+    # IMPORTANT: remove sample from coords so they are not sampled twice
+    coords <- coords[!coords$idx %in% buffer_samples_df,]
     
     #THINK ABOUT THIS CODE
     #calculate the mean x coord (psuedo-site)
@@ -173,10 +184,10 @@ SiteSampleBuffer <- function(sample_sites, coords, npts, buffer_size = 5){
     #calculate the mean y coord (psuedo-site)
     #buffer_samples_df$ysite <- mean(buffer_samples_df$y)
     
-    #save site IDs
+    # Save site IDs
     buffer_samples_df$site <- s
     
-    #bind samples
+    # Bind samples
     site_samples <- rbind(site_samples, buffer_samples_df)
   }
   return(site_samples)

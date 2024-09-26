@@ -1,0 +1,538 @@
+---
+title: "Optimizing sampling design for landscape genomics: Simulation tests"
+author: "Anusha P. Bishop, Drew E. Terasaki Hart, Ian J. Wang"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r, include = FALSE, warning = FALSE, message = FALSE, results = FALSE, include = FALSE}
+library(vcfR)
+library(adegenet)
+library(here)
+library(tidyverse)
+library(nlraa)
+library(minpack.lm)
+library(tseries)
+source(here("general_functions.R"))
+source(here("p3_methods", "IBDIBE_functions.R"))
+
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, warning = FALSE, results = FALSE, message = FALSE)
+```
+
+```{r functions}
+get_stats <- function(K, phi, m, H, r){
+  # Create paths to simulation files
+  wdir <- here("p1_gnxsims", "gnx", "test")
+  folder_name <- paste0("GNX_mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100)
+  file_name <- paste0("mod-test_K", K, "_phi", phi*100, "_m", m*100, "_seed1_H", H*100, "_r", r*100, "_it-0_spp-spp_0_OTHER_STATS.csv")
+  path <- here(wdir,  paste0(folder_name, "/it-0/spp-spp_0/", file_name))
+
+  # Check if file exists
+  if (!file.exists(path)) {warning(paste0("File does not exist: ", path)); return(NULL)}
+
+  # Read in the data
+  df <- 
+    read_csv(path) %>% 
+    mutate(K = K, phi = phi, m = m, H = H, r = r)
+
+  return(df)
+}
+
+
+mw_adf_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  # centered window: 
+  #moving_window_steps <- seq(nsteps/2, 10000 - nsteps/2, by = 10)
+  #timepoints <- map(moving_window_steps, function(x) (x-nsteps/2):(x+nsteps/2))
+  # trailing window: 
+  moving_window_steps <- seq(nsteps, 10000, by = 10)
+  timepoints <- map(moving_window_steps, function(x) (x-nsteps):x)
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = moving_window_steps, t_end = moving_window_steps+10, p = p_value)
+  
+  # Create final data frame
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
+adf_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  if (is.null(timepoints)) timepoints <- map(seq(0, 9500, nsteps), function(x) x:(x + nsteps))
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = map_dbl(timepoints, first), t_end = map_dbl(timepoints, last), p = p_value)
+  
+  # Create final data frame
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
+adf_mw_test <- function(subdf, nsteps = NULL, var = "mean_fit"){
+  # Creating a time series object
+  ts <- 
+    subdf %>% 
+    pull(.data[[var]]) %>%
+    ts()
+
+  # Testing for stationarity of different time points
+  # Note: used na.omit() instead of drop_na(mean_fit) because then the time series would be shorter than the original data
+  # and the time points would not line up correctly
+  # centered window: 
+  #moving_window_steps <- seq(nsteps/2, 10000 - nsteps/2, by = 10)
+  #timepoints <- map(moving_window_steps, function(x) (x-nsteps/2):(x+nsteps/2))
+  # trailing window: 
+  moving_window_steps <- seq(nsteps, 10000, by = 10)
+  timepoints <- map(moving_window_steps, function(x) (x-nsteps):x)
+  p_value <- map_dbl(timepoints, ~tseries::adf.test(na.omit(ts[.x]), alternative = "stationary")$p.value)
+  p_df <- data.frame(t_start = moving_window_steps, t_end = moving_window_steps+10, p = p_value)
+  
+  # Create final data frame
+  ts_df <- 
+    p_df %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) %>%
+    mutate(nsteps = as.character(nsteps))
+
+  return(ts_df)
+}
+
+```
+
+# 1. Simulation tests
+
+To determine how long to run our simulations, we ran a series of tests to evaluate when population size, fitness, and genetic structure reached equilibrium. We ran each unique set of simulation parameters (i.e., varying population size, selection strength, migration, spatial autocorrelation, and correlation between environmental layers) for 10,000 timesteps. We simulated 1,000 neutral loci in the test simulations (in contrast to 10,000 in the full simulations) to decrease  computational time; the smaller number of loci should not notably influence the results of any of our equilibrium tests. We extracted population size every 1 timestep, mean fitness every 10 timesteps, and genetic data every 1,000 timesteps (the genetic data files are large and computationally expensive to process). Based on the results of our tests, described in detail below, the latest our simulations reached equilibrium was ~4,000-5,000 timesteps. Therefore, we decided to run our simulations for 6,000 timesteps to ensure they had enough time at equilibrium.
+
+```{r format simulation stats}
+# Get all combinations of parameters
+combos <- expand.grid(K = c(1, 2), phi = c(0.5, 1), m = c(0.25, 1), H = c(0.05, 0.5), r = c(0.3, 0.6))
+
+# Get stats for each combination
+ls <- 
+  pmap(combos, get_stats) %>% 
+  compact()
+  
+# Combine all the data
+df <- 
+  ls %>%
+  bind_rows() %>%
+  mutate(group = paste0("K", K, "_phi", phi, "_m", m, "_H", H, "_r", r))
+
+```
+
+# 2. Testing for equilibrium in population size
+
+We tested for equilibrium in population size using an Augmented Dickey-Fuller test for stationarity. We tested for stationarity in windows of 2,000 time points (e.g., 0-2,000, 2,000-4,000, etc.) for each unique set of simulation parameters. We calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05 (alternate hypothesis: stationarity). All simulations achieved stationarity in population size by 2,000 timesteps.
+```{r, fig.width = 8, fig.height = 3.5}
+# Test with population size
+Nt_df <-
+  # Test for stationarity in population size
+  bind_rows(map(ls, adf_test, nsteps = 1000, var = "Nt", .progress = TRUE)) %>%
+  mutate(nsteps = as.character(nsteps)) %>%
+  mutate(stationarity = p < 0.05) 
+
+# Calculate the percentage of simulations that were at stationarity
+Nt_mean <- 
+  Nt_df %>%
+  group_by(t_start, t_end, nsteps) %>%
+  summarize(stationarity = sum(stationarity)/n() * 100) %>%
+  drop_na()
+
+ggplot() +
+  geom_rect(data = Nt_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
+  geom_vline(data = Nt_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white") +
+  geom_line(data = drop_na(df, Nt), aes(x = t, y = Nt, group = group), alpha = 0.3) +
+  labs(x = "Timepoint", y = "Population size", fill = "% at\nstationarity") +
+  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0, limit = c(20, 100)) +
+  theme_classic() +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
+  theme(strip.background = element_blank())
+```
+
+# 3. Testing for equilibrium in fitness
+
+## 3.1 Stationarity test
+
+We tested for equilibrium in mean fitness using an Augmented Dickey-Fuller test for stationarity. As before, we tested for stationarity in windows of 2,000 time points and calculated the percentage of simulations that were at stationarity within those windows based on an alpha level of 0.05. All simulations acheived stationarity in mean fitness by 6000 timesteps.
+
+```{r, fig.width = 8, fig.height = 3.5}
+fitness_df <-
+  # Test for stationarity in mean fitness
+  map(ls, adf_test, nsteps = 2000, .progress = TRUE) %>% 
+  bind_rows() %>%
+  mutate(stationarity = p < 0.05) 
+
+# Calculate the percentage of simulations that were at stationarity
+fitness_mean <- 
+  fitness_df %>%
+  mutate(nsteps = as.character(nsteps)) %>%
+  group_by(t_start, t_end, nsteps) %>%
+  summarize(stationarity = sum(stationarity)/n() * 100) %>%
+  drop_na()
+
+# Calculate the mean fitness for each timepoint for all simulations
+fitness_meanall <-
+  df %>%
+  group_by(t) %>%
+  drop_na(mean_fit) %>%
+  summarise(mean_fit = mean(mean_fit, na.rm = TRUE), .groups = "drop")
+
+ggplot() +
+  geom_rect(data = fitness_mean, aes(xmin = t_start, xmax = t_end, ymin = -Inf, ymax = Inf, fill = stationarity), alpha = 0.9) +
+  geom_vline(data = fitness_mean, aes(xintercept = t_end), lty = "dashed", alpha = 0.5, col = "white", lwd = 0.8) +
+  geom_line(data = drop_na(df, mean_fit), aes(x = t, y = mean_fit, group = group), alpha = 0.3) +
+  geom_line(data = fitness_meanall, aes(x = t, y = mean_fit), lwd = 1) +
+  labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
+  scale_fill_viridis_c(option = "mako", end = 0.8, begin = 0, limit = c(20, 100)) +
+  theme_classic() +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
+  ggtitle("A. Percent of simulations at stationarity in the 2000 timestep window") +
+  theme(strip.background = element_blank())
+
+```
+
+## 3.2 Plateau test
+
+To determine the timepoint at which fitness plateaued, we fit a linear plateau model to the mean fitness data. We used this model to deterimine the junction point at which fitness flattened out (i.e., the timepoint at which the slope of the model changes to zero). The latest junction point was at ~2,000 timesteps. 
+
+```{r, fig.width = 8, fig.height = 3.5}
+# Adapted from: https://gradcylinder.org/post/linear-plateau/
+jp_test <- function(subdf, nsteps = NULL, var = "mean_fit", timepoints = NULL){
+
+  subdf <- subdf %>% drop_na(mean_fit)
+  fit <- nlsLM(formula = mean_fit ~ SSlinp(t, a, b, jp), data = subdf)
+  jp <- 
+    summary(fit)$coefficients %>% 
+    as.data.frame() %>%
+    mutate(name = rownames(.)) %>%
+    filter(name == "jp") %>%
+    pull(Estimate) 
+  
+  jp_df <- 
+    data.frame(jp = jp, pred = predict(fit), obs = subdf$mean_fit, resids = residuals(fit), t = subdf$t) %>%
+    bind_cols(unique(select(subdf, K, phi, m, H, r))) 
+
+  return(jp_df)
+}
+
+jp_df <-
+  map(ls, jp_test) %>%
+  bind_rows() %>%
+  mutate(group = paste0("K", K, "_phi", phi, "_m", m, "_H", H, "_r", r))
+
+mean_jp <-
+  jp_df %>%
+  summarize(mean = mean(jp, na.rm = TRUE))
+
+ggplot() +
+  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "tomato") +
+  geom_line(data =jp_df, aes(x = t, y = obs, group = group), alpha = 0.3) +
+  #geom_line(data =jp_df, aes(x = t, y = pred, group = group), alpha = 0.3, col = "red") +
+  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "tomato") +
+  labs(x = "Timepoint", y = "Mean fitness", fill = "% at\nstationarity") +
+  theme_classic() +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
+  theme(strip.background = element_blank())
+
+ggplot() +
+  geom_vline(data = jp_df, aes(xintercept = jp), lty = "dashed", alpha = 0.5, col = "tomato") +
+  geom_point(data =jp_df, aes(x = t, y = resids, group = group), alpha = 0.1, cex = 0.3) +
+  geom_vline(data = mean_jp, aes(xintercept = mean), lwd = 1.5, col = "tomato") +
+  labs(x = "Timepoint", y = "Model residuals", fill = "% at\nstationarity") +
+  theme_classic() +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0, 10000, 2000)) +
+  theme(strip.background = element_blank())
+```
+
+# 4. Testing for genetic equilibrium
+
+We tested for equilibrium in genetic structure using two tests: (1) a test for equilibrium in genetic structure using Mantel tests and (2) a test for equilibrium of genotype-environment associations based on genotype-environment correlations. 
+```{r}
+calc_stats <- function(x, t, stat = "mantel", cache = TRUE){
+  # Create paths for loading data
+  path <- here(x, "it-0", "spp-spp_0")
+
+  # Create paths for loading vcf
+  vcf_paths <- list.files(path, pattern = ".vcf", full.names = TRUE)
+  vcf_path <- vcf_paths[grepl(paste0("_t-", t, "_"), vcf_paths)]
+
+  # Get model name
+  mod_name = gsub(".vcf", "", basename(vcf_path))
+
+  # Output path
+  if (stat == "mantel") out_path <- here(path, paste0(mod_name, "_t-", t, "_mantel.csv"))
+  if (stat == "gea") out_path <- here(path, paste0(mod_name, "_t-", t, "_gea.csv"))
+  if (cache & file.exists(out_path)){
+    message("using cached file")
+    return(read_csv(out_path))
+  }
+
+  # Load genetic data
+  gen <- dos_cache(vcf_path)
+
+  # Get geospatial data
+  gsd_path <- gsub(".vcf", ".csv", vcf_path)
+  gsd_df <- get_gsd(gsd_path)
+
+  if (stat == "mantel") results <- calc_mantel(gen, gsd_df)
+  if (stat == "gea") results <- calc_gea(gen, gsd_df)
+
+  # Add model name
+  results <- 
+    results %>% 
+    mutate(t = t, path = mod_name)
+
+  # Write out the results
+  write_csv(results, out_path)
+    
+  return(results)
+}
+
+dos_cache <- function(vcf_path){
+  # Create paths for loading dosage
+  dos_file_path <- gsub("/mod-(.*?)_", "/dos-\\1_", vcf_path)
+  dos_file_path <- gsub(".vcf", ".csv", dos_file_path)
+  # Check if dosage file exists
+  # If yes: read from dosage
+  if (file.exists(dos_file_path)) {
+    gen <- get_dos(dos_file_path)
+    message("using cached dosage file")
+  # If no: read from vcf and write out dosage
+  } else {
+    gen <- get_gen(vcf_path)
+    write.csv(gen, dos_file_path, row.names = TRUE)
+    message("created dosage file")
+  }
+  return(gen)
+}
+
+calc_mantel <- function(gen, gsd_df){
+  # Calculate genetic distance
+  gendist <- calc_dist(gen)
+
+  # Calculate geographic and environmental distance
+  env1_dist <- as.matrix(dist(gsd_df[,"env1"], diag = TRUE, upper = TRUE))
+  env2_dist <- as.matrix(dist(gsd_df[,"env2"], diag = TRUE, upper = TRUE))
+  geo_dist <- as.matrix(dist(gsd_df[,c("x", "y")], diag = TRUE, upper = TRUE))
+
+  # Create a list of distance matrices
+  dist_list <- list(geo = geo_dist, env1 = env1_dist, env2 = env2_dist)
+
+  # Apply the function to each distance matrix
+  results <- 
+    map(dist_list, ~vegan::mantel(gendist, .x, method="pearson", permutations=1)$statistic) %>%
+    bind_rows(.id = "var")
+  
+  return(results)
+}
+
+# Calculate genotype-env correlation
+calc_gea <- function(gen, gsd_df){
+  cor1 <- map(gen, ~cor.test(.x, gsd_df$env1))
+  cor2 <- map(gen, ~cor.test(.x, gsd_df$env2))
+  p1 <- map_dbl(cor1, "p.value")
+  p2 <- map_dbl(cor2, "p.value")
+  r1 <- map_dbl(cor1, "estimate")
+  r2 <- map_dbl(cor2, "estimate")
+
+  result <- 
+    data.frame( 
+      sampstrat = "full", 
+      cor1_p = p1,
+      cor2_p = p2,
+      cor1_r = r1,
+      cor2_r = r2,
+      adaptive = c(rep(TRUE, 8), rep(FALSE, 1000))
+    )
+
+  result <-
+    result %>%
+    mutate(cor1_sig = cor1_p < 0.05, cor2_sig = cor2_p < 0.05, cor_sig = (cor1_sig + cor2_sig)/2)
+}
+
+calc_stats_possibly <- possibly(calc_stats)
+```
+
+```{r}
+# list folders in the gnx directory
+dirs <- list.dirs(here("p1_gnxsims", "gnx", "test"), full.names = TRUE, recursive = FALSE)
+dirs <- dirs[grepl("GNX_mod-test", dirs)]
+
+# get the stats for each folder across all time steps
+combos <- expand.grid(x = dirs, t = seq(0, 10000, 1000))
+```
+
+## 4.1 Genetic structure test
+
+To determine when genetic structure reached equilibrium, we calculated the correlation between (1) genetic distance and geographic distance and (2) genetic distance and environmental distance using Mantel's r. We calculated these correlations every 1,000 timesteps for each unique set of simulation parameters. There are not enough points to run an Augmented Dickey-Fuller test for stationarity, so we visually inspected the data to determine when the correlations reached equilibrium. Each line on the plot represents a unique simulation; we colored the lines based on the migration and spatial autocorrelation parameters of each simulation because they are expected to have strong effects on neutral and adaptive genetic structure, however these lines also include variation in population size, selection strength, and environmental correlation. Overall, the Mantel correlations are stable by about 4,000-5,000 timesteps. 
+
+```{r, fig.width = 7, fig.height = 6}
+mantel_results <- 
+  pmap(
+    combos, \(x, t) calc_stats_possibly(x, t, stat = "mantel"),
+   .progress = TRUE
+   ) %>%
+  compact() %>%
+  bind_rows()
+  
+mantel_ggdf <-
+  mantel_results %>%
+  # Add the values in the 'env1' and 'env2' to get one 'env' column
+  mutate(env = env1 + env2) %>%
+  # Reshape the data from wide to long format
+  pivot_longer(c(geo, env)) %>%
+  # Create new columns to define the color group
+  mutate(
+    m = case_when(grepl("_m25_", path) ~ "Low m", TRUE ~ "High m"),
+    H = case_when(grepl("_H5_", path) ~ "Low H", TRUE ~ "High H")
+    ) %>%
+  mutate(color_group = paste(H, "&", m)) %>%
+  # Remove timestep from the path to create a grouping variable for simulations
+  mutate(group = str_remove(path, "_t-\\d+")) %>%
+  # Create a new column to group the geographic and environmental distances
+  mutate(name = case_when(name == "geo" ~ "A. Geographic distance", name == "env" ~ "B. Environmental distance"))
+
+ggplot(mantel_ggdf) +
+  # add lines every 1000 steps
+  geom_vline(xintercept = seq(0, 10000, 1000), alpha = 1, linetype = "dotted", col = "gray") +
+  geom_line(aes(x = t, y = value, group = group, col = color_group)) +
+  theme_classic() +
+  facet_wrap(~name, ncol =1, scales = "free") +
+  labs(x = "Timepoint", y = "Mantel's r") +
+  ylim(-0.02, 1) +
+  scale_color_manual("Autocorrelation (H)\n& Migration (m)", values = c("#ED7953FF", "#0D0887FF", "#7678ed", "#17c3b2")) +
+  # label the x axis every 2000 steps
+  scale_x_continuous(breaks = seq(0, 10000, 2000)) +
+  # left align the strip labels
+  theme(panel.border = element_blank(),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12, hjust = 0),
+        axis.text = element_text(size = 11),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.6, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") 
+```
+
+## 4.2 Genotype-environment association test
+
+To determine when genotype-environment associations reached equilibrium, we calculated genotype-environment correlations for both adaptive and neutral loci. We calculated correlations every 1,000 timesteps for each unique set of simulation parameters. We calculated correlations two seperate ways: (1) including fixed loci and counting them as a correlation of 0 and (2) excluding fixed loci. In the plots including fixed loci, correlation for neutral loci decreases overtime as more loci become fixed due to the loss of genetic diversity to drift overtime in the absence of mutation (B). This decrease is unlikely to affect our analyses because we simulated 10,000 loci, so many will still be variable, even at later timepoints. The adaptive loci plots (A) show greater variation over time because they are averages across just 8 loci (compared to 1,000 neutral loci for the neutral loci plots). The plots are otherwise the same as described above; each line on the plot represents a unique simulation, colored by migration and spatial autocorrelation parameters. Overall, the correlations for the adaptive and neutral loci appear to be relatively stable by about 4,000 timesteps. 
+
+```{r, fig.width = 10, fig.height = 5}
+gea_results <- 
+  pmap(
+    combos, \(x, t) calc_stats_possibly(x, t, stat = "gea"),
+   .progress = TRUE
+   ) %>%
+  compact() %>%
+  bind_rows()
+
+gea_ggdf <- 
+  gea_results %>%
+  # Group by the loci type (adaptive/neutral), timestep, and model (filepath) 
+  group_by(adaptive, t, path) %>%
+  # Replace r = NA values in 'cor1_r' and 'cor2_r' with r = 0
+  mutate(cor1_rNA = case_when(is.na(cor1_r) ~ 0, TRUE ~ cor1_r), cor2_rNA = case_when(is.na(cor2_r) ~ 0, TRUE ~ cor2_r)) %>%
+  # Calculate the mean of the absolute values of 'cor1_rNA', 'cor2_rNA', 'cor1_r', and 'cor2_r', ignoring NA values
+  summarise(across(c(cor1_rNA, cor2_rNA, cor1_r, cor2_r), ~mean(abs(.x), na.rm = TRUE))) %>%
+  # Calculate the average of 'cor1_rNA' and 'cor2_rNA', and the average of 'cor1_r' and 'cor2_r'
+  mutate(cor_rNA = (cor1_rNA + cor2_rNA)/2, cor_r = (cor1_r + cor2_r)/2) %>%
+  # Reshape the data from wide to long format
+  pivot_longer(c(cor_r, cor_rNA)) %>%
+  # Create a new column 'rtype' based on how r was calculated
+  mutate(rtype = case_when(name == "cor_rNA" ~ "Fixed loci included (r = 0)", name == "cor_r" ~ "Fixed loci removed (r = NA)")) %>%
+  # Create new columns to define the color group
+  mutate(
+    m = case_when(grepl("_m25_", path) ~ "Low m", TRUE ~ "High m"),
+    H = case_when(grepl("_H5_", path) ~ "Low H", TRUE ~ "High H")
+    ) %>%
+  mutate(color_group = paste(H, "&", m)) %>%
+  # Remove timestep from the path to create a grouping variable for simulations
+  mutate(group = str_remove(path, "_t-\\d+")) %>%
+  # Create a new column to group the adaptive and neutral loci
+  mutate(name = case_when(adaptive ~ "A. Adaptive loci", !adaptive ~ "B. Neutral loci")) 
+
+ggplot(gea_ggdf) +
+  # add lines every 1000 steps
+  geom_vline(xintercept = seq(0, 10000, 1000), alpha = 1, linetype = "dotted", col = "gray") +
+  geom_line(aes(x = t, y = value, group = group, col = color_group)) +
+  theme_classic() +
+  facet_grid(rtype~name) +
+  labs(x = "Timepoint", y = "Mean environmental correlation") +
+  #ylim(-0.01, 1) +
+  scale_color_manual("Autocorrelation (H)\n& Migration (m)", values = c("#ED7953FF", "#0D0887FF", "#7678ed", "#17c3b2")) +
+  # label the x axis every 2000 steps
+  scale_x_continuous(breaks = seq(0, 10000, 2000)) +
+  # left align the strip labels
+  theme(panel.border = element_blank(),
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        strip.text = element_text(size = 12, hjust = 0),
+        axis.text = element_text(size = 11),
+        title = element_text(size = 12),
+        panel.spacing = unit(0.6, "lines"),
+        legend.position = "right",
+        strip.placement = "outside") 
+
+```
+
+```{r, include = FALSE}
+# Confirm with tests that env1 and env2 (the landscape layers) don't have any systematic differences in genotype-enviornment association strength
+gea_ggdf2 <- 
+  gea_results %>%
+  # filter out the neutral loci
+  filter(adaptive) %>%
+  # Create new columns to define the color group
+  mutate(
+    m = case_when(grepl("_m25_", path) ~ "Low m", TRUE ~ "High m"),
+    H = case_when(grepl("_H5_", path) ~ "Low H", TRUE ~ "High H")
+    ) %>%
+  mutate(color_group = paste(H, "&", m)) %>%
+  # Reshape the data from wide to long format
+  pivot_longer(c(cor1_r, cor2_r)) %>%
+  mutate(name = case_when(name == "cor1_r" ~ "env1", name == "cor2_r" ~ "env2")) %>%
+  # Get magnitude of correlation
+  mutate(value = abs(value)) %>%
+  # Calculate average within simulations 
+  mutate(group = str_remove(path, "_t-\\d+")) %>%
+  group_by(group, color_group, name) %>%
+  summarize(value = mean(value, na.rm = TRUE)) 
+
+# confirm same number of points in each group
+check <- 
+  gea_ggdf2 %>%
+  group_by(color_group, name) %>%
+  count() %>%
+  pull(n) %>%
+  all(. == 8)
+stopifnot(check)
+
+ggplot(gea_ggdf2, aes(x = color_group, y = value, fill = name)) +
+  geom_boxplot() +
+  geom_dotplot(binaxis='y', stackdir='center', position=position_dodge(0.8), binwidth = 0.006, alpha = 0.8) +
+  labs(fill = "Env", y = "|Genotype-environment correlation|", x = "Simulation group") +
+  theme_classic() 
+```
