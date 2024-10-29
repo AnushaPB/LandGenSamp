@@ -1,7 +1,5 @@
 # Data from: Optimizing sampling design for landscape genomics
 
-<https://doi.org/10.5061/dryad.63xsj3v8s>
-
 This dataset contains a compressed tarball (.tar.gz) with the simulation data used in "Optimizing sampling design for landscape genomics"
 
 ## Description of the data and file structure
