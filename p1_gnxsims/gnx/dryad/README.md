@@ -12,7 +12,7 @@ The tarball must first be unpacked. For example, this can be done using this bas
 The tarball contains 960 pairs of CSV files and Variant Call Format (VCF) files with genomic data for each of the 960 simulations.
 
 Each file is titled as such:
-mod-K[1 or 2]_phi[50 or 100]_m[25 or 100]_H[5 or 50]_r[30 or 60]_it-[1-10]_t-1000_spp-spp_0
+mod-K[1 or 2]_phi[50 or 100]_m[25 or 100]_H[5 or 50]_r[30 or 60]_it-[1-10]_t-6000_spp-spp_0
 The values within brackets represent the different low/high parameter levels (e.g., K1 = small population and K2 = large population) or the iteration (1 through 10)
 
 File name abbreviations are:
