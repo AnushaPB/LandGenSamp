@@ -22,7 +22,7 @@ m = migration rate
 H = spatial autocorrelation
 r = environmental correlatio
 it = iteration
-See the original paper for more information on these parameters
+See the original paper for more information on these parameters.
 
 The CSV files contain geospatial data for the simulated individuals. The columns are:
 idx = individual ID (matches with VCF)
