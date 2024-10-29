@@ -99,9 +99,9 @@ Analyze and visualize landscape genomic results
 |   analysis_megatable.Rmd - notebook for creating giant tables of mixed model results
 |   example_simulations.Rmd - notebook used to visualize example simulations
 |  
-└───[outputs] - directory for storing analysis outputs
+└───[outputs] - directory for storing analysis outputs (empty; filled by running .Rmd files)
 |  
-└───[example_data] - directory for storing example data used by example_simulations.Rmd (example data is moved here by p1_gnxsims_job.sh)
+└───[example_data] - directory for storing example data used by example_simulations.Rmd (empty; example data is moved here by p1_gnxsims_job.sh)
 ```
 
 # 3. Running everything
