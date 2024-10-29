@@ -84,7 +84,7 @@ Test different landscape genomic analyses
 |   phenotype_environment.R - script to calculate phenotypic mismatch and phenotype-environment associations (run by methods_job.sh)
 |   genotype_environment.R - script to calculate genotype-environment associations (run by methods_job.sh)
 |  
-└───outputs.zip - compressed folder of p3_methods outputs *except for results from genotype_environment.R because they are too large to be committed (these results can be reproduced using the original script and the Dryad data)
+└───outputs_*.zip - compressed folder of p3_methods outputs. The outputs are split into multiple zip files due to GitHub maximum file size requirements. To combine them run the following code: cat outputs.zip.part_* > outputs.zip
 ```
 
 ### 2.4 [p4_analysis](https://github.com/AnushaPB/LandGenSamp/tree/main/p4_analysis)
