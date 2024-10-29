@@ -38,13 +38,17 @@ Rscript run_make_dosage.R
 
 # Create folder with simulation results for archive
 mkdir -p LGS_simulation_archive
-## This only contains the raw csv and vcf mod outputs  from geonomics from the final time step
-find LGS_data -name 'mod*t-6000*' -type f -exec cp --parents \{\} LGS_simulation_archive \;
-## Compress the archive
+# Copy the files directly into LGS_simulation_archive without creating LGS_simulation_archive/LGS_data
+find LGS_data -name 'mod*t-6000*' -type f -exec cp --parents \{\} LGS_simulation_archive/ \;
+# Move the files from LGS_simulation_archive/LGS_data to LGS_simulation_archive
+find LGS_simulation_archive/LGS_data -type f -exec mv \{\} LGS_simulation_archive/ \;
+# Remove the now-empty LGS_simulation_archive/LGS_data directory
+rm -r LGS_simulation_archive/LGS_data
+# Compress the archive
 tar -czvf LGS_simulation_archive.tar.gz LGS_simulation_archive/
-## Create directory for dryad data
+# Create directory for dryad data
 mkdir -p dryad
-## Move the archive to the dryad directory
+# Move the archive to the dryad directory
 mv LGS_simulation_archive.tar.gz dryad/
 
 # Copy example data into p4_analysis folder
