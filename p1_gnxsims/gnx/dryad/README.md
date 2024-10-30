@@ -37,6 +37,6 @@ The VCF files follow standard VCF formatting and have the same IDs as the CSV fi
 
 ## Code/Software
 
-The code and additional files used to generate this data are archived on Zenodo: 10.5281/zenodo.14009717
+The code and additional files used to generate this data are archived on Zenodo (DOI 10.5281/zenodo.14009717)
 
 The most recent version of this code can be found on GitHub: https://github.com/AnushaPB/LandGenSamp
